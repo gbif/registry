@@ -27,6 +27,7 @@ import org.gbif.api.model.common.search.SearchResponse;
 import org.gbif.api.model.crawler.DatasetProcessStatus;
 import org.gbif.api.model.registry.Contact;
 import org.gbif.api.model.registry.Dataset;
+import org.gbif.api.model.registry.DatasetCitation;
 import org.gbif.api.model.registry.Grid;
 import org.gbif.api.model.registry.Identifier;
 import org.gbif.api.model.registry.LenientEquals;
@@ -490,6 +491,17 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset, DatasetL
   @Override
   public PagingResponse<Dataset> list(DatasetRequestSearchParams request) {
     return registryDatasetService.augmentWithMetadata(listInternal(request, null));
+  }
+
+  @GetMapping("citation/{key}")
+  public DatasetCitation getCitation(@PathVariable UUID key) {
+    return registryDatasetService.getDatasetCitation(key);
+  }
+
+  @PostMapping("citations")
+  @Override
+  public List<DatasetCitation> listCitations(@RequestBody List<UUID> keys) {
+    return registryDatasetService.listDatasetCitations(keys);
   }
 
   private PagingResponse<Dataset> listInternal(

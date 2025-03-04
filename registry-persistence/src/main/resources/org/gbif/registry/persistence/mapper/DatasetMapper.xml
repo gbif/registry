@@ -20,6 +20,12 @@
     <id property="key" column="key"/>
   </resultMap>
 
+  <resultMap id="DATASET_MAP_CITATIONS" type="org.gbif.api.model.registry.Dataset" autoMapping="true">
+    <id property="key" column="key"/>
+    <association property="citation" resultMap="CITATION_MAP"/>
+    <collection property="contacts" column="key" select="listContacts"/>
+  </resultMap>
+
   <!-- maps a citation object  -->
   <resultMap id="CITATION_MAP" type="org.gbif.api.model.registry.Citation" autoMapping="false">
     <result property="text" column="citation" />
@@ -132,6 +138,21 @@
     SELECT <include refid="DATASET_FIELDS"/>
     FROM dataset d INNER JOIN organization o ON o.key = d.publishing_organization_key
     WHERE d.key = #{key,jdbcType=OTHER}
+  </select>
+
+  <select id="getCitation" resultMap="DATASET_MAP_CITATIONS">
+    SELECT <include refid="DATASET_FIELDS"/>
+    FROM dataset d INNER JOIN organization o ON o.key = d.publishing_organization_key
+    WHERE d.key = #{key,jdbcType=OTHER}
+  </select>
+
+  <select id="getCitations" resultMap="DATASET_MAP_CITATIONS">
+    SELECT <include refid="DATASET_FIELDS"/>
+    FROM dataset d INNER JOIN organization o ON o.key = d.publishing_organization_key
+    WHERE d.key IN
+    <foreach item="key" collection="keys" open="(" separator="," close=")">
+      #{key, jdbcType=VARCHAR}
+    </foreach>
   </select>
 
   <select id="exists" resultType="Boolean">

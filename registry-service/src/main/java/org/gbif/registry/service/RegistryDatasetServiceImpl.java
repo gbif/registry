@@ -20,6 +20,7 @@ import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.Citation;
 import org.gbif.api.model.registry.Dataset;
+import org.gbif.api.model.registry.DatasetCitation;
 import org.gbif.api.model.registry.Metadata;
 import org.gbif.api.model.registry.Organization;
 import org.gbif.api.util.CitationGenerator;
@@ -404,4 +405,64 @@ public class RegistryDatasetServiceImpl implements RegistryDatasetService {
 
     return result;
   }
+
+  @Override
+  public List<DatasetCitation> listDatasetCitations(List<UUID> datasetKeys) {
+    return datasetMapper.getCitations(datasetKeys).stream()
+      .map(this::toDatasetCitation)
+      .collect(Collectors.toList());
+  }
+
+  @Override
+  public DatasetCitation getDatasetCitation(UUID key) {
+    return toDatasetCitation(datasetMapper.getCitation(key));
+  }
+
+  private DatasetCitation toDatasetCitation(Dataset dataset) {
+    DatasetCitation citation = new DatasetCitation();
+    citation.setDatasetKey(dataset.getKey());
+    citation.setDatasetTitle(dataset.getTitle());
+    if (dataset.getCitation() != null) {
+      citation.setCitableText(dataset.getCitation().getText());
+    }
+    citation.setLicense(dataset.getLicense());
+    return citation;
+  }
+
+//
+//  /**
+//   * Checks the contacts of a dataset and finds the preferred contact that should be used as the main author
+//   * of a dataset.
+//   *
+//   * @return preferred author contact or null
+//   */
+//  private static Optional<Contact> getContentProviderContact(Dataset dataset) {
+//    return findFirstAuthor(dataset).map(author-> {
+//        Contact provider = null;
+//        try {
+//          provider = new Contact();
+//          PropertyUtils.copyProperties(provider, author);
+//          provider.setKey(null);
+//          provider.setType(ContactType.CONTENT_PROVIDER);
+//          provider.setPrimary(false);
+//        } catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
+//          LOG.error("Error setting provider contact", e);
+//        }
+//        return provider;
+//      }
+//    );
+//  }
+//
+//  /**
+//   * Iterates over the dataset contacts to find the first contact of author type.
+//   */
+//  private static Optional<Contact> findFirstAuthor(Dataset dataset) {
+//    return dataset.getContacts().stream().filter(IS_AUTHOR_PREDICATE).findFirst();
+//  }
+//
+//  private static final List<ContactType> AUTHOR_TYPES =
+//    ImmutableList.of(ContactType.ORIGINATOR, ContactType.AUTHOR, ContactType.POINT_OF_CONTACT);
+//
+//  private static final Predicate<Contact> IS_AUTHOR_PREDICATE = contact -> AUTHOR_TYPES.contains(contact.getType()) || contact.isPrimary();
+
 }

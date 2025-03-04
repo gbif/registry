@@ -76,4 +76,8 @@ public interface DatasetMapper extends BaseNetworkEntityMapper<Dataset> {
   List<Grid> listGrids(@Param("datasetKey") UUID datasetKey);
 
   Dataset getLightweight(@Param("key") UUID key);
+
+  List<Dataset> getCitations(@Param("keys") List<UUID> datasetKeys);
+
+  Dataset getCitation(@Param("key") UUID datasetKeys);
 }

@@ -305,4 +305,14 @@ public class MockDatasetMapper implements DatasetMapper {
   public Dataset getLightweight(UUID key) {
     return null;
   }
+
+  @Override
+  public List<Dataset> getCitations(List<UUID> datasetKeys) {
+    return List.of();
+  }
+
+  @Override
+  public Dataset getCitation(UUID datasetKey) {
+    return null;
+  }
 }

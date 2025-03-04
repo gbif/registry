@@ -17,6 +17,7 @@ import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.Dataset;
+import org.gbif.api.model.registry.DatasetCitation;
 import org.gbif.api.model.registry.Metadata;
 import org.gbif.api.model.registry.Network;
 import org.gbif.api.model.registry.search.DatasetRequestSearchParams;
@@ -190,4 +191,12 @@ public interface DatasetClient extends NetworkEntityClient<Dataset>, DatasetServ
       @PathVariable("prefix") String prefix,
       @PathVariable("suffix") String suffix,
       @SpringQueryMap Pageable pageable);
+
+  @RequestMapping(
+    method = RequestMethod.POST,
+    value = "citations",
+    produces = MediaType.APPLICATION_JSON_VALUE)
+  @ResponseBody
+  @Override
+  List<DatasetCitation> listCitations(@RequestBody List<UUID> datasetKeys);
 }

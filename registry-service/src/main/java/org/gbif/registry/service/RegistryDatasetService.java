@@ -15,6 +15,7 @@ package org.gbif.registry.service;
 
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.Dataset;
+import org.gbif.api.model.registry.DatasetCitation;
 import org.gbif.api.model.registry.Metadata;
 import org.gbif.api.vocabulary.MetadataType;
 import org.gbif.registry.domain.ws.DerivedDatasetUsage;
@@ -39,4 +40,8 @@ public interface RegistryDatasetService {
   byte[] getMetadataDocument(int metadataKey);
 
   List<DerivedDatasetUsage> ensureDerivedDatasetDatasetUsagesValid(Map<String, Long> data);
+
+  List<DatasetCitation> listDatasetCitations(List<UUID> datasetKeys);
+
+  DatasetCitation getDatasetCitation(UUID datasetKey);
 }
