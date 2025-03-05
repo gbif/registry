@@ -4,7 +4,7 @@ db:
   user: registry
   password: blablabla
 directory:
-  wsUrl: http://api.gbif-dev2.org/v1/directory/
+  wsUrl: http://api.gbif-dev.org/v1/directory/
   appKey: my-appkey
   appSecret: my-secret
 frequencyInHour: 24
