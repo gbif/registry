@@ -420,10 +420,10 @@ public class RegistryDatasetServiceImpl implements RegistryDatasetService {
 
   private DatasetCitation toDatasetCitation(Dataset dataset) {
     DatasetCitation datasetCitation = new DatasetCitation();
-    datasetCitation.setDatasetKey(dataset.getKey());
-    datasetCitation.setDatasetTitle(dataset.getTitle());
+    datasetCitation.setKey(dataset.getKey());
+    datasetCitation.setTitle(dataset.getTitle());
     if (dataset.getCitation() != null) {
-      datasetCitation.setCitableText(dataset.getCitation().getText());
+      datasetCitation.setCitation(dataset.getCitation().getText());
     }
     datasetCitation.setLicense(dataset.getLicense());
     return datasetCitation;
