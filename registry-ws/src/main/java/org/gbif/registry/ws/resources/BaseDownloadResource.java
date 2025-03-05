@@ -503,7 +503,7 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
   @Validated({PostPersist.class, Default.class})
   @Transactional
   @Override
-  public void update(@RequestBody Download download) {
+  public Download update(@RequestBody Download download) {
     // The current download is retrieved because its user could be modified during the update
     Download currentDownload = get(download.getKey());
     Preconditions.checkNotNull(currentDownload);
@@ -525,6 +525,7 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
     }
 
     occurrenceDownloadMapper.update(download);
+    return occurrenceDownloadMapper.get(download.getKey());
   }
 
   @Override
