@@ -195,8 +195,18 @@ public interface DatasetClient extends NetworkEntityClient<Dataset>, DatasetServ
   @RequestMapping(
     method = RequestMethod.POST,
     value = "citations",
+    consumes = MediaType.APPLICATION_JSON_VALUE,
     produces = MediaType.APPLICATION_JSON_VALUE)
   @ResponseBody
   @Override
   List<DatasetCitation> listCitations(@RequestBody List<UUID> datasetKeys);
+
+  @RequestMapping(
+    method = RequestMethod.GET,
+    value = "citation/{key}",
+    produces = MediaType.APPLICATION_JSON_VALUE
+  )
+  @ResponseBody
+  @Override
+  DatasetCitation getCitation(@PathVariable("key") UUID key);
 }

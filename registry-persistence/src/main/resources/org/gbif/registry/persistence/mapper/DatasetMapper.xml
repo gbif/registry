@@ -22,8 +22,9 @@
 
   <resultMap id="DATASET_MAP_CITATIONS" type="org.gbif.api.model.registry.Dataset" autoMapping="true">
     <id property="key" column="key"/>
+    <result property="title" column="title"/>
+    <result property="license" column="license"/>
     <association property="citation" resultMap="CITATION_MAP"/>
-    <collection property="contacts" column="key" select="listContacts"/>
   </resultMap>
 
   <!-- maps a citation object  -->
@@ -46,6 +47,10 @@
     COALESCE(d.citation, o.title || ': ' || d.title) as citation,
     d.citation_identifier,d.rights,d.locked_for_auto_update,d.created,d.created_by,
     d.modified,d.modified_by,d.deleted,d.doi,d.license,d.maintenance_update_frequency,d.version
+  </sql>
+
+  <sql id="DATASET_CITATION_FIELDS">
+    d.key,d.title,d.license, COALESCE(d.citation, o.title || ': ' || d.title) as citation, d.citation_identifier
   </sql>
 
   <!--
@@ -141,13 +146,13 @@
   </select>
 
   <select id="getCitation" resultMap="DATASET_MAP_CITATIONS">
-    SELECT <include refid="DATASET_FIELDS"/>
+    SELECT <include refid="DATASET_CITATION_FIELDS"/>
     FROM dataset d INNER JOIN organization o ON o.key = d.publishing_organization_key
     WHERE d.key = #{key,jdbcType=OTHER}
   </select>
 
   <select id="getCitations" resultMap="DATASET_MAP_CITATIONS">
-    SELECT <include refid="DATASET_FIELDS"/>
+    SELECT <include refid="DATASET_CITATION_FIELDS"/>
     FROM dataset d INNER JOIN organization o ON o.key = d.publishing_organization_key
     WHERE d.key IN
     <foreach item="key" collection="keys" open="(" separator="," close=")">

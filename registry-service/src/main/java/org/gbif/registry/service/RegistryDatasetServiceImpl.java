@@ -419,50 +419,13 @@ public class RegistryDatasetServiceImpl implements RegistryDatasetService {
   }
 
   private DatasetCitation toDatasetCitation(Dataset dataset) {
-    DatasetCitation citation = new DatasetCitation();
-    citation.setDatasetKey(dataset.getKey());
-    citation.setDatasetTitle(dataset.getTitle());
+    DatasetCitation datasetCitation = new DatasetCitation();
+    datasetCitation.setDatasetKey(dataset.getKey());
+    datasetCitation.setDatasetTitle(dataset.getTitle());
     if (dataset.getCitation() != null) {
-      citation.setCitableText(dataset.getCitation().getText());
+      datasetCitation.setCitableText(dataset.getCitation().getText());
     }
-    citation.setLicense(dataset.getLicense());
-    return citation;
+    datasetCitation.setLicense(dataset.getLicense());
+    return datasetCitation;
   }
-
-//
-//  /**
-//   * Checks the contacts of a dataset and finds the preferred contact that should be used as the main author
-//   * of a dataset.
-//   *
-//   * @return preferred author contact or null
-//   */
-//  private static Optional<Contact> getContentProviderContact(Dataset dataset) {
-//    return findFirstAuthor(dataset).map(author-> {
-//        Contact provider = null;
-//        try {
-//          provider = new Contact();
-//          PropertyUtils.copyProperties(provider, author);
-//          provider.setKey(null);
-//          provider.setType(ContactType.CONTENT_PROVIDER);
-//          provider.setPrimary(false);
-//        } catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
-//          LOG.error("Error setting provider contact", e);
-//        }
-//        return provider;
-//      }
-//    );
-//  }
-//
-//  /**
-//   * Iterates over the dataset contacts to find the first contact of author type.
-//   */
-//  private static Optional<Contact> findFirstAuthor(Dataset dataset) {
-//    return dataset.getContacts().stream().filter(IS_AUTHOR_PREDICATE).findFirst();
-//  }
-//
-//  private static final List<ContactType> AUTHOR_TYPES =
-//    ImmutableList.of(ContactType.ORIGINATOR, ContactType.AUTHOR, ContactType.POINT_OF_CONTACT);
-//
-//  private static final Predicate<Contact> IS_AUTHOR_PREDICATE = contact -> AUTHOR_TYPES.contains(contact.getType()) || contact.isPrimary();
-
 }
