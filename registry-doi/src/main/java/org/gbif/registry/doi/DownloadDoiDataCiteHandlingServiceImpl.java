@@ -13,18 +13,15 @@
  */
 package org.gbif.registry.doi;
 
+import com.google.common.base.Preconditions;
+import java.util.EnumSet;
 import org.gbif.api.model.common.GbifUser;
 import org.gbif.api.model.occurrence.Download;
-
-import java.util.EnumSet;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
 import org.springframework.stereotype.Service;
-
-import com.google.common.base.Preconditions;
 
 @Service
 public class DownloadDoiDataCiteHandlingServiceImpl implements DownloadDoiDataCiteHandlingService {
@@ -73,12 +70,6 @@ public class DownloadDoiDataCiteHandlingServiceImpl implements DownloadDoiDataCi
             download.getKey(),
             download.getDoi(),
             error);
-      }
-    } else if (FAILED_STATES.contains(download.getStatus())) {
-      if (download.getDoi() == null) {
-        LOG.error(DOI_SMTP, "Failed to delete the DOI for download {}: no DOI.", download.getKey());
-      } else {
-        doiMessageManagingService.delete(download.getDoi());
       }
     }
   }
