@@ -71,7 +71,6 @@ pipeline {
                 configFile(fileId: 'org.jenkinsci.plugins.configfiles.maven.GlobalMavenSettingsConfig1387378707709',variable: 'MAVEN_SETTINGS_XML'),
                 configFile(fileId: 'org.jenkinsci.plugins.configfiles.maven.MavenSettingsConfig1396361652540', variable: 'SECRETS')]) {
               git 'https://github.com/gbif/registry.git'
-              sh 'mvn -s $MAVEN_SETTINGS_XML -B -Denforcer.skip=true release:prepare release:perform $RELEASE_ARGS'
               sh '''
                 mvn --settings ${SECRETS} --global-settings ${MAVEN_SETTINGS} -B \
                     release:prepare release:perform -Darguments="-Dparallel=classes -DuseUnlimitedThreads=true \
