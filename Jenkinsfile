@@ -67,13 +67,14 @@ pipeline {
           RELEASE_ARGS = utils.createReleaseArgs(params.RELEASE_VERSION, params.DEVELOPMENT_VERSION, params.DRY_RUN_RELEASE)
       }
       steps {
-          configFileProvider(
-                  [configFile(fileId: 'org.jenkinsci.plugins.configfiles.maven.GlobalMavenSettingsConfig1387378707709',
-                          variable: 'MAVEN_SETTINGS_XML')]) {
+          configFileProvider([
+                configFile(fileId: 'org.jenkinsci.plugins.configfiles.maven.GlobalMavenSettingsConfig1387378707709',variable: 'MAVEN_SETTINGS_XML'),
+                configFile(fileId: 'org.jenkinsci.plugins.configfiles.maven.MavenSettingsConfig1396361652540', variable: 'SECRETS')]) {
               git 'https://github.com/gbif/registry.git'
               sh 'mvn -s $MAVEN_SETTINGS_XML -B -Denforcer.skip=true release:prepare release:perform $RELEASE_ARGS'
               sh '''
-                mvn -s $MAVEN_SETTINGS_XML -B release:prepare release:perform -Darguments="-Dparallel=classes -DuseUnlimitedThreads=true \
+                mvn --settings ${SECRETS} --global-settings ${MAVEN_SETTINGS} -B \
+                    release:prepare release:perform -Darguments="-Dparallel=classes -DuseUnlimitedThreads=true \
                     -Djetty.port=$HTTP_PORT -Dappkeys.testfile=$APPKEYS_TESTFILE" -Pgbif-dev,secrets-dev,registry-cli-it $RELEASE_ARGS
                 '''
           }
