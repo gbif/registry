@@ -811,6 +811,17 @@
         <version>${maven-surefire-plugin.version}</version>
         <configuration>
           <argLine>--add-opens=java.base/java.lang.invoke=ALL-UNNAMED</argLine>
+          <argLine>--add-opens=java.base/java.util=ALL-UNNAMED</argLine>
+        </configuration>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-failsafe-plugin</artifactId>
+        <version>${maven-failsafe-plugin.version}</version>
+        <configuration>
+          <argLine>--add-opens=java.base/java.lang.invoke=ALL-UNNAMED</argLine>
+          <argLine>--add-opens=java.base/java.util=ALL-UNNAMED</argLine>
         </configuration>
       </plugin>
     </plugins>
