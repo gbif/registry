@@ -35,7 +35,7 @@ pipeline {
             configFile(fileId: 'org.jenkinsci.plugins.configfiles.custom.CustomConfig1389220396351', variable: 'APPKEYS_TESTFILE')
           ]) {
           sh '''
-            mvn -s ${MAVEN_SETTINGS} -B -Denforcer.skip=true -Dappkeys.testfile=$APPKEYS_TESTFILE clean package install verify -T 1C
+            mvn -s ${MAVEN_SETTINGS} -B -Denforcer.skip=true -Dappkeys.testfile=$APPKEYS_TESTFILE clean package install verify -T 1C \
                 -Dparallel=classes -DuseUnlimitedThreads=true -Pgbif-dev,registry-cli-it,secrets-dev -U
             '''
         }
@@ -71,7 +71,7 @@ pipeline {
               git 'https://github.com/gbif/registry.git'
               sh 'mvn -s $MAVEN_SETTINGS_XML -B -Denforcer.skip=true release:prepare release:perform $RELEASE_ARGS'
               sh '''
-                mvn -s $MAVEN_SETTINGS_XML -B release:prepare release:perform -Darguments="-Dparallel=classes -DuseUnlimitedThreads=true
+                mvn -s $MAVEN_SETTINGS_XML -B release:prepare release:perform -Darguments="-Dparallel=classes -DuseUnlimitedThreads=true \
                     -Djetty.port=$HTTP_PORT -Dappkeys.testfile=$APPKEYS_TESTFILE" -Pgbif-dev,secrets-dev,registry-cli-it $RELEASE_ARGS
                 '''
           }
