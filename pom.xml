@@ -810,8 +810,7 @@
         <artifactId>maven-surefire-plugin</artifactId>
         <version>${maven-surefire-plugin.version}</version>
         <configuration>
-          <argLine>--add-opens=java.base/java.lang.invoke=ALL-UNNAMED</argLine>
-          <argLine>--add-opens=java.base/java.util=ALL-UNNAMED</argLine>
+          <argLine>--add-opens=java.base/java.lang.invoke=ALL-UNNAMED --add-opens=java.base/java.lang=ALL-UNNAMED --add-opens=java.base/java.util=ALL-UNNAMED --add-opens=java.base/java.lang.reflect=ALL-UNNAMED</argLine>
         </configuration>
       </plugin>
 
@@ -820,8 +819,7 @@
         <artifactId>maven-failsafe-plugin</artifactId>
         <version>${maven-failsafe-plugin.version}</version>
         <configuration>
-          <argLine>--add-opens=java.base/java.lang.invoke=ALL-UNNAMED</argLine>
-          <argLine>--add-opens=java.base/java.util=ALL-UNNAMED</argLine>
+          <argLine>--add-opens=java.base/java.lang.invoke=ALL-UNNAMED --add-opens=java.base/java.lang=ALL-UNNAMED --add-opens=java.base/java.util=ALL-UNNAMED --add-opens=java.base/java.lang.reflect=ALL-UNNAMED</argLine>
         </configuration>
       </plugin>
 
@@ -830,7 +828,7 @@
         <artifactId>maven-release-plugin</artifactId>
         <version>${maven-release-plugin.version}</version>
         <configuration>
-          <arguments>--add-opens=java.base/java.lang.invoke=ALL-UNNAMED</arguments>
+          <arguments>--add-opens=java.base/java.lang.invoke=ALL-UNNAMED --add-opens=java.base/java.lang=ALL-UNNAMED --add-opens=java.base/java.util=ALL-UNNAMED --add-opens=java.base/java.lang.reflect=ALL-UNNAMED</arguments>
         </configuration>
       </plugin>
     </plugins>
@@ -842,7 +840,7 @@
           <artifactId>spring-boot-maven-plugin</artifactId>
           <version>${spring-boot-maven-plugin.version}</version>
           <configuration>
-            <jvmArguments>--add-opens java.base/java.lang.invoke=ALL-UNNAMED</jvmArguments>
+            <jvmArguments>--add-opens=java.base/java.lang.invoke=ALL-UNNAMED --add-opens=java.base/java.lang=ALL-UNNAMED --add-opens=java.base/java.util=ALL-UNNAMED --add-opens=java.base/java.lang.reflect=ALL-UNNAMED</jvmArguments>
           </configuration>
         </plugin>
         <plugin>
