@@ -33,6 +33,7 @@ pipeline {
         configFileProvider([
             configFile(fileId: 'org.jenkinsci.plugins.configfiles.maven.GlobalMavenSettingsConfig1387378707709', variable: 'MAVEN_SETTINGS'),
             configFile(fileId: 'org.jenkinsci.plugins.configfiles.custom.CustomConfig1389220396351', variable: 'APPKEYS_TESTFILE')
+            configFile(fileId: 'org.jenkinsci.plugins.configfiles.maven.MavenSettingsConfig1396361652540', variable: 'SECRETS')
           ]) {
           sh '''
             mvn -s ${MAVEN_SETTINGS} -B -Denforcer.skip=true -Dappkeys.testfile=$APPKEYS_TESTFILE clean package install verify -T 1C \
