@@ -4,7 +4,7 @@
   <parent>
     <groupId>org.gbif.registry</groupId>
     <artifactId>registry-parent</artifactId>
-    <version>4.0.10</version>
+    <version>4.0.11-SNAPSHOT</version>
   </parent>
   <artifactId>registry-ws</artifactId>
   <name>GBIF Registry Webservices</name>
