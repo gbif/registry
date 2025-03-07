@@ -3,7 +3,7 @@
 pipeline {
   agent any
   tools {
-    maven 'Maven 3.8.5'
+    maven 'Maven 3.9.9'
     jdk 'OpenJDK11'
   }
   options {
@@ -30,16 +30,17 @@ pipeline {
         }
       }
       steps {
-        configFileProvider([
-            configFile(fileId: 'org.jenkinsci.plugins.configfiles.maven.GlobalMavenSettingsConfig1387378707709', variable: 'MAVEN_SETTINGS'),
-            configFile(fileId: 'org.jenkinsci.plugins.configfiles.custom.CustomConfig1389220396351', variable: 'APPKEYS_TESTFILE'),
-            configFile(fileId: 'org.jenkinsci.plugins.configfiles.maven.MavenSettingsConfig1396361652540', variable: 'SECRETS')
-          ]) {
-          sh '''
-            mvn --settings ${SECRETS} --global-settings ${MAVEN_SETTINGS} -B \
-                -Denforcer.skip=true -Dappkeys.testfile=$APPKEYS_TESTFILE clean package install verify -T 1C \
-                -Dparallel=classes -DuseUnlimitedThreads=true -Pgbif-dev,registry-cli-it,secrets-dev -U
-            '''
+        withMaven(globalMavenSettingsConfig: 'org.jenkinsci.plugins.configfiles.maven.GlobalMavenSettingsConfig1387378707709',
+          mavenOpts: '-Xms4096m -Xmx8096m', mavenSettingsConfig: 'org.jenkinsci.plugins.configfiles.maven.MavenSettingsConfig1396361652540',
+          traceability: true) {
+           configFileProvider([
+              configFile(fileId: 'org.jenkinsci.plugins.configfiles.custom.CustomConfig1389220396351', variable: 'APPKEYS_TESTFILE')
+              ]) {
+                sh '''
+                   mvn -B -Denforcer.skip=true -Dappkeys.testfile=$APPKEYS_TESTFILE clean package install verify -T 1C \
+                       -Dparallel=classes -DuseUnlimitedThreads=true -Pgbif-dev,registry-cli-it,secrets-dev -U
+                  '''
+              }
         }
       }
     }
@@ -67,15 +68,19 @@ pipeline {
           RELEASE_ARGS = utils.createReleaseArgs(params.RELEASE_VERSION, params.DEVELOPMENT_VERSION, params.DRY_RUN_RELEASE)
       }
       steps {
-          configFileProvider([
-                configFile(fileId: 'org.jenkinsci.plugins.configfiles.maven.GlobalMavenSettingsConfig1387378707709',variable: 'MAVEN_SETTINGS'),
-                configFile(fileId: 'org.jenkinsci.plugins.configfiles.maven.MavenSettingsConfig1396361652540', variable: 'SECRETS')]) {
-              git 'https://github.com/gbif/registry.git'
-              sh '''
-                mvn --settings ${SECRETS} --global-settings ${MAVEN_SETTINGS} -B \
-                    release:prepare release:perform -Darguments="-Dparallel=classes -DuseUnlimitedThreads=true \
-                    -Djetty.port=$HTTP_PORT -Dappkeys.testfile=$APPKEYS_TESTFILE" -Pgbif-dev,secrets-dev,registry-cli-it $RELEASE_ARGS
-                '''
+          withMaven(globalMavenSettingsConfig: 'org.jenkinsci.plugins.configfiles.maven.GlobalMavenSettingsConfig1387378707709',
+            mavenOpts: '-Xms4096m -Xmx8096m', mavenSettingsConfig: 'org.jenkinsci.plugins.configfiles.maven.MavenSettingsConfig1396361652540',
+            traceability: true) {
+             configFileProvider([
+                configFile(fileId: 'org.jenkinsci.plugins.configfiles.custom.CustomConfig1389220396351', variable: 'APPKEYS_TESTFILE')
+                ]) {
+                  git 'https://github.com/gbif/registry.git'
+                  sh '''
+                    mvn -B \
+                        release:prepare release:perform -Darguments="-Djetty.port=$HTTP_PORT -Dappkeys.testfile=$APPKEYS_TESTFILE" \
+                         -T 1C -Dparallel=classes -DuseUnlimitedThreads=true -Pgbif-dev,secrets-dev,registry-cli-it $RELEASE_ARGS
+                    '''
+                }
           }
       }
     }
