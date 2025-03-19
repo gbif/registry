@@ -193,7 +193,7 @@ public abstract class BaseNetworkEntityResource<T extends NetworkEntity, P exten
         @Parameter(
             name = "modified",
             description =
-                "The modified date of the dataset. Accepts ranges and a '*' can be used as a wildcard, e.g.:modified=2023-04-01,*",
+                "The modified date of the dataset. Accepts ranges and a `*` can be used as a wildcard, e.g. `modified=2023-04-01,*`",
             schema = @Schema(implementation = Range.class),
             in = ParameterIn.QUERY,
             explode = Explode.TRUE),
@@ -973,7 +973,16 @@ public abstract class BaseNetworkEntityResource<T extends NetworkEntity, P exten
   }
 
   protected String parseQuery(String q) {
-    return q != null ? Strings.emptyToNull(CharMatcher.whitespace().trimFrom(q)) : q;
+    if (q == null || q.trim().isEmpty()) {
+      return null;
+    }
+
+    // Remove parentheses and single quotes; remove colons and backslashes
+    String sanitizedQuery = q
+        .replaceAll("[()']", "")
+        .replaceAll("[:\\\\]", "");
+
+    return Strings.emptyToNull(CharMatcher.whitespace().trimFrom(sanitizedQuery));
   }
 
   protected Date parseFrom(Range<LocalDate> range) {

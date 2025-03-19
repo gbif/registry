@@ -156,6 +156,10 @@
   <include file="liquibase/148-primary-identifier-grscicoll.xml" />
   <include file="liquibase/149-taxon-fields-collection-descriptors.xml" />
   <include file="liquibase/150-similar-name-list-function.xml" />
+  <include file="liquibase/151-indexes-collections-contacts.xml" />
   <include file="liquibase/151-usage-key-string.xml" />
+  <include file="liquibase/152-function-search-paths.xml" />
   <include file="liquibase/152-taxon-keys-string.xml" />
+  <include file="liquibase/153-institution-suggest-fts.xml" />
+  <include file="liquibase/154-new-download-fields.xml" />
 </databaseChangeLog>

@@ -4,7 +4,7 @@
   <parent>
     <groupId>org.gbif.registry</groupId>
     <artifactId>registry-parent</artifactId>
-    <version>3.97.0-multitaxonomy-SNAPSHOT</version>
+    <version>4.0.5-multitaxonomy-SNAPSHOT</version>
   </parent>
 
   <artifactId>registry-cli</artifactId>
@@ -25,7 +25,7 @@
     <main.basedir>${project.parent.basedir}</main.basedir>
     <jcommander.version>1.48</jcommander.version>
     <yammer.version>2.2.0</yammer.version>
-    <gbif-cli.version>1.2-SNAPSHOT</gbif-cli.version>
+    <gbif-cli.version>2.0.0</gbif-cli.version>
     <metainf-services.version>1.11</metainf-services.version>
     <jersey.version>1.19.3</jersey.version>
     <javax.mail.version>1.4.7</javax.mail.version>
@@ -55,6 +55,7 @@
       .../registry-spring-boot/registry-spring-boot-cli/target/classes/META-INF/services/org.gbif.cli.Command -->
       <plugin>
         <artifactId>maven-compiler-plugin</artifactId>
+        <version>${maven-compiler-plugin.version}</version>
         <configuration combine.self="override">
           <source>${maven.compiler.source}</source>
           <target>${maven.compiler.target}</target>
@@ -66,6 +67,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-shade-plugin</artifactId>
+        <version>${maven-shade-plugin.version}</version>
         <configuration>
           <createDependencyReducedPom>true</createDependencyReducedPom>
           <filters>

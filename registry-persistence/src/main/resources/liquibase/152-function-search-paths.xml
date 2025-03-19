@@ -1,0 +1,17 @@
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+  <changeSet id="152" author="mblissett" runInTransaction="false" ignore="true">
+    <sql splitStatements="false" stripComments="false">
+      <![CDATA[
+        ALTER FUNCTION assert_is_http SET search_path = public;
+        ALTER FUNCTION assert_min_length SET search_path = public;
+        ALTER FUNCTION get_user_ids_values SET search_path = public;
+        ALTER FUNCTION similar_name SET search_path = public;
+        ALTER FUNCTION similar_name_score SET search_path = public;
+      ]]>
+    </sql>
+  </changeSet>
+</databaseChangeLog>

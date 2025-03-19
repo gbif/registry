@@ -693,6 +693,15 @@ public class CollectionsSearchIT extends BaseServiceIT {
                 .build());
     assertEquals(2, searchResponse.getFacets().size());
     assertTrue(searchResponse.getFacets().stream().allMatch(f -> f.getCounts().size() == 1));
+
+    searchResponse =
+        searchService.searchCollections(
+            CollectionDescriptorsSearchRequest.builder()
+                .country(Collections.singletonList(Country.SPAIN))
+                .facets(Set.of(CollectionFacetParameter.COUNTRY))
+                .build());
+    assertEquals(1, searchResponse.getFacets().size());
+    assertTrue(searchResponse.getFacets().stream().allMatch(f -> f.getCounts().size() == 1));
   }
 
   @Test

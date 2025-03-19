@@ -3,12 +3,11 @@
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
 
-  <changeSet id="139" author="mblissett">
+  <changeSet id="153" author="auzun" runInTransaction="false">
     <sql splitStatements="false" stripComments="false">
       <![CDATA[
-          DROP INDEX dataset_occurrence_download_created_idx;
-          CREATE INDEX dataset_occurrence_download_created_idx ON dataset_occurrence_download (dataset_key, right(download_key, 15) DESC, left(download_key, 7) DESC);
-       ]]>
+        CREATE INDEX idx_institution_fulltext_search ON institution USING gin (to_tsvector('english', code || ' ' || name));
+      ]]>
     </sql>
   </changeSet>
 </databaseChangeLog>

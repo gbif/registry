@@ -287,4 +287,8 @@ public abstract class BaseGrSciCollSearchRequestHandlerMethodArgumentResolver
             Collectors.toMap(
                 e -> e.getKey().toLowerCase(), Map.Entry::getValue, ArrayUtils::addAll));
   }
+
+  protected String normalizeFacet(String facet) {
+    return facet.toLowerCase().replace("_", "");
+  }
 }

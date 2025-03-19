@@ -459,7 +459,6 @@ public class DefaultRegistryPipelinesHistoryTrackingService
     switch (stepName) {
       case INTERPRETED_TO_INDEX:
       case HDFS_VIEW:
-      case DATA_WAREHOUSE:
       case FRAGMENTER:
         return createInterpretedMessage(prefix, jsonMessage, stepName);
       case VERBATIM_TO_INTERPRETED:
@@ -524,14 +523,12 @@ public class DefaultRegistryPipelinesHistoryTrackingService
       steps.add(StepType.VERBATIM_TO_INTERPRETED.name());
       steps.add(StepType.INTERPRETED_TO_INDEX.name());
       steps.add(StepType.HDFS_VIEW.name());
-      steps.add(StepType.DATA_WAREHOUSE.name());
     }
 
     if (message.getPipelineSteps().contains(StepType.EVENTS_VERBATIM_TO_INTERPRETED.name())) {
       steps.add(StepType.EVENTS_VERBATIM_TO_INTERPRETED.name());
       steps.add(StepType.EVENTS_INTERPRETED_TO_INDEX.name());
       steps.add(StepType.EVENTS_HDFS_VIEW.name());
-      steps.add(StepType.DATA_WAREHOUSE.name());
     }
 
     message.setPipelineSteps(steps);
@@ -543,7 +540,6 @@ public class DefaultRegistryPipelinesHistoryTrackingService
       message.getInterpretTypes().add(RecordType.BASIC.name());
       message.getInterpretTypes().add(RecordType.TEMPORAL.name());
       message.getInterpretTypes().add(RecordType.TAXONOMY.name());
-      message.getInterpretTypes().add(RecordType.MULTI_TAXONOMY.name());
       message.getInterpretTypes().add(RecordType.LOCATION.name());
       message.getInterpretTypes().add(RecordType.GRSCICOLL.name());
       message.getInterpretTypes().add(RecordType.CLUSTERING.name());

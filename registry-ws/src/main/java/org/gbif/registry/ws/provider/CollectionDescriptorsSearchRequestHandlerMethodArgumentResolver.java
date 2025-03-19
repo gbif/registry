@@ -85,6 +85,13 @@ public class CollectionDescriptorsSearchRequestHandlerMethodArgumentResolver
   }
 
   private Function<String, CollectionFacetParameter> facetParamParser() {
-    return s -> CollectionFacetParameter.valueOf(s.toUpperCase());
+    return s -> {
+      for (CollectionFacetParameter value : CollectionFacetParameter.values()) {
+        if (normalizeFacet(value.name()).equals(normalizeFacet(s))) {
+          return value;
+        }
+      }
+      return null;
+    };
   }
 }

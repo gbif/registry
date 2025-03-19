@@ -265,12 +265,12 @@
           parameterType="Pageable">
     SELECT c.*
     <if test="params.descriptorSearch">
-      ,d.key AS descriptorKey, d.collection_descriptor_group_key AS descriptorGroupKey, d.usage_key AS descriptorUsageKey,
-      d.usage_name AS descriptorUsageName, d.usage_rank AS descriptorUsageRank, d.country AS descriptorCountry,
-      d.individual_count AS descriptorIndividualCount, d.identified_by AS descriptorIdentifiedBy,
-      d.date_identified as descriptorDateIdentified, d.type_status AS descriptorTypeStatus,
-      d.recorded_by AS descriptorRecordedBy, d.discipline AS descriptorDiscipline,
-      d.object_classification_name AS descriptorObjectClassification, d.issues AS descriptorIssues
+      ,cd.key AS descriptorKey, cd.collection_descriptor_group_key AS descriptorGroupKey, cd.usage_key AS descriptorUsageKey,
+      cd.usage_name AS descriptorUsageName, cd.usage_rank AS descriptorUsageRank, cd.country AS descriptorCountry,
+      cd.individual_count AS descriptorIndividualCount, cd.identified_by AS descriptorIdentifiedBy,
+      cd.date_identified as descriptorDateIdentified, cd.type_status AS descriptorTypeStatus,
+      cd.recorded_by AS descriptorRecordedBy, cd.discipline AS descriptorDiscipline,
+      cd.object_classification_name AS descriptorObjectClassification, cd.issues AS descriptorIssues
     </if>
     <if test="params.query != null &amp;&amp; params.highlight">
       ,ts_headline(c.code, c.query) code_highlight, ts_headline(c.name, c.query) name_highlight
@@ -282,20 +282,20 @@
       ,ts_headline(mail_province, c.query) mail_province_highlight, ts_headline(mailingCountry, c.query)
       mail_country_highlight,
       <if test="params.descriptorSearch">
-        ts_headline(d.usage_name, c.query) descriptor_usage_name_highlight,
-        ts_headline(d.country, c.query) descriptor_country_highlight,
-        ts_headline(array_to_string(d.identified_by, ' '), c.query) descriptor_identified_by_highlight,
-        ts_headline(array_to_string(d.type_status, ' '), c.query) descriptor_type_status_highlight,
-        ts_headline(array_to_string(d.recorded_by, ' '), c.query) descriptor_recorded_by_highlight,
-        ts_headline(d.discipline, c.query) descriptor_discipline_highlight,
-        ts_headline(d.object_classification_name, c.query) descriptor_object_classification_highlight,
-        ts_headline(array_to_string(d.issues, ' '), c.query) descriptor_issues_highlight,
-        ts_headline(ds.title, c.query) descriptor_group_title_highlight,
-        ts_headline(ds.description, c.query) descriptor_group_description_highlight
+        ts_headline(cd.usage_name, c.query) descriptor_usage_name_highlight,
+        ts_headline(cd.country, c.query) descriptor_country_highlight,
+        ts_headline(array_to_string(cd.identified_by, ' '), c.query) descriptor_identified_by_highlight,
+        ts_headline(array_to_string(cd.type_status, ' '), c.query) descriptor_type_status_highlight,
+        ts_headline(array_to_string(cd.recorded_by, ' '), c.query) descriptor_recorded_by_highlight,
+        ts_headline(cd.discipline, c.query) descriptor_discipline_highlight,
+        ts_headline(cd.object_classification_name, c.query) descriptor_object_classification_highlight,
+        ts_headline(array_to_string(cd.issues, ' '), c.query) descriptor_issues_highlight,
+        ts_headline(cdg.title, c.query) descriptor_group_title_highlight,
+        ts_headline(cdg.description, c.query) descriptor_group_description_highlight
       </if>
     </if>
     <if test="params.query != null">
-      ,ts_rank_cd(c.fulltext_search, c.query) AS query_rank, ts_rank_cd(d.fulltext_search, c.query) query_descriptor_rank
+      ,ts_rank_cd(c.fulltext_search, c.query) AS query_rank, ts_rank_cd(cd.fulltext_search, c.query) query_descriptor_rank
     </if>
     <if test="params.query != null">,c.query</if>
     <if test="params.fuzzyName != null">,similar_name_score(c.name, #{params.fuzzyName,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler}::text[]) AS similarity_score
@@ -319,8 +319,8 @@
     <if test="params.query != null">, query</if>
     FROM collection c
     <if test="params.descriptorSearch">
-      LEFT JOIN collection_descriptor_group ds ON ds.collection_key = c.key AND ds.deleted IS NULL
-      LEFT JOIN collection_descriptor d ON d.collection_descriptor_group_key = ds.key
+      LEFT JOIN collection_descriptor_group cdg ON cdg.collection_key = c.key AND cdg.deleted IS NULL
+      LEFT JOIN collection_descriptor cd ON cd.collection_descriptor_group_key = cdg.key
     </if>
     <if test="params.query != null" >
       <include refid="COLLECTIONS_FULLTEXT_SEARCH"/>
@@ -339,8 +339,8 @@
     </if>
     ) AS c
     <if test="params.descriptorSearch">
-      LEFT JOIN collection_descriptor_group ds ON ds.collection_key = c.key AND ds.deleted IS NULL
-      LEFT JOIN collection_descriptor d ON d.collection_descriptor_group_key = ds.key
+      LEFT JOIN collection_descriptor_group cdg ON cdg.collection_key = c.key AND cdg.deleted IS NULL
+      LEFT JOIN collection_descriptor cd ON cd.collection_descriptor_group_key = cdg.key
     </if>
     <where>
       <include refid="DESCRIPTORS_FILTER"/>
@@ -351,8 +351,8 @@
     SELECT count(DISTINCT c.key)
     FROM collection c
     <if test="params.descriptorSearch">
-      LEFT JOIN collection_descriptor_group ds ON ds.collection_key = c.key AND ds.deleted IS NULL
-      LEFT JOIN collection_descriptor d ON d.collection_descriptor_group_key = ds.key
+      LEFT JOIN collection_descriptor_group cdg ON cdg.collection_key = c.key AND cdg.deleted IS NULL
+      LEFT JOIN collection_descriptor cd ON cd.collection_descriptor_group_key = cdg.key
     </if>
     <if test="params.query != null" >
       <include refid="COLLECTIONS_FULLTEXT_SEARCH"/>
@@ -363,75 +363,75 @@
 
   <sql id="DESCRIPTORS_FILTER">
     <if test="params.usageKey != null and params.usageKey.size > 0">
-      AND d.usage_key IN
+      AND cd.usage_key IN
       <foreach item="item" collection="params.usageKey" open="(" separator="," close=")">
-        #{item,jdbcType=VARCHAR}
+        #{item,jdbcType=INTEGER}
       </foreach>
     </if>
     <if test="params.usageName != null and params.usageName.size > 0">
-      AND d.usage_name IN
+      AND cd.usage_name IN
       <foreach item="item" collection="params.usageName" open="(" separator="," close=")">
         #{item,jdbcType=VARCHAR}
       </foreach>
     </if>
     <if test="params.usageRank != null and params.usageRank.size > 0">
-      AND d.usage_rank IN
+      AND cd.usage_rank IN
       <foreach item="item" collection="params.usageRank" open="(" separator="," close=")">
         #{item,jdbcType=VARCHAR}
       </foreach>
     </if>
     <if test="params.taxonKey != null  and params.taxonKey.size > 0">
-      AND d.taxon_keys &amp;&amp; ARRAY
+      AND cd.taxon_keys &amp;&amp; ARRAY
       <foreach item="item" collection="params.taxonKey" open="[" separator="," close="]">
-        #{item,jdbcType=VARCHAR}
+        #{item,jdbcType=INTEGER}
       </foreach>
     </if>
     <include refid="org.gbif.registry.persistence.mapper.collections.Common.MULTIVALUE_RANGE_FIELD_FILTER">
       <property name="values" value="params.individualCount"/>
-      <property name="field" value="d.individual_count"/>
+      <property name="field" value="cd.individual_count"/>
     </include>
     <if test="params.identifiedBy != null and params.identifiedBy.size > 0">
-      AND d.identified_by &amp;&amp; ARRAY
+      AND cd.identified_by &amp;&amp; ARRAY
       <foreach item="item" collection="params.identifiedBy" open="[" separator="," close="]">
         #{item,jdbcType=VARCHAR}::text
       </foreach>
     </if>
     <include refid="org.gbif.registry.persistence.mapper.collections.Common.MULTIVALUE_RANGE_FIELD_FILTER">
       <property name="values" value="params.dateIdentified"/>
-      <property name="field" value="d.date_identified"/>
+      <property name="field" value="cd.date_identified"/>
     </include>
     <if test="params.typeStatus != null and params.typeStatus.size > 0">
-      AND d.type_status &amp;&amp; ARRAY
+      AND cd.type_status &amp;&amp; ARRAY
       <foreach item="item" collection="params.typeStatus" open="[" separator="," close="]">
         #{item,jdbcType=VARCHAR}::text
       </foreach>
     </if>
     <if test="params.recordedBy != null and params.recordedBy.size > 0">
-      AND d.recorded_by &amp;&amp; ARRAY
+      AND cd.recorded_by &amp;&amp; ARRAY
       <foreach item="item" collection="params.recordedBy" open="[" separator="," close="]">
         #{item,jdbcType=VARCHAR}::text
       </foreach>
     </if>
     <if test="params.discipline != null  and params.discipline.size > 0">
-      AND d.discipline IN
+      AND cd.discipline IN
       <foreach item="item" collection="params.discipline" open="(" separator="," close=")">
         #{item,jdbcType=VARCHAR}
       </foreach>
     </if>
     <if test="params.objectClassification != null  and params.objectClassification.size > 0">
-      AND d.object_classification_name IN
+      AND cd.object_classification_name IN
       <foreach item="item" collection="params.objectClassification" open="(" separator="," close=")">
         #{item,jdbcType=VARCHAR}
       </foreach>
     </if>
     <if test="params.descriptorCountry != null  and params.descriptorCountry.size > 0">
-      AND d.country IN
+      AND cd.country IN
       <foreach item="item" collection="params.descriptorCountry" open="(" separator="," close=")">
         #{item,jdbcType=VARCHAR}
       </foreach>
     </if>
     <if test="params.issues != null and params.issues.size > 0">
-      AND d.issues &amp;&amp; ARRAY
+      AND cd.issues &amp;&amp; ARRAY
       <foreach item="item" collection="params.issues" open="[" separator="," close="]">
         #{item,jdbcType=VARCHAR}::text
       </foreach>
@@ -445,8 +445,8 @@
     FROM collection_collection_contact JOIN collection_contact cc ON cc.key = collection_contact_key
     WHERE collection_key = c.key AND query @@ cc.fulltext_search
     )
-    OR <include refid="TS_QUERY"/> @@ d.fulltext_search
-    OR <include refid="TS_QUERY"/> @@ ds.fulltext_search
+    OR <include refid="TS_QUERY"/> @@ cd.fulltext_search
+    OR <include refid="TS_QUERY"/> @@ cdg.fulltext_search
   </sql>
 
   <select id="institutionFacet" resultMap="FACET_DTO_MAP" resultType="FacetDto" parameterType="Pageable">
@@ -531,7 +531,7 @@
       LEFT JOIN address ma ON ma.key = c.mailing_address_key
     </if>
     <if test="params.descriptorFacet">
-      INNER JOIN collection_descriptor_group cdg ON cdg.collection_key = c.key
+      INNER JOIN collection_descriptor_group cdg ON cdg.collection_key = c.key AND cdg.deleted IS NULL
       INNER JOIN collection_descriptor cd ON cd.collection_descriptor_group_key = cdg.key
     </if>
     <include refid="org.gbif.registry.persistence.mapper.collections.CollectionMapper.LIST_FILTER"/>
@@ -621,7 +621,7 @@
         COUNT(DISTINCT CASE WHEN a.${params.facet.name} is not null THEN a.${params.facet.name} ELSE ma.${params.facet.name} END)
         FROM collection c
         <if test="params.descriptorFacet">
-          INNER JOIN collection_descriptor_group cdg ON cdg.collection_key = c.key
+          INNER JOIN collection_descriptor_group cdg ON cdg.collection_key = c.key AND cdg.deleted IS NULL
           INNER JOIN collection_descriptor cd ON cd.collection_descriptor_group_key = cdg.key
         </if>
       </when>
@@ -632,7 +632,7 @@
         COUNT(DISTINCT facet)
         FROM collection c
         <if test="params.descriptorFacet">
-          INNER JOIN collection_descriptor_group cdg ON cdg.collection_key = c.key
+          INNER JOIN collection_descriptor_group cdg ON cdg.collection_key = c.key AND cdg.deleted IS NULL
           INNER JOIN collection_descriptor cd ON cd.collection_descriptor_group_key = cdg.key
         </if>
         INNER JOIN unnest(
@@ -691,7 +691,7 @@
         </choose>
         ) FROM collection c
         <if test="params.descriptorFacet">
-          INNER JOIN collection_descriptor_group cdg ON cdg.collection_key = c.key
+          INNER JOIN collection_descriptor_group cdg ON cdg.collection_key = c.key AND cdg.deleted IS NULL
           INNER JOIN collection_descriptor cd ON cd.collection_descriptor_group_key = cdg.key
         </if>
       </otherwise>
