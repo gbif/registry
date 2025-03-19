@@ -37,7 +37,7 @@ pipeline {
           ]) {
           sh '''
             mvn --settings ${SECRETS} --global-settings ${MAVEN_SETTINGS} -B \
-                -Denforcer.skip=true -Dappkeys.testfile=$APPKEYS_TESTFILE clean package install verify -T 1C \
+                -Denforcer.skip=true -Dappkeys.testfile=$APPKEYS_TESTFILE clean deploy verify -T 1C \
                 -Dparallel=classes -DuseUnlimitedThreads=true -Pgbif-dev,registry-cli-it,secrets-dev -U
             '''
         }
