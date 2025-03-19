@@ -815,14 +815,24 @@ public class BaseCollectionEntityService<
           organizationMapper, masterSourceMetadata.getSourceId(), Organization.class);
     }
 
+    // check preconditions for CETAF
+    if (masterSourceMetadata.getSource() == Source.CETAF && !(entity instanceof Collection)) {
+        throw new IllegalArgumentException("CETAF sources can be set only to collections");
+    }
+
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     masterSourceMetadata.setCreatedBy(authentication.getName());
 
     masterSourceSyncMetadataMapper.create(masterSourceMetadata);
-    MasterSourceType masterSourceType =
-        masterSourceMetadata.getSource() == Source.IH_IRN
-            ? MasterSourceType.IH
-            : MasterSourceType.GBIF_REGISTRY;
+    MasterSourceType masterSourceType;
+
+    if (masterSourceMetadata.getSource() == Source.IH_IRN) {
+      masterSourceType = MasterSourceType.IH;
+    } else if (masterSourceMetadata.getSource() == Source.CETAF) {
+      masterSourceType = MasterSourceType.CETAF;
+    } else {
+      masterSourceType = MasterSourceType.GBIF_REGISTRY;
+    }
 
     baseMapper.addMasterSourceMetadata(
         targetEntityKey, masterSourceMetadata.getKey(), masterSourceType);

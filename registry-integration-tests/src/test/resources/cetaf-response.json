@@ -1,0 +1,108 @@
+{
+  "pager": {
+    "page": 1,
+    "page_size": 1,
+    "size": 1
+  },
+  "data": [
+    {
+      "uuid": "11111111-2222-3333-4444-555555555555",
+      "uuid_institution_normalized": "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
+      "uuid_collection_normalized": "ffffffff-gggg-hhhh-iiii-jjjjjjjjjjjj",
+      "current": true,
+      "version": 1,
+      "identifier": "TEST-INST COLLECTION",
+      "local_identifier": "COLLECTION",
+      "data": {
+        "type": "main_collection",
+        "data_list": [
+          {
+            "data": {
+              "main_metadata": {
+                "contact": {
+                  "curator": {
+                    "mail": "test.curator@example.com",
+                    "orcid": "0000-0000-0000-0000"
+                  }
+                },
+                "description": {
+                  "abstract": "This is a test collection description for testing purposes. Contains various specimens and samples."
+                },
+                "geographic_coverage": {}
+              },
+              "collection_data": {
+                "storage": {
+                  "Dried not assembled": {
+                    "object_quantity": {
+                      "detail": {
+                        "SOILS": 1000,
+                        "PETROLOGY": 2000,
+                        "SEDIMENTS": 3000,
+                        "WATER-ICE": 0,
+                        "GEOLOGY-OTHER": 0,
+                        "MIXED-GEOLOGY": 0,
+                        "LIQUID-OR-GASEOUS": 0,
+                        "MINERALS-AND-GEMS": 4000
+                      }
+                    }
+                  }
+                },
+                "geospatial_coverage": {
+                  "country_list": {
+                    "Europe": {
+                      "TEST - Test Country": {
+                        "petrology": "Yes",
+                        "sediments": "Yes",
+                        "minerals_and_gems": "Yes"
+                      }
+                    }
+                  },
+                  "geographic_areas": {
+                    "TERRESTRIAL ZONES": {
+                      "Europe": {
+                        "object_quantity": {
+                          "SUM": 10000,
+                          "DETAIL": {
+                            "PETROLOGY": 2000,
+                            "SEDIMENTS": 3000,
+                            "MINERALS-AND-GEMS": 4000
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
+      "child_collections": [
+        [
+          {
+            "uri": "https://example.com/cetaf_survey_api/collections/?operation=get_by_id&protocol=cetaf&values=TEST-INST COLLECTION-MIN",
+            "name": "TEST-INST-MINERALS",
+            "type": "cetaf",
+            "value": "TEST-INST COLLECTION-MIN"
+          }
+        ],
+        [
+          {
+            "uri": "https://example.com/cetaf_survey_api/collections/?operation=get_by_id&protocol=cetaf&values=TEST-INST COLLECTION-PET",
+            "name": "TEST-INST-PETROLOGY",
+            "type": "cetaf",
+            "value": "TEST-INST COLLECTION-PET"
+          }
+        ],
+        [
+          {
+            "uri": "https://example.com/cetaf_survey_api/collections/?operation=get_by_id&protocol=cetaf&values=TEST-INST COLLECTION-SED",
+            "name": "TEST-INST-SEDIMENTS",
+            "type": "cetaf",
+            "value": "TEST-INST COLLECTION-SED"
+          }
+        ]
+      ]
+    }
+  ]
+} 

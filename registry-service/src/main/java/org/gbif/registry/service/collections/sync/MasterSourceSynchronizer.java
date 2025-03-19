@@ -13,9 +13,12 @@
  */
 package org.gbif.registry.service.collections.sync;
 
+import java.io.IOException;
+
 import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.CollectionEntityType;
 import org.gbif.api.model.collections.Institution;
+import org.gbif.api.model.collections.MasterSourceMetadata;
 import org.gbif.api.model.registry.Comment;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Organization;
@@ -32,6 +35,7 @@ import org.gbif.registry.mail.EmailSender;
 import org.gbif.registry.mail.collections.CollectionsEmailManager;
 import org.gbif.registry.persistence.mapper.collections.CollectionMapper;
 import org.gbif.registry.persistence.mapper.collections.dto.MasterSourceOrganizationDto;
+import org.gbif.registry.service.CetafSyncServiceImpl;
 import org.gbif.registry.service.RegistryDatasetService;
 import org.gbif.registry.service.collections.converters.CollectionConverter;
 import org.gbif.registry.service.collections.converters.InstitutionConverter;
@@ -50,12 +54,15 @@ import com.google.common.eventbus.Subscribe;
 
 import lombok.extern.slf4j.Slf4j;
 
+import org.springframework.web.client.RestTemplate;
+
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 @Component
 public class MasterSourceSynchronizer {
 
+  private final CetafSyncServiceImpl cetafSyncService;
   private final CollectionService collectionService;
   private final InstitutionService institutionService;
   private final OrganizationService organizationService;
@@ -67,7 +74,7 @@ public class MasterSourceSynchronizer {
 
   @Autowired
   public MasterSourceSynchronizer(
-      CollectionService collectionService,
+    CetafSyncServiceImpl cetafSyncService, CollectionService collectionService,
       InstitutionService institutionService,
       OrganizationService organizationService,
       RegistryDatasetService registryDatasetService,
@@ -76,6 +83,7 @@ public class MasterSourceSynchronizer {
       EmailSender emailSender,
       EventManager eventManager,
       ConceptClient conceptClient) {
+    this.cetafSyncService = cetafSyncService;
     this.collectionService = collectionService;
     this.institutionService = institutionService;
     this.organizationService = organizationService;
@@ -287,8 +295,24 @@ public class MasterSourceSynchronizer {
           organization.getKey());
 
       updateInstitution(organization, institution);
+    } else if (event.getMetadata().getSource() == Source.CETAF) {
+      Collection collection = collectionService.get(event.getCollectionEntityKey());
+      checkArgument(
+        collection != null, "Collection not found for key " + event.getCollectionEntityKey());
+
+      log.info("Updating collection {} with new master source CETAF", collection.getKey());
+      syncCollectionFromCETAF(event.getMetadata().getSourceId(), collection);
     }
   }
+
+  private void syncCollectionFromCETAF(String sourceID, Collection collection) {
+    try {
+       cetafSyncService.updateCollectionFromCetaf(sourceID, collection.getKey());
+    } catch (Exception e) {
+      log.error("Error synchronizing collection {} from CETAF: {}", collection.getKey(), e.getMessage());
+    }
+  }
+
 
   private void updateCollection(
       Dataset dataset, Organization publishingOrganization, Collection existingCollection) {
