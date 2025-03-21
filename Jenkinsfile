@@ -37,7 +37,7 @@ pipeline {
               configFile(fileId: 'org.jenkinsci.plugins.configfiles.custom.CustomConfig1389220396351', variable: 'APPKEYS_TESTFILE')
               ]) {
                 sh '''
-                   mvn -B -Denforcer.skip=true -Dappkeys.testfile=$APPKEYS_TESTFILE clean package install verify -T 1C \
+                   mvn -B -Denforcer.skip=true -Dappkeys.testfile=$APPKEYS_TESTFILE clean deploy verify -T 1C \
                        -Dparallel=classes -DuseUnlimitedThreads=true -Pgbif-dev,registry-cli-it,secrets-dev -U
                   '''
               }
