@@ -64,7 +64,7 @@ public class SearchParameterProvider {
 
     if (searchRequest != null) {
       parameters.put(
-          PARAM_FACET_MULTISELECT, Boolean.toString(searchRequest.isMultiSelectFacets()));
+          PARAM_FACET_MULTISELECT, Boolean.toString(searchRequest.isFacetMultiSelect()));
       if (searchRequest.getFacetMinCount() != null) {
         parameters.put(PARAM_FACET_MINCOUNT, Integer.toString(searchRequest.getFacetMinCount()));
       }
