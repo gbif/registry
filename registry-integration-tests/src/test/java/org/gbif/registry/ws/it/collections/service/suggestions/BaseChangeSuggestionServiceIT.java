@@ -599,7 +599,7 @@ public abstract class BaseChangeSuggestionServiceIT<
       .filter(c -> c.getKey().equals(contact1.getKey()))
       .findFirst()
       .get()
-      .setModifiedBy("11");
+      .setModifiedBy("111");
 
     R suggestion3 = createEmptyChangeSuggestion();
     suggestion3.setSuggestedEntity(entity);
@@ -614,6 +614,23 @@ public abstract class BaseChangeSuggestionServiceIT<
     // Then
     suggestion3 = changeSuggestionService.getChangeSuggestion(sugg3Key);
     assertEquals(0, suggestion3.getChanges().size());
+
+    // suggestion to change contact1 with an invalid name
+    entity.getContactPersons().stream()
+      .filter(c -> c.getKey().equals(contact1.getKey()))
+      .findFirst()
+      .get()
+      .setFirstName("");
+
+    R suggestion4 = createEmptyChangeSuggestion();
+    suggestion4.setSuggestedEntity(entity);
+    suggestion4.setType(Type.UPDATE);
+    suggestion4.setEntityKey(entityKey);
+    suggestion4.setProposerEmail(PROPOSER);
+    suggestion4.setComments(Collections.singletonList("contact1"));
+
+    assertThrows(ValidationException.class,
+      () -> changeSuggestionService.createChangeSuggestion(suggestion4));
   }
 
   protected void assertCreatedSuggestion(R created) {

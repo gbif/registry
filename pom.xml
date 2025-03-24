@@ -11,7 +11,7 @@
 
   <groupId>org.gbif.registry</groupId>
   <artifactId>registry-parent</artifactId>
-  <version>4.0.5-SNAPSHOT</version>
+  <version>4.0.11-SNAPSHOT</version>
   <name>GBIF Registry Parent</name>
   <description>GBIF Registry project</description>
 
@@ -88,7 +88,7 @@
     <spring-cloud-sleuth.version>2.2.8.RELEASE</spring-cloud-sleuth.version>
 
     <!-- GBIF -->
-    <gbif-api.version>2.0.5-SNAPSHOT</gbif-api.version>
+    <gbif-api.version>2.0.5-dna-SNAPSHOT</gbif-api.version>
     <gbif-common.version>0.59</gbif-common.version>
     <gbif-common-mybatis.version>2.0.0</gbif-common-mybatis.version>
     <gbif-common-ws.version>2.0.0</gbif-common-ws.version>
@@ -100,7 +100,7 @@
     <gbif-parsers.version>0.67</gbif-parsers.version>
     <gbif-postal-service.version>1.8.1</gbif-postal-service.version>
     <xoai.version>4.1.0-gbif-4</xoai.version>
-    <gbif-occurrence.version>1.0.5</gbif-occurrence.version>
+    <gbif-occurrence.version>1.0.23-dna-SNAPSHOT</gbif-occurrence.version>
     <gbif-vocabulary.version>2.0.2</gbif-vocabulary.version>
     <checklistbank.version>3.0.0</checklistbank.version>
 
@@ -128,6 +128,7 @@
     <woodstox.version>4.4.1</woodstox.version>
     <zookeeper.version>3.8.1</zookeeper.version>
     <curator.version>5.5.0</curator.version>
+    <curator-framework.version>5.5.0-disable-connectstr-updates</curator-framework.version>
     <owasp-java-html-sanitizer.version>20200713.1</owasp-java-html-sanitizer.version>
     <super-csv.version>2.4.0</super-csv.version>
     <opencsv.version>5.7.1</opencsv.version>
@@ -459,7 +460,7 @@
       <dependency>
         <groupId>org.apache.curator</groupId>
         <artifactId>curator-framework</artifactId>
-        <version>${curator.version}</version>
+        <version>${curator-framework.version}</version>
       </dependency>
       <dependency>
         <groupId>org.apache.curator</groupId>
@@ -803,6 +804,30 @@
         <artifactId>spotless-maven-plugin</artifactId>
         <version>${spotless-maven-plugin.version}</version>
       </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>${maven-surefire-plugin.version}</version>
+        <configuration>
+          <argLine>--add-opens=java.base/java.lang.invoke=ALL-UNNAMED --add-opens=java.base/java.lang=ALL-UNNAMED --add-opens=java.base/java.util=ALL-UNNAMED --add-opens=java.base/java.lang.reflect=ALL-UNNAMED</argLine>
+        </configuration>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-failsafe-plugin</artifactId>
+        <version>${maven-failsafe-plugin.version}</version>
+        <configuration>
+          <argLine>--add-opens=java.base/java.lang.invoke=ALL-UNNAMED --add-opens=java.base/java.lang=ALL-UNNAMED --add-opens=java.base/java.util=ALL-UNNAMED --add-opens=java.base/java.lang.reflect=ALL-UNNAMED</argLine>
+        </configuration>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-release-plugin</artifactId>
+        <version>${maven-release-plugin.version}</version>
+      </plugin>
     </plugins>
 
     <pluginManagement>
@@ -811,6 +836,9 @@
           <groupId>org.springframework.boot</groupId>
           <artifactId>spring-boot-maven-plugin</artifactId>
           <version>${spring-boot-maven-plugin.version}</version>
+          <configuration>
+            <jvmArguments>--add-opens=java.base/java.lang.invoke=ALL-UNNAMED --add-opens=java.base/java.lang=ALL-UNNAMED --add-opens=java.base/java.util=ALL-UNNAMED --add-opens=java.base/java.lang.reflect=ALL-UNNAMED</jvmArguments>
+          </configuration>
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>

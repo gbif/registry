@@ -159,5 +159,6 @@
   <include file="liquibase/151-indexes-collections-contacts.xml" />
   <include file="liquibase/152-function-search-paths.xml" />
   <include file="liquibase/153-institution-suggest-fts.xml" />
-  <include file="liquibase/154-descriptor-suggestions.xml" />
+  <include file="liquibase/154-new-download-fields.xml" />
+  <include file="liquibase/155-descriptor-suggestions.xml" />
 </databaseChangeLog>

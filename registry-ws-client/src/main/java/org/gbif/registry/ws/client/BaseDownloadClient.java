@@ -122,7 +122,7 @@ public interface BaseDownloadClient extends OccurrenceDownloadService {
 
   @RequestMapping(method = RequestMethod.PUT, consumes = MediaType.APPLICATION_JSON_VALUE)
   @Override
-  void update(@RequestBody Download download);
+  Download update(@RequestBody Download download);
 
   @Override
   default PagingResponse<DatasetOccurrenceDownloadUsage> listDatasetUsages(@PathVariable("key") String key, @SpringQueryMap Pageable page) {

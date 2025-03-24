@@ -224,7 +224,6 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
   @Override
   public void create(@RequestBody @Trim Download occurrenceDownload) {
     try {
-      occurrenceDownload.setDoi(doiIssuingService.newDownloadDOI());
       occurrenceDownload.setLicense(License.UNSPECIFIED);
       occurrenceDownload.getRequest().setType(downloadType);
       occurrenceDownloadMapper.create(occurrenceDownload);
@@ -293,13 +292,6 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
 
     clearSensitiveData(authentication, download);
     assertDownloadType(download);
-
-    // the doi is removed from datacite when the download is in a failed state and should be hidden.
-    // It is also removed in the update method but old downloads still keep it in the DB
-    // https://github.com/gbif/registry/issues/367
-    if (FAILED_STATES.contains(download.getStatus())) {
-      download.setDoi(null);
-    }
 
     return download;
   }
@@ -511,7 +503,7 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
   @Validated({PostPersist.class, Default.class})
   @Transactional
   @Override
-  public void update(@RequestBody Download download) {
+  public Download update(@RequestBody Download download) {
     // The current download is retrieved because its user could be modified during the update
     Download currentDownload = get(download.getKey());
     Preconditions.checkNotNull(currentDownload);
@@ -519,6 +511,10 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
 
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     checkUserIsInSecurityContext(currentDownload.getRequest().getCreator(), authentication);
+
+    if (download.getStatus().equals(Download.Status.SUCCEEDED)) {
+      download.setDoi(doiIssuingService.newDownloadDOI());
+    }
 
     GbifUser user = identityService.get(authentication.getName());
     doiDataCiteHandlingService.downloadChanged(download, currentDownload, user);
@@ -529,6 +525,7 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
     }
 
     occurrenceDownloadMapper.update(download);
+    return occurrenceDownloadMapper.get(download.getKey());
   }
 
   @Override
