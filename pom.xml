@@ -100,7 +100,7 @@
     <gbif-parsers.version>0.67</gbif-parsers.version>
     <gbif-postal-service.version>1.8.1</gbif-postal-service.version>
     <xoai.version>4.1.0-gbif-4</xoai.version>
-    <gbif-occurrence.version>1.0.24-SNAPSHOT</gbif-occurrence.version>
+    <gbif-occurrence.version>1.0.24</gbif-occurrence.version>
     <gbif-vocabulary.version>2.0.2</gbif-vocabulary.version>
     <checklistbank.version>3.0.0</checklistbank.version>
 
