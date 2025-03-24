@@ -261,7 +261,7 @@ public class EsSearchRequestBuilder<P extends SearchParameter> {
   GroupedParams groupParameters(FacetedSearchRequest<P> searchRequest) {
     GroupedParams groupedParams = new GroupedParams<P>();
 
-    if (!searchRequest.isMultiSelectFacets()
+    if (!searchRequest.isFacetMultiSelect()
         || searchRequest.getFacets() == null
         || searchRequest.getFacets().isEmpty()) {
       groupedParams.queryParams = searchRequest.getParameters();
@@ -313,7 +313,7 @@ public class EsSearchRequestBuilder<P extends SearchParameter> {
       return Optional.empty();
     }
 
-    if (searchRequest.isMultiSelectFacets()
+    if (searchRequest.isFacetMultiSelect()
         && postFilterParams != null
         && !postFilterParams.isEmpty()) {
       return Optional.of(buildFacetsMultiselect(searchRequest, postFilterParams));
