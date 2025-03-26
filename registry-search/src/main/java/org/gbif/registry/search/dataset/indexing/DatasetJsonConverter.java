@@ -358,7 +358,7 @@ public class DatasetJsonConverter {
     OccurrenceSearchRequest occurrenceSearchRequest = new OccurrenceSearchRequest();
     occurrenceSearchRequest.setLimit(0);
     occurrenceSearchRequest.setOffset(0);
-    occurrenceSearchRequest.setMultiSelectFacets(false);
+    occurrenceSearchRequest.setFacetMultiSelect(false);
     occurrenceSearchRequest.setFacetLimit(MAX_FACET_LIMIT);
     occurrenceSearchRequest.setFacetMinCount(1);
     occurrenceSearchRequest.setFacets(facets);
