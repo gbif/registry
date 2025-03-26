@@ -58,7 +58,7 @@ public class DownloadDoiDataCiteHandlingServiceImpl implements DownloadDoiDataCi
             || (previousDownload.getStatus() != Download.Status.SUCCEEDED
                 && previousDownload.getStatus() != Download.Status.FILE_ERASED))) {
       try {
-        if (download.getStatus().equals(Download.Status.SUCCEEDED)) {
+        if (download.getStatus().equals(Download.Status.SUCCEEDED) && download.getDoi() == null) {
           download.setDoi(doiIssuingService.newDownloadDOI());
         }
         doiMessageManagingService.registerDownload(
