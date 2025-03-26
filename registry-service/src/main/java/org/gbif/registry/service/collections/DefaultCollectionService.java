@@ -30,9 +30,11 @@ import javax.validation.constraints.NotNull;
 import javax.validation.groups.Default;
 import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.Contact;
+import org.gbif.api.model.collections.Institution;
 import org.gbif.api.model.collections.MasterSourceMetadata;
 import org.gbif.api.model.collections.latimercore.ObjectGroup;
 import org.gbif.api.model.collections.request.CollectionSearchRequest;
+import org.gbif.api.model.collections.request.InstitutionSearchRequest;
 import org.gbif.api.model.collections.view.CollectionView;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingRequest;
@@ -42,6 +44,7 @@ import org.gbif.api.model.registry.Organization;
 import org.gbif.api.model.registry.PrePersist;
 import org.gbif.api.model.registry.search.collections.KeyCodeNameResult;
 import org.gbif.api.service.collections.CollectionService;
+import org.gbif.api.service.collections.InstitutionService;
 import org.gbif.api.vocabulary.collections.Source;
 import org.gbif.registry.events.EventManager;
 import org.gbif.registry.events.collections.CreateCollectionEntityEvent;
@@ -70,6 +73,7 @@ public class DefaultCollectionService extends BaseCollectionEntityService<Collec
   private final DatasetMapper datasetMapper;
   private final OrganizationMapper organizationMapper;
   private Validator validator;
+  private InstitutionService institutionService;
 
   @Autowired
   protected DefaultCollectionService(
@@ -87,7 +91,7 @@ public class DefaultCollectionService extends BaseCollectionEntityService<Collec
       EventManager eventManager,
       WithMyBatis withMyBatis,
       Validator validator,
-      ConceptClient conceptClient) {
+      ConceptClient conceptClient, InstitutionService institutionService) {
     super(
         collectionMapper,
         addressMapper,
@@ -108,6 +112,7 @@ public class DefaultCollectionService extends BaseCollectionEntityService<Collec
     this.datasetMapper = datasetMapper;
     this.organizationMapper = organizationMapper;
     this.validator = validator;
+    this.institutionService = institutionService;
   }
 
   @Override
@@ -210,6 +215,42 @@ public class DefaultCollectionService extends BaseCollectionEntityService<Collec
   @Override
   public PagingResponse<CollectionView> listDeleted(CollectionSearchRequest searchRequest) {
     return listInternal(searchRequest, true);
+  }
+
+  @Override
+  public List<CollectionView> getCollectionsForInstitutionsBySearch(
+    InstitutionSearchRequest searchRequest) {
+    List<UUID> institutionKeys = new ArrayList<>();
+    long offset = 0;
+    PagingResponse<Institution> institutions;
+
+    // Keep getting institutions until we've got them all
+    do {
+      searchRequest.setOffset(offset);
+      searchRequest.setLimit(20); // Use a reasonable page size
+      institutions = institutionService.list(searchRequest);
+
+      institutionKeys.addAll(
+          institutions.getResults().stream()
+              .map(Institution::getKey)
+              .collect(Collectors.toList())
+      );
+
+      offset += institutions.getLimit();
+    } while (offset < institutions.getCount());
+
+    if (institutionKeys.isEmpty()) {
+      return Collections.emptyList();
+    }
+
+    // Create collection search request with the institution keys
+    CollectionSearchRequest collectionRequest = CollectionSearchRequest.builder()
+        .institution(institutionKeys)
+        .build();
+
+    // Get all collections for these institutions
+    PagingResponse<CollectionView> response = list(collectionRequest);
+    return response.getResults();
   }
 
   @Override
