@@ -135,7 +135,6 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
   private final OccurrenceDownloadMapper occurrenceDownloadMapper;
   private final DatasetOccurrenceDownloadMapper datasetOccurrenceDownloadMapper;
   private final IdentityAccessService identityService;
-  private final DoiIssuingService doiIssuingService;
   private final DownloadDoiDataCiteHandlingService doiDataCiteHandlingService;
   private final DownloadType downloadType;
 
@@ -204,13 +203,11 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
   public BaseDownloadResource(
       OccurrenceDownloadMapper occurrenceDownloadMapper,
       DatasetOccurrenceDownloadMapper datasetOccurrenceDownloadMapper,
-      DoiIssuingService doiIssuingService,
       @Lazy DownloadDoiDataCiteHandlingService doiDataCiteHandlingService,
       @Qualifier("baseIdentityAccessService") IdentityAccessService identityService,
       DownloadType downloadType) {
     this.occurrenceDownloadMapper = occurrenceDownloadMapper;
     this.datasetOccurrenceDownloadMapper = datasetOccurrenceDownloadMapper;
-    this.doiIssuingService = doiIssuingService;
     this.doiDataCiteHandlingService = doiDataCiteHandlingService;
     this.identityService = identityService;
     this.downloadType = downloadType;
@@ -511,10 +508,6 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
 
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     checkUserIsInSecurityContext(currentDownload.getRequest().getCreator(), authentication);
-
-    if (download.getStatus().equals(Download.Status.SUCCEEDED)) {
-      download.setDoi(doiIssuingService.newDownloadDOI());
-    }
 
     GbifUser user = identityService.get(authentication.getName());
     doiDataCiteHandlingService.downloadChanged(download, currentDownload, user);
