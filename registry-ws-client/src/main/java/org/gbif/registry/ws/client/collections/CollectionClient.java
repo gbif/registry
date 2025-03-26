@@ -24,6 +24,7 @@ import org.gbif.api.model.collections.latimercore.ObjectGroup;
 import org.gbif.api.model.collections.request.CollectionSearchRequest;
 import org.gbif.api.model.collections.request.DescriptorGroupSearchRequest;
 import org.gbif.api.model.collections.request.DescriptorSearchRequest;
+import org.gbif.api.model.collections.request.InstitutionSearchRequest;
 import org.gbif.api.model.collections.suggestions.CollectionChangeSuggestion;
 import org.gbif.api.model.collections.view.CollectionView;
 import org.gbif.api.model.common.export.ExportFormat;
@@ -41,6 +42,9 @@ public interface CollectionClient
   @RequestMapping(method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
   @ResponseBody
   PagingResponse<CollectionView> list(@SpringQueryMap CollectionSearchRequest searchRequest);
+
+  @GetMapping(value = "listForInstitution", produces = MediaType.APPLICATION_JSON_VALUE)
+  PagingResponse<CollectionView> listForInstitutions(@SpringQueryMap InstitutionSearchRequest searchRequest);
 
   @RequestMapping(
       method = RequestMethod.GET,

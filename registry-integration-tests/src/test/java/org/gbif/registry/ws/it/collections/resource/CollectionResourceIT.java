@@ -15,6 +15,7 @@ package org.gbif.registry.ws.it.collections.resource;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -35,6 +36,7 @@ import org.gbif.api.model.collections.latimercore.ObjectGroup;
 import org.gbif.api.model.collections.request.CollectionSearchRequest;
 import org.gbif.api.model.collections.request.DescriptorGroupSearchRequest;
 import org.gbif.api.model.collections.request.DescriptorSearchRequest;
+import org.gbif.api.model.collections.request.InstitutionSearchRequest;
 import org.gbif.api.model.collections.suggestions.CollectionChangeSuggestion;
 import org.gbif.api.model.collections.suggestions.Type;
 import org.gbif.api.model.collections.view.CollectionView;
@@ -47,6 +49,7 @@ import org.gbif.api.service.collections.ChangeSuggestionService;
 import org.gbif.api.service.collections.CollectionEntityService;
 import org.gbif.api.service.collections.CollectionService;
 import org.gbif.api.service.collections.DescriptorsService;
+import org.gbif.api.service.collections.InstitutionService;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.GbifRegion;
 import org.gbif.api.vocabulary.Rank;
@@ -67,6 +70,8 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 
 public class CollectionResourceIT
     extends BaseCollectionEntityResourceIT<Collection, CollectionChangeSuggestion> {
@@ -81,6 +86,10 @@ public class CollectionResourceIT
 
   @MockBean private CollectionBatchService collectionBatchService;
   @MockBean private DescriptorsService descriptorsService;
+  @MockBean private InstitutionService institutionService;
+
+  @Captor
+  private ArgumentCaptor<InstitutionSearchRequest> searchRequestCaptor;
 
   @Autowired
   public CollectionResourceIT(
@@ -373,6 +382,99 @@ public class CollectionResourceIT
     when(descriptorsService.getDescriptorGroup(anyLong())).thenReturn(descriptorGroup);
 
     assertDoesNotThrow(() -> getClient().deleteCollectionDescriptorGroup(collectionKey, 1L));
+  }
+
+  @Test
+  public void listForInstitutionsTest() {
+    // Create test institutions with distinct keys
+    UUID institution1Key = UUID.randomUUID();
+    UUID institution2Key = UUID.randomUUID();
+
+    // Create collections for these institutions
+    Collection collection1 = testData.newEntity();
+    collection1.setCode("C1");
+    collection1.setName("Botanical Collection");
+    collection1.setInstitutionKey(institution1Key);
+
+    Collection collection2 = testData.newEntity();
+    collection2.setCode("C2");
+    collection2.setName("Herbarium Collection");
+    collection2.setInstitutionKey(institution1Key);
+
+    Collection collection3 = testData.newEntity();
+    collection3.setCode("C3");
+    collection3.setName("Zoological Collection");
+    collection3.setInstitutionKey(institution2Key);
+
+    // Create collection views
+    CollectionView view1 = new CollectionView();
+    view1.setCollection(collection1);
+
+    CollectionView view2 = new CollectionView();
+    view2.setCollection(collection2);
+
+    CollectionView view3 = new CollectionView();
+    view3.setCollection(collection3);
+
+    // Setup mock to respond based on captured arguments
+    List<CollectionView> institution1Collections = Arrays.asList(view1, view2);
+    List<CollectionView> allCollections = Arrays.asList(view1, view2, view3);
+    List<CollectionView> emptyList = Collections.emptyList();
+
+    // Use any() for the mock, but we'll use the captor to verify the correct arguments later
+    when(collectionService.getCollectionsForInstitutionsBySearch(any(InstitutionSearchRequest.class)))
+        .thenAnswer(invocation -> {
+            InstitutionSearchRequest request = invocation.getArgument(0);
+
+            // Check for name search - Institution 1 collections
+            if (request.getName() != null &&
+                request.getName().contains("Botanical Institute")) {
+                return institution1Collections;
+            }
+
+            // Check for keyword search - All collections
+            if (request.getQ() != null &&
+                "Collection".equals(request.getQ())) {
+                return allCollections;
+            }
+
+            // Check for no match search - Empty list
+            if (request.getQ() != null &&
+                "Non-existent Institution".equals(request.getQ())) {
+                return emptyList;
+            }
+
+            // Default case
+            return emptyList;
+        });
+
+    // Scenario 1: Search by institution name
+    InstitutionSearchRequest nameSearchRequest = InstitutionSearchRequest.builder()
+        .name(Collections.singletonList("Botanical Institute"))
+        .build();
+
+    // Execute test and verify results
+    PagingResponse<CollectionView> nameSearchResponse = getClient().listForInstitutions(nameSearchRequest);
+    assertEquals(2, nameSearchResponse.getResults().size());
+    assertTrue(nameSearchResponse.getResults().stream()
+        .map(CollectionView::getCollection)
+        .allMatch(c -> c.getInstitutionKey().equals(institution1Key)));
+
+    // Scenario 2: Search by keyword that matches multiple institutions
+    InstitutionSearchRequest keywordSearchRequest = InstitutionSearchRequest.builder()
+        .q("Collection")
+        .build();
+
+    PagingResponse<CollectionView> keywordResponse = getClient().listForInstitutions(keywordSearchRequest);
+    assertEquals(3, keywordResponse.getResults().size());
+
+    // Scenario 3: Search with no matching results
+    InstitutionSearchRequest noMatchRequest = InstitutionSearchRequest.builder()
+        .q("Non-existent Institution")
+        .build();
+
+    PagingResponse<CollectionView> emptyResponse = getClient().listForInstitutions(noMatchRequest);
+    assertEquals(0, emptyResponse.getResults().size());
   }
 
   protected CollectionClient getClient() {
