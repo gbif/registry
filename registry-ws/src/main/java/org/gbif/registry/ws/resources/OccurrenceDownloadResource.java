@@ -36,13 +36,11 @@ public class OccurrenceDownloadResource extends BaseDownloadResource {
   public OccurrenceDownloadResource(
       OccurrenceDownloadMapper occurrenceDownloadMapper,
       DatasetOccurrenceDownloadMapper datasetOccurrenceDownloadMapper,
-      DoiIssuingService doiIssuingService,
       @Lazy DownloadDoiDataCiteHandlingService doiDataCiteHandlingService,
       @Qualifier("baseIdentityAccessService") IdentityAccessService identityService) {
     super(
         occurrenceDownloadMapper,
         datasetOccurrenceDownloadMapper,
-        doiIssuingService,
         doiDataCiteHandlingService,
         identityService,
         DownloadType.OCCURRENCE);
