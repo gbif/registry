@@ -269,6 +269,8 @@ public interface BaseCollectionEntityClient<
       @RequestParam(value = "type", required = false) Type type,
       @RequestParam(value = "proposerEmail", required = false) String proposerEmail,
       @RequestParam(value = "entityKey", required = false) UUID entityKey,
+      @RequestParam(value = "ihIdentifier", required = false) String ihIdentifier,
+      @RequestParam(value = "country", required = false) String country,
       @SpringQueryMap Pageable page);
 
   @RequestMapping(method = RequestMethod.PUT, value = "changeSuggestion/{key}/discard")
