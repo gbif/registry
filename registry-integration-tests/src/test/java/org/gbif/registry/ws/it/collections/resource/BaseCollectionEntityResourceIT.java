@@ -547,14 +547,14 @@ abstract class BaseCollectionEntityResourceIT<
     UUID entityKey = UUID.randomUUID();
     Pageable page = new PagingRequest();
 
-    when(getMockChangeSuggestionService().list(status, type, proposerEmail, entityKey, null, page))
+    when(getMockChangeSuggestionService().list(status, type, proposerEmail, entityKey, null, null, page))
         .thenReturn(
             new PagingResponse<>(
                 new PagingRequest(), 1L, Collections.singletonList(changeSuggestion)));
 
     PagingResponse<R> result =
         getPrimaryCollectionEntityClient()
-            .listChangeSuggestion(status, type, proposerEmail, entityKey, page);
+            .listChangeSuggestion(status, type, proposerEmail, entityKey, null, null, page);
     assertEquals(1, result.getResults().size());
   }
 
