@@ -340,7 +340,7 @@ class DatasetIT extends NetworkEntityIT<Dataset> {
 
     req = new DatasetSearchRequest();
     req.addPublishingCountryFilter(Country.GERMANY);
-    req.setMultiSelectFacets(true);
+    req.setFacetMultiSelect(true);
     req.addFacets(DatasetSearchParameter.PUBLISHING_COUNTRY);
 
     resp = searchService.search(req);

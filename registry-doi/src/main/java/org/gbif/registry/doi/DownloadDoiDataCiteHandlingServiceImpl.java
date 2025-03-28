@@ -31,15 +31,15 @@ public class DownloadDoiDataCiteHandlingServiceImpl implements DownloadDoiDataCi
       LoggerFactory.getLogger(DownloadDoiDataCiteHandlingServiceImpl.class);
   private static final Marker DOI_SMTP = MarkerFactory.getMarker("DOI_SMTP");
 
-  private static final EnumSet<Download.Status> FAILED_STATES =
-      EnumSet.of(Download.Status.KILLED, Download.Status.CANCELLED, Download.Status.FAILED);
+  private final DoiIssuingService doiIssuingService;
 
   private final DoiMessageManagingService doiMessageManagingService;
   private final DataCiteMetadataBuilderService metadataBuilderService;
 
   public DownloadDoiDataCiteHandlingServiceImpl(
-      DoiMessageManagingService doiMessageManagingService,
+    DoiIssuingService doiIssuingService, DoiMessageManagingService doiMessageManagingService,
       DataCiteMetadataBuilderService metadataBuilderService) {
+    this.doiIssuingService = doiIssuingService;
     this.doiMessageManagingService = doiMessageManagingService;
     this.metadataBuilderService = metadataBuilderService;
   }
@@ -58,6 +58,9 @@ public class DownloadDoiDataCiteHandlingServiceImpl implements DownloadDoiDataCi
             || (previousDownload.getStatus() != Download.Status.SUCCEEDED
                 && previousDownload.getStatus() != Download.Status.FILE_ERASED))) {
       try {
+        if (download.getStatus().equals(Download.Status.SUCCEEDED) && download.getDoi() == null) {
+          download.setDoi(doiIssuingService.newDownloadDOI());
+        }
         doiMessageManagingService.registerDownload(
             download.getDoi(),
             metadataBuilderService.buildMetadata(download, user),
