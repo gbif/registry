@@ -45,6 +45,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 import javax.servlet.http.HttpServletResponse;
@@ -61,6 +62,7 @@ import org.gbif.api.model.collections.latimercore.ObjectGroup;
 import org.gbif.api.model.collections.request.CollectionSearchRequest;
 import org.gbif.api.model.collections.request.DescriptorGroupSearchRequest;
 import org.gbif.api.model.collections.request.DescriptorSearchRequest;
+import org.gbif.api.model.collections.request.InstitutionSearchRequest;
 import org.gbif.api.model.collections.suggestions.CollectionChangeSuggestion;
 import org.gbif.api.model.collections.view.CollectionView;
 import org.gbif.api.model.common.export.ExportFormat;
@@ -413,6 +415,62 @@ public class CollectionResource
       CsvWriter.collections(
               Iterables.collections(searchRequest, collectionService, EXPORT_LIMIT), format)
           .export(writer);
+    }
+  }
+
+  @Operation(
+      operationId = "listCollectionsForInstitutions",
+      summary = "List collections for institutions matching search criteria",
+      description = "Returns collections that belong to institutions matching the provided search criteria. "
+          + "The method first retrieves all matching institutions using pagination, then returns their collections.",
+      extensions =
+          @Extension(
+              name = "Order",
+              properties = @ExtensionProperty(name = "Order", value = "0104")))
+  @ApiResponse(responseCode = "200", description = "Collections found and returned")
+  @ApiResponse(responseCode = "400", description = "Invalid search query provided")
+  @GetMapping("listForInstitution")
+  public PagingResponse<CollectionView> listForInstitutions(InstitutionSearchRequest searchRequest) {
+    List<CollectionView> collections = collectionService.getCollectionsForInstitutionsBySearch(searchRequest);
+    return new PagingResponse<>(new PagingResponse<>(), (long) collections.size(), collections);
+  }
+
+  @Operation(
+      operationId = "exportCollectionsForInstitutions",
+      summary = "Export collections for institutions matching search criteria",
+      description = "Download collections that belong to institutions matching the provided search criteria. "
+          + "The method first retrieves all matching institutions using pagination, then exports their collections "
+          + "in the specified format (TSV or CSV).",
+      extensions =
+          @Extension(
+              name = "Order",
+              properties = @ExtensionProperty(name = "Order", value = "0103")))
+  @ApiResponse(responseCode = "200", description = "Collections exported successfully")
+  @ApiResponse(responseCode = "204", description = "No institutions found matching the search criteria")
+  @ApiResponse(responseCode = "400", description = "Invalid search query provided")
+  @GetMapping("exportForInstitution")
+  public void exportForInstitutions(HttpServletResponse response,
+    @RequestParam(value = "format", defaultValue = "TSV") ExportFormat format, InstitutionSearchRequest searchRequest) throws IOException {
+
+    List<CollectionView> collections = collectionService.getCollectionsForInstitutionsBySearch(searchRequest);
+
+    if (collections.isEmpty()) {
+      response.setStatus(HttpServletResponse.SC_NO_CONTENT);
+      return;
+    }
+
+    // Create collection search request with the institution keys for the file header
+    CollectionSearchRequest collectionRequest = CollectionSearchRequest.builder()
+        .institution(collections.stream()
+            .map(CollectionView::getCollection)
+            .map(Collection::getInstitutionKey)
+            .collect(Collectors.toList()))
+        .build();
+
+    response.setHeader(HttpHeaders.CONTENT_DISPOSITION, getExportFileHeader(collectionRequest, format));
+
+    try (Writer writer = new BufferedWriter(new OutputStreamWriter(response.getOutputStream()))) {
+      CsvWriter.collections(collections, format).export(writer);
     }
   }
 
