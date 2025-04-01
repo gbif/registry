@@ -201,7 +201,8 @@ public class Vocabularies {
                             .build()))
             .get();
 
-    if (result.getResults() == null
+    if (result == null
+        ||result.getResults() == null
         || result.getResults().isEmpty()
         || result.getResults().get(0).getChildren() == null
         || result.getResults().get(0).getChildren().isEmpty()) {
