@@ -437,6 +437,9 @@ public abstract class BaseChangeSuggestionServiceIT<
   public void listTest() {
     // State
     T entity = createEntity();
+    Address address = new Address();
+    address.setCountry(Country.DENMARK);
+    entity.setAddress(address);
     R suggestion = createEmptyChangeSuggestion();
     suggestion.setSuggestedEntity(entity);
     suggestion.setType(Type.CREATE);
@@ -458,26 +461,32 @@ public abstract class BaseChangeSuggestionServiceIT<
 
     // When
     PagingResponse<R> results =
-        changeSuggestionService.list(Status.APPLIED, null, null, null, null, DEFAULT_PAGE);
+        changeSuggestionService.list(Status.APPLIED, null, null, null, null, null, DEFAULT_PAGE);
     // Then
     assertEquals(0, results.getResults().size());
     assertEquals(0, results.getCount());
 
     // When
-    results = changeSuggestionService.list(null, Type.CREATE, null, null, null, DEFAULT_PAGE);
+    results = changeSuggestionService.list(null, Type.CREATE, null, null, null, null, DEFAULT_PAGE);
     // Then
     assertEquals(1, results.getResults().size());
     assertEquals(1, results.getCount());
 
     // When
-    results = changeSuggestionService.list(null, null, null, entity2Key, null, DEFAULT_PAGE);
+    results = changeSuggestionService.list(null, null, null, entity2Key, null, null, DEFAULT_PAGE);
+    // Then
+    assertEquals(1, results.getResults().size());
+    assertEquals(1, results.getCount());
+
+    // When
+    results = changeSuggestionService.list(null, null, null, null, null, "DK", DEFAULT_PAGE);
     // Then
     assertEquals(1, results.getResults().size());
     assertEquals(1, results.getCount());
 
     // When - user with no rights can't see the proposer email
     resetSecurityContext("user", UserRole.USER);
-    results = changeSuggestionService.list(null, null, null, entity2Key, null, DEFAULT_PAGE);
+    results = changeSuggestionService.list(null, null, null, entity2Key, null, null, DEFAULT_PAGE);
     // Then
     assertTrue(results.getResults().stream().allMatch(v -> v.getProposerEmail() == null));
   }
