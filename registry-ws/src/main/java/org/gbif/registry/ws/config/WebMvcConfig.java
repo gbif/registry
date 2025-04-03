@@ -20,7 +20,6 @@ import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.module.jaxb.JaxbAnnotationModule;
 import java.util.*;
-import org.gbif.checklistbank.ws.client.NubResourceClient;
 import org.gbif.registry.domain.ws.*;
 import org.gbif.registry.security.precheck.AuthPreCheckInterceptor;
 import org.gbif.registry.ws.converter.CountryMessageConverter;
@@ -32,6 +31,9 @@ import org.gbif.registry.ws.provider.InstitutionFacetedSearchRequestHandlerMetho
 import org.gbif.registry.ws.provider.InstitutionSearchRequestHandlerMethodArgumentResolver;
 import org.gbif.registry.ws.provider.PartialDateHandlerMethodArgumentResolver;
 import org.gbif.registry.ws.provider.networkEntitiesList.*;
+import org.gbif.rest.client.RestClientFactory;
+import org.gbif.rest.client.configuration.ClientConfiguration;
+import org.gbif.rest.client.species.NameUsageMatchingService;
 import org.gbif.vocabulary.client.ConceptClient;
 import org.gbif.ws.client.ClientBuilder;
 import org.gbif.ws.json.JacksonJsonObjectMapperProvider;
@@ -185,13 +187,10 @@ public class WebMvcConfig implements WebMvcConfigurer {
   }
 
   @Bean
-  public NubResourceClient nubResourceClient(@Value("${api.root.url}") String apiRootUrl) {
-    return new ClientBuilder()
-        .withObjectMapper(
-            JacksonJsonObjectMapperProvider.getObjectMapperWithBuilderSupport()
-                .registerModule(new JavaTimeModule()))
-        .withUrl(apiRootUrl)
-        .build(NubResourceClient.class);
+  public NameUsageMatchingService nameUsageMatchingService(@Value("${api.root.url}") String apiRootUrl) {
+    return RestClientFactory.createNameMatchService(ClientConfiguration.builder()
+        .withBaseApiUrl(apiRootUrl)
+        .build());
   }
 
   @Bean

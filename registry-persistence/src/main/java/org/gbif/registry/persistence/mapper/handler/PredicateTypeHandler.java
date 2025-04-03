@@ -13,6 +13,9 @@
  */
 package org.gbif.registry.persistence.mapper.handler;
 
+import com.fasterxml.jackson.databind.module.SimpleModule;
+
+import org.gbif.api.model.occurrence.search.OccurrenceSearchParameter;
 import org.gbif.api.model.predicate.Predicate;
 
 import java.sql.CallableStatement;
@@ -32,7 +35,12 @@ import com.google.common.base.Strings;
 public class PredicateTypeHandler implements TypeHandler<Predicate> {
 
   private final ObjectMapper objectMapper =
-      new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+      new ObjectMapper()
+        .registerModule(new SimpleModule()
+          .addKeyDeserializer(OccurrenceSearchParameter.class, new OccurrenceSearchParameter.OccurrenceSearchParameterKeyDeserializer())
+          .addDeserializer(OccurrenceSearchParameter.class, new OccurrenceSearchParameter.OccurrenceSearchParameterDeserializer())
+        )
+        .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
   @Override
   public Predicate getResult(CallableStatement cs, int columnIndex) throws SQLException {
