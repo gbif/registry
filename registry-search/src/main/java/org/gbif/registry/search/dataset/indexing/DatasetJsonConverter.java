@@ -352,7 +352,7 @@ public class DatasetJsonConverter {
   private void addFacetsData(ObjectNode datasetJsonNode) {
     String datasetKey = datasetJsonNode.get("key").textValue();
     Set<OccurrenceSearchParameter> facets =
-        EnumSet.of(
+        Set.of(
             OccurrenceSearchParameter.COUNTRY, OccurrenceSearchParameter.CONTINENT,
             OccurrenceSearchParameter.TAXON_KEY, OccurrenceSearchParameter.YEAR);
     OccurrenceSearchRequest occurrenceSearchRequest = new OccurrenceSearchRequest();

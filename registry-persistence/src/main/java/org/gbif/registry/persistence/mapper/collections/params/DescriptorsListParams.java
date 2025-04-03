@@ -14,10 +14,10 @@ import org.gbif.api.vocabulary.collections.CollectionFacetParameter;
 public class DescriptorsListParams extends CollectionListParams {
 
   // descriptors fields
-  @Nullable List<String> usageName;
-  @Nullable List<Integer> usageKey;
-  @Nullable List<Rank> usageRank;
-  @Nullable List<Integer> taxonKey;
+  List<String> usageName;
+  List<String> usageKey;
+  List<String> usageRank;
+  List<String> taxonKey;
   @Nullable List<Country> descriptorCountry;
   @Nullable List<RangeParam<Integer>> individualCount;
   @Nullable List<String> identifiedBy;
@@ -42,8 +42,7 @@ public class DescriptorsListParams extends CollectionListParams {
         || facet == CollectionFacetParameter.SPECIES_KEY
         || facet == CollectionFacetParameter.TYPE_STATUS
         || facet == CollectionFacetParameter.RECORDED_BY
-        || facet == CollectionFacetParameter.OBJECT_CLASSIFICATION
-        || facet == CollectionFacetParameter.TAXON_KEY;
+        || facet == CollectionFacetParameter.OBJECT_CLASSIFICATION;
   }
 
   public boolean descriptorSearch() {
@@ -83,7 +82,6 @@ public class DescriptorsListParams extends CollectionListParams {
     return facet == CollectionFacetParameter.PRESERVATION_TYPE
         || facet == CollectionFacetParameter.CONTENT_TYPE
         || facet == CollectionFacetParameter.TYPE_STATUS
-        || facet == CollectionFacetParameter.RECORDED_BY
-        || facet == CollectionFacetParameter.TAXON_KEY;
+        || facet == CollectionFacetParameter.RECORDED_BY;
   }
 }

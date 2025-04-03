@@ -46,7 +46,6 @@ import org.gbif.api.model.registry.Taggable;
 import org.gbif.api.service.collections.ChangeSuggestionService;
 import org.gbif.api.service.collections.ContactService;
 import org.gbif.api.service.collections.CrudService;
-import org.gbif.api.util.VocabularyUtils;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.UserRole;
 import org.gbif.api.vocabulary.collections.MasterSourceType;
@@ -255,7 +254,7 @@ public abstract class BaseChangeSuggestionService<
     T currentEntity = crudService.get(changeSuggestion.getEntityKey());
     dto.setChanges(extractChanges(changeSuggestion.getSuggestedEntity(), currentEntity));
     dto.setCountryScope(getCountry(currentEntity));
-    dto.setCountryIsoCode(getCountry(currentEntity) != null ? getCountry(currentEntity).getIso2LetterCode() : null);
+
     return dto;
   }
 
@@ -267,11 +266,6 @@ public abstract class BaseChangeSuggestionService<
     dto.setChanges(
         extractChanges(changeSuggestion.getSuggestedEntity(), createEmptyEntityInstance()));
     dto.setCountryScope(getCountry(changeSuggestion.getSuggestedEntity()));
-
-    Country country = getCountry(changeSuggestion.getSuggestedEntity());
-    if (country != null) {
-      dto.setCountryIsoCode(country.getIso2LetterCode());
-    }
     if (changeSuggestion instanceof CollectionChangeSuggestion) {
       dto.setCreateInstitution(((CollectionChangeSuggestion) changeSuggestion).getCreateInstitution());
       dto.setIhIdentifier(((CollectionChangeSuggestion) changeSuggestion).getIhIdentifier());
@@ -291,12 +285,7 @@ public abstract class BaseChangeSuggestionService<
     }
 
     ChangeSuggestionDto dto = createBaseChangeSuggestionDto(changeSuggestion);
-
-    Country country = getCountry(currentEntity);
-    dto.setCountryScope(country);
-    if (country != null) {
-      dto.setCountryIsoCode(country.getIso2LetterCode());
-    }
+    dto.setCountryScope(getCountry(currentEntity));
 
     return dto;
   }
@@ -309,12 +298,7 @@ public abstract class BaseChangeSuggestionService<
     dto.setMergeTargetKey(changeSuggestion.getMergeTargetKey());
 
     T currentEntity = crudService.get(changeSuggestion.getEntityKey());
-
-    Country country = getCountry(currentEntity);
-    dto.setCountryScope(country);
-    if (country != null) {
-      dto.setCountryIsoCode(country.getIso2LetterCode());
-    }
+    dto.setCountryScope(getCountry(currentEntity));
 
     return dto;
   }
@@ -510,21 +494,15 @@ public abstract class BaseChangeSuggestionService<
       @Nullable String proposerEmail,
       @Nullable UUID entityKey,
       @Nullable String ihIdentifier,
-      @Nullable String country,
       @Nullable Pageable pageable) {
     Pageable page = pageable == null ? new PagingRequest() : pageable;
 
-    // Use VocabularyUtils to handle flexible country code input
-    String countryCode = VocabularyUtils.lookup(country, Country.class)
-        .map(Country::getIso2LetterCode)
-        .orElse(country);
-
     List<ChangeSuggestionDto> dtos =
         changeSuggestionMapper.list(
-            status, type, collectionEntityType, proposerEmail, entityKey, ihIdentifier, countryCode, page);
+            status, type, collectionEntityType, proposerEmail, entityKey, ihIdentifier, page);
 
     long count =
-        changeSuggestionMapper.count(status, type, collectionEntityType, proposerEmail, entityKey, countryCode);
+        changeSuggestionMapper.count(status, type, collectionEntityType, proposerEmail, entityKey);
 
     List<R> changeSuggestions =
         dtos.stream().map(this::dtoToChangeSuggestion).collect(Collectors.toList());
@@ -675,22 +653,6 @@ public abstract class BaseChangeSuggestionService<
     dto.setProposerEmail(changeSuggestion.getProposerEmail());
     dto.setProposedBy(getUsername());
     dto.setModifiedBy(getUsername());
-
-    // Set the country for the change suggestion
-    if (changeSuggestion.getEntityKey() != null) {
-      // For updates, get country from existing entity
-      T entity = crudService.get(changeSuggestion.getEntityKey());
-      Country country = getCountry(entity);
-      if (country != null) {
-        dto.setCountryIsoCode(country.getIso2LetterCode());
-      }
-    } else if (changeSuggestion.getSuggestedEntity() != null) {
-      // For creates, get country from suggested entity
-      Country country = getCountry(changeSuggestion.getSuggestedEntity());
-      if (country != null) {
-        dto.setCountryIsoCode(country.getIso2LetterCode());
-      }
-    }
 
     return dto;
   }

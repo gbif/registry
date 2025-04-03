@@ -52,15 +52,8 @@ public class ChangeSuggestionDto {
   private String modifiedBy;
   private String ihIdentifier;
   private Boolean createInstitution;
-  /**
-   * ISO-2 country code, stored in the database for filtering purposes.
-   */
-  private String countryIsoCode;
 
-  /**
-   * This field is not persisted in the DB.
-   * It stores the country object that has to be taken into account
-   * for user permissions and email notifications.
-   */
+  // this field is not persisted in the DB. It stores the country that has to be taken into account
+  // to check the user permissions
   private Country countryScope;
 }

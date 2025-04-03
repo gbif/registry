@@ -44,7 +44,6 @@ public interface ChangeSuggestionMapper {
       @Param("proposerEmail") String proposerEmail,
       @Param("entityKey") UUID entityKey,
       @Param("ihIdentifier") String ihIdentifier,
-      @Param("country") String country,
       @Nullable @Param("page") Pageable page);
 
   long count(
@@ -52,8 +51,7 @@ public interface ChangeSuggestionMapper {
       @Param("type") Type type,
       @Param("entityType") CollectionEntityType entityType,
       @Param("proposerEmail") String proposerEmail,
-      @Param("entityKey") UUID entityKey,
-      @Param("country") String country);
+      @Param("entityKey") UUID entityKey);
 
   void update(ChangeSuggestionDto suggestion);
 }
