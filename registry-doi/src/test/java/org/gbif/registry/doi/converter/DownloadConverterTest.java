@@ -34,6 +34,7 @@ import static org.gbif.registry.doi.converter.DownloadTestDataProvider.preparePr
 import static org.gbif.registry.doi.converter.DownloadTestDataProvider.prepareSqlDownload;
 import static org.gbif.registry.doi.converter.DownloadTestDataProvider.prepareUser;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.mock;
@@ -52,6 +53,7 @@ public class DownloadConverterTest {
     // mock title lookup API
     TitleLookupService tl = mock(TitleLookupService.class);
     when(tl.getSpeciesName(anyString())).thenReturn("Abies alba Mill.");
+    when(tl.getSpeciesName(anyString(), any())).thenReturn("Abies alba Mill.");
     final String expected = getXmlMetadataFromFile("metadata/metadata-predicate-download.xml");
 
     // when
@@ -63,7 +65,7 @@ public class DownloadConverterTest {
     assertThat(
       actualXmlMetadata,
       CompareMatcher.isIdenticalTo(expected).normalizeWhitespace().ignoreWhitespace());
-    verify(tl, atLeastOnce()).getSpeciesName(anyString());
+    verify(tl, atLeastOnce()).getSpeciesName(anyString(), any());
   }
 
   @Test
@@ -101,6 +103,7 @@ public class DownloadConverterTest {
     // mock title lookup API
     TitleLookupService tl = mock(TitleLookupService.class);
     when(tl.getSpeciesName(anyString())).thenReturn("Abies alba Mill.");
+    when(tl.getSpeciesName(anyString(), any())).thenReturn("Abies alba Mill.");
     final String expected = getXmlMetadataFromFile("metadata/metadata-large-predicate-download.xml");
 
     // when
@@ -114,6 +117,6 @@ public class DownloadConverterTest {
     assertThat(
       truncatedXml,
       CompareMatcher.isIdenticalTo(expected).normalizeWhitespace().ignoreWhitespace());
-    verify(tl, atLeastOnce()).getSpeciesName(anyString());
+    verify(tl, atLeastOnce()).getSpeciesName(anyString(), any());
   }
 }
