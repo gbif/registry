@@ -14,10 +14,10 @@ import org.gbif.api.vocabulary.collections.CollectionFacetParameter;
 public class DescriptorsListParams extends CollectionListParams {
 
   // descriptors fields
-  @Nullable List<String> usageName;
-  @Nullable List<Integer> usageKey;
-  @Nullable List<Rank> usageRank;
-  @Nullable List<Integer> taxonKey;
+  List<String> usageName;
+  List<String> usageKey;
+  List<String> usageRank;
+  List<String> taxonKey;
   @Nullable List<Country> descriptorCountry;
   @Nullable List<RangeParam<Integer>> individualCount;
   @Nullable List<String> identifiedBy;

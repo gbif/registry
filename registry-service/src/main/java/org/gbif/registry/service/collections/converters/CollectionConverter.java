@@ -19,6 +19,9 @@ import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Identifier;
 import org.gbif.api.model.registry.Organization;
 import org.gbif.api.model.registry.eml.TaxonomicCoverages;
+import org.gbif.api.model.registry.eml.temporal.DateRange;
+import org.gbif.api.model.registry.eml.temporal.SingleDate;
+import org.gbif.api.model.registry.eml.temporal.VerbatimTimePeriod;
 import org.gbif.api.vocabulary.ContactType;
 import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.api.vocabulary.PreservationMethodType;
@@ -30,7 +33,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-
+import java.text.SimpleDateFormat;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 
@@ -42,6 +45,8 @@ import static org.gbif.registry.service.collections.converters.ConverterUtils.no
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class CollectionConverter {
+
+  private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
 
   private static List<String> fromPreservationMethodType(
       PreservationMethodType preservationMethodType, ConceptClient conceptClient) {
@@ -133,6 +138,27 @@ public class CollectionConverter {
             .collect(Collectors.joining("."));
     geographicCoverage = normalizePunctuationSigns(geographicCoverage).trim();
     existingCollection.setGeographicCoverage(geographicCoverage);
+
+    String temporalCoverage = dataset.getTemporalCoverages().stream()
+        .map(tc -> {
+            if (tc instanceof DateRange) {
+                DateRange dr = (DateRange) tc;
+                return String.format("%s - %s",
+                    dr.getStart() != null ? DATE_FORMAT.format(dr.getStart()) : "",
+                    dr.getEnd() != null ? DATE_FORMAT.format(dr.getEnd()) : "");
+            } else if (tc instanceof SingleDate) {
+                SingleDate sd = (SingleDate) tc;
+                return sd.getDate() != null ? DATE_FORMAT.format(sd.getDate()) : "";
+            } else if (tc instanceof VerbatimTimePeriod) {
+                VerbatimTimePeriod vtp = (VerbatimTimePeriod) tc;
+                return vtp.getPeriod() != null ? vtp.getPeriod() : "";
+            }
+            return "";
+        })
+        .filter(s -> !s.isEmpty())
+        .collect(Collectors.joining("; "));
+    temporalCoverage = normalizePunctuationSigns(temporalCoverage).trim();
+    existingCollection.setTemporalCoverage(temporalCoverage);
 
     existingCollection.setIncorporatedCollections(
         dataset.getCollections().stream()

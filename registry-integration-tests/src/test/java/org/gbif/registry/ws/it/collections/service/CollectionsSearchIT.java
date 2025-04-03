@@ -51,7 +51,7 @@ import org.gbif.api.vocabulary.collections.CollectionsSortField;
 import org.gbif.api.vocabulary.collections.InstitutionFacetParameter;
 import org.gbif.registry.database.TestCaseDatabaseInitializer;
 import org.gbif.registry.service.collections.CollectionsSearchService;
-import org.gbif.registry.test.mocks.NubResourceClientMock;
+import org.gbif.registry.test.mocks.NameUsageMatchingServiceMock;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -452,7 +452,7 @@ public class CollectionsSearchIT extends BaseServiceIT {
         1,
         null,
         CollectionDescriptorsSearchRequest.builder()
-            .usageName(Collections.singletonList(NubResourceClientMock.DEFAULT_USAGE.getName()))
+            .usageName(Collections.singletonList(NameUsageMatchingServiceMock.DEFAULT_USAGE.getName()))
             .build());
 
     assertDescriptorSearch(
