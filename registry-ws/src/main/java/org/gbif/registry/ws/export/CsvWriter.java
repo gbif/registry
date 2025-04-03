@@ -881,7 +881,7 @@ public class CsvWriter<T> {
           ":",
           String.valueOf(rankedName.getKey()),
           rankedName.getName(),
-          rankedName.getRank() != null ? rankedName.getRank().name() : null);
+          rankedName.getRank() != null ? rankedName.getRank() : null);
     }
 
     @Override

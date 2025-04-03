@@ -365,7 +365,7 @@
     <if test="params.usageKey != null and params.usageKey.size > 0">
       AND cd.usage_key IN
       <foreach item="item" collection="params.usageKey" open="(" separator="," close=")">
-        #{item,jdbcType=INTEGER}
+        #{item,jdbcType=VARCHAR}
       </foreach>
     </if>
     <if test="params.usageName != null and params.usageName.size > 0">
@@ -383,7 +383,7 @@
     <if test="params.taxonKey != null  and params.taxonKey.size > 0">
       AND cd.taxon_keys &amp;&amp; ARRAY
       <foreach item="item" collection="params.taxonKey" open="[" separator="," close="]">
-        #{item,jdbcType=INTEGER}
+        #{item,jdbcType=VARCHAR}
       </foreach>
     </if>
     <include refid="org.gbif.registry.persistence.mapper.collections.Common.MULTIVALUE_RANGE_FIELD_FILTER">
@@ -585,9 +585,6 @@
       <when test="params.facet.name.equals('ACCESSION_STATUS')">
         c.accession_status
       </when>
-      <when test="params.facet.name.equals('TAXON_KEY')">
-        unnest(cd.taxon_keys)
-      </when>
       <when test="params.facet.name.equals('DESCRIPTOR_COUNTRY')">
         cd.country
       </when>
@@ -631,8 +628,7 @@
       <when test="params.facet.name.equals('PRESERVATION_TYPE')
                   or params.facet.name.equals('CONTENT_TYPE')
                   or params.facet.name.equals('TYPE_STATUS')
-                  or params.facet.name.equals('RECORDED_BY')
-                  or params.facet.name.equals('TAXON_KEY')">
+                  or params.facet.name.equals('RECORDED_BY')">
         COUNT(DISTINCT facet)
         FROM collection c
         <if test="params.descriptorSearch or params.descriptorFacet">
@@ -652,9 +648,6 @@
           </when>
           <when test="params.facet.name.equals('RECORDED_BY')">
             cd.recorded_by
-          </when>
-          <when test="params.facet.name.equals('TAXON_KEY')">
-            cd.taxon_keys
           </when>
         </choose>
         ) facet ON true
