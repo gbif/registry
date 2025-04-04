@@ -88,19 +88,19 @@
     <spring-cloud-sleuth.version>2.2.8.RELEASE</spring-cloud-sleuth.version>
 
     <!-- GBIF -->
-    <gbif-api.version>2.1.0-multitaxonomy-SNAPSHOT</gbif-api.version>
+    <gbif-api.version>2.2.0-multitaxonomy-SNAPSHOT</gbif-api.version>
     <gbif-common.version>0.59</gbif-common.version>
     <gbif-common-mybatis.version>2.0.1-multitaxonomy-SNAPSHOT</gbif-common-mybatis.version>
     <gbif-common-ws.version>2.0.6</gbif-common-ws.version>
     <gbif-directory.version>1.14</gbif-directory.version>
     <gbif-doi.version>2.22-SNAPSHOT</gbif-doi.version>
-    <gbif-download-query-tools.version>1.53.0-multitaxonomy-java11-SNAPSHOT</gbif-download-query-tools.version>
+    <gbif-download-query-tools.version>2.0.2-multitaxonomy-java11-SNAPSHOT</gbif-download-query-tools.version>
     <gbif-httputils.version>0.10</gbif-httputils.version>
     <gbif-metadata-profile.version>2.6</gbif-metadata-profile.version>
     <gbif-parsers.version>0.67</gbif-parsers.version>
     <gbif-postal-service.version>1.8.1</gbif-postal-service.version>
     <xoai.version>4.1.0-gbif-4</xoai.version>
-    <gbif-occurrence.version>0.196.0-H3-multi-taxonomy-SNAPSHOT</gbif-occurrence.version>
+    <gbif-occurrence.version>1.0.28-multitaxonomy-SNAPSHOT</gbif-occurrence.version>
     <gbif-vocabulary.version>1.0.12</gbif-vocabulary.version>
     <gbif-kvs.version>2.0-multitaxonomy-SNAPSHOT</gbif-kvs.version>
     <checklistbank.version>2.127</checklistbank.version>
@@ -433,13 +433,11 @@
         <artifactId>vocabulary-rest-ws-client</artifactId>
         <version>${gbif-vocabulary.version}</version>
       </dependency>
-
       <dependency>
         <groupId>org.gbif.kvs</groupId>
         <artifactId>kvs-rest-clients</artifactId>
         <version>${gbif-kvs.version}</version>
       </dependency>
-
 
       <!-- Third party dependencies -->
       <dependency>
