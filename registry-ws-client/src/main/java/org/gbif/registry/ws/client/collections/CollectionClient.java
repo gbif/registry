@@ -14,6 +14,7 @@
 package org.gbif.registry.ws.client.collections;
 
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import org.gbif.api.annotation.Trim;
 import org.gbif.api.model.collections.Collection;
@@ -115,7 +116,8 @@ public interface CollectionClient
       @RequestParam(value = "format", defaultValue = "CSV") ExportFormat format,
       @RequestPart("descriptorsFile") MultipartFile descriptorsFile,
       @RequestParam("title") @Trim String title,
-      @RequestParam(value = "description", required = false) @Trim String description);
+      @RequestParam(value = "description", required = false) @Trim String description,
+      @RequestParam(value = "tags", required = false) Set<String> tags);
 
   @PutMapping(
       value = "{collectionKey}/descriptorGroup/{key}",
@@ -126,7 +128,8 @@ public interface CollectionClient
       @RequestParam(value = "format", defaultValue = "CSV") ExportFormat format,
       @RequestPart("descriptorsFile") MultipartFile descriptorsFile,
       @RequestParam("title") @Trim String title,
-      @RequestParam(value = "description", required = false) @Trim String description);
+      @RequestParam(value = "description", required = false) @Trim String description,
+      @RequestParam(value = "tags", required = false) Set<String> tags);
 
   @GetMapping(
       value = "{collectionKey}/descriptorGroup/{key}",

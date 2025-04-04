@@ -596,12 +596,14 @@ public class CollectionResource
       @RequestParam(value = "format", defaultValue = "CSV") ExportFormat format,
       @RequestPart(value = "descriptorsFile", required = false) MultipartFile descriptorsFile,
       @RequestParam("title") @Trim String title,
-      @RequestParam(value = "description", required = false) @Trim String description) {
+      @RequestParam(value = "description", required = false) @Trim String description,
+      @RequestParam(value = "tags", required = false) Set<String> tags) {
     return descriptorsService.createDescriptorGroup(
         StreamUtils.copyToByteArray(descriptorsFile.getResource().getInputStream()),
         format,
         title,
         description,
+        tags,
         collectionKey);
   }
 
@@ -629,7 +631,8 @@ public class CollectionResource
       @RequestParam(value = "format", defaultValue = "CSV") ExportFormat format,
       @RequestPart("descriptorsFile") MultipartFile descriptorsFile,
       @RequestParam("title") @Trim String title,
-      @RequestParam(value = "description", required = false) @Trim String description) {
+      @RequestParam(value = "description", required = false) @Trim String description,
+      @RequestParam(value = "tags", required = false) Set<String> tags) {
     DescriptorGroup existingDescriptorGroup =
         descriptorsService.getDescriptorGroup(descriptorGroupKey);
     if (existingDescriptorGroup == null) {
@@ -643,6 +646,7 @@ public class CollectionResource
         StreamUtils.copyToByteArray(descriptorsFile.getResource().getInputStream()),
         format,
         title,
+        tags,
         description);
   }
 

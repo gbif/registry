@@ -25,6 +25,7 @@ import static org.mockito.Mockito.when;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import lombok.SneakyThrows;
@@ -248,7 +249,7 @@ public class CollectionResourceIT
   @SneakyThrows
   @Test
   public void createDescriptorGroupTest() {
-    when(descriptorsService.createDescriptorGroup(any(), any(), any(), any(), any()))
+    when(descriptorsService.createDescriptorGroup(any(), any(), any(), any(), any(), any()))
         .thenReturn(1L);
 
     Resource descriptorsResource = new ClassPathResource("collections/descriptors.csv");
@@ -259,7 +260,7 @@ public class CollectionResourceIT
         1L,
         getClient()
             .createDescriptorGroup(
-                UUID.randomUUID(), ExportFormat.CSV, descriptorsFile, "title", "desc"));
+                UUID.randomUUID(), ExportFormat.CSV, descriptorsFile, "title",  "desc", Set.of("test-tag")));
   }
 
   @SneakyThrows
@@ -273,7 +274,7 @@ public class CollectionResourceIT
     when(descriptorsService.getDescriptorGroup(anyLong())).thenReturn(descriptorGroup);
     doNothing()
         .when(descriptorsService)
-        .updateDescriptorGroup(anyLong(), any(), any(), anyString(), anyString());
+        .updateDescriptorGroup(anyLong(), any(), any(), anyString(), any(Set.class), anyString());
 
     Resource descriptorsResource = new ClassPathResource("collections/descriptors.csv");
     MultipartFile descriptorsFile =
@@ -283,7 +284,7 @@ public class CollectionResourceIT
         () ->
             getClient()
                 .updateDescriptorGroup(
-                    collectionKey, 1L, ExportFormat.CSV, descriptorsFile, "title", "desc"));
+                    collectionKey, 1L, ExportFormat.CSV, descriptorsFile, "title", "desc", Set.of("test-tag")));
   }
 
   @Test
@@ -475,6 +476,29 @@ public class CollectionResourceIT
 
     PagingResponse<CollectionView> emptyResponse = getClient().listForInstitutions(noMatchRequest);
     assertEquals(0, emptyResponse.getResults().size());
+  }
+
+  @Test
+  public void searchDescriptorGroupByTagsTest() {
+    UUID collectionKey = UUID.randomUUID();
+    DescriptorGroup descriptorGroup = new DescriptorGroup();
+    descriptorGroup.setKey(1L);
+    descriptorGroup.setCollectionKey(collectionKey);
+    descriptorGroup.setTitle("title");
+    descriptorGroup.setTags(Set.of("test-tag"));
+
+    when(resourceNotFoundService.entityExists(any(), any())).thenReturn(true);
+    when(descriptorsService.getDescriptorGroup(anyLong())).thenReturn(descriptorGroup);
+    when(descriptorsService.listDescriptorGroups(any(), any())).thenReturn(
+        new PagingResponse<>(new PagingRequest(), 1L, Collections.singletonList(descriptorGroup)));
+
+    DescriptorGroupSearchRequest searchRequest = DescriptorGroupSearchRequest.builder()
+        .tags(Set.of("test-tag"))
+        .build();
+
+    PagingResponse<DescriptorGroup> response = getClient().listCollectionDescriptorGroups(collectionKey, searchRequest);
+    assertEquals(1, response.getCount());
+    assertEquals("test-tag", response.getResults().get(0).getTags().iterator().next());
   }
 
   protected CollectionClient getClient() {

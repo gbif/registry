@@ -1,0 +1,28 @@
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+  <changeSet id="157" author="auzun">
+    <sql splitStatements="false" stripComments="true">
+      <![CDATA[
+        -- Add the tags column as a text array
+        ALTER TABLE collection_descriptor_group ADD COLUMN tags text[] DEFAULT '{}'::text[];
+
+        -- Update fulltext search trigger to include tags for searching
+        CREATE OR REPLACE FUNCTION collection_descriptor_group_change_trigger()
+          RETURNS TRIGGER AS
+          $change$
+              BEGIN
+                NEW.fulltext_search :=
+                  TO_TSVECTOR('pg_catalog.english', unaccent(COALESCE(NEW.title,''))) ||
+                  TO_TSVECTOR('pg_catalog.english', unaccent(COALESCE(NEW.description,''))) ||
+                  TO_TSVECTOR('pg_catalog.english', unaccent(COALESCE(array_to_string(NEW.tags, ' '),'')));
+                RETURN NEW;
+              END;
+         $change$
+         LANGUAGE plpgsql;
+      ]]>
+    </sql>
+  </changeSet>
+</databaseChangeLog>

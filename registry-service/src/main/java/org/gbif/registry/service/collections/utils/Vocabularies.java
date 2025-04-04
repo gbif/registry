@@ -59,6 +59,8 @@ public class Vocabularies {
   public static final String PRESERVATION_TYPE = "PreservationType";
   public static final String TYPE_STATUS = "TypeStatus";
 
+  public static final String COLLECTION_DESCRIPTOR_GROUP_TYPE = "CollectionDescriptorGroupTypes";
+
   private static final Cache<String, Set<String>> childrenConceptsCache =
       new Cache2kBuilder<String, Set<String>>() {}.eternal(true).build();
 
@@ -129,6 +131,20 @@ public class Vocabularies {
 
     if (errors.length() > 0) {
       throw new IllegalArgumentException(errors.toString());
+    }
+  }
+
+  public static void checkDescriptorGroupTags(ConceptClient conceptClient, Set<String> tags) {
+    if (tags != null && !tags.isEmpty()) {
+      StringJoiner errors = new StringJoiner(";\n");
+      tags.stream()
+          .filter(s -> !Strings.isNullOrEmpty(s))
+          .forEach(
+              tag ->
+                  checkConcept(conceptClient, COLLECTION_DESCRIPTOR_GROUP_TYPE, tag, errors));
+      if (errors.length() > 0) {
+        throw new IllegalArgumentException(errors.toString());
+      }
     }
   }
 
