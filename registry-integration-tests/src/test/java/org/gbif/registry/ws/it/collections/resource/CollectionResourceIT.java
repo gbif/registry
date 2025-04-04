@@ -13,15 +13,24 @@
  */
 package org.gbif.registry.ws.it.collections.resource;
 
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -31,6 +40,8 @@ import lombok.SneakyThrows;
 import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.CollectionImportParams;
 import org.gbif.api.model.collections.descriptors.Descriptor;
+import org.gbif.api.model.collections.descriptors.DescriptorChangeSuggestion;
+import org.gbif.api.model.collections.descriptors.DescriptorChangeSuggestionRequest;
 import org.gbif.api.model.collections.descriptors.DescriptorGroup;
 import org.gbif.api.model.collections.latimercore.ObjectGroup;
 import org.gbif.api.model.collections.request.CollectionSearchRequest;
@@ -38,9 +49,11 @@ import org.gbif.api.model.collections.request.DescriptorGroupSearchRequest;
 import org.gbif.api.model.collections.request.DescriptorSearchRequest;
 import org.gbif.api.model.collections.request.InstitutionSearchRequest;
 import org.gbif.api.model.collections.suggestions.CollectionChangeSuggestion;
+import org.gbif.api.model.collections.suggestions.Status;
 import org.gbif.api.model.collections.suggestions.Type;
 import org.gbif.api.model.collections.view.CollectionView;
 import org.gbif.api.model.common.export.ExportFormat;
+import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.search.collections.KeyCodeNameResult;
@@ -48,6 +61,7 @@ import org.gbif.api.service.collections.BatchService;
 import org.gbif.api.service.collections.ChangeSuggestionService;
 import org.gbif.api.service.collections.CollectionEntityService;
 import org.gbif.api.service.collections.CollectionService;
+import org.gbif.api.service.collections.DescriptorChangeSuggestionService;
 import org.gbif.api.service.collections.DescriptorsService;
 import org.gbif.api.service.collections.InstitutionService;
 import org.gbif.api.vocabulary.Country;
@@ -61,7 +75,11 @@ import org.gbif.registry.service.collections.merge.MergeService;
 import org.gbif.registry.service.collections.suggestions.CollectionChangeSuggestionService;
 import org.gbif.registry.ws.client.collections.CollectionClient;
 import org.gbif.registry.ws.it.fixtures.RequestTestFixture;
+import org.gbif.ws.NotFoundException;
+import org.gbif.ws.WebApplicationException;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
+
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -70,6 +88,7 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.http.HttpStatus;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 
@@ -85,7 +104,11 @@ public class CollectionResourceIT
   @MockBean private CollectionChangeSuggestionService collectionChangeSuggestionService;
 
   @MockBean private CollectionBatchService collectionBatchService;
+
   @MockBean private DescriptorsService descriptorsService;
+
+  @MockBean private DescriptorChangeSuggestionService descriptorChangeSuggestionService;
+
   @MockBean private InstitutionService institutionService;
 
   @Captor
@@ -477,6 +500,229 @@ public class CollectionResourceIT
     assertEquals(0, emptyResponse.getResults().size());
   }
 
+  @Test
+  public void createDescriptorChangeSuggestionTest() throws IOException {
+    UUID collectionKey = UUID.randomUUID();
+    DescriptorChangeSuggestion descriptorChangeSuggestion = newDescriptorChangeSuggestion(collectionKey);
+    Long suggestionKey = 1L;
+    descriptorChangeSuggestion.setKey(suggestionKey);
+
+    // Mock the entity exists check
+    when(resourceNotFoundService.entityExists(any(), any())).thenReturn(true);
+
+    // Mock service methods
+    when(descriptorChangeSuggestionService.createSuggestion(
+        any(InputStream.class),
+        anyString(),
+        any(DescriptorChangeSuggestionRequest.class)))
+      .thenReturn(descriptorChangeSuggestion);
+
+    Resource descriptorsResource = new ClassPathResource("collections/descriptors.csv");
+    MultipartFile descriptorsFile =
+      new MockMultipartFile("file", "descriptors.csv", "text/csv", descriptorsResource.getInputStream());
+
+    // Create the suggestion
+    DescriptorChangeSuggestion created = getClient()
+      .createDescriptorSuggestion(
+        collectionKey,
+        descriptorsFile,
+        descriptorChangeSuggestion.getType(),
+        descriptorChangeSuggestion.getTitle(),
+        descriptorChangeSuggestion.getDescription(),
+        descriptorChangeSuggestion.getFormat(),
+        descriptorChangeSuggestion.getComments(),
+        descriptorChangeSuggestion.getProposedBy()
+      );
+
+    // Verify create suggestion
+    assertEquals(suggestionKey, created.getKey());
+    assertEquals(descriptorChangeSuggestion.getTitle(), created.getTitle());
+    assertEquals(descriptorChangeSuggestion.getDescription(), created.getDescription());
+    assertEquals(descriptorChangeSuggestion.getFormat(), created.getFormat());
+    verify(descriptorChangeSuggestionService).createSuggestion(
+        any(InputStream.class),
+        anyString(),
+        any(DescriptorChangeSuggestionRequest.class));
+  }
+
+  @Test
+  public void listAllDescriptorSuggestionsTest() {
+    // Create suggestions for different collections
+    UUID collectionKey1 = UUID.randomUUID();
+    UUID collectionKey2 = UUID.randomUUID();
+
+    DescriptorChangeSuggestion suggestion1 = newDescriptorChangeSuggestion(collectionKey1);
+    suggestion1.setKey(1L);
+
+    DescriptorChangeSuggestion suggestion2 = newDescriptorChangeSuggestion(collectionKey2);
+    suggestion2.setKey(2L);
+    suggestion2.setTitle("Second Collection Descriptors");
+
+    List<DescriptorChangeSuggestion> allSuggestions = Arrays.asList(suggestion1, suggestion2);
+
+    // Mock the entity exists check
+    when(resourceNotFoundService.entityExists(any(), any())).thenReturn(true);
+
+    // Set up the mock for list all suggestions
+    when(descriptorChangeSuggestionService.list(
+        any(Pageable.class),
+        isNull(),
+        isNull(),
+        isNull(),
+        isNull() // collectionKey is null for listing all suggestions
+    )).thenReturn(new PagingResponse<>(new PagingRequest(), Long.valueOf(allSuggestions.size()), allSuggestions));
+
+    // Call the client method
+    PagingResponse<DescriptorChangeSuggestion> result = getClient().listAllDescriptorSuggestions(
+        null, null, null, new PagingRequest());
+
+    // Verify results
+    assertEquals(allSuggestions.size(), result.getResults().size());
+    assertEquals(2, result.getCount());
+
+    // Verify both collections are represented
+    assertTrue(result.getResults().stream()
+        .anyMatch(s -> s.getCollectionKey().equals(collectionKey1)));
+    assertTrue(result.getResults().stream()
+        .anyMatch(s -> s.getCollectionKey().equals(collectionKey2)));
+
+    verify(descriptorChangeSuggestionService).list(
+        any(Pageable.class), isNull(), isNull(), isNull(), isNull());
+  }
+
+  @Test
+  public void listDescriptorSuggestionsTest() {
+    UUID collectionKey = UUID.randomUUID();
+    DescriptorChangeSuggestion suggestion1 = newDescriptorChangeSuggestion(collectionKey);
+    suggestion1.setKey(1L);
+    suggestion1.setType(Type.CREATE);
+    suggestion1.setComments(Collections.singletonList("comment 1"));
+    suggestion1.setProposedBy("test1@example.com");
+
+    DescriptorChangeSuggestion suggestion2 = newDescriptorChangeSuggestion(collectionKey);
+    suggestion2.setKey(2L);
+    suggestion2.setType(Type.UPDATE);
+    suggestion2.setComments(Collections.singletonList("comment 2"));
+    suggestion2.setProposedBy("test2@example.com");
+
+    List<DescriptorChangeSuggestion> suggestions = Arrays.asList(suggestion1, suggestion2);
+
+    // Mock the entity exists check
+    when(resourceNotFoundService.entityExists(any(), any())).thenReturn(true);
+
+    // Set up the mock with any() for Pageable
+    when(descriptorChangeSuggestionService.list(
+        any(Pageable.class),
+        isNull(),
+        isNull(),
+        isNull(),
+        eq(collectionKey)
+    )).thenReturn(new PagingResponse<>(new PagingRequest(), Long.valueOf(suggestions.size()), suggestions));
+
+    // Call the client method
+    PagingResponse<DescriptorChangeSuggestion> result = getClient().listDescriptorSuggestions(
+        collectionKey, null, null, null, new PagingRequest());
+
+    assertEquals(suggestions.size(), result.getResults().size());
+    assertEquals(2, result.getCount());
+    assertEquals(suggestion1.getType(), result.getResults().get(0).getType());
+    assertEquals(suggestion2.getType(), result.getResults().get(1).getType());
+
+    verify(descriptorChangeSuggestionService).list(
+        any(Pageable.class), isNull(), isNull(), isNull(), eq(collectionKey));
+  }
+
+  @Test
+  public void updateDescriptorChangeSuggestionTest() throws IOException {
+    UUID collectionKey = UUID.randomUUID();
+    long suggestionKey = 1;
+    DescriptorChangeSuggestion descriptorChangeSuggestion = newDescriptorChangeSuggestion(collectionKey);
+    descriptorChangeSuggestion.setKey(suggestionKey);
+
+    // Mock the entity exists check
+    when(resourceNotFoundService.entityExists(any(), any())).thenReturn(true);
+
+    when(descriptorChangeSuggestionService.updateSuggestion(
+      eq(suggestionKey),
+      any(DescriptorChangeSuggestionRequest.class),
+      any(InputStream.class),
+      anyString()
+    )).thenReturn(descriptorChangeSuggestion);
+
+    Resource descriptorsResource = new ClassPathResource("collections/descriptors.csv");
+    MultipartFile descriptorsFile =
+      new MockMultipartFile("file", "descriptors.csv", "text/csv", descriptorsResource.getInputStream());
+
+    // Call the client
+    assertDoesNotThrow( () -> getClient()
+      .updateDescriptorSuggestion(
+        collectionKey,
+        suggestionKey,
+        descriptorsFile,
+        descriptorChangeSuggestion.getType(),
+        descriptorChangeSuggestion.getTitle(),
+        descriptorChangeSuggestion.getDescription(),
+        descriptorChangeSuggestion.getFormat(),
+        descriptorChangeSuggestion.getComments(),
+        descriptorChangeSuggestion.getProposedBy()
+      ));
+
+    verify(descriptorChangeSuggestionService).updateSuggestion(
+      suggestionKey,
+      any(DescriptorChangeSuggestionRequest.class),
+      any(InputStream.class),
+      anyString());
+  }
+
+  @Test
+  public void getDescriptorSuggestionTest() {
+    UUID collectionKey = UUID.randomUUID();
+    long suggestionKey = 1;
+    DescriptorChangeSuggestion suggestion = newDescriptorChangeSuggestion(collectionKey);
+    suggestion.setKey(suggestionKey);
+
+    // Mock the entity exists check
+    when(resourceNotFoundService.entityExists(any(), any())).thenReturn(true);
+    when(descriptorChangeSuggestionService.getSuggestion(anyLong())).thenReturn(suggestion);
+
+    DescriptorChangeSuggestion result = getClient().getDescriptorSuggestion(collectionKey, suggestionKey);
+
+    Assertions.assertNotNull(result);
+    assertEquals(suggestion.getKey(), result.getKey());
+    assertEquals(suggestion.getType(), result.getType());
+    assertEquals(suggestion.getTitle(), result.getTitle());
+
+    verify(descriptorChangeSuggestionService).getSuggestion(suggestionKey);
+  }
+
+  @Test
+  public void applyDescriptorSuggestionTest() throws IOException {
+    UUID collectionKey = UUID.randomUUID();
+    long suggestionKey = 1;
+
+    // Mock the entity exists check
+    when(resourceNotFoundService.entityExists(any(), any())).thenReturn(true);
+    doNothing().when(descriptorChangeSuggestionService).applySuggestion(suggestionKey);
+
+    assertDoesNotThrow(() -> getClient().applyDescriptorSuggestion(collectionKey, suggestionKey));
+
+    verify(descriptorChangeSuggestionService).applySuggestion(suggestionKey);
+  }
+
+  @Test
+  public void discardDescriptorSuggestionTest() {
+    UUID collectionKey = UUID.randomUUID();
+    long suggestionKey = 1;
+
+    // Mock the entity exists check
+    when(resourceNotFoundService.entityExists(any(), any())).thenReturn(true);
+    doNothing().when(descriptorChangeSuggestionService).discardSuggestion(suggestionKey);
+
+    assertDoesNotThrow(() -> getClient().discardDescriptorSuggestion(collectionKey, suggestionKey));
+
+    verify(descriptorChangeSuggestionService).discardSuggestion(suggestionKey);
+  }
+
   protected CollectionClient getClient() {
     return (CollectionClient) baseClient;
   }
@@ -489,5 +735,19 @@ public class CollectionResourceIT
   @Override
   protected CollectionEntityService<Collection> getMockCollectionEntityService() {
     return collectionService;
+  }
+
+  private DescriptorChangeSuggestion newDescriptorChangeSuggestion(UUID collectionKey) {
+    DescriptorChangeSuggestion suggestion = new DescriptorChangeSuggestion();
+    suggestion.setKey(1L);
+    suggestion.setType(Type.CREATE);
+    suggestion.setTitle("Collection Descriptors!!");
+    suggestion.setDescription("Collection descriptors for specimen counts and dates");
+    suggestion.setFormat(ExportFormat.CSV);
+    suggestion.setComments(Arrays.asList("Initial upload of collection descriptors", "Comment required!"));
+    suggestion.setProposedBy("aa@aa.org");
+    suggestion.setCollectionKey(collectionKey);
+    suggestion.setStatus(Status.PENDING);
+    return suggestion;
   }
 }
