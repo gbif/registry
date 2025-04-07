@@ -33,7 +33,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-
+import java.text.SimpleDateFormat;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 
@@ -45,6 +45,8 @@ import static org.gbif.registry.service.collections.converters.ConverterUtils.no
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class CollectionConverter {
+
+  private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
 
   private static List<String> fromPreservationMethodType(
       PreservationMethodType preservationMethodType, ConceptClient conceptClient) {
@@ -141,12 +143,12 @@ public class CollectionConverter {
         .map(tc -> {
             if (tc instanceof DateRange) {
                 DateRange dr = (DateRange) tc;
-                return String.format("%s - %s", 
-                    dr.getStart() != null ? dr.getStart().toString() : "",
-                    dr.getEnd() != null ? dr.getEnd().toString() : "");
+                return String.format("%s - %s",
+                    dr.getStart() != null ? DATE_FORMAT.format(dr.getStart()) : "",
+                    dr.getEnd() != null ? DATE_FORMAT.format(dr.getEnd()) : "");
             } else if (tc instanceof SingleDate) {
                 SingleDate sd = (SingleDate) tc;
-                return sd.getDate() != null ? sd.getDate().toString() : "";
+                return sd.getDate() != null ? DATE_FORMAT.format(sd.getDate()) : "";
             } else if (tc instanceof VerbatimTimePeriod) {
                 VerbatimTimePeriod vtp = (VerbatimTimePeriod) tc;
                 return vtp.getPeriod() != null ? vtp.getPeriod() : "";
