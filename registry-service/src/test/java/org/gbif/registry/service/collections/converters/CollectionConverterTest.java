@@ -32,6 +32,7 @@ import java.net.URI;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
+import java.text.SimpleDateFormat;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
@@ -45,6 +46,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class CollectionConverterTest {
 
   private final ConceptClient conceptClient = new ConceptClientMock();
+
+  private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
 
   @Test
   public void convertFromDatasetTest() {
@@ -120,19 +123,19 @@ public class CollectionConverterTest {
     // Verify temporal coverage contains all three types
     String temporalCoverage = convertedCollection.getTemporalCoverage();
     assertNotNull(temporalCoverage);
-    
+
     // Split by semicolon and verify each part
     String[] parts = temporalCoverage.split(";");
     assertEquals(3, parts.length);
-    
+
     // Verify SingleDate
-    assertEquals(singleDateValue.toString(), parts[0].trim());
-    
+    assertEquals(DATE_FORMAT.format(singleDateValue), parts[0].trim());
+
     // Verify DateRange
-    assertTrue(parts[1].trim().contains(startDate.toString()));
-    assertTrue(parts[1].trim().contains(endDate.toString()));
+    assertTrue(parts[1].trim().contains(DATE_FORMAT.format(startDate)));
+    assertTrue(parts[1].trim().contains(DATE_FORMAT.format(endDate)));
     assertTrue(parts[1].trim().contains(" - "));
-    
+
     // Verify VerbatimTimePeriod
     assertEquals(period, parts[2].trim());
   }
