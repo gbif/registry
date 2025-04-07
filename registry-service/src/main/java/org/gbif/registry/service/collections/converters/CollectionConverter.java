@@ -19,6 +19,9 @@ import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Identifier;
 import org.gbif.api.model.registry.Organization;
 import org.gbif.api.model.registry.eml.TaxonomicCoverages;
+import org.gbif.api.model.registry.eml.temporal.DateRange;
+import org.gbif.api.model.registry.eml.temporal.SingleDate;
+import org.gbif.api.model.registry.eml.temporal.VerbatimTimePeriod;
 import org.gbif.api.vocabulary.ContactType;
 import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.api.vocabulary.PreservationMethodType;
@@ -133,6 +136,27 @@ public class CollectionConverter {
             .collect(Collectors.joining("."));
     geographicCoverage = normalizePunctuationSigns(geographicCoverage).trim();
     existingCollection.setGeographicCoverage(geographicCoverage);
+
+    String temporalCoverage = dataset.getTemporalCoverages().stream()
+        .map(tc -> {
+            if (tc instanceof DateRange) {
+                DateRange dr = (DateRange) tc;
+                return String.format("%s - %s", 
+                    dr.getStart() != null ? dr.getStart().toString() : "",
+                    dr.getEnd() != null ? dr.getEnd().toString() : "");
+            } else if (tc instanceof SingleDate) {
+                SingleDate sd = (SingleDate) tc;
+                return sd.getDate() != null ? sd.getDate().toString() : "";
+            } else if (tc instanceof VerbatimTimePeriod) {
+                VerbatimTimePeriod vtp = (VerbatimTimePeriod) tc;
+                return vtp.getPeriod() != null ? vtp.getPeriod() : "";
+            }
+            return "";
+        })
+        .filter(s -> !s.isEmpty())
+        .collect(Collectors.joining("; "));
+    temporalCoverage = normalizePunctuationSigns(temporalCoverage).trim();
+    existingCollection.setTemporalCoverage(temporalCoverage);
 
     existingCollection.setIncorporatedCollections(
         dataset.getCollections().stream()
