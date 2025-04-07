@@ -21,6 +21,9 @@ import org.gbif.api.model.registry.Organization;
 import org.gbif.api.model.registry.eml.TaxonomicCoverage;
 import org.gbif.api.model.registry.eml.TaxonomicCoverages;
 import org.gbif.api.model.registry.eml.geospatial.GeospatialCoverage;
+import org.gbif.api.model.registry.eml.temporal.SingleDate;
+import org.gbif.api.model.registry.eml.temporal.DateRange;
+import org.gbif.api.model.registry.eml.temporal.VerbatimTimePeriod;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.PreservationMethodType;
 import org.gbif.vocabulary.client.ConceptClient;
@@ -28,6 +31,7 @@ import org.gbif.vocabulary.client.ConceptClient;
 import java.net.URI;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Date;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
@@ -80,6 +84,57 @@ public class CollectionConverterTest {
     assertNotEquals(originalCollectionName, convertedCollection.getName());
     assertEquals(collection.getNotes(), convertedCollection.getNotes());
     assertConvertedCollection(dataset, organization, convertedCollection);
+  }
+
+  @Test
+  public void convertFromDatasetWithTemporalCoveragesTest() {
+    Dataset dataset = createDataset();
+    Organization organization = createOrganization();
+    String collectionCode = "CODE";
+
+    // Add SingleDate
+    SingleDate singleDate = new SingleDate();
+    Date singleDateValue = new Date();
+    singleDate.setDate(singleDateValue);
+    dataset.getTemporalCoverages().add(singleDate);
+
+    // Add DateRange
+    DateRange dateRange = new DateRange();
+    Date startDate = new Date();
+    Date endDate = new Date(System.currentTimeMillis() + 86400000); // tomorrow
+    dateRange.setStart(startDate);
+    dateRange.setEnd(endDate);
+    dataset.getTemporalCoverages().add(dateRange);
+
+    // Add VerbatimTimePeriod
+    VerbatimTimePeriod verbatimTimePeriod = new VerbatimTimePeriod();
+    String period = "Pleistocene";
+    verbatimTimePeriod.setPeriod(period);
+    dataset.getTemporalCoverages().add(verbatimTimePeriod);
+
+    Collection convertedCollection = CollectionConverter.convertFromDataset(
+        dataset, organization, collectionCode, conceptClient);
+    assertEquals(collectionCode, convertedCollection.getCode());
+    assertConvertedCollection(dataset, organization, convertedCollection);
+
+    // Verify temporal coverage contains all three types
+    String temporalCoverage = convertedCollection.getTemporalCoverage();
+    assertNotNull(temporalCoverage);
+    
+    // Split by semicolon and verify each part
+    String[] parts = temporalCoverage.split(";");
+    assertEquals(3, parts.length);
+    
+    // Verify SingleDate
+    assertEquals(singleDateValue.toString(), parts[0].trim());
+    
+    // Verify DateRange
+    assertTrue(parts[1].trim().contains(startDate.toString()));
+    assertTrue(parts[1].trim().contains(endDate.toString()));
+    assertTrue(parts[1].trim().contains(" - "));
+    
+    // Verify VerbatimTimePeriod
+    assertEquals(period, parts[2].trim());
   }
 
   private void assertConvertedCollection(
