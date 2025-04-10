@@ -91,9 +91,9 @@
     <gbif-api.version>2.2.0-multitaxonomy-SNAPSHOT</gbif-api.version>
     <gbif-common.version>0.59</gbif-common.version>
     <gbif-common-mybatis.version>2.0.1-multitaxonomy-SNAPSHOT</gbif-common-mybatis.version>
-    <gbif-common-ws.version>2.0.6</gbif-common-ws.version>
+    <gbif-common-ws.version>2.0.7</gbif-common-ws.version>
     <gbif-directory.version>1.14</gbif-directory.version>
-    <gbif-doi.version>2.22-SNAPSHOT</gbif-doi.version>
+    <gbif-doi.version>3.0.0</gbif-doi.version>
     <gbif-download-query-tools.version>2.0.2-multitaxonomy-java11-SNAPSHOT</gbif-download-query-tools.version>
     <gbif-httputils.version>0.10</gbif-httputils.version>
     <gbif-metadata-profile.version>2.6</gbif-metadata-profile.version>
@@ -101,9 +101,9 @@
     <gbif-postal-service.version>1.8.1</gbif-postal-service.version>
     <xoai.version>4.1.0-gbif-4</xoai.version>
     <gbif-occurrence.version>1.0.28-multitaxonomy-SNAPSHOT</gbif-occurrence.version>
-    <gbif-vocabulary.version>1.0.12</gbif-vocabulary.version>
+    <gbif-vocabulary.version>2.0.2</gbif-vocabulary.version>
     <gbif-kvs.version>2.0-multitaxonomy-SNAPSHOT</gbif-kvs.version>
-    <checklistbank.version>2.127</checklistbank.version>
+    <checklistbank.version>3.0.0</checklistbank.version>
 
     <!-- Third party -->
     <commons-digester.version>3.2</commons-digester.version>
@@ -129,6 +129,7 @@
     <woodstox.version>4.4.1</woodstox.version>
     <zookeeper.version>3.8.1</zookeeper.version>
     <curator.version>5.5.0</curator.version>
+    <curator-framework.version>5.5.0-disable-connectstr-updates</curator-framework.version>
     <owasp-java-html-sanitizer.version>20200713.1</owasp-java-html-sanitizer.version>
     <super-csv.version>2.4.0</super-csv.version>
     <opencsv.version>5.7.1</opencsv.version>
@@ -465,7 +466,7 @@
       <dependency>
         <groupId>org.apache.curator</groupId>
         <artifactId>curator-framework</artifactId>
-        <version>${curator.version}</version>
+        <version>${curator-framework.version}</version>
       </dependency>
       <dependency>
         <groupId>org.apache.curator</groupId>
