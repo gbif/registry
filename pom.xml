@@ -102,7 +102,7 @@
     <xoai.version>4.1.0-gbif-4</xoai.version>
     <gbif-occurrence.version>1.0.28-multitaxonomy-SNAPSHOT</gbif-occurrence.version>
     <gbif-vocabulary.version>2.0.2</gbif-vocabulary.version>
-    <gbif-kvs.version>2.0-multitaxonomy-SNAPSHOT</gbif-kvs.version>
+    <gbif-kvs.version>3.0-SNAPSHOT</gbif-kvs.version>
     <checklistbank.version>3.0.0</checklistbank.version>
 
     <!-- Third party -->
