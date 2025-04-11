@@ -27,4 +27,9 @@ public class TitleLookupServiceMock implements TitleLookupService {
   public String getSpeciesName(String speciesKey) {
     return speciesKey;
   }
+
+  @Override
+  public String getSpeciesName(String speciesKey, String checklistKey) {
+    return speciesKey;
+  }
 }
