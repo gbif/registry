@@ -13,6 +13,32 @@
  */
 package org.gbif.registry.pipelines;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Ordering;
+import freemarker.template.TemplateException;
+import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.EnumMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.function.Consumer;
+import javax.annotation.Nullable;
+import org.apache.commons.lang3.StringUtils;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.pipelines.*;
@@ -45,30 +71,6 @@ import org.gbif.registry.pipelines.issues.GithubApiClient.IssueComment;
 import org.gbif.registry.pipelines.issues.GithubApiClient.IssueResult;
 import org.gbif.registry.pipelines.issues.IssueCreator;
 import org.gbif.registry.pipelines.util.PredicateUtils;
-
-import java.io.IOException;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.EnumMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.function.Consumer;
-
-import com.fasterxml.jackson.core.JsonProcessingException;
-
-import javax.annotation.Nullable;
-
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -79,14 +81,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Ordering;
-
-import freemarker.template.TemplateException;
 
 /** Service that allows to re-run pipeline steps on a specific attempt. */
 @Service
@@ -107,6 +101,7 @@ public class DefaultRegistryPipelinesHistoryTrackingService
           PipelineStep.Status.COMPLETED, PipelineStep.Status.ABORTED, PipelineStep.Status.FAILED);
 
   private ObjectMapper objectMapper;
+
   /** The messagePublisher can be optional. */
   private final MessagePublisher publisher;
 
@@ -271,7 +266,7 @@ public class DefaultRegistryPipelinesHistoryTrackingService
   @VisibleForTesting
   Optional<PipelineStep> getLatestSuccessfulStep(PipelineProcess pipelineProcess, StepType step) {
     return pipelineProcess.getExecutions().stream()
-        .filter(ex-> !ex.getStepsToRun().isEmpty())
+        .filter(ex -> !ex.getStepsToRun().isEmpty())
         .sorted(Comparator.comparing(PipelineExecution::getCreated).reversed())
         .flatMap(ex -> ex.getSteps().stream())
         .filter(s -> step.equals(s.getType()))
@@ -391,7 +386,7 @@ public class DefaultRegistryPipelinesHistoryTrackingService
     Map<StepType, PipelineBasedMessage> stepsToSend = new EnumMap<>(StepType.class);
     for (StepType stepName : prioritizeSteps(steps, dataset)) {
       Optional<? extends PipelineBasedMessage> message =
-        createStepMessage(stepName, process, prefix, interpretTypes);
+          createStepMessage(stepName, process, prefix, interpretTypes);
       message.ifPresent(m -> stepsToSend.put(stepName, m));
     }
 
@@ -446,8 +441,8 @@ public class DefaultRegistryPipelinesHistoryTrackingService
     return responseBuilder.build();
   }
 
-  private Optional<? extends PipelineBasedMessage> createStepMessage(StepType stepName, PipelineProcess process, String prefix,
-      Set<String> interpretTypes){
+  private Optional<? extends PipelineBasedMessage> createStepMessage(
+      StepType stepName, PipelineProcess process, String prefix, Set<String> interpretTypes) {
     Optional<PipelineStep> latestStepOpt = getLatestSuccessfulStep(process, stepName);
 
     if (latestStepOpt.isEmpty()) {
@@ -644,11 +639,14 @@ public class DefaultRegistryPipelinesHistoryTrackingService
     Objects.requireNonNull(pipelineStep, "PipelineStep can't be null");
     Preconditions.checkArgument(StringUtils.isNotEmpty(user), "user can't be null");
 
-    pipelineStep.setStarted(LocalDateTime.now());
-    pipelineStep.setCreatedBy(user);
+    pipelineStep.setModified(LocalDateTime.now());
+    pipelineStep.setModifiedBy(user);
 
-    LOG.info("Update pipelines step: {}, type: {}, state: {}", pipelineStep.getKey(), pipelineStep.getType(),
-      pipelineStep.getState());
+    LOG.info(
+        "Update pipelines step: {}, type: {}, state: {}",
+        pipelineStep.getKey(),
+        pipelineStep.getType(),
+        pipelineStep.getState());
 
     mapper.updatePipelineStep(pipelineStep);
     return pipelineStep.getKey();
@@ -749,7 +747,7 @@ public class DefaultRegistryPipelinesHistoryTrackingService
       // check if there is an open issue for this dataset
       List<IssueResult> existingIssues =
           githubApiClient.listIssues(
-                  Collections.singletonList(datasetKey.toString()), "open", 1, 1);
+              Collections.singletonList(datasetKey.toString()), "open", 1, 1);
 
       if (existingIssues.isEmpty()) {
         LOG.info(
@@ -786,23 +784,29 @@ public class DefaultRegistryPipelinesHistoryTrackingService
                 .build());
       }
     } catch (HttpClientErrorException | HttpServerErrorException e) {
-        LOG.error("Error occurred calling GitHub API: {}", e.getMessage(), e);
+      LOG.error("Error occurred calling GitHub API: {}", e.getMessage(), e);
     } catch (Exception e) {
       LOG.error("Error in notifyAbsentIdentifiers: {}", e.getMessage(), e);
     }
   }
 
   @Override
+  public void setSubmittedPipelineStepToQueued(long pipelineStepKey, String user) {
+    Preconditions.checkArgument(StringUtils.isNotEmpty(user), "user can't be null");
+    mapper.setSubmittedPipelineStepToQueued(pipelineStepKey, user);
+  }
+
+  @Override
   public void allowAbsentIndentifiers(UUID datasetKey, int attempt) {
-    allowAbsentIndentifiersCommon(datasetKey, attempt);
+    allowAbsentIdentifiersCommon(datasetKey, attempt);
   }
 
   @Override
   public void allowAbsentIndentifiers(UUID datasetKey) {
-    allowAbsentIndentifiersCommon(datasetKey, null);
+    allowAbsentIdentifiersCommon(datasetKey, null);
   }
 
-  public void allowAbsentIndentifiersCommon(UUID datasetKey, Integer attempt) {
+  public void allowAbsentIdentifiersCommon(UUID datasetKey, Integer attempt) {
     try {
       // GET History messages
       Integer latestAttempt =
@@ -818,9 +822,9 @@ public class DefaultRegistryPipelinesHistoryTrackingService
             steps.stream().filter(x -> x.getType() == StepType.VERBATIM_TO_IDENTIFIER).findAny();
 
         if (identifierStep.isPresent()
-          && FINISHED_STATE_SET.contains(identifierStep.get().getState())
-          && identifierStep.get().getMessage() != null
-          && !identifierStep.get().getMessage().isEmpty()) {
+            && FINISHED_STATE_SET.contains(identifierStep.get().getState())
+            && identifierStep.get().getMessage() != null
+            && !identifierStep.get().getMessage().isEmpty()) {
 
           // Update and mark identier as OK
           PipelineStep pipelineStep = identifierStep.get();
@@ -859,7 +863,8 @@ public class DefaultRegistryPipelinesHistoryTrackingService
               attempt);
         } else {
           LOG.warn(
-              "Execution ID - {} doesn't contain failed identifier step", pipelineExecution.getKey());
+              "Execution ID - {} doesn't contain failed identifier step",
+              pipelineExecution.getKey());
         }
       }
     } catch (IOException ex) {
@@ -912,7 +917,7 @@ public class DefaultRegistryPipelinesHistoryTrackingService
 
     Dataset dataset = datasetService.get(process.getDatasetKey());
     if (dataset != null) {
-        process.setDatasetTitle(dataset.getTitle());
+      process.setDatasetTitle(dataset.getTitle());
     }
   }
 }

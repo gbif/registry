@@ -239,6 +239,7 @@ class PipelinesHistoryIT extends BaseItTest {
 
     PipelineStep step =
         new PipelineStep()
+            .setKey(1L)
             .setMessage("message")
             .setRunner(StepRunner.STANDALONE)
             .setType(StepType.ABCD_TO_VERBATIM)
@@ -330,6 +331,7 @@ class PipelinesHistoryIT extends BaseItTest {
     message.setValidationReport(report);
 
     PipelineStep pipelineStep = new PipelineStep()
+      .setKey(1L)
       .setMessage(message.toString())
       .setRunner(StepRunner.STANDALONE)
       .setType(DWCA_TO_VERBATIM)
@@ -383,6 +385,7 @@ class PipelinesHistoryIT extends BaseItTest {
 
     service.updatePipelineStep(
         new PipelineStep()
+            .setKey(1L)
             .setMessage("message")
             .setRunner(StepRunner.STANDALONE)
             .setType(StepType.DWCA_TO_VERBATIM)
@@ -433,6 +436,7 @@ class PipelinesHistoryIT extends BaseItTest {
     message.setPipelineSteps(new HashSet<>(Arrays.asList(DWCA_TO_VERBATIM.name(),VERBATIM_TO_INTERPRETED.name(),INTERPRETED_TO_INDEX.name(),HDFS_VIEW.name())));
 
     PipelineStep pipelineStep = new PipelineStep()
+      .setKey(1L)
       .setMessage(message.toString())
       .setRunner(StepRunner.STANDALONE)
       .setType(StepType.DWCA_TO_VERBATIM)
