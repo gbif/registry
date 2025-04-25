@@ -41,7 +41,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.EnumSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -352,7 +351,7 @@ public class DatasetJsonConverter {
   private void addFacetsData(ObjectNode datasetJsonNode) {
     String datasetKey = datasetJsonNode.get("key").textValue();
     Set<OccurrenceSearchParameter> facets =
-        EnumSet.of(
+        Set.of(
             OccurrenceSearchParameter.COUNTRY, OccurrenceSearchParameter.CONTINENT,
             OccurrenceSearchParameter.TAXON_KEY, OccurrenceSearchParameter.YEAR);
     OccurrenceSearchRequest occurrenceSearchRequest = new OccurrenceSearchRequest();

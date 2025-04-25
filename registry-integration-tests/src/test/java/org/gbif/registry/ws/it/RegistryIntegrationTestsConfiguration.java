@@ -22,7 +22,6 @@ import org.apache.commons.beanutils.ConvertUtilsBean;
 import org.apache.commons.beanutils.converters.DateConverter;
 import org.apache.commons.beanutils.converters.DateTimeConverter;
 import org.gbif.api.vocabulary.UserRole;
-import org.gbif.checklistbank.ws.client.NubResourceClient;
 import org.gbif.registry.doi.config.TitleLookupConfiguration;
 import org.gbif.registry.events.config.VarnishPurgeConfiguration;
 import org.gbif.registry.mail.EmailSenderImpl;
@@ -32,8 +31,9 @@ import org.gbif.registry.search.dataset.indexing.es.EsConfiguration;
 import org.gbif.registry.search.dataset.indexing.ws.GbifWsClient;
 import org.gbif.registry.surety.OrganizationEmailTemplateManagerIT;
 import org.gbif.registry.test.mocks.ConceptClientMock;
-import org.gbif.registry.test.mocks.NubResourceClientMock;
+import org.gbif.registry.test.mocks.NameUsageMatchingServiceMock;
 import org.gbif.registry.ws.config.DataSourcesConfiguration;
+import org.gbif.rest.client.species.NameUsageMatchingService;
 import org.gbif.vocabulary.client.ConceptClient;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 import org.mybatis.spring.annotation.MapperScan;
@@ -215,7 +215,7 @@ public class RegistryIntegrationTestsConfiguration {
   }
 
   @Bean
-  public NubResourceClient nubResourceClient() {
-    return new NubResourceClientMock();
+  public NameUsageMatchingService nameUsageMatchingService() {
+    return new NameUsageMatchingServiceMock();
   }
 }
