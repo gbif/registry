@@ -31,6 +31,7 @@ import lombok.SneakyThrows;
 import org.gbif.api.model.collections.Address;
 import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.Institution;
+import org.gbif.api.model.collections.descriptors.DescriptorChangeSuggestion;
 import org.gbif.api.model.collections.merge.ConvertToCollectionParams;
 import org.gbif.api.model.collections.merge.MergeParams;
 import org.gbif.api.model.collections.suggestions.Type;
@@ -41,6 +42,7 @@ import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.registry.persistence.mapper.UserRightsMapper;
 import org.gbif.registry.persistence.mapper.collections.ChangeSuggestionMapper;
 import org.gbif.registry.persistence.mapper.collections.CollectionMapper;
+import org.gbif.registry.persistence.mapper.collections.DescriptorChangeSuggestionMapper;
 import org.gbif.registry.persistence.mapper.collections.InstitutionMapper;
 import org.gbif.registry.persistence.mapper.collections.dto.ChangeSuggestionDto;
 import org.gbif.registry.security.AuthenticationFacade;
@@ -116,6 +118,8 @@ public class GrSciCollEditorAuthorizationFilterTest {
   private final InstitutionMapper mockInstitutionMapper = Mockito.mock(InstitutionMapper.class);
   private final ChangeSuggestionMapper changeSuggestionMapper =
       Mockito.mock(ChangeSuggestionMapper.class);
+  private final DescriptorChangeSuggestionMapper descriptorChangeSuggestionMapper = Mockito.mock(
+    DescriptorChangeSuggestionMapper.class);
   private final Authentication mockAuthentication = Mockito.mock(Authentication.class);
 
   private final GrSciCollAuthorizationService authService =
@@ -124,6 +128,7 @@ public class GrSciCollEditorAuthorizationFilterTest {
           mockCollectionMapper,
           mockInstitutionMapper,
           changeSuggestionMapper,
+          descriptorChangeSuggestionMapper,
           objectMapper);
 
   private final GrSciCollEditorAuthorizationFilter filter =
@@ -1232,6 +1237,80 @@ public class GrSciCollEditorAuthorizationFilterTest {
     when(mockRequest.getMethod()).thenReturn("POST");
     when(mockAuthentication.getName()).thenReturn(USERNAME);
     doReturn(ROLES_GRSCICOLL_ADMIN_ONLY).when(mockAuthentication).getAuthorities();
+
+    // WHEN, THEN
+    assertDoesNotThrow(() -> filter.doFilter(mockRequest, mockResponse, mockFilterChain));
+  }
+
+  @Test
+  public void createDescriptorSuggestionAsUserTest() {
+    // GIVEN
+    when(mockAuthenticationFacade.getAuthentication()).thenReturn(mockAuthentication);
+    when(mockRequest.getRequestURI())
+        .thenReturn("/grscicoll/collection/" + COLL_KEY.toString() + "/descriptorGroup/suggestion");
+    when(mockRequest.getMethod()).thenReturn("POST");
+    when(mockRequest.getContent()).thenReturn("{\"type\": \"CREATE\", \"title\": \"Test\", \"format\": \"CSV\", \"comments\": [\"Test comment\"], \"proposerEmail\": \"test@gbif.org\"}");
+    when(mockAuthentication.getName()).thenReturn(USERNAME);
+    doReturn(COLLECTION).when(mockCollectionMapper).get(COLL_KEY);
+
+    // WHEN, THEN
+    assertDoesNotThrow(() -> filter.doFilter(mockRequest, mockResponse, mockFilterChain));
+  }
+
+  @Test
+  public void updateDescriptorSuggestionAsUserTest() {
+    // GIVEN
+    when(mockAuthenticationFacade.getAuthentication()).thenReturn(mockAuthentication);
+    when(mockRequest.getRequestURI())
+        .thenReturn("/grscicoll/collection/" + COLL_KEY.toString() + "/descriptorGroup/suggestion/1");
+    when(mockRequest.getMethod()).thenReturn("PUT");
+    when(mockRequest.getContent()).thenReturn("{\"type\": \"UPDATE\", \"title\": \"Test\", \"format\": \"CSV\", \"comments\": [\"Test comment\"], \"proposerEmail\": \"test@gbif.org\"}");
+    when(mockAuthentication.getName()).thenReturn(USERNAME);
+    doReturn(COLLECTION).when(mockCollectionMapper).get(COLL_KEY);
+
+    // WHEN
+    WebApplicationException ex =
+        assertThrows(
+            WebApplicationException.class,
+            () -> filter.doFilter(mockRequest, mockResponse, mockFilterChain));
+
+    // THEN
+    assertEquals(HttpStatus.FORBIDDEN.value(), ex.getStatus());
+  }
+
+  @Test
+  public void applyDescriptorSuggestionAsEditorTest() {
+    // GIVEN
+    when(mockAuthenticationFacade.getAuthentication()).thenReturn(mockAuthentication);
+    when(mockRequest.getRequestURI())
+        .thenReturn("/grscicoll/collection/" + COLL_KEY.toString() + "/descriptorGroup/suggestion/1/apply");
+    when(mockRequest.getMethod()).thenReturn("PUT");
+    when(mockAuthentication.getName()).thenReturn(USERNAME);
+    doReturn(ROLES_GRSCICOLL_EDITOR_ONLY).when(mockAuthentication).getAuthorities();
+    doReturn(COLLECTION).when(mockCollectionMapper).get(COLL_KEY);
+    DescriptorChangeSuggestion descriptorChangeSuggestion = new DescriptorChangeSuggestion();
+    descriptorChangeSuggestion.setCollectionKey(COLL_KEY);
+    doReturn(descriptorChangeSuggestion).when(descriptorChangeSuggestionMapper).findByKey(1);
+
+    // WHEN, THEN
+    assertThrows(
+      WebApplicationException.class,
+      () -> filter.doFilter(mockRequest, mockResponse, mockFilterChain));
+  }
+
+  @Test
+  public void applyDescriptorSuggestionAsAdminTest() {
+    // GIVEN
+    when(mockAuthenticationFacade.getAuthentication()).thenReturn(mockAuthentication);
+    when(mockRequest.getRequestURI())
+      .thenReturn("/grscicoll/collection/" + COLL_KEY.toString() + "/descriptorGroup/suggestion/1/apply");
+    when(mockRequest.getMethod()).thenReturn("PUT");
+    when(mockAuthentication.getName()).thenReturn(USERNAME);
+    doReturn(ROLES_GRSCICOLL_ADMIN_ONLY).when(mockAuthentication).getAuthorities();
+    doReturn(COLLECTION).when(mockCollectionMapper).get(COLL_KEY);
+    DescriptorChangeSuggestion descriptorChangeSuggestion = new DescriptorChangeSuggestion();
+    descriptorChangeSuggestion.setCollectionKey(COLL_KEY);
+    doReturn(descriptorChangeSuggestion).when(descriptorChangeSuggestionMapper).findByKey(1);
 
     // WHEN, THEN
     assertDoesNotThrow(() -> filter.doFilter(mockRequest, mockResponse, mockFilterChain));

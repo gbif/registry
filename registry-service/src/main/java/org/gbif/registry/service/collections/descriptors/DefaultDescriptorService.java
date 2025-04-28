@@ -228,12 +228,10 @@ public class DefaultDescriptorService implements DescriptorsService {
   @Override
   public void updateDescriptorGroup(
       @NotNull long descriptorGroupKey,
-      @NotNull byte[] descriptorGroupFile,
+      byte[] descriptorGroupFile,
       @NotNull ExportFormat format,
       @NotNull String title,
       String description) {
-    Objects.requireNonNull(descriptorGroupFile);
-    Preconditions.checkArgument(descriptorGroupFile.length > 0);
     Preconditions.checkArgument(!Strings.isNullOrEmpty(title));
 
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -250,13 +248,13 @@ public class DefaultDescriptorService implements DescriptorsService {
     descriptorGroup.setDescription(description);
     descriptorGroup.setModifiedBy(username);
     descriptorsMapper.updateDescriptorGroup(descriptorGroup);
+    if(descriptorGroupFile != null ) {
+      // remove descriptors
+      descriptorsMapper.deleteDescriptors(descriptorGroup.getKey());
 
-    // remove descriptors
-    descriptorsMapper.deleteDescriptors(descriptorGroup.getKey());
-
-    // reimport the file
-    importDescriptorsFile(descriptorGroupFile, format, descriptorGroup.getKey());
-
+      // reimport the file
+      importDescriptorsFile(descriptorGroupFile, format, descriptorGroup.getKey());
+    }
     eventManager.post(
         SubEntityCollectionEvent.newInstance(
             descriptorGroup.getCollectionKey(),
