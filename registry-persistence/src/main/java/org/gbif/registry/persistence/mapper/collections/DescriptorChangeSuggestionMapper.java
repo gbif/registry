@@ -1,7 +1,6 @@
 package org.gbif.registry.persistence.mapper.collections;
 
 import java.util.List;
-
 import java.util.UUID;
 
 import org.apache.ibatis.annotations.Param;
@@ -68,11 +67,4 @@ public interface DescriptorChangeSuggestionMapper {
     @Param("type") Type type,
     @Param("proposerEmail") String proposerEmail,
     @Param("collectionKey") UUID collectionKey);
-
-  /**
-   * Deletes a descriptor change suggestion by its primary key.
-   *
-   * @param key the primary key of the suggestion to delete
-   */
-  void deleteSuggestion(@Param("key") long key);
 }

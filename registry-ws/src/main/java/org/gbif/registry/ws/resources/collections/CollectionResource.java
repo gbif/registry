@@ -637,7 +637,7 @@ public class CollectionResource
       @PathVariable("collectionKey") UUID collectionKey,
       @PathVariable("key") long descriptorGroupKey,
       @RequestParam(value = "format", defaultValue = "CSV") ExportFormat format,
-      @RequestPart("descriptorsFile") MultipartFile descriptorsFile,
+      @RequestPart(value = "descriptorsFile", required = false) MultipartFile descriptorsFile,
       @RequestParam("title") @Trim String title,
       @RequestParam(value = "description", required = false) @Trim String description) {
     DescriptorGroup existingDescriptorGroup =
@@ -647,10 +647,10 @@ public class CollectionResource
     }
 
     Preconditions.checkArgument(existingDescriptorGroup.getCollectionKey().equals(collectionKey));
-
+    byte[] file = descriptorsFile != null ? StreamUtils.copyToByteArray(descriptorsFile.getResource().getInputStream()) : null;
     descriptorsService.updateDescriptorGroup(
         descriptorGroupKey,
-        StreamUtils.copyToByteArray(descriptorsFile.getResource().getInputStream()),
+        file,
         format,
         title,
         description);
@@ -1045,21 +1045,24 @@ public class CollectionResource
   @Docs.DefaultUnsuccessfulWriteResponses
   @PostMapping(value = "{collectionKey}/descriptorGroup/suggestion", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
   public DescriptorChangeSuggestion createDescriptorSuggestion(
-      @PathVariable("collectionKey") UUID collectionKey,
-      @RequestPart("file") MultipartFile file,
-      @RequestParam("type") Type type,
-      @RequestParam("title") String title,
-      @RequestParam(value = "description", required = false) String description,
-      @RequestParam("format") ExportFormat format,
-      @RequestParam("comments") List<String> comments,
-      @RequestParam("proposerEmail") String proposerEmail) throws IOException {
-    if (file == null || file.isEmpty()) {
-      throw new IllegalArgumentException("File cannot be null or empty");
+    @PathVariable("collectionKey") UUID collectionKey,
+    @RequestPart(value = "file", required = false) MultipartFile file,
+    @RequestParam("type") Type type,
+    @RequestParam(value = "descriptorGroupKey", required = false) Long descriptorGroupKey,
+    @RequestParam("title") String title,
+    @RequestParam(value = "description", required = false) String description,
+    @RequestParam("format") ExportFormat format,
+    @RequestParam("comments") List<String> comments,
+    @RequestParam("proposerEmail") String proposerEmail) throws IOException {
+
+    if (type == Type.CREATE && (file == null || file.isEmpty())) {
+      throw new IllegalArgumentException("File is required for CREATE type suggestions");
     }
 
     DescriptorChangeSuggestionRequest request = new DescriptorChangeSuggestionRequest();
     request.setCollectionKey(collectionKey);
     request.setType(type);
+    request.setDescriptorGroupKey(descriptorGroupKey);
     request.setTitle(title);
     request.setDescription(description);
     request.setFormat(format);
@@ -1067,8 +1070,8 @@ public class CollectionResource
     request.setProposerEmail(proposerEmail);
 
     return descriptorChangeSuggestionService.createSuggestion(
-      file.getInputStream(),
-      file.getOriginalFilename(),
+      file != null ? file.getInputStream() : null,
+      file != null ? file.getOriginalFilename() : null,
       request);
   }
 
@@ -1100,6 +1103,10 @@ public class CollectionResource
 
     // Get the file content
     InputStream stream = descriptorChangeSuggestionService.getSuggestionFile(key);
+    if (stream == null) {
+      throw new WebApplicationException("Descriptor group suggestion file was not found",
+        HttpStatus.NOT_FOUND);
+    }
     byte[] fileBytes = IOUtils.toByteArray(stream);
 
     // Generate a descriptive filename
@@ -1144,7 +1151,7 @@ public class CollectionResource
               properties = @ExtensionProperty(name = "Order", value = "0303")))
   @ApiResponse(responseCode = "200", description = "Suggestion applied successfully")
   @Docs.DefaultUnsuccessfulWriteResponses
-  @PostMapping(value = "{collectionKey}/descriptorGroup/suggestion/{key}/apply")
+  @PutMapping(value = "{collectionKey}/descriptorGroup/suggestion/{key}/apply")
   public void applyDescriptorSuggestion(
       @PathVariable("collectionKey") UUID collectionKey,
       @PathVariable("key") long key) throws IOException {
@@ -1161,7 +1168,7 @@ public class CollectionResource
               properties = @ExtensionProperty(name = "Order", value = "0304")))
   @ApiResponse(responseCode = "200", description = "Suggestion discarded successfully")
   @Docs.DefaultUnsuccessfulWriteResponses
-  @PostMapping(value = "{collectionKey}/descriptorGroup/suggestion/{key}/discard")
+  @PutMapping(value = "{collectionKey}/descriptorGroup/suggestion/{key}/discard")
   public void discardDescriptorSuggestion(
       @PathVariable("collectionKey") UUID collectionKey,
       @PathVariable("key") long key) {

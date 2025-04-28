@@ -13,9 +13,6 @@
  */
 package org.gbif.registry.ws.it.collections.resource;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -25,10 +22,8 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
@@ -75,8 +70,6 @@ import org.gbif.registry.service.collections.merge.MergeService;
 import org.gbif.registry.service.collections.suggestions.CollectionChangeSuggestionService;
 import org.gbif.registry.ws.client.collections.CollectionClient;
 import org.gbif.registry.ws.it.fixtures.RequestTestFixture;
-import org.gbif.ws.NotFoundException;
-import org.gbif.ws.WebApplicationException;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
 import org.junit.jupiter.api.Assertions;
@@ -88,7 +81,6 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.http.HttpStatus;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 
@@ -668,7 +660,7 @@ public class CollectionResourceIT
       ));
 
     verify(descriptorChangeSuggestionService).updateSuggestion(
-      suggestionKey,
+      eq(suggestionKey),
       any(DescriptorChangeSuggestionRequest.class),
       any(InputStream.class),
       anyString());

@@ -31,12 +31,9 @@ import org.gbif.registry.events.collections.EventType;
 import org.gbif.registry.events.collections.SubEntityCollectionEvent;
 import org.gbif.registry.persistence.mapper.collections.DescriptorChangeSuggestionMapper;
 
-import org.gbif.ws.WebApplicationException;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.PathResource;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -71,15 +68,15 @@ public class DescriptorChangeSuggestionServiceImpl implements DescriptorChangeSu
     String fileName,
     DescriptorChangeSuggestionRequest request)
     throws IOException {
-    if (fileStream == null) {
-      throw new IllegalArgumentException("File cannot be null or empty");
-    }
     Preconditions.checkArgument(!request.getComments().isEmpty(), "Comment is required");
 
-    String filename = generateFilename(String.valueOf(request.getCollectionKey()), fileName);
-    Path filePath = saveFile(fileStream, filename);
+    DescriptorChangeSuggestion suggestion = buildSuggestion(request);
 
-    DescriptorChangeSuggestion suggestion = buildSuggestion(request, filePath);
+    if (fileName != null || fileStream != null) {
+      String filename = generateFilename(String.valueOf(request.getCollectionKey()), fileName);
+      Path filePath = saveFile(fileStream, filename);
+      suggestion.setSuggestedFile(filePath.toString());
+    }
 
     suggestionMapper.createSuggestion(suggestion);
 
@@ -105,11 +102,11 @@ public class DescriptorChangeSuggestionServiceImpl implements DescriptorChangeSu
     DescriptorChangeSuggestion suggestion = getSuggestion(key);
 
     if (suggestion == null) {
-      throw new WebApplicationException("Suggestion not found", HttpStatus.NOT_FOUND);
+      throw new IllegalArgumentException("Suggestion not found with key: " + key);
     }
 
     // Ensure suggestion is in PENDING status to allow update
-    if (Status.PENDING != suggestion.getStatus()) {
+    if (!Status.PENDING.equals(suggestion.getStatus())) {
       throw new IllegalStateException("Only pending suggestions can be updated");
     }
 
@@ -129,9 +126,10 @@ public class DescriptorChangeSuggestionServiceImpl implements DescriptorChangeSu
 
     // Update the file if a new file is provided
     if (fileStream != null) {
+      deleteSuggestionFile(suggestion);
       String filename = generateFilename(String.valueOf(request.getCollectionKey()), fileName);
-      Path filePath = saveFile(fileStream, filename); // Save the new file
-      suggestion.setSuggestedFile(filePath.toString()); // Update the file path in the suggestion
+      Path filePath = saveFile(fileStream, filename);
+      suggestion.setSuggestedFile(filePath.toString());
     }
 
     suggestion.setModifiedBy(getUsername());
@@ -161,16 +159,18 @@ public class DescriptorChangeSuggestionServiceImpl implements DescriptorChangeSu
   public InputStream getSuggestionFile(long key) throws IOException {
     DescriptorChangeSuggestion suggestion = getSuggestion(key);
 
-    if (suggestion == null) {
-      throw new WebApplicationException("Descriptor suggestion was not found", HttpStatus.NOT_FOUND);
+    if (suggestion == null || suggestion.getSuggestedFile() == null) {
+      return null;
     }
 
     Path filePath = Paths.get(suggestion.getSuggestedFile());
     PathResource resource = new PathResource((filePath));
+
     if (!resource.exists()) {
-      throw new WebApplicationException("Descriptor group suggestion file was not found",
-        HttpStatus.NOT_FOUND);
+      throw new IllegalStateException("Suggested file for descriptor change suggestion with key "
+        + key + " was not found at the expected location: " + filePath);
     }
+
     return resource.getInputStream();
   }
 
@@ -180,18 +180,25 @@ public class DescriptorChangeSuggestionServiceImpl implements DescriptorChangeSu
   public void applySuggestion(long key) throws IOException {
     DescriptorChangeSuggestion suggestion = getSuggestion(key);
     if (suggestion == null) {
-      throw new WebApplicationException("Descriptor suggestion was not found", HttpStatus.NOT_FOUND);
+      throw new IllegalArgumentException("Descriptor suggestion was not found with the key: " + key);
     }
 
     if (suggestion.getStatus() != Status.PENDING) {
-      throw new WebApplicationException(
-          "Descriptor suggestion is not in PENDING status", HttpStatus.BAD_REQUEST);
+      throw new IllegalStateException(
+        "Descriptor suggestion is not in PENDING status");
+    }
+
+    byte[] fileBytes = null;
+    try (InputStream inputStream = getSuggestionFile(key)) {
+      if (inputStream != null) {
+        fileBytes = inputStream.readAllBytes();
+      }
     }
 
     // Apply the suggestion based on type
     if (Type.CREATE.equals(suggestion.getType())) {
       long descriptorGroupKey = descriptorsService.createDescriptorGroup(
-          getSuggestionFile(key).readAllBytes(),
+          fileBytes,
           suggestion.getFormat(),
           suggestion.getTitle(),
           suggestion.getDescription(),
@@ -200,12 +207,12 @@ public class DescriptorChangeSuggestionServiceImpl implements DescriptorChangeSu
     } else if (Type.UPDATE.equals(suggestion.getType())) {
       descriptorsService.updateDescriptorGroup(
           suggestion.getDescriptorGroupKey(),
-          getSuggestionFile(key).readAllBytes(),
+          fileBytes,
           suggestion.getFormat(),
           suggestion.getTitle(),
           suggestion.getDescription());
     } else if (Type.DELETE.equals(suggestion.getType())) {
-      descriptorsService.deleteDescriptorGroup(suggestion.getKey());
+      descriptorsService.deleteDescriptorGroup(suggestion.getDescriptorGroupKey());
     }
 
     // Update suggestion status
@@ -218,6 +225,14 @@ public class DescriptorChangeSuggestionServiceImpl implements DescriptorChangeSu
     // Delete the suggestion file
     deleteSuggestionFile(suggestion);
 
+    eventManager.post(
+      SubEntityCollectionEvent.newInstance(
+        suggestion.getCollectionKey(),
+        Collection.class,
+        DescriptorChangeSuggestion.class,
+        suggestion.getKey(),
+        EventType.APPLY_SUGGESTION));
+
     log.info("Applied descriptor suggestion with key: {}", key);
   }
 
@@ -226,12 +241,13 @@ public class DescriptorChangeSuggestionServiceImpl implements DescriptorChangeSu
   public void discardSuggestion(long key) {
     DescriptorChangeSuggestion suggestion = getSuggestion(key);
     if (suggestion == null) {
-      throw new WebApplicationException("Descriptor suggestion was not found", HttpStatus.NOT_FOUND);
+      throw new IllegalArgumentException(
+          "Descriptor suggestion was not found");
     }
 
     if (suggestion.getStatus() != Status.PENDING) {
-      throw new WebApplicationException(
-          "Descriptor suggestion is not in PENDING status", HttpStatus.BAD_REQUEST);
+      throw new IllegalStateException(
+          "Descriptor suggestion is not in PENDING status");
     }
 
     // Update suggestion status
@@ -244,6 +260,14 @@ public class DescriptorChangeSuggestionServiceImpl implements DescriptorChangeSu
 
     // Delete the suggestion file
     deleteSuggestionFile(suggestion);
+
+    eventManager.post(
+      SubEntityCollectionEvent.newInstance(
+        suggestion.getCollectionKey(),
+        Collection.class,
+        DescriptorChangeSuggestion.class,
+        suggestion.getKey(),
+        EventType.DISCARD_SUGGESTION));
 
     log.info("Discarded descriptor suggestion with key: {}", key);
   }
@@ -284,10 +308,9 @@ public class DescriptorChangeSuggestionServiceImpl implements DescriptorChangeSu
   }
 
   private DescriptorChangeSuggestion buildSuggestion(
-    DescriptorChangeSuggestionRequest request, Path filePath) {
+    DescriptorChangeSuggestionRequest request) {
     return DescriptorChangeSuggestion.builder()
       .collectionKey(request.getCollectionKey())
-      .suggestedFile(filePath.toString())
       .descriptorGroupKey(request.getDescriptorGroupKey())
       .title(request.getTitle())
       .type(request.getType())

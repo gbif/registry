@@ -183,12 +183,12 @@ public interface CollectionClient
       @PathVariable("collectionKey") UUID collectionKey,
       @PathVariable("key") long key);
 
-  @PostMapping(value = "{collectionKey}/descriptorGroup/suggestion/{key}/apply")
+  @PutMapping(value = "{collectionKey}/descriptorGroup/suggestion/{key}/apply")
   void applyDescriptorSuggestion(
       @PathVariable("collectionKey") UUID collectionKey,
       @PathVariable("key") long key);
 
-  @PostMapping(value = "{collectionKey}/descriptorGroup/suggestion/{key}/discard")
+  @PutMapping(value = "{collectionKey}/descriptorGroup/suggestion/{key}/discard")
   void discardDescriptorSuggestion(
       @PathVariable("collectionKey") UUID collectionKey,
       @PathVariable("key") long key);
