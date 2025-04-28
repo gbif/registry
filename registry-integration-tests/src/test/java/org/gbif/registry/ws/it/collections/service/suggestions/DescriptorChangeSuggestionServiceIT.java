@@ -2,6 +2,7 @@ package org.gbif.registry.ws.it.collections.service.suggestions;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.io.IOException;
 import java.util.Collections;
 import java.io.InputStream;
 
@@ -18,7 +19,6 @@ import org.gbif.api.service.collections.DescriptorChangeSuggestionService;
 import org.gbif.api.service.collections.DescriptorsService;
 import org.gbif.registry.database.TestCaseDatabaseInitializer;
 import org.gbif.registry.ws.it.collections.service.BaseServiceIT;
-import org.gbif.ws.WebApplicationException;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
 import org.junit.jupiter.api.Test;
@@ -271,11 +271,10 @@ class DescriptorChangeSuggestionServiceIT extends BaseServiceIT {
   }
 
   @Test
-  void getSuggestionFileNotFoundTest() {
+  void getSuggestionFileNotFoundTest() throws IOException {
     // When - try to get a non-existent suggestion file
-    assertThrows(WebApplicationException.class,
-        () -> descriptorChangeSuggestionService.getSuggestionFile(9999L),
-        "Should throw WebApplicationException for non-existent suggestion");
+    assertNull(descriptorChangeSuggestionService.getSuggestionFile(9999L),
+      "Should return null for non-existent suggestion");
   }
 
   @Test

@@ -121,9 +121,4 @@
     </where>
   </select>
 
-  <delete id="deleteSuggestion" parameterType="long">
-    DELETE FROM descriptor_change_suggestion
-    WHERE key = #{key,jdbcType=OTHER}
-  </delete>
-
 </mapper>

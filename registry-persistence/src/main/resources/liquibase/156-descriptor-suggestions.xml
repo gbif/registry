@@ -7,15 +7,13 @@
   <changeSet id="154" author="auzun" runInTransaction="false">
     <sql splitStatements="false" stripComments="true">
       <![CDATA[
-        CREATE SEQUENCE descriptor_change_suggestion_key_seq;
-
         CREATE TABLE descriptor_change_suggestion (
-            key BIGINT PRIMARY KEY DEFAULT nextval('descriptor_change_suggestion_key_seq'),
-            collection_key UUID, -- Foreign key to collection
-            descriptor_group_key INTEGER,
+            key SERIAL PRIMARY KEY,
+            collection_key UUID REFERENCES collection(key) ON DELETE CASCADE,
+            descriptor_group_key INTEGER REFERENCES collection_descriptor_group(key) ON DELETE CASCADE,
             type enum_change_suggestion_type NOT NULL, -- CREATE, UPDATE, DELETE
             status enum_change_suggestion_status NOT NULL DEFAULT 'PENDING', -- PENDING, APPROVED, DISCARDED
-            suggested_file TEXT NOT NULL,
+            suggested_file TEXT,
             title TEXT,
             description TEXT,
             format TEXT,
