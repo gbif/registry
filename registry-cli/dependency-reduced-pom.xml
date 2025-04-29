@@ -3,7 +3,7 @@
   <parent>
     <artifactId>registry-parent</artifactId>
     <groupId>org.gbif.registry</groupId>
-    <version>3.97.0-SNAPSHOT</version>
+    <version>4.0.5-SNAPSHOT</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <artifactId>registry-cli</artifactId>
@@ -24,6 +24,7 @@
     <plugins>
       <plugin>
         <artifactId>maven-compiler-plugin</artifactId>
+        <version>${maven-compiler-plugin.version}</version>
         <configuration>
           <source>${maven.compiler.source}</source>
           <target>${maven.compiler.target}</target>
@@ -33,6 +34,7 @@
       </plugin>
       <plugin>
         <artifactId>maven-shade-plugin</artifactId>
+        <version>${maven-shade-plugin.version}</version>
         <executions>
           <execution>
             <phase>package</phase>
@@ -86,9 +88,11 @@
       </plugin>
       <plugin>
         <artifactId>maven-surefire-plugin</artifactId>
+        <version>${maven-surefire-plugin.version}</version>
       </plugin>
       <plugin>
         <artifactId>maven-failsafe-plugin</artifactId>
+        <version>${maven-failsafe-plugin.version}</version>
       </plugin>
     </plugins>
   </build>
@@ -136,7 +140,7 @@
     <dependency>
       <groupId>org.gbif.registry</groupId>
       <artifactId>registry-search</artifactId>
-      <version>3.97.0-SNAPSHOT</version>
+      <version>4.0.5-SNAPSHOT</version>
       <classifier>tests</classifier>
       <scope>test</scope>
     </dependency>
@@ -203,7 +207,7 @@
     <dependency>
       <groupId>org.gbif.registry</groupId>
       <artifactId>registry-integration-tests</artifactId>
-      <version>3.97.0-SNAPSHOT</version>
+      <version>4.0.5-SNAPSHOT</version>
       <type>test-jar</type>
       <scope>test</scope>
     </dependency>
@@ -217,7 +221,7 @@
   <properties>
     <kotlin.version>1.4.20</kotlin.version>
     <jersey.version>1.19.3</jersey.version>
-    <gbif-cli.version>1.2-SNAPSHOT</gbif-cli.version>
+    <gbif-cli.version>2.0.0</gbif-cli.version>
     <main.basedir>${project.parent.basedir}</main.basedir>
     <jcommander.version>1.48</jcommander.version>
     <sonar.coverage.jacoco.xmlReportPaths>${project.basedir}/../target/site/jacoco-it/jacoco.xml,${project.basedir}/../target/site/jacoco-ut/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
