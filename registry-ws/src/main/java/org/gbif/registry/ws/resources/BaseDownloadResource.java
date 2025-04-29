@@ -519,7 +519,7 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
 
     if (Status.FILE_ERASED.equals(download.getStatus())) {
       //we remove the download link when the file is erased
-      download.setDownloadLink(null);
+      download.setDownloadLink("");
     }
 
     occurrenceDownloadMapper.update(download);
