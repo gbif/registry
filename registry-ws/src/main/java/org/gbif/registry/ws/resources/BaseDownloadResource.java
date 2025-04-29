@@ -23,6 +23,7 @@ import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.common.search.Facet;
 import org.gbif.api.model.occurrence.Download;
+import org.gbif.api.model.occurrence.Download.Status;
 import org.gbif.api.model.occurrence.DownloadStatistics;
 import org.gbif.api.model.occurrence.DownloadType;
 import org.gbif.api.model.registry.CountryOccurrenceDownloadUsage;
@@ -39,7 +40,6 @@ import org.gbif.api.vocabulary.DatasetUsageSortField;
 import org.gbif.api.vocabulary.License;
 import org.gbif.api.vocabulary.OrganizationUsageSortField;
 import org.gbif.api.vocabulary.SortOrder;
-import org.gbif.registry.doi.DoiIssuingService;
 import org.gbif.registry.doi.DownloadDoiDataCiteHandlingService;
 import org.gbif.registry.persistence.mapper.DatasetOccurrenceDownloadMapper;
 import org.gbif.registry.persistence.mapper.OccurrenceDownloadMapper;
@@ -515,6 +515,11 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
     if (FAILED_STATES.contains(download.getStatus())) {
       // we remove the doi from the DB in failed states
       download.setDoi(null);
+    }
+
+    if (Status.FILE_ERASED.equals(download.getStatus())) {
+      //we remove the download link when the file is erased
+      download.setDownloadLink(null);
     }
 
     occurrenceDownloadMapper.update(download);
