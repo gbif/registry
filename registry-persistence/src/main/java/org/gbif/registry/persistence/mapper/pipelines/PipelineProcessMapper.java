@@ -108,6 +108,14 @@ public interface PipelineProcessMapper {
   void updatePipelineStep(@Param("step") PipelineStep step);
 
   /**
+   * Updates the state of a pipeline step from submitted to queued.
+   *
+   * @param key pipeline step key
+   * @param user user that is performing the action
+   */
+  void setSubmittedPipelineStepToQueued(@Param("key") long key, @Param("user") String user);
+
+  /**
    * Lists {@link PipelineProcess} based in the search parameters.
    *
    * <p>It supports paging.
