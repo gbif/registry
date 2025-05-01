@@ -20,7 +20,6 @@ import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.module.jaxb.JaxbAnnotationModule;
 import java.util.*;
-import org.gbif.checklistbank.ws.client.NubResourceClient;
 import org.gbif.registry.domain.ws.*;
 import org.gbif.registry.security.precheck.AuthPreCheckInterceptor;
 import org.gbif.registry.ws.converter.CountryMessageConverter;

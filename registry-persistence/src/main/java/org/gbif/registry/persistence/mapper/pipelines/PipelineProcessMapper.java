@@ -98,7 +98,7 @@ public interface PipelineProcessMapper {
    * @param step step to add
    */
   void addPipelineStep(
-    @Param("pipelineExecutionKey") long pipelineExecutionKey, @Param("step") PipelineStep step);
+      @Param("pipelineExecutionKey") long pipelineExecutionKey, @Param("step") PipelineStep step);
 
   /**
    * Adds a {@link PipelineStep} to an existing {@link PipelineExecution}.
@@ -165,9 +165,7 @@ public interface PipelineProcessMapper {
       @Nullable @Param("rerunReason") String rerunReason,
       @Nullable @Param("pipelinesVersion") String pipelinesVersion);
 
-  /**
-   * Mark all existing {@link PipelineExecution} as finished
-   */
+  /** Mark all existing {@link PipelineExecution} as finished */
   void markAllPipelineExecutionAsFinished();
 
   /**
