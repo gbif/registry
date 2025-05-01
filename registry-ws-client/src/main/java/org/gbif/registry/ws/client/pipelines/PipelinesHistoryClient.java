@@ -13,6 +13,9 @@
  */
 package org.gbif.registry.ws.client.pipelines;
 
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.pipelines.PipelineExecution;
@@ -22,16 +25,12 @@ import org.gbif.api.model.pipelines.RunPipelineResponse;
 import org.gbif.api.model.pipelines.ws.PipelineProcessParameters;
 import org.gbif.api.model.pipelines.ws.RunAllParams;
 import org.gbif.api.service.pipelines.PipelinesHistoryService;
-
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
-
 import org.springframework.cloud.openfeign.SpringQueryMap;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -92,9 +91,14 @@ public interface PipelinesHistoryClient extends PipelinesHistoryService {
   @Override
   void markPipelineStatusAsAborted(@PathVariable("executionKey") long executionKey);
 
-  @PostMapping(value = "step", consumes = MediaType.APPLICATION_JSON_VALUE)
   @Override
-  long updatePipelineStep(@RequestBody PipelineStep pipelineStep);
+  default long updatePipelineStep(@RequestBody PipelineStep pipelineStep) {
+    return updatePipelineStep(pipelineStep.getKey(), pipelineStep);
+  }
+
+  @PutMapping(value = "step/{stepKey}", consumes = MediaType.APPLICATION_JSON_VALUE)
+  long updatePipelineStep(
+      @PathVariable("stepKey") long stepKey, @RequestBody PipelineStep pipelineStep);
 
   @GetMapping(value = "step/{stepKey}", produces = MediaType.APPLICATION_JSON_VALUE)
   @ResponseBody
@@ -165,4 +169,10 @@ public interface PipelinesHistoryClient extends PipelinesHistoryService {
       @PathVariable("attempt") int attempt,
       @PathVariable("executionKey") long executionKey,
       @RequestBody String message);
+
+  @PutMapping(
+      value = "step/{stepKey}/submittedToQueued",
+      consumes = MediaType.APPLICATION_JSON_VALUE)
+  @Override
+  void setSubmittedPipelineStepToQueued(@PathVariable("stepKey") long stepKey);
 }

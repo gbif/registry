@@ -230,6 +230,14 @@
     WHERE key = #{step.key,jdbcType=BIGINT}
   </update>
 
+  <update id="setSubmittedPipelineStepToQueued">
+    UPDATE pipeline_step
+    SET state = 'QUEUED',
+        modified = now(),
+        modified_by = #{user,jdbcType=VARCHAR}
+    WHERE key = #{key,jdbcType=BIGINT} AND state = 'SUBMITTED'
+  </update>
+
   <select id="search" resultMap="SEARCH_RESULT_MAP">
     SELECT pp.dataset_key dataset_key, pp.attempt, pe.key execution_key, pe.rerun_reason, ps.type, ps.state, ps.started,
             ps.finished, ps.pipelines_version

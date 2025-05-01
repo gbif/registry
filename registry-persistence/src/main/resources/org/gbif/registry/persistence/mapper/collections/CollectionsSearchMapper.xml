@@ -628,7 +628,8 @@
       <when test="params.facet.name.equals('PRESERVATION_TYPE')
                   or params.facet.name.equals('CONTENT_TYPE')
                   or params.facet.name.equals('TYPE_STATUS')
-                  or params.facet.name.equals('RECORDED_BY')">
+                  or params.facet.name.equals('RECORDED_BY')
+                  or params.facet.name.equals('TAXON_KEY')">
         COUNT(DISTINCT facet)
         FROM collection c
         <if test="params.descriptorSearch or params.descriptorFacet">
@@ -648,6 +649,9 @@
           </when>
           <when test="params.facet.name.equals('RECORDED_BY')">
             cd.recorded_by
+          </when>
+          <when test="params.facet.name.equals('TAXON_KEY')">
+            cd.taxon_keys
           </when>
         </choose>
         ) facet ON true

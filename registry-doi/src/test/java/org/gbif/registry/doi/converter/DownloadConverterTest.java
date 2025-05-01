@@ -42,8 +42,8 @@ import static org.mockito.Mockito.when;
 
 public class DownloadConverterTest {
 
-//  @Test
-  public void xxxConvertPredicateDownload() throws Exception {
+  @Test
+  public void testConvertPredicateDownload() throws Exception {
     // given
     DatasetOccurrenceDownloadUsage du1 = prepareDatasetOccurrenceDownloadUsage1();
     DatasetOccurrenceDownloadUsage du2 = prepareDatasetOccurrenceDownloadUsage2();
@@ -88,9 +88,8 @@ public class DownloadConverterTest {
       CompareMatcher.isIdenticalTo(expected).normalizeWhitespace().ignoreWhitespace());
   }
 
-//  @Test()
-//  @Ignore
-  public void xxxConvertLargePredicateDownload() throws Exception {
+  @Test
+  public void testConvertLargePredicateDownload() throws Exception {
     // given
     DatasetOccurrenceDownloadUsage du = prepareDatasetOccurrenceDownloadUsage1();
     List<DatasetOccurrenceDownloadUsage> manyUsages = new ArrayList<DatasetOccurrenceDownloadUsage>();
