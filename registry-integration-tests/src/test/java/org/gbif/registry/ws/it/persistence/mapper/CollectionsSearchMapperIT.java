@@ -317,6 +317,11 @@ public class CollectionsSearchMapperIT extends BaseItTest {
                 .build()));
 
     facetDtos =
+      collectionsSearchMapper.collectionFacet(
+        DescriptorsListParams.builder().facet(CollectionFacetParameter.COUNTRY).taxonKey(Collections.singletonList(123)).build());
+    assertEquals(1, facetDtos.size());
+
+    facetDtos =
         collectionsSearchMapper.collectionFacet(
             DescriptorsListParams.builder().facet(CollectionFacetParameter.COUNTRY).build());
     assertEquals(1, facetDtos.size());

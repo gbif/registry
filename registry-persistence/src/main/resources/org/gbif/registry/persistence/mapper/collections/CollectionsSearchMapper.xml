@@ -585,6 +585,9 @@
       <when test="params.facet.name.equals('ACCESSION_STATUS')">
         c.accession_status
       </when>
+      <when test="params.facet.name.equals('TAXON_KEY')">
+        unnest(cd.taxon_keys)
+      </when>
       <when test="params.facet.name.equals('DESCRIPTOR_COUNTRY')">
         cd.country
       </when>
