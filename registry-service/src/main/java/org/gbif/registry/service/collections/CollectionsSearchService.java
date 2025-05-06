@@ -149,7 +149,9 @@ public class CollectionsSearchService {
 
     Pageable page = searchRequest.getPage() == null ? new PagingRequest() : searchRequest.getPage();
 
-    Vocabularies.addChildrenConcepts(searchRequest, conceptClient);
+    if (searchRequest.getFacetIncludeChildren()) {
+      Vocabularies.addChildrenConcepts(searchRequest, conceptClient);
+    }
 
     InstitutionListParams.InstitutionListParamsBuilder listParamsBuilder =
         InstitutionListParams.builder()
@@ -229,7 +231,9 @@ public class CollectionsSearchService {
       institutionKeys.addAll(searchRequest.getInstitutionKeys());
     }
 
-    Vocabularies.addChildrenConcepts(searchRequest, conceptClient);
+    if (Boolean.TRUE.equals(searchRequest.getFacetIncludeChildren())) {
+      Vocabularies.addChildrenConcepts(searchRequest, conceptClient);
+    }
 
     DescriptorsListParams.DescriptorsListParamsBuilder listParamsBuilder =
         DescriptorsListParams.builder()
