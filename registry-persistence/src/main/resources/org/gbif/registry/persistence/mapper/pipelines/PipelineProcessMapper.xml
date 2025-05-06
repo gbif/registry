@@ -92,6 +92,7 @@
   </sql>
 
   <sql id="STEP_UPDATE">
+    started = #{step.started,jdbcType=OTHER},
     finished = #{step.finished,jdbcType=OTHER},
     state = #{step.state,jdbcType=OTHER},
     message = #{step.message,jdbcType=VARCHAR},
