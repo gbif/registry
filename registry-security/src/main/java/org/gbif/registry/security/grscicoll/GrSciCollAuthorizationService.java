@@ -17,12 +17,14 @@ import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.CollectionEntityType;
 import org.gbif.api.model.collections.Contactable;
 import org.gbif.api.model.collections.Institution;
+import org.gbif.api.model.collections.descriptors.DescriptorChangeSuggestion;
 import org.gbif.api.model.collections.suggestions.Type;
 import org.gbif.api.model.registry.MachineTag;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.registry.persistence.mapper.UserRightsMapper;
 import org.gbif.registry.persistence.mapper.collections.ChangeSuggestionMapper;
 import org.gbif.registry.persistence.mapper.collections.CollectionMapper;
+import org.gbif.registry.persistence.mapper.collections.DescriptorChangeSuggestionMapper;
 import org.gbif.registry.persistence.mapper.collections.InstitutionMapper;
 import org.gbif.registry.persistence.mapper.collections.dto.ChangeSuggestionDto;
 import org.gbif.registry.security.SecurityContextCheck;
@@ -61,6 +63,7 @@ public class GrSciCollAuthorizationService {
   private final CollectionMapper collectionMapper;
   private final InstitutionMapper institutionMapper;
   private final ChangeSuggestionMapper changeSuggestionMapper;
+  private final DescriptorChangeSuggestionMapper descriptorChangeSuggestionMapper;
   private final ObjectMapper objectMapper;
 
   public GrSciCollAuthorizationService(
@@ -68,11 +71,13 @@ public class GrSciCollAuthorizationService {
       CollectionMapper collectionMapper,
       InstitutionMapper institutionMapper,
       ChangeSuggestionMapper changeSuggestionMapper,
+    DescriptorChangeSuggestionMapper descriptorChangeSuggestionMapper,
       @Qualifier("registryObjectMapper") ObjectMapper objectMapper) {
     this.userRightsMapper = userRightsMapper;
     this.collectionMapper = collectionMapper;
     this.institutionMapper = institutionMapper;
     this.changeSuggestionMapper = changeSuggestionMapper;
+    this.descriptorChangeSuggestionMapper = descriptorChangeSuggestionMapper;
     this.objectMapper = objectMapper;
   }
 
@@ -350,6 +355,27 @@ public class GrSciCollAuthorizationService {
 
     return false;
   }
+
+  public boolean allowedToUpdateDescriptorChangeSuggestion(
+    int key, Authentication authentication) {
+
+    if (SecurityContextCheck.checkUserInRole(authentication, GRSCICOLL_ADMIN_ROLE)) {
+      return true;
+    }
+
+    DescriptorChangeSuggestion descriptorChangeSuggestion =
+        descriptorChangeSuggestionMapper.findByKey(key);
+
+    if (descriptorChangeSuggestion == null) {
+      return false;
+    }
+
+    Collection collectionToAddDescription =
+        collectionMapper.get(descriptorChangeSuggestion.getCollectionKey());
+
+    return allowedToModifyCollection(authentication, collectionToAddDescription.getKey(), collectionToAddDescription);
+  }
+
 
   private <T extends Contactable> Country extractCountry(T entity) {
     if (entity.getAddress() != null && entity.getAddress().getCountry() != null) {

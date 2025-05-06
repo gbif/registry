@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.gbif.registry.persistence.mapper.collections.DescriptorChangeSuggestionMapper">
+
+  <!-- ResultMap to map columns to DescriptorChangeSuggestion properties -->
+  <resultMap id="DESCRIPTOR_CHANGE_SUGGESTION_MAP" type="org.gbif.api.model.collections.descriptors.DescriptorChangeSuggestion" autoMapping="true">
+    <id property="key" column="key"/>
+    <result property="comments" column="comments" typeHandler="StringArrayTypeHandler"/>
+  </resultMap>
+
+  <sql id="DESCRIPTOR_CHANGE_SUGGESTION_WRITE_FIELDS">
+    collection_key, descriptor_group_key, type, status, suggested_file, title, description, format, proposed, proposed_by,
+    proposer_email, applied, applied_by, discarded,
+    discarded_by, comments, modified, modified_by
+  </sql>
+
+  <sql id="DESCRIPTOR_CHANGE_SUGGESTION_READ_FIELDS">
+    key, collection_key, descriptor_group_key, type, status, suggested_file, title, description, format, proposed, proposed_by,
+    proposer_email, applied, applied_by, discarded, discarded_by,
+    suggested_file, comments, modified, modified_by
+  </sql>
+
+  <sql id="DESCRIPTOR_CHANGE_SUGGESTION_PARAMS_CREATE">
+    #{collectionKey,jdbcType=OTHER},
+    #{descriptorGroupKey,jdbcType=OTHER},
+    #{type,jdbcType=OTHER, typeHandler=org.apache.ibatis.type.EnumTypeHandler},
+    #{status,jdbcType=OTHER},
+    #{suggestedFile,jdbcType=VARCHAR},
+    #{title,jdbcType=VARCHAR},
+    #{description,jdbcType=VARCHAR},
+    #{format, jdbcType=OTHER, typeHandler=org.gbif.registry.persistence.mapper.handler.ExportFormatHandler},
+    #{proposed,jdbcType=TIMESTAMP},
+    #{proposedBy,jdbcType=VARCHAR},
+    #{proposerEmail,jdbcType=VARCHAR},
+    #{applied,jdbcType=TIMESTAMP},
+    #{appliedBy,jdbcType=VARCHAR},
+    #{discarded,jdbcType=TIMESTAMP},
+    #{discardedBy,jdbcType=VARCHAR},
+    #{comments,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler},
+    #{modified,jdbcType=TIMESTAMP},
+    #{modifiedBy,jdbcType=VARCHAR}
+  </sql>
+
+  <sql id="DESCRIPTOR_CHANGE_SUGGESTION_PARAMS_UPDATE">
+    title = #{title,jdbcType=VARCHAR},
+    description = #{description,jdbcType=VARCHAR},
+    status = #{status,jdbcType=OTHER},
+    suggested_file = #{suggestedFile,jdbcType=VARCHAR},
+    comments = #{comments,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler},
+    modified = now(),
+    modified_by = #{modifiedBy,jdbcType=VARCHAR},
+    discarded = #{discarded,jdbcType=OTHER},
+    discarded_by = #{discardedBy,jdbcType=INTEGER},
+    applied = #{applied,jdbcType=OTHER},
+    applied_by = #{appliedBy,jdbcType=INTEGER},
+    descriptor_group_key = #{descriptorGroupKey,jdbcType=OTHER}
+  </sql>
+
+  <!-- Insert statement -->
+  <insert id="createSuggestion" parameterType="DescriptorChangeSuggestion" useGeneratedKeys="true" keyProperty="key">
+    INSERT INTO descriptor_change_suggestion(<include refid="DESCRIPTOR_CHANGE_SUGGESTION_WRITE_FIELDS"/>)
+    VALUES(<include refid="DESCRIPTOR_CHANGE_SUGGESTION_PARAMS_CREATE"/>)
+  </insert>
+
+  <!-- Update statement -->
+  <update id="updateSuggestion" parameterType="DescriptorChangeSuggestion">
+    UPDATE descriptor_change_suggestion
+    SET
+    <include refid="DESCRIPTOR_CHANGE_SUGGESTION_PARAMS_UPDATE"/>
+    WHERE key = #{key,jdbcType=OTHER}
+  </update>
+
+  <!-- Select statement -->
+  <select id="findByKey" parameterType="long" resultMap="DESCRIPTOR_CHANGE_SUGGESTION_MAP">
+    SELECT
+    <include refid="DESCRIPTOR_CHANGE_SUGGESTION_READ_FIELDS"/>
+    FROM descriptor_change_suggestion
+    WHERE key = #{key,jdbcType=OTHER}
+  </select>
+
+  <select id="list" resultType="DescriptorChangeSuggestion" resultMap="DESCRIPTOR_CHANGE_SUGGESTION_MAP" parameterType="Pageable">
+    SELECT
+    <include refid="DESCRIPTOR_CHANGE_SUGGESTION_READ_FIELDS"/>
+    FROM descriptor_change_suggestion dcs
+    <where>
+      <if test="status != null">
+        AND dcs.status = #{status,jdbcType=OTHER}
+      </if>
+      <if test="type != null">
+        AND dcs.type = #{type,jdbcType=OTHER, typeHandler=org.apache.ibatis.type.EnumTypeHandler}
+      </if>
+      <if test="proposerEmail != null">
+        AND dcs.proposer_email = #{proposerEmail,jdbcType=VARCHAR}
+      </if>
+      <if test="collectionKey != null">
+        AND dcs.collection_key = #{collectionKey,jdbcType=OTHER}
+      </if>
+    </where>
+    ORDER BY dcs.proposed DESC
+    <if test="page != null and page.limit != null and page.offset != null">
+      LIMIT #{page.limit} OFFSET #{page.offset}
+    </if>
+  </select>
+
+  <select id="count" resultType="long" parameterType="map">
+    SELECT COUNT(*)
+    FROM descriptor_change_suggestion
+    <where>
+      <if test="status != null">
+        AND status = #{status,jdbcType=OTHER}
+      </if>
+      <if test="type != null">
+        AND type = #{type,jdbcType=OTHER, typeHandler=org.apache.ibatis.type.EnumTypeHandler}
+      </if>
+      <if test="proposerEmail != null">
+        AND proposer_email = #{proposerEmail,jdbcType=VARCHAR}
+      </if>
+      <if test="collectionKey != null">
+        AND collection_key = #{collectionKey,jdbcType=OTHER}
+      </if>
+    </where>
+  </select>
+
+</mapper>
