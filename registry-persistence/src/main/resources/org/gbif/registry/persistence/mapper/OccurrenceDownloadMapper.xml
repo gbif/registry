@@ -134,6 +134,7 @@
     license = #{license,jdbcType=OTHER},
     erase_after = #{eraseAfter,jdbcType=TIMESTAMP},
     erasure_notification = #{erasureNotification,jdbcType=TIMESTAMP},
+    download_link = #{downloadLink,jdbcType=VARCHAR},
     modified = now()
   </sql>
 

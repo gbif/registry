@@ -13,6 +13,21 @@
  */
 package org.gbif.registry.ws.resources.pipelines;
 
+import static org.gbif.registry.security.UserRoles.ADMIN_ROLE;
+import static org.gbif.registry.security.UserRoles.EDITOR_ROLE;
+
+import com.google.common.base.Preconditions;
+import io.swagger.v3.oas.annotations.Hidden;
+import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
+import java.util.stream.Collectors;
+import javax.annotation.Nullable;
+import javax.validation.ConstraintViolationException;
+import javax.validation.constraints.NotNull;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.pipelines.PipelineExecution;
@@ -26,18 +41,6 @@ import org.gbif.api.model.pipelines.ws.SearchResult;
 import org.gbif.api.service.pipelines.PipelinesHistoryService;
 import org.gbif.registry.pipelines.RegistryPipelinesHistoryTrackingService;
 import org.gbif.registry.ws.util.DateUtils;
-
-import java.time.LocalDateTime;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
-import java.util.stream.Collectors;
-
-import javax.annotation.Nullable;
-import javax.validation.ConstraintViolationException;
-
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -50,15 +53,11 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
-import io.swagger.v3.oas.annotations.Hidden;
-
-import static org.gbif.registry.security.UserRoles.ADMIN_ROLE;
-import static org.gbif.registry.security.UserRoles.EDITOR_ROLE;
 
 /** Pipelines History service. */
 @Hidden // TODO: Document?
@@ -164,12 +163,27 @@ public class PipelinesHistoryResource implements PipelinesHistoryService {
   }
 
   /** Update pipeline step */
-  @PostMapping(value = "step", consumes = MediaType.APPLICATION_JSON_VALUE)
+  @PutMapping(value = "step/{stepKey}", consumes = MediaType.APPLICATION_JSON_VALUE)
   @Secured(ADMIN_ROLE)
+  public long updatePipelineStep(@PathVariable("stepKey") long stepKey, @RequestBody PipelineStep pipelineStep) {
+    Preconditions.checkArgument(pipelineStep.getKey() == stepKey);
+    return updatePipelineStep(pipelineStep);
+  }
+
   @Override
-  public long updatePipelineStep(@RequestBody PipelineStep pipelineStep) {
+  public long updatePipelineStep(@NotNull PipelineStep pipelineStep) {
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     return historyTrackingService.updatePipelineStep(pipelineStep, authentication.getName());
+  }
+
+  @PutMapping(
+      value = "step/{stepKey}/submittedToQueued",
+      consumes = MediaType.APPLICATION_JSON_VALUE)
+  @Secured(ADMIN_ROLE)
+  @Override
+  public void setSubmittedPipelineStepToQueued(@PathVariable("stepKey") long stepKey) {
+    final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    historyTrackingService.setSubmittedPipelineStepToQueued(stepKey, authentication.getName());
   }
 
   /**

@@ -267,4 +267,11 @@ public interface RegistryPipelinesHistoryTrackingService {
    * @param message cause of the issue
    */
   void notifyAbsentIdentifiers(UUID datasetKey, int attempt, long executionKey, String message);
+
+  /**
+   * Sets the pipeline step state as QUEUED only if the step is in SUBMITTED state.
+   *
+   * @param pipelineStepKey key of the pipeline step
+   */
+  void setSubmittedPipelineStepToQueued(long pipelineStepKey, String user);
 }

@@ -34,6 +34,7 @@ import static org.gbif.registry.doi.converter.DownloadTestDataProvider.preparePr
 import static org.gbif.registry.doi.converter.DownloadTestDataProvider.prepareSqlDownload;
 import static org.gbif.registry.doi.converter.DownloadTestDataProvider.prepareUser;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.mock;
@@ -42,8 +43,8 @@ import static org.mockito.Mockito.when;
 
 public class DownloadConverterTest {
 
-//  @Test
-  public void xxxConvertPredicateDownload() throws Exception {
+  @Test
+  public void testConvertPredicateDownload() throws Exception {
     // given
     DatasetOccurrenceDownloadUsage du1 = prepareDatasetOccurrenceDownloadUsage1();
     DatasetOccurrenceDownloadUsage du2 = prepareDatasetOccurrenceDownloadUsage2();
@@ -52,6 +53,7 @@ public class DownloadConverterTest {
     // mock title lookup API
     TitleLookupService tl = mock(TitleLookupService.class);
     when(tl.getSpeciesName(anyString())).thenReturn("Abies alba Mill.");
+    when(tl.getSpeciesName(anyString(), any())).thenReturn("Abies alba Mill.");
     final String expected = getXmlMetadataFromFile("metadata/metadata-predicate-download.xml");
 
     // when
@@ -63,7 +65,7 @@ public class DownloadConverterTest {
     assertThat(
       actualXmlMetadata,
       CompareMatcher.isIdenticalTo(expected).normalizeWhitespace().ignoreWhitespace());
-    verify(tl, atLeastOnce()).getSpeciesName(anyString());
+    verify(tl, atLeastOnce()).getSpeciesName(anyString(), any());
   }
 
   @Test
@@ -88,9 +90,8 @@ public class DownloadConverterTest {
       CompareMatcher.isIdenticalTo(expected).normalizeWhitespace().ignoreWhitespace());
   }
 
-//  @Test()
-//  @Ignore
-  public void xxxConvertLargePredicateDownload() throws Exception {
+  @Test
+  public void testConvertLargePredicateDownload() throws Exception {
     // given
     DatasetOccurrenceDownloadUsage du = prepareDatasetOccurrenceDownloadUsage1();
     List<DatasetOccurrenceDownloadUsage> manyUsages = new ArrayList<DatasetOccurrenceDownloadUsage>();
@@ -102,6 +103,7 @@ public class DownloadConverterTest {
     // mock title lookup API
     TitleLookupService tl = mock(TitleLookupService.class);
     when(tl.getSpeciesName(anyString())).thenReturn("Abies alba Mill.");
+    when(tl.getSpeciesName(anyString(), any())).thenReturn("Abies alba Mill.");
     final String expected = getXmlMetadataFromFile("metadata/metadata-large-predicate-download.xml");
 
     // when

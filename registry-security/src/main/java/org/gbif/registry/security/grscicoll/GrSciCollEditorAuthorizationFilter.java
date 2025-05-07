@@ -63,6 +63,8 @@ public class GrSciCollEditorAuthorizationFilter extends OncePerRequestFilter {
       Pattern.compile(".*/grscicoll/(collection|institution|person)/([a-f0-9-]+)$");
   public static final Pattern CHANGE_SUGGESTION_UPDATE_PATTERN =
       Pattern.compile(".*/grscicoll/(collection|institution)/changeSuggestion/([0-9]+).*");
+  public static final Pattern DESCRIPTION_CHANGE_SUGGESTION_UPDATE_PATTERN =
+    Pattern.compile(".*/grscicoll/collection/([a-f0-9-]+)/descriptorGroup/suggestion/([0-9]+).*");
   public static final Pattern INST_COLL_CREATE_PATTERN =
       Pattern.compile(".*/grscicoll/(collection|institution)$");
   public static final Pattern MACHINE_TAG_PATTERN_DELETE =
@@ -121,6 +123,7 @@ public class GrSciCollEditorAuthorizationFilter extends OncePerRequestFilter {
               "User has no GrSciColl admin rights", HttpStatus.FORBIDDEN);
         } else if (isChangeSuggestionRequest(path)) {
           checkChangeSuggestionUpdate(path, authentication);
+          checkDescriptionChangeSuggestionUpdate(path, authentication);
         } else if (!isBatchRequest(path)) {
           // editors cannot edit machine tags
           checkMachineTagsPermissions(request, path, authentication);
@@ -135,7 +138,7 @@ public class GrSciCollEditorAuthorizationFilter extends OncePerRequestFilter {
   }
 
   private boolean isChangeSuggestionRequest(String path) {
-    return path.contains("/changeSuggestion");
+    return path.contains("/changeSuggestion") || path.contains("/suggestion");
   }
 
   private boolean isReinterpretAllDescriptorGroupsRequest(String path) {
@@ -162,6 +165,20 @@ public class GrSciCollEditorAuthorizationFilter extends OncePerRequestFilter {
                 "User {0} is not allowed to update change suggestion {1}",
                 authentication.getName(), key),
             HttpStatus.FORBIDDEN);
+      }
+    }
+  }
+
+  private void checkDescriptionChangeSuggestionUpdate(String path, Authentication authentication) {
+    Matcher matcher = DESCRIPTION_CHANGE_SUGGESTION_UPDATE_PATTERN.matcher(path);
+    if (matcher.matches()) {
+      int key = Integer.parseInt(matcher.group(2));
+      if (!authService.allowedToUpdateDescriptorChangeSuggestion(key, authentication)) {
+        throw new WebApplicationException(
+          MessageFormat.format(
+            "User {0} is not allowed to update descriptor change suggestion {1}",
+            authentication.getName(), key),
+          HttpStatus.FORBIDDEN);
       }
     }
   }

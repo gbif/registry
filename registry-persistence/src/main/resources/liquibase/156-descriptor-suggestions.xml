@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+  xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+  <changeSet id="156" author="auzun" runInTransaction="false">
+    <sql splitStatements="false" stripComments="true">
+      <![CDATA[
+        CREATE TABLE descriptor_change_suggestion (
+            key SERIAL PRIMARY KEY,
+            collection_key UUID REFERENCES collection(key) ON DELETE CASCADE,
+            descriptor_group_key INTEGER REFERENCES collection_descriptor_group(key) ON DELETE CASCADE,
+            type enum_change_suggestion_type NOT NULL, -- CREATE, UPDATE, DELETE
+            status enum_change_suggestion_status NOT NULL DEFAULT 'PENDING', -- PENDING, APPROVED, DISCARDED
+            suggested_file TEXT,
+            title TEXT,
+            description TEXT,
+            format TEXT,
+            proposed TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+            proposed_by VARCHAR NOT NULL CHECK (assert_min_length(proposed_by, 3)),
+            proposer_email VARCHAR NOT NULL CHECK (assert_min_length(proposer_email, 3)),
+            applied TIMESTAMP WITH TIME ZONE,
+            applied_by VARCHAR CHECK (assert_min_length(applied_by, 3)),
+            discarded TIMESTAMP WITH TIME ZONE,
+            discarded_by VARCHAR CHECK (assert_min_length(discarded_by, 3)),
+            comments TEXT[],
+            modified TIMESTAMP WITH TIME ZONE,
+            modified_by VARCHAR CHECK (assert_min_length(modified_by, 3))
+        );
+
+        CREATE TYPE export_format_enum AS ENUM (
+          'CSV',  -- Comma separated
+          'TSV'   -- Tab separated
+        );
+      ]]>
+    </sql>
+  </changeSet>
+
+</databaseChangeLog>

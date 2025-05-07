@@ -98,7 +98,7 @@ public interface PipelineProcessMapper {
    * @param step step to add
    */
   void addPipelineStep(
-    @Param("pipelineExecutionKey") long pipelineExecutionKey, @Param("step") PipelineStep step);
+      @Param("pipelineExecutionKey") long pipelineExecutionKey, @Param("step") PipelineStep step);
 
   /**
    * Adds a {@link PipelineStep} to an existing {@link PipelineExecution}.
@@ -106,6 +106,14 @@ public interface PipelineProcessMapper {
    * @param step step to add
    */
   void updatePipelineStep(@Param("step") PipelineStep step);
+
+  /**
+   * Updates the state of a pipeline step from submitted to queued.
+   *
+   * @param key pipeline step key
+   * @param user user that is performing the action
+   */
+  void setSubmittedPipelineStepToQueued(@Param("key") long key, @Param("user") String user);
 
   /**
    * Lists {@link PipelineProcess} based in the search parameters.
@@ -157,9 +165,7 @@ public interface PipelineProcessMapper {
       @Nullable @Param("rerunReason") String rerunReason,
       @Nullable @Param("pipelinesVersion") String pipelinesVersion);
 
-  /**
-   * Mark all existing {@link PipelineExecution} as finished
-   */
+  /** Mark all existing {@link PipelineExecution} as finished */
   void markAllPipelineExecutionAsFinished();
 
   /**

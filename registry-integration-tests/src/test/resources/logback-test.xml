@@ -7,7 +7,7 @@
   </appender>
 
   <!-- set to DEBUG to see mybatis queries -->
-  <logger name="org.gbif.registry.persistence.mapper.collections" level="DEBUG"/>
+  <logger name="org.gbif.registry.persistence.mapper.collections" level="INFO"/>
 
   <root level="info">
     <appender-ref ref="STDOUT"/>
