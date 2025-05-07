@@ -106,7 +106,8 @@ public class TestCaseDatabaseInitializer implements BeforeEachCallback {
           "collections_batch",
           "collection_descriptor_group",
           "collection_descriptor",
-          "collection_descriptor_verbatim");
+          "collection_descriptor_verbatim",
+          "descriptor_change_suggestion");
 
   public TestCaseDatabaseInitializer() {}
 
