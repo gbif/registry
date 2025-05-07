@@ -86,6 +86,7 @@
     <mybatis-spring-boot-starter.version>2.3.2</mybatis-spring-boot-starter.version>
     <springdoc-openapi-ui.version>1.5.8</springdoc-openapi-ui.version>
     <spring-cloud-sleuth.version>2.2.8.RELEASE</spring-cloud-sleuth.version>
+    <micrometer.version>1.12.2</micrometer.version>
 
     <!-- GBIF -->
     <gbif-api.version>2.1.6</gbif-api.version>
@@ -242,6 +243,12 @@
         <groupId>org.springdoc</groupId>
         <artifactId>springdoc-openapi-ui</artifactId>
         <version>${springdoc-openapi-ui.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.micrometer</groupId>
+        <artifactId>micrometer-registry-prometheus</artifactId>
+        <version>${micrometer.version}</version>
+        <scope>runtime</scope>
       </dependency>
 
       <!-- GBIF dependencies -->
