@@ -149,9 +149,7 @@ public class CollectionsSearchService {
 
     Pageable page = searchRequest.getPage() == null ? new PagingRequest() : searchRequest.getPage();
 
-    if (searchRequest.getFacetIncludeChildren()) {
-      Vocabularies.addChildrenConcepts(searchRequest, conceptClient);
-    }
+    Vocabularies.addChildrenConcepts(searchRequest, conceptClient);
 
     InstitutionListParams.InstitutionListParamsBuilder listParamsBuilder =
         InstitutionListParams.builder()
@@ -337,17 +335,79 @@ public class CollectionsSearchService {
 
   private <F extends CollectionsFacetParameter> CollectionFacet<F> createFacet(
       F f, List<FacetDto> facetDtos, long cardinality) {
-    List<CollectionFacet.Count> facetCounts =
-        facetDtos.stream()
-            .filter(dto -> !Strings.isNullOrEmpty(dto.getFacet()))
-            .map(dto -> new CollectionFacet.Count(dto.getFacet(), dto.getCount()))
-            .collect(Collectors.toList());
+    List<CollectionFacet.Count> facetCounts;
+
+    // Check if this facet parameter is a vocabulary field
+    String vocabularyName = getVocabularyName(f);
+    if (vocabularyName != null) {
+      Map<String, Long> hierarchicalCounts = new HashMap<>();
+
+      // get all concepts and their children
+      Map<String, Set<String>> conceptHierarchy = new HashMap<>();
+      for (FacetDto dto : facetDtos) {
+        if (!Strings.isNullOrEmpty(dto.getFacet())) {
+          Set<String> children = Vocabularies.getChildrenConcepts(
+              vocabularyName,
+              dto.getFacet(),
+              conceptClient
+          );
+          conceptHierarchy.put(dto.getFacet(), children);
+        }
+      }
+
+      // calculate total counts including children
+      for (FacetDto dto : facetDtos) {
+        if (!Strings.isNullOrEmpty(dto.getFacet())) {
+          String concept = dto.getFacet();
+          long count = dto.getCount();
+
+          // add counts from child concepts
+          Set<String> children = conceptHierarchy.get(concept);
+          if (children != null) {
+            for (String child : children) {
+              for (FacetDto childDto : facetDtos) {
+                if (child.equals(childDto.getFacet())) {
+                  count += childDto.getCount();
+                  break;
+                }
+              }
+            }
+          }
+
+          hierarchicalCounts.put(concept, count);
+        }
+      }
+
+      // convert to facet counts
+      facetCounts = hierarchicalCounts.entrySet().stream()
+          .map(e -> new CollectionFacet.Count(e.getKey(), e.getValue()))
+          .collect(Collectors.toList());
+    } else {
+      // for non-vocabulary facets, use the original logic
+      facetCounts = facetDtos.stream()
+          .filter(dto -> !Strings.isNullOrEmpty(dto.getFacet()))
+          .map(dto -> new CollectionFacet.Count(dto.getFacet(), dto.getCount()))
+          .collect(Collectors.toList());
+    }
 
     CollectionFacet<F> collectionFacet = new CollectionFacet<>();
     collectionFacet.setField(f);
     collectionFacet.setCounts(facetCounts);
     collectionFacet.setCardinality(cardinality);
     return collectionFacet;
+  }
+
+  private String getVocabularyName(CollectionsFacetParameter facetParameter) {
+    if (facetParameter == InstitutionFacetParameter.DISCIPLINE) {
+      return Vocabularies.DISCIPLINE;
+    } else if (facetParameter == CollectionFacetParameter.TYPE_STATUS) {
+      return Vocabularies.TYPE_STATUS;
+    } else if (facetParameter == CollectionFacetParameter.ACCESSION_STATUS) {
+      return Vocabularies.ACCESSION_STATUS;
+    } else if (facetParameter == CollectionFacetParameter.PRESERVATION_TYPE) {
+      return Vocabularies.PRESERVATION_TYPE;
+    }
+    return null;
   }
 
   private static <F extends CollectionsFacetParameter> Pageable extractFacetPage(
