@@ -11,7 +11,7 @@
 
   <groupId>org.gbif.registry</groupId>
   <artifactId>registry-parent</artifactId>
-  <version>4.0.17-SNAPSHOT</version>
+  <version>4.1.0-SNAPSHOT</version>
   <name>GBIF Registry Parent</name>
   <description>GBIF Registry project</description>
 
@@ -86,22 +86,24 @@
     <mybatis-spring-boot-starter.version>2.3.2</mybatis-spring-boot-starter.version>
     <springdoc-openapi-ui.version>1.5.8</springdoc-openapi-ui.version>
     <spring-cloud-sleuth.version>2.2.8.RELEASE</spring-cloud-sleuth.version>
+    <micrometer.version>1.12.2</micrometer.version>
 
     <!-- GBIF -->
-    <gbif-api.version>2.1.5-SNAPSHOT</gbif-api.version>
+    <gbif-api.version>2.2.0-SNAPSHOT</gbif-api.version>
     <gbif-common.version>0.59</gbif-common.version>
-    <gbif-common-mybatis.version>2.0.0</gbif-common-mybatis.version>
-    <gbif-common-ws.version>2.0.8-SNAPSHOT</gbif-common-ws.version>
-    <gbif-directory.version>1.13</gbif-directory.version>
+    <gbif-common-mybatis.version>2.0.1-SNAPSHOT</gbif-common-mybatis.version>
+    <gbif-common-ws.version>2.0.8-keytest-SNAPSHOT</gbif-common-ws.version>
+    <gbif-directory.version>1.14</gbif-directory.version>
     <gbif-doi.version>3.0.0</gbif-doi.version>
-    <gbif-download-query-tools.version>2.0.0</gbif-download-query-tools.version>
+    <gbif-download-query-tools.version>2.1.0-java11-SNAPSHOT</gbif-download-query-tools.version>
     <gbif-httputils.version>0.10</gbif-httputils.version>
     <gbif-metadata-profile.version>2.6</gbif-metadata-profile.version>
     <gbif-parsers.version>0.67</gbif-parsers.version>
     <gbif-postal-service.version>1.8.1</gbif-postal-service.version>
     <xoai.version>4.1.0-gbif-4</xoai.version>
-    <gbif-occurrence.version>1.0.28</gbif-occurrence.version>
+    <gbif-occurrence.version>1.1.0-SNAPSHOT</gbif-occurrence.version>
     <gbif-vocabulary.version>2.0.2</gbif-vocabulary.version>
+    <gbif-kvs.version>3.0-SNAPSHOT</gbif-kvs.version>
     <checklistbank.version>3.0.0</checklistbank.version>
 
     <!-- Third party -->
@@ -146,8 +148,8 @@
     <junit.version>5.9.1</junit.version>
     <mockito.version>3.3.3</mockito.version>
     <xmlunit.version>2.6.3</xmlunit.version>
-    <postgresql-testcontainers.version>1.19.8</postgresql-testcontainers.version>
-    <testcontainers-elasticsearch.version>1.19.8</testcontainers-elasticsearch.version>
+    <postgresql-testcontainers.version>1.20.2</postgresql-testcontainers.version>
+    <testcontainers-elasticsearch.version>1.20.2</testcontainers-elasticsearch.version>
     <mock-javamail.version>1.9</mock-javamail.version>
     <mybatis-spring-boot-starter-test.version>2.0.0</mybatis-spring-boot-starter-test.version>
     <reflections.version>0.9.12</reflections.version>
@@ -242,6 +244,12 @@
         <groupId>org.springdoc</groupId>
         <artifactId>springdoc-openapi-ui</artifactId>
         <version>${springdoc-openapi-ui.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.micrometer</groupId>
+        <artifactId>micrometer-registry-prometheus</artifactId>
+        <version>${micrometer.version}</version>
+        <scope>runtime</scope>
       </dependency>
 
       <!-- GBIF dependencies -->
@@ -432,6 +440,11 @@
         <groupId>org.gbif.vocabulary</groupId>
         <artifactId>vocabulary-rest-ws-client</artifactId>
         <version>${gbif-vocabulary.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.gbif.kvs</groupId>
+        <artifactId>kvs-rest-clients</artifactId>
+        <version>${gbif-kvs.version}</version>
       </dependency>
 
       <!-- Third party dependencies -->

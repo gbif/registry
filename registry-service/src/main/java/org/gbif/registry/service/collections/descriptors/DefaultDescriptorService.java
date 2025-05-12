@@ -37,9 +37,7 @@ import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.service.collections.CollectionService;
 import org.gbif.api.service.collections.DescriptorsService;
 import org.gbif.api.vocabulary.Country;
-import org.gbif.api.vocabulary.Rank;
 import org.gbif.api.vocabulary.collections.MasterSourceType;
-import org.gbif.checklistbank.ws.client.NubResourceClient;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.registry.events.EventManager;
 import org.gbif.registry.events.collections.EventType;
@@ -50,6 +48,7 @@ import org.gbif.registry.persistence.mapper.collections.dto.VerbatimDto;
 import org.gbif.registry.persistence.mapper.collections.params.DescriptorGroupParams;
 import org.gbif.registry.persistence.mapper.collections.params.DescriptorParams;
 import org.gbif.registry.service.collections.batch.FileParsingUtils;
+import org.gbif.rest.client.species.NameUsageMatchingService;
 import org.gbif.vocabulary.client.ConceptClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
@@ -65,7 +64,7 @@ import org.springframework.validation.annotation.Validated;
 @Slf4j
 public class DefaultDescriptorService implements DescriptorsService {
 
-  private final NubResourceClient nubResourceClient;
+  private final NameUsageMatchingService nameUsageMatchingService;
   private final DescriptorsMapper descriptorsMapper;
   private final EventManager eventManager;
   private final CollectionService collectionService;
@@ -73,12 +72,12 @@ public class DefaultDescriptorService implements DescriptorsService {
 
   @Autowired
   public DefaultDescriptorService(
-      NubResourceClient nubResourceClient,
+      NameUsageMatchingService nameUsageMatchingService,
       DescriptorsMapper descriptorsMapper,
       EventManager eventManager,
       CollectionService collectionService,
       ConceptClient conceptClient) {
-    this.nubResourceClient = nubResourceClient;
+    this.nameUsageMatchingService = nameUsageMatchingService;
     this.descriptorsMapper = descriptorsMapper;
     this.eventManager = eventManager;
     this.collectionService = collectionService;
@@ -248,12 +247,12 @@ public class DefaultDescriptorService implements DescriptorsService {
     descriptorGroup.setDescription(description);
     descriptorGroup.setModifiedBy(username);
     descriptorsMapper.updateDescriptorGroup(descriptorGroup);
-    if(descriptorGroupFile != null ) {
-      // remove descriptors
-      descriptorsMapper.deleteDescriptors(descriptorGroup.getKey());
+    if (descriptorGroupFile != null ) {
+    // remove descriptors
+    descriptorsMapper.deleteDescriptors(descriptorGroup.getKey());
 
-      // reimport the file
-      importDescriptorsFile(descriptorGroupFile, format, descriptorGroup.getKey());
+    // reimport the file
+    importDescriptorsFile(descriptorGroupFile, format, descriptorGroup.getKey());
     }
     eventManager.post(
         SubEntityCollectionEvent.newInstance(
@@ -438,12 +437,15 @@ public class DefaultDescriptorService implements DescriptorsService {
     DescriptorDto descriptorDto = new DescriptorDto();
     // taxonomy
     InterpretedResult<Interpreter.TaxonData> taxonomyResult =
-        Interpreter.interpretTaxonomy(valuesMap, nubResourceClient);
+        Interpreter.interpretTaxonomy(valuesMap, nameUsageMatchingService);
     if (taxonomyResult.getResult() != null) {
       descriptorDto.setUsageKey(taxonomyResult.getResult().getUsageKey());
       descriptorDto.setUsageRank(taxonomyResult.getResult().getUsageRank());
       descriptorDto.setUsageName(taxonomyResult.getResult().getUsageName());
-      descriptorDto.setTaxonKeys(taxonomyResult.getResult().getTaxonKeys());
+      descriptorDto.setTaxonKeys(
+          taxonomyResult.getResult().getTaxonKeys() != null
+              ? new ArrayList<>(taxonomyResult.getResult().getTaxonKeys())
+              : null);
       descriptorDto.setTaxonClassification(taxonomyResult.getResult().getTaxonClassification());
       if (taxonomyResult.getResult().getTaxonClassification() != null) {
         taxonomyResult
@@ -451,27 +453,35 @@ public class DefaultDescriptorService implements DescriptorsService {
             .getTaxonClassification()
             .forEach(
                 r -> {
-                  if (r.getRank() == Rank.KINGDOM) {
-                    descriptorDto.setKingdomKey(r.getKey());
-                    descriptorDto.setKingdomName(r.getName());
-                  } else if (r.getRank() == Rank.PHYLUM) {
-                    descriptorDto.setPhylumKey(r.getKey());
-                    descriptorDto.setPhylumName(r.getName());
-                  } else if (r.getRank() == Rank.CLASS) {
-                    descriptorDto.setClassKey(r.getKey());
-                    descriptorDto.setClassName(r.getName());
-                  } else if (r.getRank() == Rank.ORDER) {
-                    descriptorDto.setOrderKey(r.getKey());
-                    descriptorDto.setOrderName(r.getName());
-                  } else if (r.getRank() == Rank.FAMILY) {
-                    descriptorDto.setFamilyKey(r.getKey());
-                    descriptorDto.setFamilyName(r.getName());
-                  } else if (r.getRank() == Rank.GENUS) {
-                    descriptorDto.setGenusKey(r.getKey());
-                    descriptorDto.setGenusName(r.getName());
-                  } else if (r.getRank() == Rank.SPECIES) {
-                    descriptorDto.setSpeciesKey(r.getKey());
-                    descriptorDto.setSpeciesName(r.getName());
+                  switch (r.getRank().toLowerCase()) {
+                    case "kingdom":
+                      descriptorDto.setKingdomKey(r.getKey());
+                      descriptorDto.setKingdomName(r.getName());
+                      break;
+                    case "phylum":
+                      descriptorDto.setPhylumKey(r.getKey());
+                      descriptorDto.setPhylumName(r.getName());
+                      break;
+                    case "class":
+                      descriptorDto.setClassKey(r.getKey());
+                      descriptorDto.setClassName(r.getName());
+                      break;
+                    case "order":
+                      descriptorDto.setOrderKey(r.getKey());
+                      descriptorDto.setOrderName(r.getName());
+                      break;
+                    case "family":
+                      descriptorDto.setFamilyKey(r.getKey());
+                      descriptorDto.setFamilyName(r.getName());
+                      break;
+                    case "genus":
+                      descriptorDto.setGenusKey(r.getKey());
+                      descriptorDto.setGenusName(r.getName());
+                      break;
+                    case "species":
+                      descriptorDto.setSpeciesKey(r.getKey());
+                      descriptorDto.setSpeciesName(r.getName());
+                      break;
                   }
                 });
       }

@@ -49,13 +49,10 @@ public class CollectionDescriptorsSearchRequestHandlerMethodArgumentResolver
     fillCollectionSearchRequest(searchRequest, webRequest);
 
     Map<String, String[]> params = toCaseInsensitiveParams(webRequest);
-    extractMultivalueParam(params, "usageKey", Integer::parseInt)
-        .ifPresent(searchRequest::setUsageKey);
+    extractMultivalueParam(params, "usageKey").ifPresent(searchRequest::setUsageKey);
     extractMultivalueParam(params, "usageName").ifPresent(searchRequest::setUsageName);
-    extractMultivalueParam(params, "usageRank", Rank::valueOf)
-        .ifPresent(searchRequest::setUsageRank);
-    extractMultivalueParam(params, "taxonKey", Integer::parseInt)
-        .ifPresent(searchRequest::setTaxonKey);
+    extractMultivalueParam(params, "usageRank").ifPresent(searchRequest::setUsageRank);
+    extractMultivalueParam(params, "taxonKey").ifPresent(searchRequest::setTaxonKey);
     extractMultivalueParam(params, "identifiedBy").ifPresent(searchRequest::setIdentifiedBy);
     extractMultivalueParam(params, "typeStatus").ifPresent(searchRequest::setTypeStatus);
     extractMultivalueParam(params, "recordedBy").ifPresent(searchRequest::setRecordedBy);
