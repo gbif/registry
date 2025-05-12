@@ -92,6 +92,7 @@
   </sql>
 
   <sql id="STEP_UPDATE">
+    started = #{step.started,jdbcType=OTHER},
     finished = #{step.finished,jdbcType=OTHER},
     state = #{step.state,jdbcType=OTHER},
     message = #{step.message,jdbcType=VARCHAR},
@@ -230,6 +231,14 @@
     WHERE key = #{step.key,jdbcType=BIGINT}
   </update>
 
+  <update id="setSubmittedPipelineStepToQueued">
+    UPDATE pipeline_step
+    SET state = 'QUEUED',
+        modified = now(),
+        modified_by = #{user,jdbcType=VARCHAR}
+    WHERE key = #{key,jdbcType=BIGINT} AND state = 'SUBMITTED'
+  </update>
+
   <select id="search" resultMap="SEARCH_RESULT_MAP">
     SELECT pp.dataset_key dataset_key, pp.attempt, pe.key execution_key, pe.rerun_reason, ps.type, ps.state, ps.started,
             ps.finished, ps.pipelines_version
@@ -348,18 +357,20 @@
   </update>
 
   <select id="getRunningPipelineProcessCount" resultType="Long">
-    SELECT COUNT(1)
+    SELECT COUNT(DISTINCT pe.key)
     FROM pipeline_execution pe
-    WHERE pe.finished = false
+    WHERE pe.finished = FALSE
   </select>
 
   <select id="getRunningPipelineProcess" resultMap="RUNNING_PIPELINES_PROCESS_MAP">
-    SELECT p.key, d.title dataset_title, p.dataset_key, p.attempt, p.created, p.created_by
-    FROM dataset d, pipeline_process p, pipeline_execution pe
-    WHERE d.key = p.dataset_key
-    AND p.key = pe.pipeline_process_key
-    AND pe.finished = FALSE
-    ORDER BY pe.created DESC
+    SELECT procs.key, procs.dataset_title, procs.dataset_key, procs.attempt, procs.created, procs.created_by
+      FROM (
+        SELECT DISTINCT ON (p.key) p.key, d.title dataset_title, p.dataset_key, p.attempt, p.created, p.created_by
+        FROM dataset d, pipeline_process p, pipeline_execution pe
+        WHERE d.key = p.dataset_key
+        AND p.key = pe.pipeline_process_key
+        AND pe.finished = FALSE ) AS procs
+    ORDER BY procs.created DESC
     <if test="page != null">
       LIMIT #{page.limit} OFFSET #{page.offset}
     </if>

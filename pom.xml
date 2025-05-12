@@ -11,7 +11,7 @@
 
   <groupId>org.gbif.registry</groupId>
   <artifactId>registry-parent</artifactId>
-  <version>4.0.15-SNAPSHOT</version>
+  <version>4.0.18-SNAPSHOT</version>
   <name>GBIF Registry Parent</name>
   <description>GBIF Registry project</description>
 
@@ -86,12 +86,13 @@
     <mybatis-spring-boot-starter.version>2.3.2</mybatis-spring-boot-starter.version>
     <springdoc-openapi-ui.version>1.5.8</springdoc-openapi-ui.version>
     <spring-cloud-sleuth.version>2.2.8.RELEASE</spring-cloud-sleuth.version>
+    <micrometer.version>1.12.2</micrometer.version>
 
     <!-- GBIF -->
-    <gbif-api.version>2.2.0-SNAPSHOT</gbif-api.version>
+    <gbif-api.version>2.1.6</gbif-api.version>
     <gbif-common.version>0.59</gbif-common.version>
     <gbif-common-mybatis.version>2.0.0</gbif-common-mybatis.version>
-    <gbif-common-ws.version>2.0.7</gbif-common-ws.version>
+    <gbif-common-ws.version>2.0.8</gbif-common-ws.version>
     <gbif-directory.version>1.13</gbif-directory.version>
     <gbif-doi.version>3.0.0</gbif-doi.version>
     <gbif-download-query-tools.version>2.0.0</gbif-download-query-tools.version>
@@ -242,6 +243,12 @@
         <groupId>org.springdoc</groupId>
         <artifactId>springdoc-openapi-ui</artifactId>
         <version>${springdoc-openapi-ui.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.micrometer</groupId>
+        <artifactId>micrometer-registry-prometheus</artifactId>
+        <version>${micrometer.version}</version>
+        <scope>runtime</scope>
       </dependency>
 
       <!-- GBIF dependencies -->

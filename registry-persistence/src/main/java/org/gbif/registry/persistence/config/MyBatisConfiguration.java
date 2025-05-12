@@ -15,10 +15,14 @@ package org.gbif.registry.persistence.config;
 
 import java.net.URI;
 import java.util.UUID;
+
+import org.apache.ibatis.type.EnumTypeHandler;
+
 import org.gbif.api.model.collections.Address;
 import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.Institution;
 import org.gbif.api.model.collections.descriptors.Descriptor;
+import org.gbif.api.model.collections.descriptors.DescriptorChangeSuggestion;
 import org.gbif.api.model.collections.descriptors.DescriptorGroup;
 import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.common.DoiData;
@@ -118,6 +122,7 @@ public class MyBatisConfiguration {
       configuration.getTypeAliasRegistry().registerAlias("CollectionDto", CollectionDto.class);
       configuration.getTypeAliasRegistry().registerAlias("DuplicateDto", DuplicateDto.class);
       configuration.getTypeAliasRegistry().registerAlias("DescriptorGroup", DescriptorGroup.class);
+      configuration.getTypeAliasRegistry().registerAlias("DescriptorChangeSuggestion", DescriptorChangeSuggestion.class);
       configuration.getTypeAliasRegistry().registerAlias("Descriptor", Descriptor.class);
       configuration.getTypeAliasRegistry().registerAlias("DescriptorDto", DescriptorDto.class);
       configuration.getTypeAliasRegistry().registerAlias("VerbatimDto", VerbatimDto.class);
@@ -202,6 +207,9 @@ public class MyBatisConfiguration {
       configuration
           .getTypeAliasRegistry()
           .registerAlias("IntegerArrayTypeHandler", IntegerArrayTypeHandler.class);
+      configuration
+        .getTypeAliasRegistry()
+        .registerAlias("ExportFormatHandler", ExportFormatHandler.class);
 
       configuration.getTypeAliasRegistry().registerAlias("PipelineProcess", PipelineProcess.class);
       configuration.getTypeAliasRegistry().registerAlias("Step", PipelineStep.class);
