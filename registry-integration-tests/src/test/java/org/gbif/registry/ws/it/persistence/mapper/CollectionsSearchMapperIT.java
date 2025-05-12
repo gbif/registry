@@ -297,6 +297,7 @@ public class CollectionsSearchMapperIT extends BaseItTest {
     DescriptorDto descriptorDtoC2 = new DescriptorDto();
     descriptorDtoC2.setDescriptorGroupKey(descriptorGroupC2.getKey());
     descriptorDtoC2.setKingdomKey("2");
+    descriptorDtoC2.setTaxonKeys(List.of("123"));
     descriptorDtoC2.setRecordedBy(Collections.singletonList("John"));
     descriptorDtoC2.setCountry(Country.DENMARK);
     descriptorDtoC2.setObjectClassificationName("obn1");
@@ -318,7 +319,8 @@ public class CollectionsSearchMapperIT extends BaseItTest {
 
     facetDtos =
       collectionsSearchMapper.collectionFacet(
-        DescriptorsListParams.builder().facet(CollectionFacetParameter.COUNTRY).taxonKey(Collections.singletonList("123")).build());
+        DescriptorsListParams.builder().facet(CollectionFacetParameter.COUNTRY)
+          .taxonKey(Collections.singletonList("123")).build());
     assertEquals(1, facetDtos.size());
 
     facetDtos =
