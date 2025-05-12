@@ -3,7 +3,7 @@
   <parent>
     <artifactId>registry-parent</artifactId>
     <groupId>org.gbif.registry</groupId>
-    <version>4.0.18-SNAPSHOT</version>
+    <version>4.1.0-SNAPSHOT</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
 
@@ -40,6 +40,12 @@
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-web</artifactId>
     </dependency>
+    <dependency>
+      <groupId>net.java.dev.jna</groupId>
+      <artifactId>jna</artifactId>
+      <version>5.15.0</version>
+      <scope>test</scope>
+    </dependency>
 
     <!-- GBIF dependencies -->
     <dependency>
@@ -55,6 +61,12 @@
     <dependency>
       <groupId>org.gbif.registry</groupId>
       <artifactId>registry-search</artifactId>
+      <exclusions>
+        <exclusion>
+          <groupId>net.java.dev.jna</groupId>
+          <artifactId>jna</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.gbif.registry</groupId>
@@ -83,6 +95,12 @@
     <dependency>
       <groupId>org.testcontainers</groupId>
       <artifactId>elasticsearch</artifactId>
+      <exclusions>
+        <exclusion>
+          <groupId>net.java.dev.jna</groupId>
+          <artifactId>jna</artifactId>
+        </exclusion>
+      </exclusions>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -113,6 +131,12 @@
     <dependency>
       <groupId>org.gbif.registry</groupId>
       <artifactId>registry-search</artifactId>
+      <exclusions>
+        <exclusion>
+          <groupId>net.java.dev.jna</groupId>
+          <artifactId>jna</artifactId>
+        </exclusion>
+      </exclusions>
       <classifier>tests</classifier>
     </dependency>
     <dependency>
@@ -141,12 +165,7 @@
       <scope>test</scope>
     </dependency>
 
-    <dependency>
-      <groupId>net.java.dev.jna</groupId>
-      <artifactId>jna</artifactId>
-      <version>5.9.0</version>
-      <scope>test</scope>
-    </dependency>
+
   </dependencies>
 
   <build>

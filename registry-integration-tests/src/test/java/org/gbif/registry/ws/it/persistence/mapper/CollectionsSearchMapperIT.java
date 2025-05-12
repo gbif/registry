@@ -22,7 +22,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 import java.util.UUID;
 import org.gbif.api.model.collections.Address;
 import org.gbif.api.model.collections.AlternativeCode;
@@ -254,12 +253,12 @@ public class CollectionsSearchMapperIT extends BaseItTest {
     descriptorDto1.setUsageName("aves");
     descriptorDto1.setCountry(Country.DENMARK);
     descriptorDto1.setRecordedBy(Arrays.asList("John", "Clint"));
-    descriptorDto1.setKingdomKey(1);
+    descriptorDto1.setKingdomKey("1");
     descriptorsMapper.createDescriptor(descriptorDto1);
 
     DescriptorDto descriptorDto2 = new DescriptorDto();
     descriptorDto2.setDescriptorGroupKey(descriptorGroup.getKey());
-    descriptorDto2.setKingdomKey(1);
+    descriptorDto2.setKingdomKey("1");
     descriptorDto2.setCountry(Country.DENMARK);
     descriptorDto2.setObjectClassificationName("obn1");
     descriptorsMapper.createDescriptor(descriptorDto2);
@@ -297,8 +296,8 @@ public class CollectionsSearchMapperIT extends BaseItTest {
 
     DescriptorDto descriptorDtoC2 = new DescriptorDto();
     descriptorDtoC2.setDescriptorGroupKey(descriptorGroupC2.getKey());
-    descriptorDtoC2.setKingdomKey(2);
-    descriptorDtoC2.setTaxonKeys(Set.of(123));
+    descriptorDtoC2.setKingdomKey("2");
+    descriptorDtoC2.setTaxonKeys(List.of("123"));
     descriptorDtoC2.setRecordedBy(Collections.singletonList("John"));
     descriptorDtoC2.setCountry(Country.DENMARK);
     descriptorDtoC2.setObjectClassificationName("obn1");
@@ -320,7 +319,8 @@ public class CollectionsSearchMapperIT extends BaseItTest {
 
     facetDtos =
       collectionsSearchMapper.collectionFacet(
-        DescriptorsListParams.builder().facet(CollectionFacetParameter.COUNTRY).taxonKey(Collections.singletonList(123)).build());
+        DescriptorsListParams.builder().facet(CollectionFacetParameter.COUNTRY)
+          .taxonKey(Collections.singletonList("123")).build());
     assertEquals(1, facetDtos.size());
 
     facetDtos =

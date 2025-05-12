@@ -150,7 +150,7 @@ public class CollectionsSearchService {
     Pageable page = searchRequest.getPage() == null ? new PagingRequest() : searchRequest.getPage();
 
     if (searchRequest.getFacetIncludeChildren()) {
-      Vocabularies.addChildrenConcepts(searchRequest, conceptClient);
+    Vocabularies.addChildrenConcepts(searchRequest, conceptClient);
     }
 
     InstitutionListParams.InstitutionListParamsBuilder listParamsBuilder =
@@ -232,7 +232,7 @@ public class CollectionsSearchService {
     }
 
     if (Boolean.TRUE.equals(searchRequest.getFacetIncludeChildren())) {
-      Vocabularies.addChildrenConcepts(searchRequest, conceptClient);
+    Vocabularies.addChildrenConcepts(searchRequest, conceptClient);
     }
 
     DescriptorsListParams.DescriptorsListParamsBuilder listParamsBuilder =
