@@ -65,6 +65,7 @@ import org.gbif.registry.persistence.mapper.TagMapper;
 import org.gbif.registry.persistence.mapper.params.BaseListParams;
 import org.gbif.registry.persistence.mapper.params.DatasetListParams;
 import org.gbif.registry.persistence.mapper.params.NetworkListParams;
+import org.gbif.registry.persistence.mapper.pipelines.PipelineProcessMapper;
 import org.gbif.registry.persistence.service.MapperServiceLocator;
 import org.gbif.registry.service.RegistryDatasetService;
 import org.gbif.registry.service.WithMyBatis;
@@ -185,6 +186,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset, DatasetL
   private final TagMapper tagMapper;
   private final NetworkMapper networkMapper;
   private final DatasetProcessStatusMapper datasetProcessStatusMapper;
+  private final PipelineProcessMapper pipelineProcessMapper;
   private final DatasetDoiDataCiteHandlingService doiDataCiteHandlingService;
   private final DataCiteMetadataBuilderService metadataBuilderService;
   private final DoiIssuingService doiIssuingService;
@@ -202,6 +204,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset, DatasetL
       DatasetDoiDataCiteHandlingService doiDataCiteHandlingService,
       DataCiteMetadataBuilderService metadataBuilderService,
       DoiIssuingService doiIssuingService,
+      PipelineProcessMapper pipelineProcessMapper,
       WithMyBatis withMyBatis,
       @Autowired(required = false) MessagePublisher messagePublisher) {
     super(
@@ -219,6 +222,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset, DatasetL
     this.tagMapper = mapperServiceLocator.getTagMapper();
     this.datasetProcessStatusMapper = mapperServiceLocator.getDatasetProcessStatusMapper();
     this.networkMapper = mapperServiceLocator.getNetworkMapper();
+    this.pipelineProcessMapper = pipelineProcessMapper;
     this.doiDataCiteHandlingService = doiDataCiteHandlingService;
     this.metadataBuilderService = metadataBuilderService;
     this.doiIssuingService = doiIssuingService;
@@ -1365,6 +1369,13 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset, DatasetL
   public void crawl(
       @PathVariable("key") UUID datasetKey,
       @RequestParam(value = "platform", required = false) String platform) {
+    Long pipelineExecutionKey = pipelineProcessMapper.getRunningExecutionKey(datasetKey);
+    if (pipelineExecutionKey != null) {
+      throw new IllegalArgumentException(
+          "Can't start a new crawl because there is a pipeline execution already running for this dataset with key: "
+              + pipelineExecutionKey);
+    }
+
     Platform indexingPlatform = Platform.parse(platform).orElse(Platform.ALL);
     if (messagePublisher != null) {
       LOG.info("Requesting crawl of dataset[{}]", datasetKey);
