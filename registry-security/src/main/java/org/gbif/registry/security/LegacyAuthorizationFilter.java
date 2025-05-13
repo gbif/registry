@@ -19,6 +19,8 @@ import org.gbif.ws.security.LegacyRequestAuthorization;
 import org.gbif.ws.util.CommonWsUtils;
 
 import java.io.IOException;
+import java.util.Base64;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.UUID;
 
@@ -30,10 +32,14 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
+
+import com.google.common.base.Splitter;
+import com.google.common.base.Strings;
 
 /**
  * A filter that will intercept legacy web service requests to /registry/* and perform
@@ -44,6 +50,8 @@ public class LegacyAuthorizationFilter extends OncePerRequestFilter {
 
   private static final Logger LOG = LoggerFactory.getLogger(LegacyAuthorizationFilter.class);
 
+  private static final Splitter COLON_SPLITTER = Splitter.on(":").limit(2);
+  private static final String BASIC_AUTH_HEADER = "Basic ";
   private static final String DOT = ".";
   private static final String SLASH = "/";
   private static final String GBRDS_REQUEST_INDICATOR = "registry/";
@@ -51,9 +59,11 @@ public class LegacyAuthorizationFilter extends OncePerRequestFilter {
   private static final String UPDATE_REQUEST_INDICATOR = "/update/";
   private static final String REGISTER_REQUEST_INDICATOR = "/register";
   private static final String ENDPOINT_REQUEST_INDICATOR = "/service";
+  private static final String VALIDATION_REQUEST_INDICATOR = "/validation";
   private static final String INSTALLATION_REQUEST_INDICATOR = "/ipt";
   private static final String DATASET_UPDATE_OR_DELETE_REQUEST_INDICATOR = "/resource/";
   private static final String NETWORK_REQUEST_INDICATOR = "/network";
+  private static final String IPT_AUTH_PREFIX = "IPT__";
 
   private final LegacyAuthorizationService legacyAuthorizationService;
 
@@ -103,6 +113,8 @@ public class LegacyAuthorizationFilter extends OncePerRequestFilter {
       handleDatasetRequest(httpRequest, path);
     } else if (isEndpointRequest(path)) {
       handleEndpointRequest(httpRequest);
+    } else if (isValidationRequest(httpRequest, path)) {
+      handleValidationRequest(httpRequest);
     }
   }
 
@@ -161,6 +173,10 @@ public class LegacyAuthorizationFilter extends OncePerRequestFilter {
   private void handleEndpointRequest(HttpServletRequest httpRequest) {
     UUID datasetKey = retrieveDatasetKeyFromFormOrQueryParameters(httpRequest);
     authorizeOrganizationDatasetChange(httpRequest, datasetKey);
+  }
+
+  private void handleValidationRequest(HttpServletRequest httpRequest) {
+    authorizeOrganizationChange(httpRequest);
   }
 
   /**
@@ -403,6 +419,26 @@ public class LegacyAuthorizationFilter extends OncePerRequestFilter {
 
   private boolean isEndpointRequest(String path) {
     return path.endsWith(ENDPOINT_REQUEST_INDICATOR);
+  }
+
+  private boolean isValidationRequest(HttpServletRequest request, String path) {
+    String authentication = request.getHeader(HttpHeaders.AUTHORIZATION);
+    if (Strings.isNullOrEmpty(authentication) || !authentication.startsWith(BASIC_AUTH_HEADER)) {
+      return false;
+    }
+
+    // should contain /validation in the path
+    if (!path.contains(VALIDATION_REQUEST_INDICATOR)) {
+      return false;
+    }
+
+    byte[] decryptedBytes = Base64.getDecoder().decode(authentication.substring(BASIC_AUTH_HEADER.length()));
+    String decrypted = new String(decryptedBytes);
+    Iterator<String> iter = COLON_SPLITTER.split(decrypted).iterator();
+    String rawUsername = iter.next();
+
+    // should contain "IPT__" prefix in the username
+    return rawUsername.startsWith(IPT_AUTH_PREFIX);
   }
 
   private boolean isDatasetRequest(String path) {

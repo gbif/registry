@@ -47,6 +47,8 @@ public class LegacyAuthorizationServiceImpl implements LegacyAuthorizationServic
 
   private static final Logger LOG = LoggerFactory.getLogger(LegacyAuthorizationServiceImpl.class);
   private static final Splitter COLON_SPLITTER = Splitter.on(":").limit(2);
+  private static final String BASIC_AUTH_HEADER = "Basic ";
+  private static final String IPT_AUTH_PREFIX = "IPT__";
 
   private final OrganizationMapper organizationMapper;
   private final DatasetMapper datasetMapper;
@@ -70,16 +72,20 @@ public class LegacyAuthorizationServiceImpl implements LegacyAuthorizationServic
   @Override
   public LegacyRequestAuthorization authenticate(HttpServletRequest httpRequest) {
     String authentication = httpRequest.getHeader(HttpHeaders.AUTHORIZATION);
-    if (Strings.isNullOrEmpty(authentication) || !authentication.startsWith("Basic ")) {
+    if (Strings.isNullOrEmpty(authentication) || !authentication.startsWith(BASIC_AUTH_HEADER)) {
       LOG.info("No basic authorization header found in legacy ws request");
       return null;
     }
 
-    byte[] decryptedBytes = Base64.getDecoder().decode(authentication.substring("Basic ".length()));
+    byte[] decryptedBytes = Base64.getDecoder().decode(authentication.substring(BASIC_AUTH_HEADER.length()));
     String decrypted = new String(decryptedBytes);
     Iterator<String> iter = COLON_SPLITTER.split(decrypted).iterator();
     try {
-      final UUID user = UUID.fromString(iter.next());
+      String rawUsername = iter.next();
+      if (rawUsername.startsWith(IPT_AUTH_PREFIX)) {
+        rawUsername = rawUsername.substring(IPT_AUTH_PREFIX.length());
+      }
+      final UUID user = UUID.fromString(rawUsername);
       final String password = iter.next();
 
       String organizationKeyStr =
