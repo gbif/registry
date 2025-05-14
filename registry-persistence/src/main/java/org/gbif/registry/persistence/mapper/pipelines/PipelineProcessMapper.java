@@ -17,6 +17,7 @@ import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.pipelines.PipelineExecution;
 import org.gbif.api.model.pipelines.PipelineProcess;
 import org.gbif.api.model.pipelines.PipelineStep;
+import org.gbif.api.model.pipelines.StepRunner;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.api.model.pipelines.ws.SearchResult;
 
@@ -62,9 +63,13 @@ public interface PipelineProcessMapper {
    */
   PipelineProcess get(@Param("key") long key);
 
-  List<PipelineProcess> getRunningPipelineProcess(@Param("page") Pageable page);
+  List<PipelineProcess> getRunningPipelineProcess(
+      @Param("stepType") StepType stepType,
+      @Param("runner") StepRunner stepRunner,
+      @Param("page") Pageable page);
 
-  long getRunningPipelineProcessCount();
+  long getRunningPipelineProcessCount(
+      @Param("stepType") StepType stepType, @Param("runner") StepRunner stepRunner);
 
   Optional<Integer> getLastAttempt(@Param("datasetKey") UUID datasetKey);
 

@@ -13,22 +13,21 @@
  */
 package org.gbif.registry.pipelines;
 
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
+import javax.annotation.Nullable;
+import javax.validation.constraints.NotNull;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.pipelines.PipelineExecution;
 import org.gbif.api.model.pipelines.PipelineProcess;
 import org.gbif.api.model.pipelines.PipelineStep;
 import org.gbif.api.model.pipelines.RunPipelineResponse;
+import org.gbif.api.model.pipelines.StepRunner;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.api.model.pipelines.ws.SearchResult;
-
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
-
-import javax.annotation.Nullable;
-import javax.validation.constraints.NotNull;
 
 /** Service to provide the history and re-execute previous attempts of Pipelines. */
 public interface RegistryPipelinesHistoryTrackingService {
@@ -142,7 +141,8 @@ public interface RegistryPipelinesHistoryTrackingService {
    *
    * @param pageable paging request
    */
-  PagingResponse<PipelineProcess> getRunningPipelineProcess(Pageable pageable);
+  PagingResponse<PipelineProcess> getRunningPipelineProcess(
+      @Nullable StepType stepType, @Nullable StepRunner stepRunner, Pageable pageable);
 
   /**
    * Creates/persists a pipelines process of dataset for an attempt identifier. If the process
