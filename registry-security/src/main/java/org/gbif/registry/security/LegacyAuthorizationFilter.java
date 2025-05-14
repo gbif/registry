@@ -178,7 +178,7 @@ public class LegacyAuthorizationFilter extends OncePerRequestFilter {
   }
 
   private void handleValidationRequest(HttpServletRequest httpRequest) {
-    authorizeOrganizationChange(httpRequest);
+    authorizeValidation(httpRequest);
   }
 
   /**
@@ -255,6 +255,14 @@ public class LegacyAuthorizationFilter extends OncePerRequestFilter {
       throw new WebApplicationException(
           "Request to register not authorized", HttpStatus.UNAUTHORIZED);
     }
+  }
+
+  /**
+   * Authorize a validation request.
+   */
+  private void authorizeValidation(HttpServletRequest request) {
+    LegacyRequestAuthorization authorization = legacyAuthorizationService.authenticate(request);
+    SecurityContextHolder.getContext().setAuthentication(authorization);
   }
 
   /**
