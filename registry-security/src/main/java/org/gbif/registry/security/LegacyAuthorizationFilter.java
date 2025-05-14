@@ -85,6 +85,10 @@ public class LegacyAuthorizationFilter extends OncePerRequestFilter {
       }
     }
 
+    if (isValidationRequest(request, path)) {
+      handleValidationRequest(request);
+    }
+
     // otherwise, just do nothing (request unchanged)
     filterChain.doFilter(request, response);
   }
@@ -113,8 +117,6 @@ public class LegacyAuthorizationFilter extends OncePerRequestFilter {
       handleDatasetRequest(httpRequest, path);
     } else if (isEndpointRequest(path)) {
       handleEndpointRequest(httpRequest);
-    } else if (isValidationRequest(httpRequest, path)) {
-      handleValidationRequest(httpRequest);
     }
   }
 
