@@ -110,9 +110,6 @@ public class DescriptorChangeSuggestionServiceImpl implements DescriptorChangeSu
       throw new IllegalStateException("Only pending suggestions can be updated");
     }
 
-    // Validate the request details (e.g., ensure comments are provided)
-    Preconditions.checkArgument(!request.getComments().isEmpty(), "Comment is required");
-
     // Update the fields of the suggestion
     if (request.getTitle() != null) {
       suggestion.setTitle(request.getTitle());
@@ -120,8 +117,11 @@ public class DescriptorChangeSuggestionServiceImpl implements DescriptorChangeSu
     if (request.getDescription() != null) {
       suggestion.setDescription(request.getDescription());
     }
-    if (request.getComments() != null) {
+    if (request.getComments() != null && !request.getComments().isEmpty()) {
       suggestion.setComments(request.getComments());
+    }
+    if (request.getTags() != null) {
+      suggestion.setTags(request.getTags());
     }
 
     // Update the file if a new file is provided
@@ -202,6 +202,7 @@ public class DescriptorChangeSuggestionServiceImpl implements DescriptorChangeSu
           suggestion.getFormat(),
           suggestion.getTitle(),
           suggestion.getDescription(),
+          suggestion.getTags(),
           suggestion.getCollectionKey());
       suggestion.setDescriptorGroupKey(descriptorGroupKey);
     } else if (Type.UPDATE.equals(suggestion.getType())) {
@@ -210,6 +211,7 @@ public class DescriptorChangeSuggestionServiceImpl implements DescriptorChangeSu
           fileBytes,
           suggestion.getFormat(),
           suggestion.getTitle(),
+          suggestion.getTags(),
           suggestion.getDescription());
     } else if (Type.DELETE.equals(suggestion.getType())) {
       descriptorsService.deleteDescriptorGroup(suggestion.getDescriptorGroupKey());
@@ -317,6 +319,7 @@ public class DescriptorChangeSuggestionServiceImpl implements DescriptorChangeSu
       .description(request.getDescription())
       .format(request.getFormat())
       .comments(request.getComments())
+      .tags(request.getTags())
       .proposedBy(getUsername())
       .proposerEmail(request.getProposerEmail())
       .proposed(new Date())

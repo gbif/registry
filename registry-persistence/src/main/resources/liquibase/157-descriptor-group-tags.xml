@@ -7,7 +7,9 @@
     <sql splitStatements="false" stripComments="true">
       <![CDATA[
         -- Add the tags column as a text array
-        ALTER TABLE collection_descriptor_group ADD COLUMN tags text[] DEFAULT '{}'::text[];
+        ALTER TABLE collection_descriptor_group ADD COLUMN tags text[] DEFAULT ARRAY[]::text[];
+
+        ALTER TABLE descriptor_change_suggestion ADD COLUMN tags text[] DEFAULT ARRAY[]::text[];
 
         -- Update fulltext search trigger to include tags for searching
         CREATE OR REPLACE FUNCTION collection_descriptor_group_change_trigger()

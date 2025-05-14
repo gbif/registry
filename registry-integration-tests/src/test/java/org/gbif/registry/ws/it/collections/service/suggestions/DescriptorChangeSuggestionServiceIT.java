@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import java.io.IOException;
 import java.util.Collections;
 import java.io.InputStream;
+import java.util.Set;
 
 import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.descriptors.DescriptorChangeSuggestion;
@@ -67,6 +68,7 @@ class DescriptorChangeSuggestionServiceIT extends BaseServiceIT {
     request.setType(Type.CREATE);
     request.setProposerEmail("test@gbif.org");
     request.setComments(Collections.singletonList("Test comment"));
+    request.setTags(Set.of("tag1", "tag2"));
 
     // When
     DescriptorChangeSuggestion suggestion = descriptorChangeSuggestionService.createSuggestion(
@@ -84,6 +86,7 @@ class DescriptorChangeSuggestionServiceIT extends BaseServiceIT {
     assertEquals(ExportFormat.CSV, suggestion.getFormat());
     assertEquals(1, suggestion.getComments().size());
     assertEquals("Test comment", suggestion.getComments().get(0));
+    assertEquals(Set.of("tag1", "tag2"), suggestion.getTags());
   }
 
   @Test
@@ -103,6 +106,7 @@ class DescriptorChangeSuggestionServiceIT extends BaseServiceIT {
     request.setType(Type.CREATE);
     request.setProposerEmail("test@gbif.org");
     request.setComments(Collections.singletonList("Test comment"));
+    request.setTags(Set.of("tag1", "tag2"));
 
     DescriptorChangeSuggestion suggestion = descriptorChangeSuggestionService.createSuggestion(
         descriptorsFile.getInputStream(),
@@ -116,6 +120,7 @@ class DescriptorChangeSuggestionServiceIT extends BaseServiceIT {
     updateRequest.setDescription("Updated Description");
     updateRequest.setFormat(ExportFormat.CSV);
     updateRequest.setComments(Collections.singletonList("Updated comment"));
+    updateRequest.setTags(Set.of("updated", "tag1"));
 
     DescriptorChangeSuggestion updatedSuggestion = descriptorChangeSuggestionService.updateSuggestion(
         suggestion.getKey(),
@@ -133,6 +138,7 @@ class DescriptorChangeSuggestionServiceIT extends BaseServiceIT {
     assertEquals(ExportFormat.CSV, updatedSuggestion.getFormat());
     assertEquals(1, updatedSuggestion.getComments().size());
     assertEquals("Updated comment", updatedSuggestion.getComments().get(0));
+    assertEquals(Set.of("updated", "tag1"), updatedSuggestion.getTags());
   }
 
   @Test

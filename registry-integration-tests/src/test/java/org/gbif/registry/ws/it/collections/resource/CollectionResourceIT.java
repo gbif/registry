@@ -524,7 +524,8 @@ public class CollectionResourceIT
         descriptorChangeSuggestion.getDescription(),
         descriptorChangeSuggestion.getFormat(),
         descriptorChangeSuggestion.getComments(),
-        descriptorChangeSuggestion.getProposedBy()
+        descriptorChangeSuggestion.getProposedBy(),
+        descriptorChangeSuggestion.getTags()
       );
 
     // Verify create suggestion
@@ -532,6 +533,7 @@ public class CollectionResourceIT
     assertEquals(descriptorChangeSuggestion.getTitle(), created.getTitle());
     assertEquals(descriptorChangeSuggestion.getDescription(), created.getDescription());
     assertEquals(descriptorChangeSuggestion.getFormat(), created.getFormat());
+    assertEquals(descriptorChangeSuggestion.getTags(), created.getTags());
     verify(descriptorChangeSuggestionService).createSuggestion(
         any(InputStream.class),
         anyString(),
@@ -657,7 +659,8 @@ public class CollectionResourceIT
         descriptorChangeSuggestion.getDescription(),
         descriptorChangeSuggestion.getFormat(),
         descriptorChangeSuggestion.getComments(),
-        descriptorChangeSuggestion.getProposedBy()
+        descriptorChangeSuggestion.getProposedBy(),
+        descriptorChangeSuggestion.getTags()
       ));
 
     verify(descriptorChangeSuggestionService).updateSuggestion(
@@ -764,6 +767,7 @@ public class CollectionResourceIT
     suggestion.setProposedBy("aa@aa.org");
     suggestion.setCollectionKey(collectionKey);
     suggestion.setStatus(Status.PENDING);
+    suggestion.setTags(Set.of("tag1", "tag2"));
     return suggestion;
   }
 }

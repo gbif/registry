@@ -16,7 +16,6 @@ package org.gbif.registry.persistence.config;
 import java.net.URI;
 import java.util.UUID;
 
-import org.apache.ibatis.type.EnumTypeHandler;
 
 import org.gbif.api.model.collections.Address;
 import org.gbif.api.model.collections.Collection;

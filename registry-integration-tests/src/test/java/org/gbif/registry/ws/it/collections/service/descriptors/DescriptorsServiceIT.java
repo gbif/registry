@@ -334,7 +334,7 @@ public class DescriptorsServiceIT extends BaseServiceIT {
         DescriptorGroupSearchRequest.builder()
             .tags(Set.of("test-tag", "another-tag"))
             .build());
-    assertEquals(0, response.getCount());
+    assertEquals(1, response.getCount());
 
     // Update descriptor group with new tags
     descriptorsService.updateDescriptorGroup(

@@ -1049,15 +1049,16 @@ public class CollectionResource
   @Docs.DefaultUnsuccessfulWriteResponses
   @PostMapping(value = "{collectionKey}/descriptorGroup/suggestion", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
   public DescriptorChangeSuggestion createDescriptorSuggestion(
-    @PathVariable("collectionKey") UUID collectionKey,
-    @RequestPart(value = "file", required = false) MultipartFile file,
-    @RequestParam("type") Type type,
-    @RequestParam(value = "descriptorGroupKey", required = false) Long descriptorGroupKey,
-    @RequestParam("title") String title,
-    @RequestParam(value = "description", required = false) String description,
-    @RequestParam("format") ExportFormat format,
-    @RequestParam("comments") List<String> comments,
-    @RequestParam("proposerEmail") String proposerEmail) throws IOException {
+      @PathVariable("collectionKey") UUID collectionKey,
+      @RequestPart(value = "file", required = false) MultipartFile file,
+      @RequestParam("type") Type type,
+      @RequestParam(value = "descriptorGroupKey", required = false) Long descriptorGroupKey,
+      @RequestParam("title") String title,
+      @RequestParam(value = "description", required = false) String description,
+      @RequestParam("format") ExportFormat format,
+      @RequestParam("comments") List<String> comments,
+      @RequestParam("proposerEmail") String proposerEmail,
+      @RequestParam(value = "tags", required = false) Set<String> tags) throws IOException {
 
     if (type == Type.CREATE && (file == null || file.isEmpty())) {
       throw new IllegalArgumentException("File is required for CREATE type suggestions");
@@ -1071,6 +1072,7 @@ public class CollectionResource
     request.setDescription(description);
     request.setFormat(format);
     request.setComments(comments);
+    request.setTags(tags);
     request.setProposerEmail(proposerEmail);
 
     return descriptorChangeSuggestionService.createSuggestion(
@@ -1155,7 +1157,7 @@ public class CollectionResource
               properties = @ExtensionProperty(name = "Order", value = "0303")))
   @ApiResponse(responseCode = "200", description = "Suggestion applied successfully")
   @Docs.DefaultUnsuccessfulWriteResponses
-  @PutMapping(value = "{collectionKey}/descriptorGroup/suggestion/{key}/apply")
+  @PutMapping(value = "{collectionKey}/descriptorGroup/suggestion/{key}/apply", consumes = MediaType.ALL_VALUE)
   public void applyDescriptorSuggestion(
       @PathVariable("collectionKey") UUID collectionKey,
       @PathVariable("key") long key) throws IOException {
@@ -1199,6 +1201,7 @@ public class CollectionResource
       @RequestParam("description") String description,
       @RequestParam("format") ExportFormat format,
       @RequestParam("comments") List<String> comments,
+      @RequestParam(value = "tags", required = false) Set<String> tags,
       @RequestParam("proposerEmail") String proposerEmail) throws IOException {
 
     DescriptorChangeSuggestionRequest request = new DescriptorChangeSuggestionRequest();
@@ -1208,6 +1211,7 @@ public class CollectionResource
     request.setDescription(description);
     request.setFormat(format);
     request.setComments(comments);
+    request.setTags(tags);
     request.setProposerEmail(proposerEmail);
 
     descriptorChangeSuggestionService.updateSuggestion(

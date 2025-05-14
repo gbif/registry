@@ -6,18 +6,19 @@
   <resultMap id="DESCRIPTOR_CHANGE_SUGGESTION_MAP" type="org.gbif.api.model.collections.descriptors.DescriptorChangeSuggestion" autoMapping="true">
     <id property="key" column="key"/>
     <result property="comments" column="comments" typeHandler="StringArrayTypeHandler"/>
+    <result property="tags" column="tags" typeHandler="org.gbif.registry.persistence.mapper.handler.SetArrayTypeHandler"/>
   </resultMap>
 
   <sql id="DESCRIPTOR_CHANGE_SUGGESTION_WRITE_FIELDS">
     collection_key, descriptor_group_key, type, status, suggested_file, title, description, format, proposed, proposed_by,
     proposer_email, applied, applied_by, discarded,
-    discarded_by, comments, modified, modified_by
+    discarded_by, comments, tags, modified, modified_by
   </sql>
 
   <sql id="DESCRIPTOR_CHANGE_SUGGESTION_READ_FIELDS">
     key, collection_key, descriptor_group_key, type, status, suggested_file, title, description, format, proposed, proposed_by,
     proposer_email, applied, applied_by, discarded, discarded_by,
-    suggested_file, comments, modified, modified_by
+    suggested_file, comments, tags, modified, modified_by
   </sql>
 
   <sql id="DESCRIPTOR_CHANGE_SUGGESTION_PARAMS_CREATE">
@@ -37,6 +38,7 @@
     #{discarded,jdbcType=TIMESTAMP},
     #{discardedBy,jdbcType=VARCHAR},
     #{comments,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler},
+    #{tags,jdbcType=ARRAY,typeHandler=org.gbif.registry.persistence.mapper.handler.SetArrayTypeHandler},
     #{modified,jdbcType=TIMESTAMP},
     #{modifiedBy,jdbcType=VARCHAR}
   </sql>
@@ -47,6 +49,7 @@
     status = #{status,jdbcType=OTHER},
     suggested_file = #{suggestedFile,jdbcType=VARCHAR},
     comments = #{comments,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler},
+    tags = #{tags,jdbcType=ARRAY,typeHandler=org.gbif.registry.persistence.mapper.handler.SetArrayTypeHandler},
     modified = now(),
     modified_by = #{modifiedBy,jdbcType=VARCHAR},
     discarded = #{discarded,jdbcType=OTHER},

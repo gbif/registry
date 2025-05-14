@@ -179,7 +179,8 @@ public interface CollectionClient
       @RequestParam(value = "description", required = false) String description,
       @RequestParam("format") ExportFormat format,
       @RequestParam("comments") List<String> comments,
-      @RequestParam("proposerEmail") String proposerEmail);
+      @RequestParam("proposerEmail") String proposerEmail,
+      @RequestParam(value = "tags", required = false) Set<String> tags);
 
   @GetMapping(value = "{collectionKey}/descriptorGroup/suggestion/{key}")
   DescriptorChangeSuggestion getDescriptorSuggestion(
@@ -211,7 +212,8 @@ public interface CollectionClient
       @RequestParam("description") String description,
       @RequestParam("format") ExportFormat format,
       @RequestParam("comments") List<String> comments,
-      @RequestParam("proposerEmail") String proposerEmail);
+      @RequestParam("proposerEmail") String proposerEmail,
+      @RequestParam(value = "tags", required = false) Set<String> tags);
 
   @GetMapping(value = "{collectionKey}/descriptorGroup/suggestion")
   PagingResponse<DescriptorChangeSuggestion> listDescriptorSuggestions(
