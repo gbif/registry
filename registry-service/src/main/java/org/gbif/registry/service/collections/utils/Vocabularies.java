@@ -257,6 +257,13 @@ public class Vocabularies {
         .get();
   }
 
+  public static Set<String> getChildrenConcepts(
+      String vocabulary, String conceptName, ConceptClient conceptClient) {
+    return childrenConceptsCache.computeIfAbsent(
+        vocabulary + conceptName,
+        k -> findChildren(conceptClient, vocabulary, conceptName, new HashSet<>()));
+  }
+
   @AllArgsConstructor(staticName = "of")
   @NoArgsConstructor
   private static class SearchRequestField<T extends SearchRequest> {

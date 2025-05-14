@@ -16,7 +16,6 @@ package org.gbif.registry.ws.provider;
 import static org.gbif.registry.service.collections.utils.SearchUtils.DEFAULT_FACET_LIMIT;
 import static org.gbif.ws.util.CommonWsUtils.*;
 import static org.gbif.ws.util.WebserviceParameter.PARAM_FACET;
-import static org.gbif.ws.util.WebserviceParameter.PARAM_FACET_INCLUDE_CHILDREN;
 import static org.gbif.ws.util.WebserviceParameter.PARAM_FACET_LIMIT;
 import static org.gbif.ws.util.WebserviceParameter.PARAM_FACET_MINCOUNT;
 import static org.gbif.ws.util.WebserviceParameter.PARAM_FACET_MULTISELECT;
@@ -214,10 +213,6 @@ public abstract class BaseGrSciCollSearchRequestHandlerMethodArgumentResolver
     if (facetMinCountValue != null) {
       searchRequest.setFacetMinCount(Integer.parseInt(facetMinCountValue));
     }
-
-    // Include children by default; only exclude if the parameter is explicitly "false"
-    final String facetIncludeChildren = getFirstIgnoreCase(params, PARAM_FACET_INCLUDE_CHILDREN);
-    searchRequest.setFacetIncludeChildren(!"false".equalsIgnoreCase(facetIncludeChildren));
 
     final String facetLimit = getFirstIgnoreCase(params, PARAM_FACET_LIMIT);
     if (facetLimit != null) {
