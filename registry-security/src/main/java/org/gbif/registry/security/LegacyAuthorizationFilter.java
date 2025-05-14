@@ -78,15 +78,21 @@ public class LegacyAuthorizationFilter extends OncePerRequestFilter {
     String path = request.getRequestURI().toLowerCase();
 
     if (isGbrdsRequest(path)) {
+      LOG.debug("GBRDS authorization request received");
       if (isGetRequest(request)) {
         filterGetRequests(request);
       } else if (isPostPutDeleteRequest(request)) {
         filterPostPutDeleteRequests(request, path);
       }
+    } else {
+      LOG.debug("Skipping request {}, not GBRDS", path);
     }
 
     if (isValidationRequest(request, path)) {
+      LOG.debug("Validation request from IPT received");
       handleValidationRequest(request);
+    } else {
+      LOG.debug("Skipping request {}, not a validation request from IPT", path);
     }
 
     // otherwise, just do nothing (request unchanged)
