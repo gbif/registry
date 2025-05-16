@@ -19,6 +19,8 @@ import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.module.jaxb.JaxbAnnotationModule;
+
+import java.time.Duration;
 import java.util.*;
 import org.gbif.checklistbank.ws.client.NubResourceClient;
 import org.gbif.registry.domain.ws.*;
@@ -32,6 +34,7 @@ import org.gbif.registry.ws.provider.InstitutionFacetedSearchRequestHandlerMetho
 import org.gbif.registry.ws.provider.InstitutionSearchRequestHandlerMethodArgumentResolver;
 import org.gbif.registry.ws.provider.PartialDateHandlerMethodArgumentResolver;
 import org.gbif.registry.ws.provider.networkEntitiesList.*;
+import org.gbif.validator.ws.client.ValidationWsClient;
 import org.gbif.vocabulary.client.ConceptClient;
 import org.gbif.ws.client.ClientBuilder;
 import org.gbif.ws.json.JacksonJsonObjectMapperProvider;
@@ -172,6 +175,22 @@ public class WebMvcConfig implements WebMvcConfigurer {
         IptEntityResponse.class,
         ErrorResponse.class);
     return marshaller;
+  }
+
+  @Bean
+  public ValidationWsClient validationWsClient(
+      @Value("${api.root.url}") String apiRootUrl,
+      @Value("${validation.client.username}") String username,
+      @Value("${validation.client.password}") String password) {
+    return new ClientBuilder()
+        .withUrl(apiRootUrl)
+        .withObjectMapper(
+            JacksonJsonObjectMapperProvider.getObjectMapperWithBuilderSupport()
+                .registerModule(new JavaTimeModule()))
+        .withFormEncoder()
+        .withCredentials(username, password)
+        .withExponentialBackoffRetry(Duration.ofSeconds(3L), 2d, 10)
+        .build(ValidationWsClient.class);
   }
 
   @Bean

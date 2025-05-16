@@ -102,6 +102,7 @@
     <xoai.version>4.1.0-gbif-4</xoai.version>
     <gbif-occurrence.version>1.0.28</gbif-occurrence.version>
     <gbif-vocabulary.version>2.0.2</gbif-vocabulary.version>
+    <gbif-validator.version>3.1.4</gbif-validator.version>
     <checklistbank.version>3.0.0</checklistbank.version>
 
     <!-- Third party -->
@@ -432,6 +433,11 @@
         <groupId>org.gbif.vocabulary</groupId>
         <artifactId>vocabulary-rest-ws-client</artifactId>
         <version>${gbif-vocabulary.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.gbif.pipelines</groupId>
+        <artifactId>validator-ws-client</artifactId>
+        <version>${gbif-validator.version}</version>
       </dependency>
 
       <!-- Third party dependencies -->
