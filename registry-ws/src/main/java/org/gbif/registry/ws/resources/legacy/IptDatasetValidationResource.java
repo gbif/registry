@@ -140,7 +140,11 @@ public class IptDatasetValidationResource {
       Validation validation = validationClient.get(validationKey);
       return ResponseEntity.ok(validation);
     } catch (FeignException.NotFound e) {
+      LOG.error("Validation {} not found", validationKey);
       return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+    } catch (Exception e) {
+      LOG.error("Failed to get the validation {} info", validationKey, e);
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
     }
   }
 }
