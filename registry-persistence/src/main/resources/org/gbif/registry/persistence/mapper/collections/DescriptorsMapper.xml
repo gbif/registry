@@ -160,11 +160,11 @@
 
   <sql id="DESCRIPTOR_PARAMS_CREATE">
     #{descriptorGroupKey,jdbcType=INTEGER},
-    #{usageKey,jdbcType=INTEGER},
+    #{usageKey,jdbcType=VARCHAR},
     #{usageName,jdbcType=VARCHAR},
     #{usageRank,jdbcType=VARCHAR},
     #{taxonClassification,jdbcType=OTHER,typeHandler=RankedNameListTypeHandler}::jsonb,
-    #{taxonKeys,jdbcType=ARRAY,typeHandler=IntegerArrayTypeHandler},
+    #{taxonKeys,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler},
     #{country,jdbcType=VARCHAR},
     #{individualCount,jdbcType=INTEGER},
     #{identifiedBy,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler},
@@ -174,28 +174,28 @@
     #{discipline,jdbcType=VARCHAR},
     #{objectClassificationName,jdbcType=VARCHAR},
     #{issues,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler},
-    #{kingdomKey,jdbcType=INTEGER},
+    #{kingdomKey,jdbcType=VARCHAR},
     #{kingdomName,jdbcType=VARCHAR},
-    #{phylumKey,jdbcType=INTEGER},
+    #{phylumKey,jdbcType=VARCHAR},
     #{phylumName,jdbcType=VARCHAR},
-    #{classKey,jdbcType=INTEGER},
+    #{classKey,jdbcType=VARCHAR},
     #{className,jdbcType=VARCHAR},
-    #{orderKey,jdbcType=INTEGER},
+    #{orderKey,jdbcType=VARCHAR},
     #{orderName,jdbcType=VARCHAR},
-    #{familyKey,jdbcType=INTEGER},
+    #{familyKey,jdbcType=VARCHAR},
     #{familyName,jdbcType=VARCHAR},
-    #{genusKey,jdbcType=INTEGER},
+    #{genusKey,jdbcType=VARCHAR},
     #{genusName,jdbcType=VARCHAR},
-    #{speciesKey,jdbcType=INTEGER},
+    #{speciesKey,jdbcType=VARCHAR},
     #{speciesName,jdbcType=VARCHAR}
   </sql>
 
   <sql id="DESCRIPTOR_PARAMS_UPDATE">
-    usage_key = #{usageKey,jdbcType=INTEGER},
+    usage_key = #{usageKey,jdbcType=VARCHAR},
     usage_name = #{usageName,jdbcType=VARCHAR},
     usage_rank = #{usageRank,jdbcType=VARCHAR},
     taxon_classification = #{taxonClassification,jdbcType=OTHER,typeHandler=RankedNameListTypeHandler}::jsonb,
-    taxon_keys = #{taxonKeys,jdbcType=ARRAY,typeHandler=IntegerArrayTypeHandler},
+    taxon_keys = #{taxonKeys,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler},
     country = #{country,jdbcType=VARCHAR},
     individual_count = #{individualCount,jdbcType=INTEGER},
     identified_by = #{identifiedBy,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler},
@@ -205,19 +205,19 @@
     discipline = #{discipline,jdbcType=VARCHAR},
     object_classification_name = #{objectClassificationName,jdbcType=VARCHAR},
     issues = #{issues,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler},
-    kingdom_key = #{kingdomKey,jdbcType=INTEGER},
+    kingdom_key = #{kingdomKey,jdbcType=VARCHAR},
     kingdom_name = #{kingdomName,jdbcType=VARCHAR},
-    phylum_key =  #{phylumKey,jdbcType=INTEGER},
+    phylum_key =  #{phylumKey,jdbcType=VARCHAR},
     phylum_name = #{phylumName,jdbcType=VARCHAR},
-    class_key =  #{classKey,jdbcType=INTEGER},
+    class_key =  #{classKey,jdbcType=VARCHAR},
     class_name = #{className,jdbcType=VARCHAR},
-    order_key =  #{orderKey,jdbcType=INTEGER},
+    order_key =  #{orderKey,jdbcType=VARCHAR},
     order_name = #{orderName,jdbcType=VARCHAR},
-    family_key = #{familyKey,jdbcType=INTEGER},
+    family_key = #{familyKey,jdbcType=VARCHAR},
     family_name = #{familyName,jdbcType=VARCHAR},
-    genus_key = #{genusKey,jdbcType=INTEGER},
+    genus_key = #{genusKey,jdbcType=VARCHAR},
     genus_name = #{genusName,jdbcType=VARCHAR},
-    species_key = #{speciesKey,jdbcType=INTEGER},
+    species_key = #{speciesKey,jdbcType=VARCHAR},
     species_name = #{speciesName,jdbcType=VARCHAR}
   </sql>
 
@@ -274,7 +274,7 @@
       <if test="params.usageKey != null and params.usageKey.size > 0">
         AND d.usage_key IN
         <foreach item="item" collection="params.usageKey" open="(" separator="," close=")">
-          #{item,jdbcType=INTEGER}
+          #{item,jdbcType=VARCHAR}
         </foreach>
       </if>
       <if test="params.usageName != null and params.usageName.size > 0">
@@ -292,7 +292,7 @@
       <if test="params.taxonKey != null and params.taxonKey.size > 0">
         AND d.taxon_keys &amp;&amp; ARRAY
         <foreach item="item" collection="params.taxonKey" open="[" separator="," close="]">
-          #{item,jdbcType=INTEGER}
+          #{item,jdbcType=VARCHAR}
         </foreach>
       </if>
       <include refid="org.gbif.registry.persistence.mapper.collections.Common.MULTIVALUE_RANGE_FIELD_FILTER">

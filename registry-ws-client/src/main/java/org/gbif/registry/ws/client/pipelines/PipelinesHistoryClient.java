@@ -22,6 +22,8 @@ import org.gbif.api.model.pipelines.PipelineExecution;
 import org.gbif.api.model.pipelines.PipelineProcess;
 import org.gbif.api.model.pipelines.PipelineStep;
 import org.gbif.api.model.pipelines.RunPipelineResponse;
+import org.gbif.api.model.pipelines.StepRunner;
+import org.gbif.api.model.pipelines.StepType;
 import org.gbif.api.model.pipelines.ws.PipelineProcessParameters;
 import org.gbif.api.model.pipelines.ws.RunAllParams;
 import org.gbif.api.service.pipelines.PipelinesHistoryService;
@@ -77,7 +79,10 @@ public interface PipelinesHistoryClient extends PipelinesHistoryService {
 
   @GetMapping("process/running")
   @Override
-  PagingResponse<PipelineProcess> getRunningPipelineProcess(Pageable pageable);
+  PagingResponse<PipelineProcess> getRunningPipelineProcess(
+      @RequestParam(value = "stepType", required = false) StepType stepType,
+      @RequestParam(value = "stepRunner", required = false) StepRunner stepRunner,
+      @SpringQueryMap Pageable pageable);
 
   @PostMapping("execution/finished")
   @Override
