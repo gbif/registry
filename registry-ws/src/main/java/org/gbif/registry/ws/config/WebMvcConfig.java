@@ -178,7 +178,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
   }
 
   @Bean
-  public ValidationWsClient validationWsClient(
+  public ValidationWsClient pipelinesValidatorWsClient(
       @Value("${api.root.url}") String apiRootUrl,
       @Value("${validation.client.username}") String username,
       @Value("${validation.client.password}") String password) {
