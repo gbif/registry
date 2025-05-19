@@ -564,7 +564,8 @@ public class CollectionResourceIT
         isNull(),
         isNull(),
         isNull(),
-        isNull() // collectionKey is null for listing all suggestions
+        isNull(), // collectionKey is null for listing all suggestions
+        isNull()
     )).thenReturn(new PagingResponse<>(new PagingRequest(), Long.valueOf(allSuggestions.size()), allSuggestions));
 
     // Call the client method
@@ -582,7 +583,7 @@ public class CollectionResourceIT
         .anyMatch(s -> s.getCollectionKey().equals(collectionKey2)));
 
     verify(descriptorChangeSuggestionService).list(
-        any(Pageable.class), isNull(), isNull(), isNull(), isNull());
+        any(Pageable.class), isNull(), isNull(), isNull(), isNull(), isNull());
   }
 
   @Test
@@ -611,7 +612,8 @@ public class CollectionResourceIT
         isNull(),
         isNull(),
         isNull(),
-        eq(collectionKey)
+        eq(collectionKey),
+        isNull()
     )).thenReturn(new PagingResponse<>(new PagingRequest(), Long.valueOf(suggestions.size()), suggestions));
 
     // Call the client method
@@ -624,7 +626,7 @@ public class CollectionResourceIT
     assertEquals(suggestion2.getType(), result.getResults().get(1).getType());
 
     verify(descriptorChangeSuggestionService).list(
-        any(Pageable.class), isNull(), isNull(), isNull(), eq(collectionKey));
+        any(Pageable.class), isNull(), isNull(), isNull(), eq(collectionKey), isNull());
   }
 
   @Test
