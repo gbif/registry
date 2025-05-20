@@ -75,6 +75,7 @@ public class DescriptorsServiceIT extends BaseServiceIT {
             ExportFormat.TSV,
             "My descriptor set",
             "description",
+            Set.of("test-tag"),
             collection.getKey());
     assertTrue(descriptorGroupKey > 0);
 
@@ -142,6 +143,7 @@ public class DescriptorsServiceIT extends BaseServiceIT {
         StreamUtils.copyToByteArray(descriptorsFile2.getInputStream()),
         ExportFormat.TSV,
         "My descriptor set",
+        Set.of("updated-tag"),
         "description");
 
     descriptors = descriptorsService.listDescriptors(DescriptorSearchRequest.builder().build());
@@ -197,6 +199,7 @@ public class DescriptorsServiceIT extends BaseServiceIT {
             ExportFormat.TSV,
             title,
             description,
+            Set.of("test-tag"),
             collection.getKey());
     assertTrue(descriptorGroupKey > 0);
 
@@ -224,6 +227,7 @@ public class DescriptorsServiceIT extends BaseServiceIT {
         StreamUtils.copyToByteArray(descriptorsFile.getInputStream()),
         ExportFormat.TSV,
         "foo",
+        Set.of("updated-tag"),
         "foo");
 
     DescriptorGroup updated = descriptorsService.getDescriptorGroup(descriptorGroupKey);
@@ -249,6 +253,7 @@ public class DescriptorsServiceIT extends BaseServiceIT {
             ExportFormat.TSV,
             "My descriptor set",
             "description",
+            Set.of("test-tag"),
             collection.getKey());
 
     long descriptorsCount =
@@ -285,5 +290,68 @@ public class DescriptorsServiceIT extends BaseServiceIT {
       descriptorsService.listDescriptors(
         DescriptorSearchRequest.builder().usageName(Collections.singletonList("Aves")).build());
     assertEquals(2, descriptors.getResults().size());
+  }
+
+  @Test
+  @SneakyThrows
+  public void searchDescriptorGroupByTagsTest() {
+    Collection collection = new Collection();
+    collection.setCode("c1");
+    collection.setName("n1");
+    collectionService.create(collection);
+
+    Resource descriptorsFile = new ClassPathResource("collections/descriptors.csv");
+    long descriptorGroupKey =
+        descriptorsService.createDescriptorGroup(
+            StreamUtils.copyToByteArray(descriptorsFile.getInputStream()),
+            ExportFormat.TSV,
+            "My descriptor set",
+            "description",
+            Set.of("test-tag"),
+            collection.getKey());
+    assertTrue(descriptorGroupKey > 0);
+
+    // Search with matching tag
+    PagingResponse<DescriptorGroup> response = descriptorsService.listDescriptorGroups(
+        collection.getKey(),
+        DescriptorGroupSearchRequest.builder()
+            .tags(Set.of("test-tag"))
+            .build());
+    assertEquals(1, response.getCount());
+    assertEquals("test-tag", response.getResults().get(0).getTags().iterator().next());
+
+    // Search with non-matching tag
+    response = descriptorsService.listDescriptorGroups(
+        collection.getKey(),
+        DescriptorGroupSearchRequest.builder()
+            .tags(Set.of("non-matching-tag"))
+            .build());
+    assertEquals(0, response.getCount());
+
+    // Search with multiple tags
+    response = descriptorsService.listDescriptorGroups(
+        collection.getKey(),
+        DescriptorGroupSearchRequest.builder()
+            .tags(Set.of("test-tag", "another-tag"))
+            .build());
+    assertEquals(1, response.getCount());
+
+    // Update descriptor group with new tags
+    descriptorsService.updateDescriptorGroup(
+        descriptorGroupKey,
+        StreamUtils.copyToByteArray(descriptorsFile.getInputStream()),
+        ExportFormat.TSV,
+        "My descriptor set",
+        Set.of("updated-tag"),
+        "description");
+
+    // Search with updated tag
+    response = descriptorsService.listDescriptorGroups(
+        collection.getKey(),
+        DescriptorGroupSearchRequest.builder()
+            .tags(Set.of("updated-tag"))
+            .build());
+    assertEquals(1, response.getCount());
+    assertEquals("updated-tag", response.getResults().get(0).getTags().iterator().next());
   }
 }

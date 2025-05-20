@@ -16,7 +16,6 @@ package org.gbif.registry.persistence.config;
 import java.net.URI;
 import java.util.UUID;
 
-import org.apache.ibatis.type.EnumTypeHandler;
 
 import org.gbif.api.model.collections.Address;
 import org.gbif.api.model.collections.Collection;
@@ -77,6 +76,7 @@ public class MyBatisConfiguration {
       configuration.getTypeHandlerRegistry().register(MetricInfoTypeHandler.class);
       configuration.getTypeHandlerRegistry().register(LocaleTypeHandler.class);
       configuration.getTypeHandlerRegistry().register(ExtensionArrayTypeHandler.class);
+      configuration.getTypeHandlerRegistry().register(SetArrayTypeHandler.class);
 
       configuration.getTypeAliasRegistry().registerAlias("Node", Node.class);
       configuration.getTypeAliasRegistry().registerAlias("Organization", Organization.class);

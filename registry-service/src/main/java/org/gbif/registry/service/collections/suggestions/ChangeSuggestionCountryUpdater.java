@@ -19,10 +19,12 @@ import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.CollectionEntity;
 import org.gbif.api.model.collections.CollectionEntityType;
 import org.gbif.api.model.collections.Institution;
+import org.gbif.api.model.collections.descriptors.DescriptorChangeSuggestion;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.registry.events.EventManager;
 import org.gbif.registry.events.collections.UpdateCollectionEntityEvent;
 import org.gbif.registry.persistence.mapper.collections.ChangeSuggestionMapper;
+import org.gbif.registry.persistence.mapper.collections.DescriptorChangeSuggestionMapper;
 import org.gbif.registry.persistence.mapper.collections.dto.ChangeSuggestionDto;
 
 import java.util.List;
@@ -35,7 +37,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Event listener that updates the country field in change_suggestion table
+ * Event listener that updates the country field in change_suggestion and descriptor_change_suggestion tables
  * when a collection or institution's country changes.
  */
 @Component
@@ -44,9 +46,12 @@ public class ChangeSuggestionCountryUpdater {
   private static final Logger LOG = LoggerFactory.getLogger(ChangeSuggestionCountryUpdater.class);
 
   private final ChangeSuggestionMapper changeSuggestionMapper;
+  private final DescriptorChangeSuggestionMapper descriptorChangeSuggestionMapper;
 
-  public ChangeSuggestionCountryUpdater(ChangeSuggestionMapper changeSuggestionMapper, EventManager eventManager) {
+  public ChangeSuggestionCountryUpdater(ChangeSuggestionMapper changeSuggestionMapper, EventManager eventManager,
+    DescriptorChangeSuggestionMapper descriptorChangeSuggestionMapper) {
     this.changeSuggestionMapper = changeSuggestionMapper;
+    this.descriptorChangeSuggestionMapper = descriptorChangeSuggestionMapper;
     eventManager.register(this);
   }
 
@@ -75,6 +80,16 @@ public class ChangeSuggestionCountryUpdater {
       for (ChangeSuggestionDto suggestion : suggestions) {
         suggestion.setCountryIsoCode(newCountry.getIso2LetterCode());
         changeSuggestionMapper.update(suggestion);
+      }
+
+      // Check if the entity is collection and it has descriptor change suggestions
+      if (entityType.equals(CollectionEntityType.COLLECTION)) {
+        List<DescriptorChangeSuggestion> descriptorChangeSuggestions = descriptorChangeSuggestionMapper.list(null, null, null, null, entityKey, null);
+
+        for (DescriptorChangeSuggestion descriptorChangeSuggestion: descriptorChangeSuggestions) {
+          descriptorChangeSuggestion.setCountry(newCountry);
+          descriptorChangeSuggestionMapper.updateSuggestion(descriptorChangeSuggestion);
+        }
       }
     }
   }

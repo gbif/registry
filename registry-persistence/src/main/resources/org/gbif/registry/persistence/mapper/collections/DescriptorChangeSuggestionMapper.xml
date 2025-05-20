@@ -6,18 +6,20 @@
   <resultMap id="DESCRIPTOR_CHANGE_SUGGESTION_MAP" type="org.gbif.api.model.collections.descriptors.DescriptorChangeSuggestion" autoMapping="true">
     <id property="key" column="key"/>
     <result property="comments" column="comments" typeHandler="StringArrayTypeHandler"/>
+    <result property="tags" column="tags" typeHandler="org.gbif.registry.persistence.mapper.handler.SetArrayTypeHandler"/>
+    <result property="country" column="country_iso_code" typeHandler="org.gbif.registry.persistence.mapper.handler.CountryNotNullTypeHandler"/>
   </resultMap>
 
   <sql id="DESCRIPTOR_CHANGE_SUGGESTION_WRITE_FIELDS">
     collection_key, descriptor_group_key, type, status, suggested_file, title, description, format, proposed, proposed_by,
     proposer_email, applied, applied_by, discarded,
-    discarded_by, comments, modified, modified_by
+    discarded_by, comments, tags, modified, modified_by, country_iso_code
   </sql>
 
   <sql id="DESCRIPTOR_CHANGE_SUGGESTION_READ_FIELDS">
     key, collection_key, descriptor_group_key, type, status, suggested_file, title, description, format, proposed, proposed_by,
     proposer_email, applied, applied_by, discarded, discarded_by,
-    suggested_file, comments, modified, modified_by
+    suggested_file, comments, tags, modified, modified_by, country_iso_code
   </sql>
 
   <sql id="DESCRIPTOR_CHANGE_SUGGESTION_PARAMS_CREATE">
@@ -37,8 +39,10 @@
     #{discarded,jdbcType=TIMESTAMP},
     #{discardedBy,jdbcType=VARCHAR},
     #{comments,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler},
+    #{tags,jdbcType=ARRAY,typeHandler=org.gbif.registry.persistence.mapper.handler.SetArrayTypeHandler},
     #{modified,jdbcType=TIMESTAMP},
-    #{modifiedBy,jdbcType=VARCHAR}
+    #{modifiedBy,jdbcType=VARCHAR},
+    #{country,jdbcType=CHAR, typeHandler=org.gbif.registry.persistence.mapper.handler.CountryNotNullTypeHandler}
   </sql>
 
   <sql id="DESCRIPTOR_CHANGE_SUGGESTION_PARAMS_UPDATE">
@@ -47,13 +51,15 @@
     status = #{status,jdbcType=OTHER},
     suggested_file = #{suggestedFile,jdbcType=VARCHAR},
     comments = #{comments,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler},
+    tags = #{tags,jdbcType=ARRAY,typeHandler=org.gbif.registry.persistence.mapper.handler.SetArrayTypeHandler},
     modified = now(),
     modified_by = #{modifiedBy,jdbcType=VARCHAR},
     discarded = #{discarded,jdbcType=OTHER},
     discarded_by = #{discardedBy,jdbcType=INTEGER},
     applied = #{applied,jdbcType=OTHER},
     applied_by = #{appliedBy,jdbcType=INTEGER},
-    descriptor_group_key = #{descriptorGroupKey,jdbcType=OTHER}
+    descriptor_group_key = #{descriptorGroupKey,jdbcType=OTHER},
+    country_iso_code = #{country,jdbcType=CHAR, typeHandler=org.gbif.registry.persistence.mapper.handler.CountryNotNullTypeHandler}
   </sql>
 
   <!-- Insert statement -->
@@ -95,6 +101,9 @@
       <if test="collectionKey != null">
         AND dcs.collection_key = #{collectionKey,jdbcType=OTHER}
       </if>
+      <if test="country != null">
+        AND dcs.country_iso_code =#{country,jdbcType=CHAR, typeHandler=org.gbif.registry.persistence.mapper.handler.CountryNotNullTypeHandler}
+      </if>
     </where>
     ORDER BY dcs.proposed DESC
     <if test="page != null and page.limit != null and page.offset != null">
@@ -117,6 +126,9 @@
       </if>
       <if test="collectionKey != null">
         AND collection_key = #{collectionKey,jdbcType=OTHER}
+      </if>
+      <if test="country != null">
+        AND country_iso_code =#{country,jdbcType=CHAR, typeHandler=org.gbif.registry.persistence.mapper.handler.CountryNotNullTypeHandler}
       </if>
     </where>
   </select>

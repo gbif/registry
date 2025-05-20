@@ -4,15 +4,16 @@
 
   <resultMap id="DESCRIPTOR_GROUP_MAP" type="DescriptorGroup" autoMapping="true">
     <id property="key" column="key"/>
+    <result property="tags" column="tags" typeHandler="org.gbif.registry.persistence.mapper.handler.SetArrayTypeHandler"/>
   </resultMap>
 
   <sql id="DESCRIPTOR_GROUP_WRITE_FIELDS">
-    title, description, collection_key, created, created_by, modified, modified_by
+    title, description, collection_key, created, created_by, modified, modified_by, tags
   </sql>
 
   <sql id="DESCRIPTOR_GROUP_READ_FIELDS">
     ds.key, ds.title, ds.description, ds.collection_key, ds.created, ds.created_by, ds.modified, ds.modified_by,
-    ds.deleted
+    ds.deleted, ds.tags
   </sql>
 
   <sql id="DESCRIPTOR_GROUP_PARAMS_CREATE">
@@ -22,7 +23,15 @@
     now(), <!-- created -->
     #{createdBy,jdbcType=VARCHAR},
     now(), <!-- modified -->
-    #{modifiedBy,jdbcType=VARCHAR}
+    #{modifiedBy,jdbcType=VARCHAR},
+    <choose>
+      <when test="tags != null and tags.size() > 0">
+        #{tags,jdbcType=ARRAY,typeHandler=org.gbif.registry.persistence.mapper.handler.SetArrayTypeHandler}
+      </when>
+      <otherwise>
+        '{}'::text[]
+      </otherwise>
+    </choose>
   </sql>
 
   <sql id="DESCRIPTOR_GROUP_PARAMS_UPDATE">
@@ -30,6 +39,14 @@
     description = #{description,jdbcType=VARCHAR},
     modified_by = #{modifiedBy,jdbcType=VARCHAR},
     modified = now(), <!-- modified -->
+    tags = <choose>
+      <when test="tags != null and tags.size() > 0">
+        #{tags,jdbcType=ARRAY,typeHandler=org.gbif.registry.persistence.mapper.handler.SetArrayTypeHandler}
+      </when>
+      <otherwise>
+        '{}'::text[]
+      </otherwise>
+    </choose>,
     deleted = null <!-- if we're updating it can't be deleted -->
     <!-- disallowed to update the collection key -->
   </sql>
@@ -102,6 +119,13 @@
       </if>
       <if test="params.description != null">
         AND lower(ds.description) = lower(#{params.description,jdbcType=VARCHAR})
+      </if>
+      <if test="params.tags != null and !params.tags.isEmpty()">
+        AND ds.tags &amp;&amp; ARRAY[
+          <foreach item="tag" collection="params.tags" separator=",">
+            #{tag}::text
+          </foreach>
+        ]::text[]
       </if>
     </where>
   </sql>
