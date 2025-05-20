@@ -19,6 +19,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Set;
 import java.util.UUID;
 import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.descriptors.DescriptorGroup;
@@ -80,6 +81,7 @@ public class DescriptorsMapperIT extends BaseItTest {
     descriptorGroup.setCreatedBy("user");
     descriptorGroup.setModifiedBy("user");
     descriptorGroup.setCollectionKey(collection.getKey());
+    descriptorGroup.setTags(Set.of("tag"));
     descriptorsMapper.createDescriptorGroup(descriptorGroup);
     assertTrue(descriptorGroup.getKey() > 0);
 

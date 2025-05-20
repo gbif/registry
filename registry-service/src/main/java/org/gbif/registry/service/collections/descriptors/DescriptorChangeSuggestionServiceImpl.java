@@ -24,8 +24,10 @@ import org.gbif.api.model.collections.suggestions.Type;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
+import org.gbif.api.service.collections.CollectionService;
 import org.gbif.api.service.collections.DescriptorChangeSuggestionService;
 import org.gbif.api.service.collections.DescriptorsService;
+import org.gbif.api.vocabulary.Country;
 import org.gbif.registry.events.EventManager;
 import org.gbif.registry.events.collections.EventType;
 import org.gbif.registry.events.collections.SubEntityCollectionEvent;
@@ -52,14 +54,16 @@ public class DescriptorChangeSuggestionServiceImpl implements DescriptorChangeSu
   private final DescriptorChangeSuggestionMapper suggestionMapper;
   private final DescriptorsService descriptorsService;
   private final EventManager eventManager;
+  private final CollectionService collectionService;
 
   @Autowired
   public DescriptorChangeSuggestionServiceImpl(DescriptorChangeSuggestionMapper suggestionMapper,
     DescriptorsService descriptorsService,
-    EventManager eventManager) {
+    EventManager eventManager, CollectionService collectionService) {
     this.suggestionMapper = suggestionMapper;
     this.descriptorsService = descriptorsService;
     this.eventManager = eventManager;
+    this.collectionService = collectionService;
   }
 
   @Override
@@ -71,6 +75,18 @@ public class DescriptorChangeSuggestionServiceImpl implements DescriptorChangeSu
     Preconditions.checkArgument(!request.getComments().isEmpty(), "Comment is required");
 
     DescriptorChangeSuggestion suggestion = buildSuggestion(request);
+
+    // Set countryIsoCode from collection address
+    Collection collection = collectionService.get(request.getCollectionKey());
+    if (collection != null) {
+      Country country = null;
+      if (collection.getAddress() != null && collection.getAddress().getCountry() != null) {
+        country = collection.getAddress().getCountry();
+      } else if (collection.getMailingAddress() != null && collection.getMailingAddress().getCountry() != null) {
+        country = collection.getMailingAddress().getCountry();
+      }
+      suggestion.setCountry(country);
+    }
 
     if (fileName != null || fileStream != null) {
       String filename = generateFilename(String.valueOf(request.getCollectionKey()), fileName);
@@ -110,9 +126,6 @@ public class DescriptorChangeSuggestionServiceImpl implements DescriptorChangeSu
       throw new IllegalStateException("Only pending suggestions can be updated");
     }
 
-    // Validate the request details (e.g., ensure comments are provided)
-    Preconditions.checkArgument(!request.getComments().isEmpty(), "Comment is required");
-
     // Update the fields of the suggestion
     if (request.getTitle() != null) {
       suggestion.setTitle(request.getTitle());
@@ -120,8 +133,11 @@ public class DescriptorChangeSuggestionServiceImpl implements DescriptorChangeSu
     if (request.getDescription() != null) {
       suggestion.setDescription(request.getDescription());
     }
-    if (request.getComments() != null) {
+    if (request.getComments() != null && !request.getComments().isEmpty()) {
       suggestion.setComments(request.getComments());
+    }
+    if (request.getTags() != null) {
+      suggestion.setTags(request.getTags());
     }
 
     // Update the file if a new file is provided
@@ -202,6 +218,7 @@ public class DescriptorChangeSuggestionServiceImpl implements DescriptorChangeSu
           suggestion.getFormat(),
           suggestion.getTitle(),
           suggestion.getDescription(),
+          suggestion.getTags(),
           suggestion.getCollectionKey());
       suggestion.setDescriptorGroupKey(descriptorGroupKey);
     } else if (Type.UPDATE.equals(suggestion.getType())) {
@@ -210,6 +227,7 @@ public class DescriptorChangeSuggestionServiceImpl implements DescriptorChangeSu
           fileBytes,
           suggestion.getFormat(),
           suggestion.getTitle(),
+          suggestion.getTags(),
           suggestion.getDescription());
     } else if (Type.DELETE.equals(suggestion.getType())) {
       descriptorsService.deleteDescriptorGroup(suggestion.getDescriptorGroupKey());
@@ -277,16 +295,17 @@ public class DescriptorChangeSuggestionServiceImpl implements DescriptorChangeSu
     Status status,
     Type type,
     String proposerEmail,
-    UUID collectionKey) {
+    UUID collectionKey,
+    Country country) {
     Pageable page = pageable == null ? new PagingRequest() : pageable;
-    List<DescriptorChangeSuggestion> suggestions = suggestionMapper.list(page, status, type, proposerEmail, collectionKey);
-    long total = suggestionMapper.count(status, type, proposerEmail, collectionKey);
+    List<DescriptorChangeSuggestion> suggestions = suggestionMapper.list(page, status, type, proposerEmail, collectionKey, country);
+    long total = suggestionMapper.count(status, type, proposerEmail, collectionKey, country);
     return new PagingResponse<>(page, total, suggestions);
   }
 
   @Override
-  public long count(Status status, Type type, String proposerEmail, UUID collectionKey) {
-    return suggestionMapper.count(status, type, proposerEmail, collectionKey);
+  public long count(Status status, Type type, String proposerEmail, UUID collectionKey, Country country) {
+    return suggestionMapper.count(status, type, proposerEmail, collectionKey, country);
   }
 
   private String generateFilename(String collectionKey, String originalFilename) {
@@ -317,6 +336,7 @@ public class DescriptorChangeSuggestionServiceImpl implements DescriptorChangeSu
       .description(request.getDescription())
       .format(request.getFormat())
       .comments(request.getComments())
+      .tags(request.getTags())
       .proposedBy(getUsername())
       .proposerEmail(request.getProposerEmail())
       .proposed(new Date())

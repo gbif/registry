@@ -29,6 +29,7 @@ import java.io.InputStream;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import lombok.SneakyThrows;
@@ -263,7 +264,7 @@ public class CollectionResourceIT
   @SneakyThrows
   @Test
   public void createDescriptorGroupTest() {
-    when(descriptorsService.createDescriptorGroup(any(), any(), any(), any(), any()))
+    when(descriptorsService.createDescriptorGroup(any(), any(), any(), any(), any(), any()))
         .thenReturn(1L);
 
     Resource descriptorsResource = new ClassPathResource("collections/descriptors.csv");
@@ -274,7 +275,7 @@ public class CollectionResourceIT
         1L,
         getClient()
             .createDescriptorGroup(
-                UUID.randomUUID(), ExportFormat.CSV, descriptorsFile, "title", "desc"));
+                UUID.randomUUID(), ExportFormat.CSV, descriptorsFile, "title",  "desc", Set.of("test-tag")));
   }
 
   @SneakyThrows
@@ -288,7 +289,7 @@ public class CollectionResourceIT
     when(descriptorsService.getDescriptorGroup(anyLong())).thenReturn(descriptorGroup);
     doNothing()
         .when(descriptorsService)
-        .updateDescriptorGroup(anyLong(), any(), any(), anyString(), anyString());
+        .updateDescriptorGroup(anyLong(), any(), any(), anyString(), any(Set.class), anyString());
 
     Resource descriptorsResource = new ClassPathResource("collections/descriptors.csv");
     MultipartFile descriptorsFile =
@@ -298,7 +299,7 @@ public class CollectionResourceIT
         () ->
             getClient()
                 .updateDescriptorGroup(
-                    collectionKey, 1L, ExportFormat.CSV, descriptorsFile, "title", "desc"));
+                    collectionKey, 1L, ExportFormat.CSV, descriptorsFile, "title", "desc", Set.of("test-tag")));
   }
 
   @Test
@@ -523,7 +524,8 @@ public class CollectionResourceIT
         descriptorChangeSuggestion.getDescription(),
         descriptorChangeSuggestion.getFormat(),
         descriptorChangeSuggestion.getComments(),
-        descriptorChangeSuggestion.getProposedBy()
+        descriptorChangeSuggestion.getProposedBy(),
+        descriptorChangeSuggestion.getTags()
       );
 
     // Verify create suggestion
@@ -531,6 +533,7 @@ public class CollectionResourceIT
     assertEquals(descriptorChangeSuggestion.getTitle(), created.getTitle());
     assertEquals(descriptorChangeSuggestion.getDescription(), created.getDescription());
     assertEquals(descriptorChangeSuggestion.getFormat(), created.getFormat());
+    assertEquals(descriptorChangeSuggestion.getTags(), created.getTags());
     verify(descriptorChangeSuggestionService).createSuggestion(
         any(InputStream.class),
         anyString(),
@@ -561,7 +564,8 @@ public class CollectionResourceIT
         isNull(),
         isNull(),
         isNull(),
-        isNull() // collectionKey is null for listing all suggestions
+        isNull(), // collectionKey is null for listing all suggestions
+        isNull()
     )).thenReturn(new PagingResponse<>(new PagingRequest(), Long.valueOf(allSuggestions.size()), allSuggestions));
 
     // Call the client method
@@ -579,7 +583,7 @@ public class CollectionResourceIT
         .anyMatch(s -> s.getCollectionKey().equals(collectionKey2)));
 
     verify(descriptorChangeSuggestionService).list(
-        any(Pageable.class), isNull(), isNull(), isNull(), isNull());
+        any(Pageable.class), isNull(), isNull(), isNull(), isNull(), isNull());
   }
 
   @Test
@@ -608,7 +612,8 @@ public class CollectionResourceIT
         isNull(),
         isNull(),
         isNull(),
-        eq(collectionKey)
+        eq(collectionKey),
+        isNull()
     )).thenReturn(new PagingResponse<>(new PagingRequest(), Long.valueOf(suggestions.size()), suggestions));
 
     // Call the client method
@@ -621,7 +626,7 @@ public class CollectionResourceIT
     assertEquals(suggestion2.getType(), result.getResults().get(1).getType());
 
     verify(descriptorChangeSuggestionService).list(
-        any(Pageable.class), isNull(), isNull(), isNull(), eq(collectionKey));
+        any(Pageable.class), isNull(), isNull(), isNull(), eq(collectionKey), isNull());
   }
 
   @Test
@@ -656,7 +661,8 @@ public class CollectionResourceIT
         descriptorChangeSuggestion.getDescription(),
         descriptorChangeSuggestion.getFormat(),
         descriptorChangeSuggestion.getComments(),
-        descriptorChangeSuggestion.getProposedBy()
+        descriptorChangeSuggestion.getProposedBy(),
+        descriptorChangeSuggestion.getTags()
       ));
 
     verify(descriptorChangeSuggestionService).updateSuggestion(
@@ -715,6 +721,29 @@ public class CollectionResourceIT
     verify(descriptorChangeSuggestionService).discardSuggestion(suggestionKey);
   }
 
+  @Test
+  public void searchDescriptorGroupByTagsTest() {
+    UUID collectionKey = UUID.randomUUID();
+    DescriptorGroup descriptorGroup = new DescriptorGroup();
+    descriptorGroup.setKey(1L);
+    descriptorGroup.setCollectionKey(collectionKey);
+    descriptorGroup.setTitle("title");
+    descriptorGroup.setTags(Set.of("test-tag"));
+
+    when(resourceNotFoundService.entityExists(any(), any())).thenReturn(true);
+    when(descriptorsService.getDescriptorGroup(anyLong())).thenReturn(descriptorGroup);
+    when(descriptorsService.listDescriptorGroups(any(), any())).thenReturn(
+        new PagingResponse<>(new PagingRequest(), 1L, Collections.singletonList(descriptorGroup)));
+
+    DescriptorGroupSearchRequest searchRequest = DescriptorGroupSearchRequest.builder()
+        .tags(Set.of("test-tag"))
+        .build();
+
+    PagingResponse<DescriptorGroup> response = getClient().listCollectionDescriptorGroups(collectionKey, searchRequest);
+    assertEquals(1, response.getCount());
+    assertEquals("test-tag", response.getResults().get(0).getTags().iterator().next());
+  }
+
   protected CollectionClient getClient() {
     return (CollectionClient) baseClient;
   }
@@ -740,6 +769,7 @@ public class CollectionResourceIT
     suggestion.setProposedBy("aa@aa.org");
     suggestion.setCollectionKey(collectionKey);
     suggestion.setStatus(Status.PENDING);
+    suggestion.setTags(Set.of("tag1", "tag2"));
     return suggestion;
   }
 }
