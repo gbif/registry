@@ -162,4 +162,7 @@
   <include file="liquibase/154-new-download-fields.xml" />
   <include file="liquibase/155-grscicoll-suggestion-country.xml" />
   <include file="liquibase/156-descriptor-suggestions.xml" />
+  <include file="liquibase/157-usage-key-string.xml" />
+  <include file="liquibase/158-taxon-keys-string.xml" />
+  <include file="liquibase/159-descriptor-group-tags.xml" />
 </databaseChangeLog>
