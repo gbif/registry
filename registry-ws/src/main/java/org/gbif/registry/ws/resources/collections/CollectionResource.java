@@ -606,12 +606,14 @@ public class CollectionResource
       @RequestParam(value = "format", defaultValue = "CSV") ExportFormat format,
       @RequestPart(value = "descriptorsFile", required = false) MultipartFile descriptorsFile,
       @RequestParam("title") @Trim String title,
-      @RequestParam(value = "description", required = false) @Trim String description) {
+      @RequestParam(value = "description", required = false) @Trim String description,
+      @RequestParam(value = "tags", required = false) Set<String> tags) {
     return descriptorsService.createDescriptorGroup(
         StreamUtils.copyToByteArray(descriptorsFile.getResource().getInputStream()),
         format,
         title,
         description,
+        tags,
         collectionKey);
   }
 
@@ -639,7 +641,8 @@ public class CollectionResource
       @RequestParam(value = "format", defaultValue = "CSV") ExportFormat format,
       @RequestPart(value = "descriptorsFile", required = false) MultipartFile descriptorsFile,
       @RequestParam("title") @Trim String title,
-      @RequestParam(value = "description", required = false) @Trim String description) {
+      @RequestParam(value = "description", required = false) @Trim String description,
+      @RequestParam(value = "tags", required = false) Set<String> tags) {
     DescriptorGroup existingDescriptorGroup =
         descriptorsService.getDescriptorGroup(descriptorGroupKey);
     if (existingDescriptorGroup == null) {
@@ -653,6 +656,7 @@ public class CollectionResource
         file,
         format,
         title,
+        tags,
         description);
   }
 
@@ -1045,15 +1049,16 @@ public class CollectionResource
   @Docs.DefaultUnsuccessfulWriteResponses
   @PostMapping(value = "{collectionKey}/descriptorGroup/suggestion", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
   public DescriptorChangeSuggestion createDescriptorSuggestion(
-    @PathVariable("collectionKey") UUID collectionKey,
-    @RequestPart(value = "file", required = false) MultipartFile file,
-    @RequestParam("type") Type type,
-    @RequestParam(value = "descriptorGroupKey", required = false) Long descriptorGroupKey,
-    @RequestParam("title") String title,
-    @RequestParam(value = "description", required = false) String description,
-    @RequestParam("format") ExportFormat format,
-    @RequestParam("comments") List<String> comments,
-    @RequestParam("proposerEmail") String proposerEmail) throws IOException {
+      @PathVariable("collectionKey") UUID collectionKey,
+      @RequestPart(value = "file", required = false) MultipartFile file,
+      @RequestParam("type") Type type,
+      @RequestParam(value = "descriptorGroupKey", required = false) Long descriptorGroupKey,
+      @RequestParam("title") String title,
+      @RequestParam(value = "description", required = false) String description,
+      @RequestParam("format") ExportFormat format,
+      @RequestParam("comments") List<String> comments,
+      @RequestParam("proposerEmail") String proposerEmail,
+      @RequestParam(value = "tags", required = false) Set<String> tags) throws IOException {
 
     if (type == Type.CREATE && (file == null || file.isEmpty())) {
       throw new IllegalArgumentException("File is required for CREATE type suggestions");
@@ -1067,6 +1072,7 @@ public class CollectionResource
     request.setDescription(description);
     request.setFormat(format);
     request.setComments(comments);
+    request.setTags(tags);
     request.setProposerEmail(proposerEmail);
 
     return descriptorChangeSuggestionService.createSuggestion(
@@ -1151,7 +1157,7 @@ public class CollectionResource
               properties = @ExtensionProperty(name = "Order", value = "0303")))
   @ApiResponse(responseCode = "200", description = "Suggestion applied successfully")
   @Docs.DefaultUnsuccessfulWriteResponses
-  @PutMapping(value = "{collectionKey}/descriptorGroup/suggestion/{key}/apply")
+  @PutMapping(value = "{collectionKey}/descriptorGroup/suggestion/{key}/apply", consumes = MediaType.ALL_VALUE)
   public void applyDescriptorSuggestion(
       @PathVariable("collectionKey") UUID collectionKey,
       @PathVariable("key") long key) throws IOException {
@@ -1195,6 +1201,7 @@ public class CollectionResource
       @RequestParam("description") String description,
       @RequestParam("format") ExportFormat format,
       @RequestParam("comments") List<String> comments,
+      @RequestParam(value = "tags", required = false) Set<String> tags,
       @RequestParam("proposerEmail") String proposerEmail) throws IOException {
 
     DescriptorChangeSuggestionRequest request = new DescriptorChangeSuggestionRequest();
@@ -1204,6 +1211,7 @@ public class CollectionResource
     request.setDescription(description);
     request.setFormat(format);
     request.setComments(comments);
+    request.setTags(tags);
     request.setProposerEmail(proposerEmail);
 
     descriptorChangeSuggestionService.updateSuggestion(
@@ -1229,8 +1237,9 @@ public class CollectionResource
       @RequestParam(value = "status", required = false) Status status,
       @RequestParam(value = "type", required = false) Type type,
       @RequestParam(value = "proposerEmail", required = false) String proposerEmail,
+      @RequestParam(value = "country", required = false) Country country,
       Pageable page) {
-    return descriptorChangeSuggestionService.list(page, status, type, proposerEmail, collectionKey);
+    return descriptorChangeSuggestionService.list(page, status, type, proposerEmail, collectionKey, country);
   }
 
   @Operation(
@@ -1248,8 +1257,9 @@ public class CollectionResource
       @RequestParam(value = "status", required = false) Status status,
       @RequestParam(value = "type", required = false) Type type,
       @RequestParam(value = "proposerEmail", required = false) String proposerEmail,
+      @RequestParam(value = "country", required = false) Country country,
       Pageable page) {
-    return descriptorChangeSuggestionService.list(page, status, type, proposerEmail, null);
+    return descriptorChangeSuggestionService.list(page, status, type, proposerEmail, null, country);
   }
 
 }

@@ -5,7 +5,9 @@ import static org.junit.jupiter.api.Assertions.*;
 import java.io.IOException;
 import java.util.Collections;
 import java.io.InputStream;
+import java.util.Set;
 
+import org.gbif.api.model.collections.Address;
 import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.descriptors.DescriptorChangeSuggestion;
 import org.gbif.api.model.collections.descriptors.DescriptorChangeSuggestionRequest;
@@ -17,6 +19,7 @@ import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.service.collections.CollectionService;
 import org.gbif.api.service.collections.DescriptorChangeSuggestionService;
 import org.gbif.api.service.collections.DescriptorsService;
+import org.gbif.api.vocabulary.Country;
 import org.gbif.registry.database.TestCaseDatabaseInitializer;
 import org.gbif.registry.ws.it.collections.service.BaseServiceIT;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
@@ -67,6 +70,7 @@ class DescriptorChangeSuggestionServiceIT extends BaseServiceIT {
     request.setType(Type.CREATE);
     request.setProposerEmail("test@gbif.org");
     request.setComments(Collections.singletonList("Test comment"));
+    request.setTags(Set.of("tag1", "tag2"));
 
     // When
     DescriptorChangeSuggestion suggestion = descriptorChangeSuggestionService.createSuggestion(
@@ -84,6 +88,7 @@ class DescriptorChangeSuggestionServiceIT extends BaseServiceIT {
     assertEquals(ExportFormat.CSV, suggestion.getFormat());
     assertEquals(1, suggestion.getComments().size());
     assertEquals("Test comment", suggestion.getComments().get(0));
+    assertEquals(Set.of("tag1", "tag2"), suggestion.getTags());
   }
 
   @Test
@@ -103,6 +108,7 @@ class DescriptorChangeSuggestionServiceIT extends BaseServiceIT {
     request.setType(Type.CREATE);
     request.setProposerEmail("test@gbif.org");
     request.setComments(Collections.singletonList("Test comment"));
+    request.setTags(Set.of("tag1", "tag2"));
 
     DescriptorChangeSuggestion suggestion = descriptorChangeSuggestionService.createSuggestion(
         descriptorsFile.getInputStream(),
@@ -116,6 +122,7 @@ class DescriptorChangeSuggestionServiceIT extends BaseServiceIT {
     updateRequest.setDescription("Updated Description");
     updateRequest.setFormat(ExportFormat.CSV);
     updateRequest.setComments(Collections.singletonList("Updated comment"));
+    updateRequest.setTags(Set.of("updated", "tag1"));
 
     DescriptorChangeSuggestion updatedSuggestion = descriptorChangeSuggestionService.updateSuggestion(
         suggestion.getKey(),
@@ -133,6 +140,7 @@ class DescriptorChangeSuggestionServiceIT extends BaseServiceIT {
     assertEquals(ExportFormat.CSV, updatedSuggestion.getFormat());
     assertEquals(1, updatedSuggestion.getComments().size());
     assertEquals("Updated comment", updatedSuggestion.getComments().get(0));
+    assertEquals(Set.of("updated", "tag1"), updatedSuggestion.getTags());
   }
 
   @Test
@@ -230,7 +238,7 @@ class DescriptorChangeSuggestionServiceIT extends BaseServiceIT {
     // When
     PagingResponse<DescriptorChangeSuggestion> results =
         descriptorChangeSuggestionService.list(
-            new PagingRequest(0, 20), null, null, null, collection.getKey());
+            new PagingRequest(0, 20), null, null, null, collection.getKey(), null);
 
     // Then
     assertEquals(1, results.getResults().size());
@@ -362,7 +370,7 @@ class DescriptorChangeSuggestionServiceIT extends BaseServiceIT {
     // When - list all suggestions regardless of collection
     PagingResponse<DescriptorChangeSuggestion> results =
         descriptorChangeSuggestionService.list(
-            new PagingRequest(0, 20), null, null, null, null); // collectionKey is null
+            new PagingRequest(0, 20), null, null, null, null, null); // collectionKey is null
 
     // Then - should return both suggestions
     assertEquals(2, results.getResults().size(), "Should return two suggestions");
@@ -394,6 +402,11 @@ class DescriptorChangeSuggestionServiceIT extends BaseServiceIT {
     Collection collection1 = new Collection();
     collection1.setCode("c1");
     collection1.setName("n1");
+
+    Address address = new Address();
+    address.setCountry(Country.TURKEY);
+    collection1.setAddress(address);
+
     collectionService.create(collection1);
 
     Collection collection2 = new Collection();
@@ -435,27 +448,32 @@ class DescriptorChangeSuggestionServiceIT extends BaseServiceIT {
 
     // When & Then - count by different parameters
     // Count all suggestions
-    assertEquals(2, descriptorChangeSuggestionService.count(null, null, null, null),
+    assertEquals(2, descriptorChangeSuggestionService.count(null, null, null, null, null),
         "Count of all suggestions should be 2");
 
     // Count by collection
-    assertEquals(1, descriptorChangeSuggestionService.count(null, null, null, collection1.getKey()),
+    assertEquals(1, descriptorChangeSuggestionService.count(null, null, null, collection1.getKey(), null),
         "Count for collection1 should be 1");
 
     // Count by type
-    assertEquals(1, descriptorChangeSuggestionService.count(null, Type.CREATE, null, null),
+    assertEquals(1, descriptorChangeSuggestionService.count(null, Type.CREATE, null, null, null),
         "Count for CREATE type should be 1");
-    assertEquals(1, descriptorChangeSuggestionService.count(null, Type.UPDATE, null, null),
+    assertEquals(1, descriptorChangeSuggestionService.count(null, Type.UPDATE, null, null, null),
         "Count for UPDATE type should be 1");
 
     // Count by status (all are PENDING by default)
-    assertEquals(2, descriptorChangeSuggestionService.count(Status.PENDING, null, null, null),
+    assertEquals(2, descriptorChangeSuggestionService.count(Status.PENDING, null, null, null, null),
         "Count for PENDING status should be 2");
-    assertEquals(0, descriptorChangeSuggestionService.count(Status.DISCARDED, null, null, null),
+    assertEquals(0, descriptorChangeSuggestionService.count(Status.DISCARDED, null, null, null, null),
         "Count for DISCARDED status should be 0");
 
     // Count by proposer email
-    assertEquals(1, descriptorChangeSuggestionService.count(null, null, "test1@gbif.org", null),
+    assertEquals(1, descriptorChangeSuggestionService.count(null, null, "test1@gbif.org", null, null),
         "Count for proposer test1@gbif.org should be 1");
+
+    // Count by country
+    assertEquals(1, descriptorChangeSuggestionService.count(null, null, "test1@gbif.org", null,
+        Country.TURKEY),
+      "Count for country Turkey should be 1");
   }
 }

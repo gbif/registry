@@ -110,6 +110,7 @@ public class BaseItTest extends BaseDBTest {
     return clientBuilder
         .withUrl("http://localhost:" + localServerPort)
         .withAppKeyCredentials(username, appKey, keyStore.getPrivateKey(appKey))
+        .withFormEncoder()
         .build(cls);
   }
 
