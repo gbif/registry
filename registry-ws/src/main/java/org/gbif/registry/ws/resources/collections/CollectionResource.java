@@ -1237,8 +1237,9 @@ public class CollectionResource
       @RequestParam(value = "status", required = false) Status status,
       @RequestParam(value = "type", required = false) Type type,
       @RequestParam(value = "proposerEmail", required = false) String proposerEmail,
+      @RequestParam(value = "country", required = false) Country country,
       Pageable page) {
-    return descriptorChangeSuggestionService.list(page, status, type, proposerEmail, collectionKey);
+    return descriptorChangeSuggestionService.list(page, status, type, proposerEmail, collectionKey, country);
   }
 
   @Operation(
@@ -1256,8 +1257,9 @@ public class CollectionResource
       @RequestParam(value = "status", required = false) Status status,
       @RequestParam(value = "type", required = false) Type type,
       @RequestParam(value = "proposerEmail", required = false) String proposerEmail,
+      @RequestParam(value = "country", required = false) Country country,
       Pageable page) {
-    return descriptorChangeSuggestionService.list(page, status, type, proposerEmail, null);
+    return descriptorChangeSuggestionService.list(page, status, type, proposerEmail, null, country);
   }
 
 }

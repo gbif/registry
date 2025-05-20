@@ -13,15 +13,20 @@
  */
 package org.gbif.registry.ws.it.collections.service.suggestions;
 
+import java.io.IOException;
+
 import org.gbif.api.model.collections.Address;
 import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.CollectionEntityType;
 import org.gbif.api.model.collections.Institution;
+import org.gbif.api.model.collections.descriptors.DescriptorChangeSuggestion;
 import org.gbif.api.model.collections.suggestions.CollectionChangeSuggestion;
 import org.gbif.api.model.collections.suggestions.InstitutionChangeSuggestion;
 import org.gbif.api.model.collections.suggestions.Type;
+import org.gbif.api.model.common.export.ExportFormat;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.registry.persistence.mapper.collections.ChangeSuggestionMapper;
+import org.gbif.registry.persistence.mapper.collections.DescriptorChangeSuggestionMapper;
 import org.gbif.registry.persistence.mapper.collections.dto.ChangeSuggestionDto;
 import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.security.UserRoles;
@@ -38,10 +43,14 @@ import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.server.LocalServerPort;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.multipart.MultipartFile;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -50,6 +59,7 @@ public class ChangeSuggestionCountryUpdaterIT extends BaseItTest {
   private final ChangeSuggestionMapper changeSuggestionMapper;
   private final InstitutionClient institutionClient;
   private final CollectionClient collectionClient;
+  private final DescriptorChangeSuggestionMapper descriptorChangeSuggestionMapper;
 
   @Autowired
   public ChangeSuggestionCountryUpdaterIT(
@@ -57,9 +67,11 @@ public class ChangeSuggestionCountryUpdaterIT extends BaseItTest {
       SimplePrincipalProvider simplePrincipalProvider,
       EsManageServer esServer,
       KeyStore keyStore,
-      @LocalServerPort int localServerPort) {
+      @LocalServerPort int localServerPort,
+    DescriptorChangeSuggestionMapper descriptorChangeSuggestionMapper) {
     super(simplePrincipalProvider, esServer);
     this.changeSuggestionMapper = changeSuggestionMapper;
+    this.descriptorChangeSuggestionMapper = descriptorChangeSuggestionMapper;
     this.institutionClient = prepareClient(localServerPort, keyStore, InstitutionClient.class);
     this.collectionClient = prepareClient(localServerPort, keyStore, CollectionClient.class);
 
@@ -126,7 +138,7 @@ public class ChangeSuggestionCountryUpdaterIT extends BaseItTest {
   }
 
   @Test
-  public void testCollectionCountryUpdate() {
+  public void testCollectionCountryUpdate() throws IOException {
     // Create a collection with Denmark as country
     Collection collection = new Collection();
     collection.setCode("test");
@@ -145,6 +157,13 @@ public class ChangeSuggestionCountryUpdaterIT extends BaseItTest {
     suggestion.setProposerEmail("test@example.org");
     suggestion.setComments(Collections.singletonList("Test comment"));
 
+    Resource descriptorsResource = new ClassPathResource("collections/descriptors.csv");
+    MultipartFile descriptorsFile =
+      new MockMultipartFile("file", "descriptors.csv", "text/csv", descriptorsResource.getInputStream());
+
+    DescriptorChangeSuggestion descriptorChangeSuggestion = getDescriptorChangeSuggestion(
+      collectionKey);
+
     Collection suggestedCollection = collectionClient.get(collectionKey);
     suggestedCollection.setCode("test-updated");
     suggestedCollection.setName("Test Collection Updated");
@@ -152,6 +171,17 @@ public class ChangeSuggestionCountryUpdaterIT extends BaseItTest {
     suggestion.setSuggestedEntity(suggestedCollection);
 
     collectionClient.createChangeSuggestion(suggestion);
+    collectionClient.createDescriptorSuggestion(
+      collectionKey,
+      descriptorsFile,
+      descriptorChangeSuggestion.getType(),
+      descriptorChangeSuggestion.getTitle(),
+      descriptorChangeSuggestion.getDescription(),
+      descriptorChangeSuggestion.getFormat(),
+      descriptorChangeSuggestion.getComments(),
+      descriptorChangeSuggestion.getProposerEmail(),
+      descriptorChangeSuggestion.getTags()
+    );
 
     // Verify country in suggestion
     List<ChangeSuggestionDto> suggestions =
@@ -159,6 +189,11 @@ public class ChangeSuggestionCountryUpdaterIT extends BaseItTest {
 
     assertEquals(1, suggestions.size());
     assertEquals(Country.DENMARK.getIso2LetterCode(), suggestions.get(0).getCountryIsoCode());
+
+    List<DescriptorChangeSuggestion> descriptorChangeSuggestions = descriptorChangeSuggestionMapper.list(null, null, null, null, collectionKey, null);
+
+    assertEquals(1, descriptorChangeSuggestions.size());
+    assertEquals(Country.DENMARK, descriptorChangeSuggestions.get(0).getCountry());
 
     // Update collection's country
     collection = collectionClient.get(collectionKey);
@@ -171,8 +206,25 @@ public class ChangeSuggestionCountryUpdaterIT extends BaseItTest {
     // Verify country in suggestion is updated
     suggestions =
         changeSuggestionMapper.list(null, null, CollectionEntityType.COLLECTION, null, collectionKey, null, null, null);
+    descriptorChangeSuggestions =
+      descriptorChangeSuggestionMapper.list(null, null, null, null, collectionKey, null);
 
     assertEquals(1, suggestions.size());
     assertEquals(Country.TURKEY.getIso2LetterCode(), suggestions.get(0).getCountryIsoCode());
+
+    assertEquals(1, descriptorChangeSuggestions.size());
+    assertEquals(Country.TURKEY, descriptorChangeSuggestions.get(0).getCountry());
+  }
+
+  private DescriptorChangeSuggestion getDescriptorChangeSuggestion(UUID collectionKey) {
+    DescriptorChangeSuggestion descriptorChangeSuggestion = new DescriptorChangeSuggestion();
+    descriptorChangeSuggestion.setCollectionKey(collectionKey);
+    descriptorChangeSuggestion.setTitle("test title");
+    descriptorChangeSuggestion.setType(Type.UPDATE);
+    descriptorChangeSuggestion.setFormat(ExportFormat.CSV);
+    descriptorChangeSuggestion.setProposerEmail("test@example.org");
+    descriptorChangeSuggestion.setComments(Collections.singletonList("Test comment"));
+    descriptorChangeSuggestion.setSuggestedFile("file/path");
+    return descriptorChangeSuggestion;
   }
 }

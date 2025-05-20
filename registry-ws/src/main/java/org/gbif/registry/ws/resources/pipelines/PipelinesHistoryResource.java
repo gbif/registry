@@ -34,6 +34,7 @@ import org.gbif.api.model.pipelines.PipelineExecution;
 import org.gbif.api.model.pipelines.PipelineProcess;
 import org.gbif.api.model.pipelines.PipelineStep;
 import org.gbif.api.model.pipelines.RunPipelineResponse;
+import org.gbif.api.model.pipelines.StepRunner;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.api.model.pipelines.ws.PipelineProcessParameters;
 import org.gbif.api.model.pipelines.ws.RunAllParams;
@@ -97,8 +98,11 @@ public class PipelinesHistoryResource implements PipelinesHistoryService {
 
   @GetMapping("process/running")
   @Override
-  public PagingResponse<PipelineProcess> getRunningPipelineProcess(Pageable pageable) {
-    return historyTrackingService.getRunningPipelineProcess(pageable);
+  public PagingResponse<PipelineProcess> getRunningPipelineProcess(
+      @RequestParam(value = "stepType", required = false) StepType stepType,
+      @RequestParam(value = "stepRunner", required = false) StepRunner stepRunner,
+      Pageable pageable) {
+    return historyTrackingService.getRunningPipelineProcess(stepType, stepRunner, pageable);
   }
 
   @PostMapping(value = "process", consumes = MediaType.APPLICATION_JSON_VALUE)
