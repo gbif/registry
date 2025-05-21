@@ -112,6 +112,11 @@ occurrence:
   ws:
     url: http://api.gbif-dev.org/v1/occurrence/
 
+validation:
+  client:
+    username: @validation.client.username@
+    password: @validation.client.password@
+
 # file with all application keys & secrets
 appkeys:
   file: @appkeys.testfile@
