@@ -192,10 +192,6 @@
       <groupId>org.gbif.occurrence</groupId>
       <artifactId>occurrence-ws-client</artifactId>
     </dependency>
-    <dependency>
-      <groupId>org.gbif.pipelines</groupId>
-      <artifactId>validator-ws-client</artifactId>
-    </dependency>
 
     <!-- Third party dependencies -->
     <dependency>
