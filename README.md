@@ -29,7 +29,7 @@ Code style related files. **Please make sure you properly configure required IDE
 
 ### Manual use of Spotless
 
-Check the project follows code style conventions:
+Check the project follows the code style conventions:
 
 ```
 mvn spotless:check
