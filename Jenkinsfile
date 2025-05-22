@@ -11,7 +11,10 @@ pipeline {
     skipStagesAfterUnstable()
     timestamps()
   }
-   parameters {
+  triggers {
+    snapshotDependencies()
+  }
+  parameters {
     separator(name: "release_separator", sectionHeader: "Release Main Project Parameters")
     booleanParam(name: 'RELEASE', defaultValue: false, description: 'Do a Maven release')
     string(name: 'RELEASE_VERSION', defaultValue: '', description: 'Release version (optional)')
