@@ -33,7 +33,8 @@ pipeline {
         }
       }
       steps {
-        withMaven(globalMavenSettingsConfig: 'org.jenkinsci.plugins.configfiles.maven.GlobalMavenSettingsConfig1387378707709',
+        withMaven(
+        maven: 'Maven 3.9.9', globalMavenSettingsConfig: 'org.jenkinsci.plugins.configfiles.maven.GlobalMavenSettingsConfig1387378707709',
           mavenOpts: '-Xms2048m -Xmx8192m', mavenSettingsConfig: 'org.jenkinsci.plugins.configfiles.maven.MavenSettingsConfig1396361652540',
           traceability: true) {
            configFileProvider([
