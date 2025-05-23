@@ -20,6 +20,7 @@ import static org.gbif.registry.service.collections.utils.ParamUtils.parseIntege
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Strings;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -63,6 +64,8 @@ import org.gbif.registry.service.collections.utils.Vocabularies;
 import org.gbif.vocabulary.client.ConceptClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.util.function.Function;
 
 /** Service to lookup GRSciColl institutions and collections. */
 @Service
@@ -190,26 +193,12 @@ public class CollectionsSearchService {
       searchRequest
           .getFacets()
           .forEach(
-              f -> {
-                InstitutionListParams.InstitutionListParamsBuilder facetParamsBuilder =
-                    searchRequest.isMultiSelectFacets()
-                        ? InstitutionListParams.builder()
-                        : listParamsBuilder;
-
-                InstitutionListParams facetParams =
-                    (InstitutionListParams)
-                        facetParamsBuilder
-                            .facet(f)
-                            .facetMinCount(searchRequest.getFacetMinCount())
-                            .facetPage(extractFacetPage(searchRequest, f))
-                            .build();
-
-                facets.add(
-                    createFacet(
-                        f,
-                        searchMapper.institutionFacet(facetParams),
-                        searchMapper.institutionFacetCardinality(facetParams)));
-              });
+              f -> addInstitutionFacet(
+                  f,
+                  facets,
+                  dtos,
+                  listParamsBuilder,
+                  searchRequest));
     }
 
     return new FacetedSearchResponse<>(
@@ -306,24 +295,12 @@ public class CollectionsSearchService {
           .getFacets()
           .forEach(
               f -> {
-                DescriptorsListParams.DescriptorsListParamsBuilder facetParamsBuilder =
-                    searchRequest.isMultiSelectFacets()
-                        ? DescriptorsListParams.builder()
-                        : listParamsBuilder;
-
-                DescriptorsListParams facetParams =
-                    (DescriptorsListParams)
-                        facetParamsBuilder
-                            .facet(f)
-                            .facetMinCount(searchRequest.getFacetMinCount())
-                            .facetPage(extractFacetPage(searchRequest, f))
-                            .build();
-
-                facets.add(
-                    createFacet(
-                        f,
-                        searchMapper.collectionFacet(facetParams),
-                        searchMapper.collectionFacetCardinality(facetParams)));
+                addCollectionFacet(
+                    f,
+                    facets,
+                    results,
+                    listParamsBuilder,
+                    searchRequest);
               });
     }
 
@@ -332,71 +309,18 @@ public class CollectionsSearchService {
   }
 
   private <F extends CollectionsFacetParameter> CollectionFacet<F> createFacet(
-      F f, List<FacetDto> facetDtos, long cardinality) {
-    List<CollectionFacet.Count> facetCounts;
-
-    // Check if this facet parameter is a vocabulary field
-    String vocabularyName = getVocabularyName(f);
-    if (vocabularyName != null) {
-      Map<String, Long> hierarchicalCounts = new HashMap<>();
-
-      // Calculate total counts including children
-      for (FacetDto dto : facetDtos) {
-        if (!Strings.isNullOrEmpty(dto.getFacet())) {
-          String concept = dto.getFacet();
-          long count = dto.getCount();
-
-          // Get children and add their counts
-          Set<String> children = Vocabularies.getChildrenConcepts(
-              vocabularyName,
-              concept,
-              conceptClient
-          );
-          if (!children.isEmpty()) {
-            for (String child : children) {
-              for (FacetDto childDto : facetDtos) {
-                if (child.equals(childDto.getFacet())) {
-                  count += childDto.getCount();
-                  break;
-                }
-              }
-            }
-          }
-
-          hierarchicalCounts.put(concept, count);
-        }
-      }
-
-      // Convert to facet counts
-      facetCounts = hierarchicalCounts.entrySet().stream()
-          .map(e -> new CollectionFacet.Count(e.getKey(), e.getValue()))
-          .collect(Collectors.toList());
-    } else {
-      // For non-vocabulary facets, use the original logic
-      facetCounts = facetDtos.stream()
-          .filter(dto -> !Strings.isNullOrEmpty(dto.getFacet()))
-          .map(dto -> new CollectionFacet.Count(dto.getFacet(), dto.getCount()))
-          .collect(Collectors.toList());
-    }
+    F f, List<FacetDto> facetDtos, long cardinality) {
+    List<CollectionFacet.Count> facetCounts =
+      facetDtos.stream()
+        .filter(dto -> !Strings.isNullOrEmpty(dto.getFacet()))
+        .map(dto -> new CollectionFacet.Count(dto.getFacet(), dto.getCount()))
+        .collect(Collectors.toList());
 
     CollectionFacet<F> collectionFacet = new CollectionFacet<>();
     collectionFacet.setField(f);
     collectionFacet.setCounts(facetCounts);
     collectionFacet.setCardinality(cardinality);
     return collectionFacet;
-  }
-
-  private String getVocabularyName(CollectionsFacetParameter facetParameter) {
-    if (facetParameter == InstitutionFacetParameter.DISCIPLINE) {
-      return Vocabularies.DISCIPLINE;
-    } else if (facetParameter == CollectionFacetParameter.TYPE_STATUS) {
-      return Vocabularies.TYPE_STATUS;
-    } else if (facetParameter == CollectionFacetParameter.ACCESSION_STATUS) {
-      return Vocabularies.ACCESSION_STATUS;
-    } else if (facetParameter == CollectionFacetParameter.PRESERVATION_TYPE) {
-      return Vocabularies.PRESERVATION_TYPE;
-    }
-    return null;
   }
 
   private static <F extends CollectionsFacetParameter> Pageable extractFacetPage(
@@ -563,5 +487,295 @@ public class CollectionsSearchService {
     }
 
     return Optional.empty();
+  }
+
+  private <E, F extends CollectionsFacetParameter> CollectionFacet<F> createHierarchicalFacet(
+      F facetParameter,
+      List<FacetDto> facetDtos,
+      long cardinality,
+      List<E> allEntities,
+      Function<E, UUID> keyExtractor,
+      Function<E, List<String>> conceptExtractor,
+      String vocabularyName) {
+    // Get the raw facet counts first
+    Map<String, Long> facetCountsMap = facetDtos.stream()
+        .filter(dto -> !Strings.isNullOrEmpty(dto.getFacet()))
+        .collect(Collectors.toMap(FacetDto::getFacet, FacetDto::getCount));
+
+    // Create a map to track which entities contribute to each concept (parent or child)
+    Map<String, Set<UUID>> conceptToEntitiesMap = new HashMap<>();
+
+    // Process each entity from the (potentially filtered) main search results
+    for (E entity : allEntities) {
+      List<String> entityConcepts = conceptExtractor.apply(entity);
+      if (entityConcepts == null || entityConcepts.isEmpty()) {
+        continue;
+      }
+
+      Set<String> allApplicableConcepts = new HashSet<>();
+      for (String concept : entityConcepts) {
+        if (Strings.isNullOrEmpty(concept)) {
+          continue;
+        }
+        allApplicableConcepts.add(concept);
+
+        for (String potentialParentFacetValue : facetCountsMap.keySet()) {
+          if (potentialParentFacetValue.equals(concept)) {
+            continue;
+          }
+          Set<String> childConceptsOfPotentialParent = Vocabularies.getChildrenConcepts(
+              vocabularyName, potentialParentFacetValue, conceptClient);
+          if (childConceptsOfPotentialParent.contains(concept)) {
+            allApplicableConcepts.add(potentialParentFacetValue);
+          }
+        }
+      }
+
+      UUID entityKey = keyExtractor.apply(entity);
+      for (String applicableConcept : allApplicableConcepts) {
+        conceptToEntitiesMap.computeIfAbsent(applicableConcept, k -> new HashSet<>()).add(entityKey);
+      }
+    }
+
+    // Create accurate counts. Iterate over all concepts found by the initial facet query (global if multiSelectFacets=true).
+    List<CollectionFacet.Count> correctedCounts = new ArrayList<>();
+    for (String facetConceptKey : facetCountsMap.keySet()) {
+        long count = 0;
+        if (conceptToEntitiesMap.containsKey(facetConceptKey)) {
+            count = conceptToEntitiesMap.get(facetConceptKey).size();
+        }
+        // Add the concept with its hierarchically adjusted count based on allEntities.
+        // If multiSelectFacets=true, this count reflects how many of the *filtered* allEntities fall under this global facetConceptKey.
+        correctedCounts.add(new CollectionFacet.Count(facetConceptKey, count));
+    }
+
+    // Fallback logic if correctedCounts ended up empty, which might indicate no overlap or empty initial sets.
+    if (correctedCounts.isEmpty() && !facetDtos.isEmpty()) {
+      // If allEntities was empty, facetCountsMap (global counts) might be more appropriate than 0 for everything.
+      // However, the test implies counts should reflect the filtered set (e.g. US institutions), so 0 for non-US is correct.
+      // This fallback is more for safety if something unexpected happens.
+      if (allEntities.isEmpty()) {
+         // If no entities in the main query, all counts for facets should be 0, but the facet values themselves should be listed if found globally.
+         correctedCounts = facetCountsMap.keySet().stream()
+            .map(key -> new CollectionFacet.Count(key, 0L))
+            .collect(Collectors.toList());
+      } else {
+        // If there were entities, but no corrected counts, revert to original DB counts.
+        // This path should be rare with the new loop structure for correctedCounts.
+        correctedCounts = facetDtos.stream()
+            .filter(dto -> !Strings.isNullOrEmpty(dto.getFacet()))
+            .map(dto -> new CollectionFacet.Count(dto.getFacet(), dto.getCount()))
+            .collect(Collectors.toList());
+      }
+    } else if (correctedCounts.isEmpty() && facetDtos.isEmpty()) {
+        // No data to begin with, nothing to do.
+    }
+
+    // Sort by count (descending) and then by name
+    correctedCounts.sort((c1, c2) -> {
+      int countCompare = Long.compare(c2.getCount(), c1.getCount());
+      if (countCompare != 0) {
+        return countCompare;
+      }
+      return c1.getName().compareTo(c2.getName());
+    });
+
+    CollectionFacet<F> collectionFacet = new CollectionFacet<>();
+    collectionFacet.setField(facetParameter);
+    collectionFacet.setCounts(correctedCounts);
+    collectionFacet.setCardinality(cardinality);
+    return collectionFacet;
+  }
+
+  private void addInstitutionFacet(
+      InstitutionFacetParameter f,
+      List<CollectionFacet<InstitutionFacetParameter>> facets,
+      List<InstitutionSearchDto> dtos,
+      InstitutionListParams.InstitutionListParamsBuilder listParamsBuilder, // to be used as base for facet specific params
+      InstitutionFacetedSearchRequest searchRequest) {
+
+    InstitutionListParams.InstitutionListParamsBuilder facetParamsBuilder =
+        searchRequest.isMultiSelectFacets()
+            ? InstitutionListParams.builder() // New builder if multiselect
+            : listParamsBuilder; // Else, use the main search's listParamsBuilder as a base
+
+    InstitutionListParams facetParams =
+        (InstitutionListParams)
+            facetParamsBuilder
+                .facet(f)
+                .facetMinCount(searchRequest.getFacetMinCount())
+                .facetPage(extractFacetPage(searchRequest, f))
+                .build();
+
+    // Add child concepts for the facet parameter (specific to how facet queries are built for vocabularies)
+    // This logic manipulates the facetParams that will be sent to the database for an initial count.
+    // It ensures the DB query for facets like DISCIPLINE considers child concepts if the original search did.
+    if (f == InstitutionFacetParameter.DISCIPLINE) {
+      List<String> disciplines = facetParams.getDisciplines();
+      if (disciplines != null && !disciplines.isEmpty()) {
+        Set<String> allConceptsAndChildren = new HashSet<>(disciplines);
+        disciplines.forEach(conceptValue ->
+            allConceptsAndChildren.addAll(
+                Vocabularies.getChildrenConcepts(Vocabularies.DISCIPLINE, conceptValue, conceptClient)));
+        facetParams.setDisciplines(new ArrayList<>(allConceptsAndChildren));
+      }
+    } else if (f == InstitutionFacetParameter.TYPE) { // Assuming INSTITUTION_TYPE also needs this param expansion
+        List<String> types = facetParams.getTypes();
+        if (types != null && !types.isEmpty()) {
+            Set<String> allConceptsAndChildren = new HashSet<>(types);
+            types.forEach(conceptValue ->
+                allConceptsAndChildren.addAll(
+                    Vocabularies.getChildrenConcepts(Vocabularies.INSTITUTION_TYPE, conceptValue, conceptClient)));
+            facetParams.setTypes(new ArrayList<>(allConceptsAndChildren));
+        }
+    }
+
+    if (f == InstitutionFacetParameter.DISCIPLINE) {
+      facets.add(
+          createHierarchicalFacet(
+              f,
+              searchMapper.institutionFacet(facetParams),
+              searchMapper.institutionFacetCardinality(facetParams),
+              dtos,
+              InstitutionSearchDto::getKey,
+              InstitutionSearchDto::getDisciplines,
+              Vocabularies.DISCIPLINE));
+    } else if (f == InstitutionFacetParameter.TYPE) {
+      facets.add(
+          createHierarchicalFacet(
+              f,
+              searchMapper.institutionFacet(facetParams),
+              searchMapper.institutionFacetCardinality(facetParams),
+              dtos,
+              InstitutionSearchDto::getKey,
+              InstitutionSearchDto::getTypes,
+              Vocabularies.INSTITUTION_TYPE));
+    } else {
+      facets.add(
+          createFacet(
+              f,
+              searchMapper.institutionFacet(facetParams),
+              searchMapper.institutionFacetCardinality(facetParams)));
+    }
+  }
+
+  private void addCollectionFacet(
+      CollectionFacetParameter f,
+      List<CollectionFacet<CollectionFacetParameter>> facets,
+      List<CollectionSearchResponse> results, // Note: using CollectionSearchResponse here
+      DescriptorsListParams.DescriptorsListParamsBuilder listParamsBuilder, // Base for facet-specific params
+      CollectionDescriptorsSearchRequest searchRequest) {
+
+    DescriptorsListParams.DescriptorsListParamsBuilder facetParamsBuilder =
+        searchRequest.isMultiSelectFacets()
+            ? DescriptorsListParams.builder() // New builder if multiselect
+            : listParamsBuilder; // Else, use the main search's listParamsBuilder
+
+    DescriptorsListParams facetParams =
+        (DescriptorsListParams)
+            facetParamsBuilder
+                .facet(f)
+                .facetMinCount(searchRequest.getFacetMinCount())
+                .facetPage(extractFacetPage(searchRequest, f))
+                .build();
+
+    // Logic to expand facetParams with child concepts for the DB query, if necessary for these vocabularies.
+    // This would mirror the logic in addInstitutionFacet if these collection-related facets also require
+    // their *database query parameters* to be expanded with children.
+    // For example, if faceting on COLLECTION_CONTENT_TYPE, and the DB query should include children:
+    if (f == CollectionFacetParameter.CONTENT_TYPE) {
+        List<String> contentTypes = facetParams.getContentTypes();
+        if (contentTypes != null && !contentTypes.isEmpty()) {
+            Set<String> allConceptsAndChildren = new HashSet<>(contentTypes);
+            contentTypes.forEach(conceptValue ->
+                allConceptsAndChildren.addAll(
+                    Vocabularies.getChildrenConcepts(Vocabularies.COLLECTION_CONTENT_TYPE, conceptValue, conceptClient)));
+            facetParams.setContentTypes(new ArrayList<>(allConceptsAndChildren));
+        }
+    } else if (f == CollectionFacetParameter.PRESERVATION_TYPE) {
+        List<String> preservationTypes = facetParams.getPreservationTypes();
+        if (preservationTypes != null && !preservationTypes.isEmpty()) {
+            Set<String> allConceptsAndChildren = new HashSet<>(preservationTypes);
+            preservationTypes.forEach(conceptValue ->
+                allConceptsAndChildren.addAll(
+                    Vocabularies.getChildrenConcepts(Vocabularies.PRESERVATION_TYPE, conceptValue, conceptClient)));
+            facetParams.setPreservationTypes(new ArrayList<>(allConceptsAndChildren));
+        }
+    } else if (f == CollectionFacetParameter.ACCESSION_STATUS) {
+        List<String> accessionStatuses = facetParams.getAccessionStatus();
+        if (accessionStatuses != null && !accessionStatuses.isEmpty()) {
+            Set<String> allConceptsAndChildren = new HashSet<>(accessionStatuses);
+            accessionStatuses.forEach(conceptValue ->
+                allConceptsAndChildren.addAll(
+                    Vocabularies.getChildrenConcepts(Vocabularies.ACCESSION_STATUS, conceptValue, conceptClient)));
+            facetParams.setAccessionStatus(new ArrayList<>(allConceptsAndChildren));
+        }
+    } else if (f == CollectionFacetParameter.TYPE_STATUS) {
+        List<String> typeStatuses = facetParams.getTypeStatus();
+        if (typeStatuses != null && !typeStatuses.isEmpty()) {
+            Set<String> allConceptsAndChildren = new HashSet<>(typeStatuses);
+            typeStatuses.forEach(conceptValue ->
+                allConceptsAndChildren.addAll(
+                    Vocabularies.getChildrenConcepts(Vocabularies.TYPE_STATUS, conceptValue, conceptClient)));
+            facetParams.setTypeStatus(new ArrayList<>(allConceptsAndChildren));
+        }
+    }
+
+    if (f == CollectionFacetParameter.CONTENT_TYPE) {
+      facets.add(
+          createHierarchicalFacet(
+              f,
+              searchMapper.collectionFacet(facetParams),
+              searchMapper.collectionFacetCardinality(facetParams),
+              results,
+              CollectionSearchResponse::getKey,
+              CollectionSearchResponse::getContentTypes,
+              Vocabularies.COLLECTION_CONTENT_TYPE));
+    } else if (f == CollectionFacetParameter.PRESERVATION_TYPE) {
+      facets.add(
+          createHierarchicalFacet(
+              f,
+              searchMapper.collectionFacet(facetParams),
+              searchMapper.collectionFacetCardinality(facetParams),
+              results,
+              CollectionSearchResponse::getKey,
+              CollectionSearchResponse::getPreservationTypes,
+              Vocabularies.PRESERVATION_TYPE));
+    } else if (f == CollectionFacetParameter.ACCESSION_STATUS) {
+      facets.add(
+          createHierarchicalFacet(
+              f,
+              searchMapper.collectionFacet(facetParams),
+              searchMapper.collectionFacetCardinality(facetParams),
+              results,
+              CollectionSearchResponse::getKey,
+              (CollectionSearchResponse csr) -> {
+                if (csr.getAccessionStatus() == null) return Collections.emptyList();
+                return Collections.singletonList(csr.getAccessionStatus());
+               },
+              Vocabularies.ACCESSION_STATUS));
+    } else if (f == CollectionFacetParameter.TYPE_STATUS) {
+      facets.add(
+          createHierarchicalFacet(
+              f,
+              searchMapper.collectionFacet(facetParams),
+              searchMapper.collectionFacetCardinality(facetParams),
+              results,
+              CollectionSearchResponse::getKey,
+              (CollectionSearchResponse csr) ->
+                  csr.getDescriptorMatches().stream()
+                     .filter(dm -> dm.getTypeStatus() != null)
+                     .flatMap(dm -> dm.getTypeStatus().stream())
+                     .filter(ts -> !Strings.isNullOrEmpty(ts))
+                     .distinct()
+                     .collect(Collectors.toList()),
+              Vocabularies.TYPE_STATUS));
+    } else {
+      facets.add(
+          createFacet(
+              f,
+              searchMapper.collectionFacet(facetParams),
+              searchMapper.collectionFacetCardinality(facetParams)));
+    }
   }
 }
