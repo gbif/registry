@@ -1,11 +1,7 @@
 @Library('gbif-common-jenkins-pipelines') _
 
 pipeline {
-  agent {
-      node {
-          label 'maven'
-      }
-  }
+  agent any
   tools {
     maven 'Maven 3.9.9'
     jdk 'OpenJDK11'
@@ -15,9 +11,9 @@ pipeline {
     skipStagesAfterUnstable()
     timestamps()
   }
-  triggers {
-    snapshotDependencies()
-  }
+//   triggers {
+//     snapshotDependencies()
+//   }
   parameters {
     separator(name: "release_separator", sectionHeader: "Release Main Project Parameters")
     booleanParam(name: 'RELEASE', defaultValue: false, description: 'Do a Maven release')
@@ -37,6 +33,9 @@ pipeline {
         }
       }
       steps {
+      script {
+                      properties([pipelineTriggers([snapshotDependencies()])])
+               }
         withMaven(globalMavenSettingsConfig: 'org.jenkinsci.plugins.configfiles.maven.GlobalMavenSettingsConfig1387378707709',
           mavenOpts: '-Xms2048m -Xmx8192m', mavenSettingsConfig: 'org.jenkinsci.plugins.configfiles.maven.MavenSettingsConfig1396361652540',
           traceability: true) {
