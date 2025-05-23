@@ -11,7 +11,10 @@ pipeline {
     skipStagesAfterUnstable()
     timestamps()
   }
-   parameters {
+  triggers {
+    snapshotDependencies()
+  }
+  parameters {
     separator(name: "release_separator", sectionHeader: "Release Main Project Parameters")
     booleanParam(name: 'RELEASE', defaultValue: false, description: 'Do a Maven release')
     string(name: 'RELEASE_VERSION', defaultValue: '', description: 'Release version (optional)')
@@ -30,18 +33,20 @@ pipeline {
         }
       }
       steps {
-        withMaven(globalMavenSettingsConfig: 'org.jenkinsci.plugins.configfiles.maven.GlobalMavenSettingsConfig1387378707709',
-          mavenOpts: '-Xms2048m -Xmx8192m', mavenSettingsConfig: 'org.jenkinsci.plugins.configfiles.maven.MavenSettingsConfig1396361652540',
-          traceability: true) {
-           configFileProvider([
-              configFile(fileId: 'org.jenkinsci.plugins.configfiles.custom.CustomConfig1389220396351', variable: 'APPKEYS_TESTFILE')
-              ]) {
-                sh '''
-                   mvn -B -Denforcer.skip=true -Dappkeys.testfile=$APPKEYS_TESTFILE clean deploy verify -T 1C \
-                       -Dparallel=classes -DuseUnlimitedThreads=true -Pgbif-dev,registry-cli-it,secrets-dev -U
-                  '''
-              }
-        }
+        withMaven(
+            globalMavenSettingsConfig: 'org.jenkinsci.plugins.configfiles.maven.GlobalMavenSettingsConfig1387378707709',
+            mavenOpts: '-Xms2048m -Xmx8192m',
+            mavenSettingsConfig: 'org.jenkinsci.plugins.configfiles.maven.MavenSettingsConfig1396361652540',
+            traceability: true) {
+               configFileProvider([
+                  configFile(fileId: 'org.jenkinsci.plugins.configfiles.custom.CustomConfig1389220396351', variable: 'APPKEYS_TESTFILE')
+                  ]) {
+                    sh '''
+                       mvn -B -Denforcer.skip=true -Dappkeys.testfile=$APPKEYS_TESTFILE clean deploy verify -T 1C \
+                           -Dparallel=classes -DuseUnlimitedThreads=true -Pgbif-dev,registry-cli-it,secrets-dev -U
+                      '''
+                  }
+            }
       }
     }
 
