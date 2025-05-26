@@ -30,6 +30,8 @@ import java.util.Optional;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.constraints.NotNull;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.CacheControl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -60,6 +62,8 @@ import static org.gbif.registry.security.UserRoles.USER_ROLE;
 @RequestMapping(path = "user", produces = MediaType.APPLICATION_JSON_VALUE)
 @RestController
 public class UserResource {
+
+  private static final Logger LOG = LoggerFactory.getLogger(UserResource.class);
 
   private final IdentityService identityService;
   private final JwtIssuanceService jwtIssuanceService;
@@ -111,6 +115,8 @@ public class UserResource {
       path = "auth/basic",
       method = {RequestMethod.GET, RequestMethod.POST})
   public ResponseEntity<?> basicRemoteAuth(Authentication authentication) {
+    LOG.debug("Remote basic authentication: {}", authentication);
+    LOG.debug("Remote basic authentication (name): {}", authentication.getName());
     // the user shall be authenticated using basic auth. scheme only.
     ensureNotGbifScheme(authentication);
     ensureUserSetInSecurityContext(authentication);
