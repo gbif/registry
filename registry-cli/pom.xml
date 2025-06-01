@@ -29,7 +29,7 @@
     <metainf-services.version>1.11</metainf-services.version>
     <jersey.version>1.19.3</jersey.version>
     <javax.mail.version>1.4.7</javax.mail.version>
-    <kotlin.version>1.4.20</kotlin.version>
+    <kotlin.version>1.6.0</kotlin.version>
 
     <sonar.coverage.jacoco.xmlReportPaths>
       ${project.basedir}/../target/site/jacoco-it/jacoco.xml,${project.basedir}/../target/site/jacoco-ut/jacoco.xml
