@@ -567,11 +567,12 @@ public class DefaultRegistryPipelinesHistoryTrackingService
   }
 
   @Override
-  public PagingResponse<PipelineProcess> getRunningPipelineProcess(Pageable pageable) {
-    long count = mapper.getRunningPipelineProcessCount();
+  public PagingResponse<PipelineProcess> getRunningPipelineProcess(
+      @Nullable StepType stepType, @Nullable StepRunner stepRunner, Pageable pageable) {
+    long count = mapper.getRunningPipelineProcessCount(stepType, stepRunner);
     List<PipelineProcess> running = Collections.emptyList();
     if (count > 0) {
-      running = mapper.getRunningPipelineProcess(pageable);
+      running = mapper.getRunningPipelineProcess(stepType, stepRunner, pageable);
     }
 
     return new PagingResponse<>(pageable, count, running);

@@ -26,7 +26,8 @@
             discarded_by VARCHAR CHECK (assert_min_length(discarded_by, 3)),
             comments TEXT[],
             modified TIMESTAMP WITH TIME ZONE,
-            modified_by VARCHAR CHECK (assert_min_length(modified_by, 3))
+            modified_by VARCHAR CHECK (assert_min_length(modified_by, 3)),
+            country_iso_code character(2)
         );
 
         CREATE TYPE export_format_enum AS ENUM (

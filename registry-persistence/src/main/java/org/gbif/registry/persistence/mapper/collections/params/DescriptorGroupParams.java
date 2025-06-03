@@ -1,5 +1,6 @@
 package org.gbif.registry.persistence.mapper.collections.params;
 
+import java.util.Set;
 import java.util.UUID;
 import javax.annotation.Nullable;
 import lombok.Builder;
@@ -15,5 +16,6 @@ public class DescriptorGroupParams {
   @Nullable String title;
   @Nullable String description;
   @Nullable Boolean deleted;
+  @Nullable Set<String> tags;
   @Nullable Pageable page;
 }

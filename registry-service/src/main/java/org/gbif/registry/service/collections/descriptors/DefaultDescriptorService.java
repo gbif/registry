@@ -48,6 +48,7 @@ import org.gbif.registry.persistence.mapper.collections.dto.VerbatimDto;
 import org.gbif.registry.persistence.mapper.collections.params.DescriptorGroupParams;
 import org.gbif.registry.persistence.mapper.collections.params.DescriptorParams;
 import org.gbif.registry.service.collections.batch.FileParsingUtils;
+import org.gbif.registry.service.collections.utils.Vocabularies;
 import org.gbif.rest.client.species.NameUsageMatchingService;
 import org.gbif.vocabulary.client.ConceptClient;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -93,11 +94,15 @@ public class DefaultDescriptorService implements DescriptorsService {
       @NotNull ExportFormat format,
       @NotNull String title,
       String description,
+      Set<String> tags,
       @NotNull UUID collectionKey) {
     Objects.requireNonNull(descriptorGroupFile);
     Preconditions.checkArgument(descriptorGroupFile.length > 0);
     Objects.requireNonNull(collectionKey);
     Preconditions.checkArgument(!Strings.isNullOrEmpty(title));
+
+    // Validate tags against vocabulary server
+    Vocabularies.checkDescriptorGroupTags(conceptClient, tags);
 
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     final String username = authentication.getName();
@@ -108,6 +113,9 @@ public class DefaultDescriptorService implements DescriptorsService {
     descriptorGroup.setCreatedBy(username);
     descriptorGroup.setModifiedBy(username);
     descriptorGroup.setCollectionKey(collectionKey);
+    if (tags != null && !tags.isEmpty()) {
+      descriptorGroup.setTags(tags);
+    }
     descriptorsMapper.createDescriptorGroup(descriptorGroup);
 
     importDescriptorsFile(descriptorGroupFile, format, descriptorGroup.getKey());
@@ -230,8 +238,13 @@ public class DefaultDescriptorService implements DescriptorsService {
       byte[] descriptorGroupFile,
       @NotNull ExportFormat format,
       @NotNull String title,
-      String description) {
+      Set<String> tags,
+      String description
+) {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(title));
+
+    // Validate tags against vocabulary server
+    Vocabularies.checkDescriptorGroupTags(conceptClient, tags);
 
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     final String username = authentication.getName();
@@ -246,6 +259,9 @@ public class DefaultDescriptorService implements DescriptorsService {
     descriptorGroup.setTitle(title);
     descriptorGroup.setDescription(description);
     descriptorGroup.setModifiedBy(username);
+    if (tags != null) {
+      descriptorGroup.setTags(tags);
+    }
     descriptorsMapper.updateDescriptorGroup(descriptorGroup);
     if (descriptorGroupFile != null ) {
     // remove descriptors
@@ -301,6 +317,7 @@ public class DefaultDescriptorService implements DescriptorsService {
             .title(searchRequest.getTitle())
             .description(searchRequest.getDescription())
             .deleted(searchRequest.getDeleted())
+            .tags(searchRequest.getTags())
             .page(page)
             .build();
 

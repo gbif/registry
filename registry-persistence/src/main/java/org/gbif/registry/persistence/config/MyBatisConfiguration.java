@@ -76,6 +76,7 @@ public class MyBatisConfiguration {
       configuration.getTypeHandlerRegistry().register(MetricInfoTypeHandler.class);
       configuration.getTypeHandlerRegistry().register(LocaleTypeHandler.class);
       configuration.getTypeHandlerRegistry().register(ExtensionArrayTypeHandler.class);
+      configuration.getTypeHandlerRegistry().register(SetArrayTypeHandler.class);
 
       configuration.getTypeAliasRegistry().registerAlias("Node", Node.class);
       configuration.getTypeAliasRegistry().registerAlias("Organization", Organization.class);
