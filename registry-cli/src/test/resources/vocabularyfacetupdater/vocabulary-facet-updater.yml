@@ -1,0 +1,35 @@
+# vocabulary-facet-updater-config.yml
+
+# Database configuration for the Registry's database
+# This is where the 'facets' table resides and will be updated.
+dbConfig:
+  serverName: "pg1.gbif-dev.org"
+  databaseName: "dev_registry"
+  user: "registry"
+  password: "password"
+  maximumPoolSize: 8
+
+# Messaging configuration to connect to your RabbitMQ (or other messaging system)
+# This is how the updater service listens for VocabularyReleasedMessage
+messaging:
+  host: "localhost"
+  port: 5672
+  username: "vocabulary"
+  password: "vocabulary"
+  virtualHost: "/"
+
+# The name of the queue that the VocabularyFacetUpdaterService will listen to
+queueName: "vocabulary-released"
+
+# Number of concurrent consumers for the message listener.
+poolSize: 1
+
+# Optional: If you only want to process specific vocabularies, uncomment and list them.
+vocabulariesToProcess:
+  - "Discipline"
+  - "InstitutionType"
+  - "CollectionContentType"
+  - "PreservationType"
+
+
+apiRootUrl: "http://api.gbif-dev.org/v1"

@@ -52,8 +52,11 @@ import org.gbif.api.vocabulary.collections.InstitutionFacetParameter;
 import org.gbif.registry.database.TestCaseDatabaseInitializer;
 import org.gbif.registry.service.collections.CollectionsSearchService;
 import org.gbif.registry.test.mocks.NameUsageMatchingServiceMock;
+import org.gbif.registry.persistence.mapper.GrScicollVocabFacetMapper;
+import org.gbif.registry.ws.it.collections.FacetTestSetup;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -70,6 +73,7 @@ public class CollectionsSearchIT extends BaseServiceIT {
   private final InstitutionService institutionService;
   private final CollectionService collectionService;
   private final DescriptorsService descriptorsService;
+  private final GrScicollVocabFacetMapper grScicollVocabFacetMapper;
 
   private final Institution i1 = new Institution();
   private final Institution i11 = new Institution();
@@ -84,17 +88,22 @@ public class CollectionsSearchIT extends BaseServiceIT {
       CollectionsSearchService collectionsSearchService,
       InstitutionService institutionService,
       CollectionService collectionService,
-      DescriptorsService descriptorsService) {
+      DescriptorsService descriptorsService,
+      GrScicollVocabFacetMapper grScicollVocabFacetMapper) {
     super(simplePrincipalProvider);
     this.searchService = collectionsSearchService;
     this.institutionService = institutionService;
     this.collectionService = collectionService;
     this.descriptorsService = descriptorsService;
+    this.grScicollVocabFacetMapper = grScicollVocabFacetMapper;
   }
 
   @SneakyThrows
   @BeforeEach
   public void loadData() {
+    // Setup facets first
+    FacetTestSetup.setupCommonFacets(grScicollVocabFacetMapper);
+
     i1.setCode("I1");
     i1.setName("Institution 1");
     i1.setTypes(Arrays.asList("t1", "t2"));
@@ -131,7 +140,7 @@ public class CollectionsSearchIT extends BaseServiceIT {
     addressC1.setProvince("Asturias");
     addressC1.setAddress("fake street");
     c1.setAddress(addressC1);
-    c1.setPreservationTypes(Collections.singletonList("pType1"));
+    c1.setPreservationTypes(Collections.singletonList("SampleDried"));
     c1.setNumberSpecimens(4000);
     c1.setDisplayOnNHCPortal(false);
     collectionService.create(c1);
@@ -158,7 +167,7 @@ public class CollectionsSearchIT extends BaseServiceIT {
     c2.setInstitutionKey(i2.getKey());
     c2.setAlternativeCodes(Collections.singletonList(new AlternativeCode("CC2", "test")));
     c2.getIdentifiers().add(new Identifier(IdentifierType.LSID, "lsid-coll"));
-    c2.setPreservationTypes(Collections.singletonList("pType2"));
+    c2.setPreservationTypes(Collections.singletonList("StorageIndoors"));
     collectionService.create(c2);
 
     descriptorsService.createDescriptorGroup(
@@ -172,12 +181,17 @@ public class CollectionsSearchIT extends BaseServiceIT {
     c3.setCode("C3");
     c3.setName("Third");
     c3.setInstitutionKey(i2.getKey());
-    c3.setPreservationTypes(Collections.singletonList("pType1"));
+    c3.setPreservationTypes(Collections.singletonList("SampleDried"));
 
     Address addressC3 = new Address();
     addressC3.setCountry(Country.PORTUGAL);
     c3.setMailingAddress(addressC3);
     collectionService.create(c3);
+  }
+
+  @AfterEach
+  public void cleanup() {
+    FacetTestSetup.cleanupTestFacets(grScicollVocabFacetMapper);
   }
 
   @Test
