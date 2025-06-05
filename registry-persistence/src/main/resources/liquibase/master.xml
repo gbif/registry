@@ -165,5 +165,4 @@
   <include file="liquibase/157-usage-key-string.xml" />
   <include file="liquibase/158-taxon-keys-string.xml" />
   <include file="liquibase/159-descriptor-group-tags.xml" />
-  <include file="liquibase/160-occurrence-download-extension.xml" />
 </databaseChangeLog>
