@@ -33,6 +33,7 @@ import org.gbif.registry.cli.common.stubs.MessagePublisherStub;
 import org.gbif.registry.cli.datasetindex.batchindexer.DatasetBatchIndexer;
 import org.gbif.registry.cli.doisynchronizer.DoiSynchronizerConfiguration;
 import org.gbif.registry.cli.doiupdater.DoiUpdaterConfiguration;
+import org.gbif.registry.cli.vocabularyfacetupdater.VocabularyFacetUpdaterConfiguration;
 import org.gbif.registry.directory.config.DirectoryClientConfiguration;
 import org.gbif.registry.identity.service.BaseIdentityAccessService;
 import org.gbif.registry.persistence.config.MyBatisConfiguration;
@@ -77,6 +78,8 @@ public class SpringContextBuilder {
 
   private MessagingConfiguration messagingConfiguration;
 
+  private VocabularyFacetUpdaterConfiguration vocabularyFacetUpdaterConfiguration;
+
   private SpringContextBuilder() {}
 
   public static SpringContextBuilder create() {
@@ -113,6 +116,14 @@ public class SpringContextBuilder {
     this.dbConfiguration = doiSynchronizerConfiguration.registry;
     this.dataCiteConfiguration = doiSynchronizerConfiguration.datacite;
     this.messagingConfiguration = doiSynchronizerConfiguration.messaging;
+    return this;
+  }
+
+  public SpringContextBuilder withVocabularyFacetUpdaterConfiguration(
+      VocabularyFacetUpdaterConfiguration vocabularyFacetUpdaterConfiguration) {
+    this.vocabularyFacetUpdaterConfiguration = vocabularyFacetUpdaterConfiguration;
+    this.dbConfiguration = vocabularyFacetUpdaterConfiguration.getDbConfig();
+    this.messagingConfiguration = vocabularyFacetUpdaterConfiguration.messaging;
     return this;
   }
 
@@ -210,6 +221,18 @@ public class SpringContextBuilder {
       ctx.register(BaseIdentityAccessService.class);
       ctx.register(OccurrenceDownloadResource.class);
       ctx.register(UpdateDownloadStatsService.class);
+    }
+
+    if (vocabularyFacetUpdaterConfiguration != null) {
+      ctx.getEnvironment()
+          .getPropertySources()
+          .addLast(
+              new MapPropertySource(
+                  "vocabularyFacetUpdaterConfigProperties",
+                  ImmutableMap.of(
+                      "api.root.url", vocabularyFacetUpdaterConfiguration.getApiRootUrl())));
+      ctx.registerBean(VocabularyFacetUpdaterConfiguration.class, () -> vocabularyFacetUpdaterConfiguration);
+      packages.add("org.gbif.registry.cli.config");
     }
 
     ctx.getEnvironment()
