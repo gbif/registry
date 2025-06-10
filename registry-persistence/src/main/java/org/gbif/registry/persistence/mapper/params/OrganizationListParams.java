@@ -13,6 +13,7 @@
  */
 package org.gbif.registry.persistence.mapper.params;
 
+import org.gbif.api.util.Range;
 import org.gbif.api.vocabulary.Country;
 
 import java.util.UUID;
@@ -31,6 +32,7 @@ public class OrganizationListParams extends BaseListParams {
   @Nullable private UUID installationKey;
   @Nullable private Country country;
   @Nullable private UUID endorsedByNodeKey;
+  @Nullable private Range<Integer> numPublishedDatasets;
 
   public static OrganizationListParams from(BaseListParams params) {
     return BaseListParams.copy(OrganizationListParams.builder().build(), params);
