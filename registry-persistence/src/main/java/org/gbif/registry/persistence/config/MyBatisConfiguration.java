@@ -16,7 +16,6 @@ package org.gbif.registry.persistence.config;
 import java.net.URI;
 import java.util.UUID;
 
-
 import org.gbif.api.model.collections.Address;
 import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.Institution;
@@ -45,6 +44,7 @@ import org.gbif.mybatis.type.*;
 import org.gbif.registry.domain.doi.DoiType;
 import org.gbif.registry.domain.ws.DerivedDataset;
 import org.gbif.registry.domain.ws.DerivedDatasetUsage;
+import org.gbif.registry.persistence.facet.LtreeTypeHandler;
 import org.gbif.registry.persistence.mapper.auxhandler.AlternativeCodesTypeHandler;
 import org.gbif.registry.persistence.mapper.collections.dto.*;
 import org.gbif.registry.persistence.mapper.collections.external.IDigBioCollectionDto;
@@ -185,8 +185,7 @@ public class MyBatisConfiguration {
           .registerAlias("DisciplineArrayTypeHandler", DisciplineArrayTypeHandler.class);
       configuration
           .getTypeAliasRegistry()
-          .registerAlias(
-              "CollectionContentTypeArrayTypeHandler", CollectionContentTypeArrayTypeHandler.class);
+          .registerAlias("CollectionContentTypeArrayTypeHandler", CollectionContentTypeArrayTypeHandler.class);
       configuration
           .getTypeAliasRegistry()
           .registerAlias("StepTypeArrayTypeHandler", StepTypeArrayTypeHandler.class);
@@ -198,8 +197,7 @@ public class MyBatisConfiguration {
           .registerAlias("ExtensionArrayTypeHandler", ExtensionArrayTypeHandler.class);
       configuration
           .getTypeAliasRegistry()
-          .registerAlias(
-              "InstitutionGovernanceArrayTypeHandler", InstitutionGovernanceArrayTypeHandler.class);
+          .registerAlias("InstitutionGovernanceArrayTypeHandler", InstitutionGovernanceArrayTypeHandler.class);
       configuration
           .getTypeAliasRegistry()
           .registerAlias("RankedNameListTypeHandler", RankedNameListTypeHandler.class);
@@ -233,6 +231,8 @@ public class MyBatisConfiguration {
       configuration
         .getTypeAliasRegistry()
         .registerAlias("MachineDescriptorTypeHandler", MachineDescriptorTypeHandler.class);
+
+      configuration.getTypeAliasRegistry().registerAlias("LtreeTypeHandler", LtreeTypeHandler.class);
 
       // external iDigBio
       configuration.getTypeAliasRegistry().registerAlias("MachineTagDto", MachineTagDto.class);

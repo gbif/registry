@@ -16,9 +16,11 @@ package org.gbif.registry.persistence.mapper.collections.params;
 import java.util.List;
 import javax.annotation.Nullable;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 
 @Getter
+@Setter
 @SuperBuilder
 public class CollectionListParams extends ListParams {
 
