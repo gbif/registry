@@ -14,6 +14,7 @@
 package org.gbif.registry.ws.provider.networkEntitiesList;
 
 import org.gbif.api.model.registry.search.OrganizationRequestSearchParams;
+import org.gbif.api.util.Range;
 import org.gbif.api.util.VocabularyUtils;
 import org.gbif.api.vocabulary.Country;
 
@@ -71,6 +72,57 @@ public class OrganizationRequestSearchParamsHandlerMethodArgumentResolver
       params.setCountry(country);
     }
 
+    // numPublishedDatasets range parameter
+    String numPublishedDatasetsParam = webRequest.getParameter("numPublishedDatasets");
+    if (!Strings.isNullOrEmpty(numPublishedDatasetsParam)) {
+      try {
+        Range<Integer> range = parseNumPublishedDatasetsRange(numPublishedDatasetsParam.trim());
+        params.setNumPublishedDatasets(range);
+      } catch (Exception e) {
+        throw new IllegalArgumentException("Invalid format for numPublishedDatasets parameter: " + numPublishedDatasetsParam + ". " +
+            "Examples: '5' (exactly 5), '1,*' (at least 1), '*,10' (at most 10), '5,15' (between 5 and 15)");
+      }
+    }
+
     return params;
+  }
+
+  private Range<Integer> parseNumPublishedDatasetsRange(String value) {
+    if ("*".equals(value)) {
+      // Match all - no range restriction  
+      return Range.closed(null, null);
+    }
+    
+    if (!value.contains(",")) {
+      // Exact match: "5"
+      int exactValue = Integer.parseInt(value);
+      return Range.closed(exactValue, exactValue);
+    }
+    
+    // Range with comma: "1,*", "*,10", "5,15"
+    String[] parts = value.split(",", 2);
+    String minPart = parts[0].trim();
+    String maxPart = parts[1].trim();
+    
+    if (("*".equals(minPart) || minPart.isEmpty()) && ("*".equals(maxPart) || maxPart.isEmpty())) {
+      return Range.closed(null, null);
+    }
+    
+    if ("*".equals(minPart) || minPart.isEmpty()) {
+      // Max only: "*,10" or ",10"
+      int maxValue = Integer.parseInt(maxPart);
+      return Range.closed(null, maxValue);
+    }
+    
+    if ("*".equals(maxPart) || maxPart.isEmpty()) {
+      // Min only: "1,*" or "1,"
+      int minValue = Integer.parseInt(minPart);
+      return Range.closed(minValue, null);
+    }
+    
+    // Both min and max: "5,15"
+    int minValue = Integer.parseInt(minPart);
+    int maxValue = Integer.parseInt(maxPart);
+    return Range.closed(minValue, maxValue);
   }
 }

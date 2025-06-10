@@ -267,6 +267,36 @@
       <if test="params.endorsedByNodeKey != null">
         AND n.deleted IS NULL AND n.key = #{params.endorsedByNodeKey,jdbcType=OTHER}
       </if>
+      <if test="params.numPublishedDatasets != null">
+        <if test="params.numPublishedDatasets.hasLowerBound() and params.numPublishedDatasets.hasUpperBound() and params.numPublishedDatasets.lowerEndpoint().equals(params.numPublishedDatasets.upperEndpoint())">
+          <!-- Exact match -->
+          AND (
+            SELECT COUNT(*)
+            FROM dataset d2
+            WHERE d2.publishing_organization_key = o.key
+              AND d2.deleted IS NULL
+          ) = #{params.numPublishedDatasets.from,jdbcType=INTEGER}
+        </if>
+        <if test="!(params.numPublishedDatasets.hasLowerBound() and params.numPublishedDatasets.hasUpperBound() and params.numPublishedDatasets.lowerEndpoint().equals(params.numPublishedDatasets.upperEndpoint()))">
+          <!-- Range match -->
+          <if test="params.numPublishedDatasets.hasLowerBound()">
+            AND (
+              SELECT COUNT(*)
+              FROM dataset d2
+              WHERE d2.publishing_organization_key = o.key
+                AND d2.deleted IS NULL
+            ) &gt;= #{params.numPublishedDatasets.from,jdbcType=INTEGER}
+          </if>
+          <if test="params.numPublishedDatasets.hasUpperBound()">
+            AND (
+              SELECT COUNT(*)
+              FROM dataset d2
+              WHERE d2.publishing_organization_key = o.key
+                AND d2.deleted IS NULL
+            ) &lt;= #{params.numPublishedDatasets.to,jdbcType=INTEGER}
+          </if>
+        </if>
+      </if>
     </where>
   </sql>
 
