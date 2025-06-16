@@ -33,7 +33,7 @@ import org.gbif.registry.cli.common.stubs.MessagePublisherStub;
 import org.gbif.registry.cli.datasetindex.batchindexer.DatasetBatchIndexer;
 import org.gbif.registry.cli.doisynchronizer.DoiSynchronizerConfiguration;
 import org.gbif.registry.cli.doiupdater.DoiUpdaterConfiguration;
-import org.gbif.registry.cli.vocabularyfacetupdater.VocabularyFacetUpdaterConfiguration;
+import org.gbif.registry.cli.vocabularysynchronizer.VocabularySynchronizerConfiguration;
 import org.gbif.registry.directory.config.DirectoryClientConfiguration;
 import org.gbif.registry.identity.service.BaseIdentityAccessService;
 import org.gbif.registry.persistence.config.MyBatisConfiguration;
@@ -78,7 +78,9 @@ public class SpringContextBuilder {
 
   private MessagingConfiguration messagingConfiguration;
 
-  private VocabularyFacetUpdaterConfiguration vocabularyFacetUpdaterConfiguration;
+  private VocabularySynchronizerConfiguration vocabularySynchronizerConfiguration;
+
+  private String conceptClientApiUrl;
 
   private SpringContextBuilder() {}
 
@@ -119,11 +121,17 @@ public class SpringContextBuilder {
     return this;
   }
 
-  public SpringContextBuilder withVocabularyFacetUpdaterConfiguration(
-      VocabularyFacetUpdaterConfiguration vocabularyFacetUpdaterConfiguration) {
-    this.vocabularyFacetUpdaterConfiguration = vocabularyFacetUpdaterConfiguration;
-    this.dbConfiguration = vocabularyFacetUpdaterConfiguration.getDbConfig();
-    this.messagingConfiguration = vocabularyFacetUpdaterConfiguration.messaging;
+  public SpringContextBuilder withVocabularySynchronizerConfiguration(
+      VocabularySynchronizerConfiguration vocabularySynchronizerConfiguration) {
+    this.vocabularySynchronizerConfiguration = vocabularySynchronizerConfiguration;
+    this.conceptClientApiUrl = vocabularySynchronizerConfiguration.apiRootUrl;
+    return this;
+  }
+
+  public SpringContextBuilder withDatasetUpdaterConfiguration(
+      org.gbif.registry.cli.datasetupdater.DatasetUpdaterConfiguration datasetUpdaterConfiguration) {
+    this.dbConfiguration = datasetUpdaterConfiguration.db;
+    this.conceptClientApiUrl = datasetUpdaterConfiguration.apiRootUrl;
     return this;
   }
 
@@ -134,6 +142,11 @@ public class SpringContextBuilder {
 
   public SpringContextBuilder withScanPackages(String... basePackages) {
     this.basePackages = basePackages;
+    return this;
+  }
+
+  public SpringContextBuilder withConceptClientApiUrl(String conceptClientApiUrl) {
+    this.conceptClientApiUrl = conceptClientApiUrl;
     return this;
   }
 
@@ -223,16 +236,24 @@ public class SpringContextBuilder {
       ctx.register(UpdateDownloadStatsService.class);
     }
 
-    if (vocabularyFacetUpdaterConfiguration != null) {
+    if (vocabularySynchronizerConfiguration != null) {
       ctx.getEnvironment()
           .getPropertySources()
           .addLast(
               new MapPropertySource(
-                  "vocabularyFacetUpdaterConfigProperties",
+                  "vocabularySynchronizerConfigProperties",
                   ImmutableMap.of(
-                      "api.root.url", vocabularyFacetUpdaterConfiguration.getApiRootUrl())));
-      ctx.registerBean(VocabularyFacetUpdaterConfiguration.class, () -> vocabularyFacetUpdaterConfiguration);
-      packages.add("org.gbif.registry.cli.config");
+                      "api.root.url", vocabularySynchronizerConfiguration.apiRootUrl)));
+      ctx.registerBean(VocabularySynchronizerConfiguration.class, () -> vocabularySynchronizerConfiguration);
+    }
+
+    if (conceptClientApiUrl != null) {
+      ctx.registerBean("conceptClient", org.gbif.vocabulary.client.ConceptClient.class, () ->
+          new org.gbif.ws.client.ClientBuilder()
+              .withObjectMapper(org.gbif.ws.json.JacksonJsonObjectMapperProvider.getObjectMapperWithBuilderSupport()
+                  .registerModule(new com.fasterxml.jackson.datatype.jsr310.JavaTimeModule()))
+              .withUrl(conceptClientApiUrl)
+              .build(org.gbif.vocabulary.client.ConceptClient.class));
     }
 
     ctx.getEnvironment()

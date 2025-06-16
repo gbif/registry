@@ -1,24 +1,23 @@
-package org.gbif.registry.cli.vocabularyfacetupdater;
+package org.gbif.registry.cli.vocabularysynchronizer;
 
 import lombok.Data;
-
 import lombok.Getter;
-
 import lombok.Setter;
 
-import org.gbif.common.messaging.config.MessagingConfiguration;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParametersDelegate;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import javax.validation.Valid;
-import javax.validation.constraints.Min;
-import javax.validation.constraints.NotNull;
-import java.util.Set;
 
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
+
+import org.gbif.common.messaging.config.MessagingConfiguration;
 import org.gbif.registry.cli.common.DbConfiguration;
 
+import java.util.Set;
+
 @Data
-public class VocabularyFacetUpdaterConfiguration {
+public class VocabularySynchronizerConfiguration {
 
   @ParametersDelegate @Valid @NotNull
   public MessagingConfiguration messaging = new MessagingConfiguration();
@@ -30,12 +29,12 @@ public class VocabularyFacetUpdaterConfiguration {
   public String queueName = "vocabulary-released";
 
   @Parameter(names = "--pool-size", description = "The size of the thread pool to listen to messages")
-  @Min(1)
   public int poolSize = 1;
 
   @Setter
   @Getter
-  @ParametersDelegate @Valid @NotNull private DbConfiguration dbConfig;
+  @ParametersDelegate @Valid @NotNull
+  private DbConfiguration dbConfig;
 
   @Setter
   @Getter
@@ -49,7 +48,7 @@ public class VocabularyFacetUpdaterConfiguration {
 
   @Override
   public String toString() {
-    return "VocabularyFacetUpdaterConfiguration{" +
+    return "VocabularySynchronizerConfiguration{" +
         "messaging=" + messaging +
         ", queueName='" + queueName + '\'' +
         ", poolSize=" + poolSize +
@@ -59,3 +58,4 @@ public class VocabularyFacetUpdaterConfiguration {
         '}';
   }
 }
+ 

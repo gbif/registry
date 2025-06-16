@@ -3,7 +3,7 @@
 <mapper namespace="org.gbif.registry.persistence.mapper.DerivedDatasetMapper">
 
   <sql id="DERIVED_DATASET_FIELDS">
-    doi,original_download_doi,description,citation,title,source_url,registration_date,created,created_by,modified,modified_by
+    doi,original_download_doi,description,citation,title,source_url,registration_date,created,created_by,modified,modified_by,category
   </sql>
 
   <sql id="DERIVED_DATASET_FIELD_TYPES">
@@ -17,7 +17,8 @@
     now(), <!-- created -->
     #{derivedDataset.createdBy},
     now(), <!-- modified -->
-    #{derivedDataset.modifiedBy}
+    #{derivedDataset.modifiedBy},
+    #{derivedDataset.category,jdbcType=ARRAY,typeHandler=org.gbif.registry.persistence.mapper.handler.SetArrayTypeHandler}
   </sql>
 
   <resultMap id="DERIVED_DATASET_MAP" type="org.gbif.registry.domain.ws.DerivedDataset">
@@ -32,6 +33,7 @@
     <result property="createdBy" column="created_by" javaType="java.lang.String"/>
     <result property="modified" column="modified" javaType="java.util.Date"/>
     <result property="modifiedBy" column="modified_by" javaType="java.lang.String"/>
+    <result property="category" column="category" javaType="java.util.Set" typeHandler="org.gbif.registry.persistence.mapper.handler.SetArrayTypeHandler"/>
   </resultMap>
 
 
@@ -138,5 +140,17 @@
     FROM dataset_derived_dataset ddd
     WHERE ddd.derived_dataset_doi = #{derivedDatasetDoi,jdbcType=OTHER}
   </select>
+
+  <select id="findDerivedDatasetsWithDeprecatedCategories" resultType="org.gbif.api.model.common.DOI">
+    SELECT DISTINCT doi
+    FROM derived_dataset
+    WHERE category &amp;&amp; #{deprecatedCategories,jdbcType=ARRAY,typeHandler=org.gbif.registry.persistence.mapper.handler.SetArrayTypeHandler}
+  </select>
+
+  <update id="removeDeprecatedCategory">
+    UPDATE derived_dataset
+    SET category = array_remove(category, #{deprecatedCategory,jdbcType=VARCHAR})
+    WHERE doi = #{doi,jdbcType=OTHER}
+  </update>
 
 </mapper>

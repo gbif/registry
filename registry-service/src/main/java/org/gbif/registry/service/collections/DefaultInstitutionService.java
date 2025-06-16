@@ -50,6 +50,7 @@ import org.gbif.registry.events.collections.ReplaceEntityEvent;
 import org.gbif.registry.persistence.mapper.*;
 import org.gbif.registry.persistence.mapper.collections.*;
 import org.gbif.registry.persistence.mapper.collections.dto.InstitutionGeoJsonDto;
+import org.gbif.registry.persistence.mapper.GrScicollVocabConceptMapper;
 import org.gbif.registry.persistence.mapper.collections.params.InstitutionListParams;
 import org.gbif.registry.service.WithMyBatis;
 import org.gbif.registry.service.collections.converters.InstitutionConverter;
@@ -91,7 +92,8 @@ public class DefaultInstitutionService extends BaseCollectionEntityService<Insti
       EventManager eventManager,
       WithMyBatis withMyBatis,
       Validator validator,
-      ConceptClient conceptClient) {
+      ConceptClient conceptClient,
+      GrScicollVocabConceptMapper grScicollVocabConceptMapper) {
     super(
         institutionMapper,
         addressMapper,
@@ -107,7 +109,8 @@ public class DefaultInstitutionService extends BaseCollectionEntityService<Insti
         Institution.class,
         eventManager,
         withMyBatis,
-        conceptClient);
+        conceptClient,
+        grScicollVocabConceptMapper);
     this.institutionMapper = institutionMapper;
     this.organizationMapper = organizationMapper;
     this.validator = validator;

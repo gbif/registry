@@ -33,6 +33,7 @@ import org.gbif.api.vocabulary.MaintenanceUpdateFrequency;
 import org.gbif.registry.search.dataset.indexing.checklistbank.ChecklistbankPersistenceService;
 import org.gbif.registry.search.dataset.indexing.ws.GbifWsClient;
 import org.gbif.registry.search.dataset.indexing.ws.JacksonObjectMapper;
+import org.gbif.vocabulary.client.ConceptClient;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -41,7 +42,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.EnumSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -102,6 +102,8 @@ public class DatasetJsonConverter {
 
   private final GbifWsClient gbifWsClient;
 
+  private final ConceptClient conceptClient;
+
   private final ObjectMapper mapper;
 
   private final RestHighLevelClient occurrenceEsClient;
@@ -129,11 +131,13 @@ public class DatasetJsonConverter {
   @Autowired
   private DatasetJsonConverter(
       GbifWsClient gbifWsClient,
+      ConceptClient conceptClient,
       @Autowired(required = false) ChecklistbankPersistenceService checklistbankPersistenceService,
       @Qualifier("apiMapper") ObjectMapper mapper,
       @Qualifier("occurrenceEsClient") RestHighLevelClient occurrenceEsClient,
       @Value("${elasticsearch.occurrence.index}") String occurrenceIndex) {
     this.gbifWsClient = gbifWsClient;
+    this.conceptClient = conceptClient;
     this.checklistbankPersistenceService = checklistbankPersistenceService;
     this.mapper = mapper;
     this.occurrenceEsClient = occurrenceEsClient;
@@ -146,11 +150,13 @@ public class DatasetJsonConverter {
 
   public static DatasetJsonConverter create(
       GbifWsClient gbifWsClient,
+      ConceptClient conceptClient,
       ChecklistbankPersistenceService checklistbankPersistenceService,
       RestHighLevelClient occurrenceEsClient,
       String occurrenceIndex) {
     return new DatasetJsonConverter(
         gbifWsClient,
+        conceptClient,
         checklistbankPersistenceService,
         JacksonObjectMapper.get(),
         occurrenceEsClient,
@@ -164,6 +170,7 @@ public class DatasetJsonConverter {
     addKeyword(dataset, datasetAsJson);
     addCountryCoverage(dataset, datasetAsJson);
     addNetworks(dataset, datasetAsJson);
+    addCategoriesWithParents(dataset, datasetAsJson);
     if (checklistbankPersistenceService != null) {
       addTaxonKeys(dataset, datasetAsJson);
     }
@@ -395,6 +402,31 @@ public class DatasetJsonConverter {
       for (Integer taxonKey :
           checklistbankPersistenceService.getTaxonKeys(dataset.getKey().toString())) {
         taxonKeyNode.add(new IntNode(taxonKey));
+      }
+    }
+  }
+
+  private void addCategoriesWithParents(Dataset dataset, ObjectNode datasetJsonNode) {
+    if (dataset.getCategory() != null && !dataset.getCategory().isEmpty()) {
+      ArrayNode categoryArray = datasetJsonNode.putArray("category");
+
+      for (String categoryName : dataset.getCategory()) {
+        ObjectNode categoryObject = mapper.createObjectNode();
+        categoryObject.put("concept", categoryName);
+
+        try {
+          Optional<VocabularyConcept> vocabularyConcept = VocabularyConceptFactory.createConceptFromName(
+              categoryName, conceptClient, "DatasetCategory");
+
+          ArrayNode lineageArray = categoryObject.putArray("lineage");
+          vocabularyConcept.ifPresent(value -> value.getLineage().forEach(lineageArray::add));
+        } catch (Exception e) {
+          log.warn("Could not fetch lineage for category: {}", categoryName, e);
+          ArrayNode lineageArray = categoryObject.putArray("lineage");
+          lineageArray.add(categoryName);
+        }
+
+        categoryArray.add(categoryObject);
       }
     }
   }

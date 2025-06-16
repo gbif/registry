@@ -257,22 +257,22 @@
       INNER JOIN institution_identifier ii on ii.institution_key = i.key
       INNER JOIN identifier id on id.key = ii.identifier_key
     </if>
-    <!-- Hierarchical facet-based filtering for types -->
+    <!-- Hierarchical concept-based filtering for types -->
     <if test="params.types != null and params.types.size > 0">
-      INNER JOIN institution_facet_links ifl_type ON ifl_type.institution_key = i.key
-      INNER JOIN grscicoll_vocab_facet f_type ON ifl_type.facet_id = f_type.id
-        AND f_type.vocabulary_name = 'InstitutionType'
-        AND f_type.name IN
+      INNER JOIN institution_concept_links icl_type ON icl_type.institution_key = i.key
+              INNER JOIN grscicoll_vocab_concept c_type ON icl_type.concept_key = c_type.concept_key
+        AND c_type.vocabulary_name = 'InstitutionType'
+        AND c_type.name IN
         <foreach item="item" collection="params.types" open="(" separator="," close=")">
           #{item,jdbcType=VARCHAR}
         </foreach>
     </if>
-    <!-- Hierarchical facet-based filtering for disciplines -->
+    <!-- Hierarchical concept-based filtering for disciplines -->
     <if test="params.disciplines != null and params.disciplines.size > 0">
-      INNER JOIN institution_facet_links ifl_discipline ON ifl_discipline.institution_key = i.key
-      INNER JOIN grscicoll_vocab_facet f_discipline ON ifl_discipline.facet_id = f_discipline.id
-        AND f_discipline.vocabulary_name = 'Discipline'
-        AND f_discipline.name IN
+      INNER JOIN institution_concept_links icl_discipline ON icl_discipline.institution_key = i.key
+              INNER JOIN grscicoll_vocab_concept c_discipline ON icl_discipline.concept_key = c_discipline.concept_key
+        AND c_discipline.vocabulary_name = 'Discipline'
+        AND c_discipline.name IN
         <foreach item="item" collection="params.disciplines" open="(" separator="," close=")">
           #{item,jdbcType=VARCHAR}
         </foreach>

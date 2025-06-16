@@ -50,19 +50,9 @@ public class DatasetUpdater {
     return new DatasetUpdater(cfg);
   }
 
-  private DatasetUpdater(DatasetUpdaterConfiguration cfg) {
-    LOG.info(
-        "Connecting to registry {}.{} as user {}",
-        cfg.db.serverName,
-        cfg.db.databaseName,
-        cfg.db.user);
-    this.context = prepareContext(cfg);
-    this.datasetResource = context.getBean(DatasetResource.class);
-  }
-
   private AnnotationConfigApplicationContext prepareContext(DatasetUpdaterConfiguration cfg) {
     return SpringContextBuilder.create()
-        .withDbConfiguration(cfg.db)
+        .withDatasetUpdaterConfiguration(cfg)
         .withComponents(
             SearchServiceStub.class,
             DatasetDoiDataCiteHandlingServiceStub.class,
@@ -74,6 +64,16 @@ public class DatasetUpdater {
             DatasetResource.class,
             WithMyBatis.class)
         .build();
+  }
+
+  private DatasetUpdater(DatasetUpdaterConfiguration cfg) {
+    LOG.info(
+        "Connecting to registry {}.{} as user {}",
+        cfg.db.serverName,
+        cfg.db.databaseName,
+        cfg.db.user);
+    this.context = prepareContext(cfg);
+    this.datasetResource = context.getBean(DatasetResource.class);
   }
 
   /**

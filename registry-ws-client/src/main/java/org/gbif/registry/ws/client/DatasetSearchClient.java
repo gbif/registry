@@ -57,7 +57,8 @@ public interface DatasetSearchClient extends DatasetSearchService {
       @RequestParam(value = "modifiedDate", required = false) Set<String> modifiedDate,
       @RequestParam(value = "datasetTitle", required = false) Set<String> datasetTitle,
       @RequestParam(value = "collectionKey", required = false) Set<String> collectionKey,
-      @RequestParam(value = "institutionKey", required = false) Set<String> institutionKey);
+      @RequestParam(value = "institutionKey", required = false) Set<String> institutionKey,
+      @RequestParam(value = "category", required = false) Set<String> category);
 
   @Override
   default SearchResponse<DatasetSearchResult, DatasetSearchParameter> search(
@@ -81,7 +82,8 @@ public interface DatasetSearchClient extends DatasetSearchService {
         datasetSearchRequest.getParameters().get(DatasetSearchParameter.MODIFIED_DATE),
         datasetSearchRequest.getParameters().get(DatasetSearchParameter.DATASET_TITLE),
         datasetSearchRequest.getParameters().get(DatasetSearchParameter.COLLECTION_KEY),
-        datasetSearchRequest.getParameters().get(DatasetSearchParameter.INSTITUTION_KEY));
+        datasetSearchRequest.getParameters().get(DatasetSearchParameter.INSTITUTION_KEY),
+        datasetSearchRequest.getParameters().get(DatasetSearchParameter.CATEGORY));
   }
 
   @RequestMapping(
@@ -108,7 +110,8 @@ public interface DatasetSearchClient extends DatasetSearchService {
       @RequestParam(value = "modifiedDate", required = false) Set<String> modifiedDate,
       @RequestParam(value = "datasetTitle", required = false) Set<String> datasetTitle,
       @RequestParam(value = "collectionKey", required = false) Set<String> collectionKey,
-      @RequestParam(value = "institutionKey", required = false) Set<String> institutionKey);
+      @RequestParam(value = "institutionKey", required = false) Set<String> institutionKey,
+      @RequestParam(value = "category", required = false) Set<String> category);
 
   @Override
   default List<DatasetSuggestResult> suggest(DatasetSuggestRequest datasetSuggestRequest) {
@@ -131,6 +134,7 @@ public interface DatasetSearchClient extends DatasetSearchService {
         datasetSuggestRequest.getParameters().get(DatasetSearchParameter.MODIFIED_DATE),
         datasetSuggestRequest.getParameters().get(DatasetSearchParameter.DATASET_TITLE),
         datasetSuggestRequest.getParameters().get(DatasetSearchParameter.COLLECTION_KEY),
-        datasetSuggestRequest.getParameters().get(DatasetSearchParameter.INSTITUTION_KEY));
+        datasetSuggestRequest.getParameters().get(DatasetSearchParameter.INSTITUTION_KEY),
+        datasetSuggestRequest.getParameters().get(DatasetSearchParameter.CATEGORY));
   }
 }

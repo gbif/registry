@@ -51,6 +51,7 @@ import org.gbif.registry.events.collections.CreateCollectionEntityEvent;
 import org.gbif.registry.persistence.mapper.*;
 import org.gbif.registry.persistence.mapper.collections.*;
 import org.gbif.registry.persistence.mapper.collections.dto.CollectionDto;
+import org.gbif.registry.persistence.mapper.GrScicollVocabConceptMapper;
 import org.gbif.registry.persistence.mapper.collections.params.CollectionListParams;
 import org.gbif.registry.service.WithMyBatis;
 import org.gbif.registry.service.collections.converters.CollectionConverter;
@@ -91,7 +92,9 @@ public class DefaultCollectionService extends BaseCollectionEntityService<Collec
       EventManager eventManager,
       WithMyBatis withMyBatis,
       Validator validator,
-      ConceptClient conceptClient, InstitutionService institutionService) {
+      ConceptClient conceptClient,
+      GrScicollVocabConceptMapper grScicollVocabConceptMapper,
+      InstitutionService institutionService) {
     super(
         collectionMapper,
         addressMapper,
@@ -107,7 +110,8 @@ public class DefaultCollectionService extends BaseCollectionEntityService<Collec
         Collection.class,
         eventManager,
         withMyBatis,
-        conceptClient);
+        conceptClient,
+        grScicollVocabConceptMapper);
     this.collectionMapper = collectionMapper;
     this.datasetMapper = datasetMapper;
     this.organizationMapper = organizationMapper;

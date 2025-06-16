@@ -22,6 +22,7 @@ import org.gbif.registry.persistence.mapper.params.DatasetListParams;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.Set;
 
 import javax.annotation.Nullable;
 
@@ -76,4 +77,18 @@ public interface DatasetMapper extends BaseNetworkEntityMapper<Dataset> {
   List<Grid> listGrids(@Param("datasetKey") UUID datasetKey);
 
   Dataset getLightweight(@Param("key") UUID key);
+
+  /**
+   * Find datasets that have deprecated categories.
+   * @param deprecatedCategories set of deprecated category names
+   * @return list of dataset keys that have deprecated categories
+   */
+  List<UUID> findDatasetsWithDeprecatedCategories(@Param("deprecatedCategories") Set<String> deprecatedCategories);
+
+  /**
+   * Remove a single deprecated category from a dataset.
+   * @param datasetKey the dataset key
+   * @param deprecatedCategory the deprecated category name to remove
+   */
+  void removeDeprecatedCategory(@Param("datasetKey") UUID datasetKey, @Param("deprecatedCategory") String deprecatedCategory);
 }

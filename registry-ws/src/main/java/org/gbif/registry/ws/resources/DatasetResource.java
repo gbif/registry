@@ -69,7 +69,9 @@ import org.gbif.registry.persistence.mapper.pipelines.PipelineProcessMapper;
 import org.gbif.registry.persistence.service.MapperServiceLocator;
 import org.gbif.registry.service.RegistryDatasetService;
 import org.gbif.registry.service.WithMyBatis;
+import org.gbif.registry.service.collections.utils.Vocabularies;
 import org.gbif.registry.ws.export.CsvWriter;
+import org.gbif.vocabulary.client.ConceptClient;
 import org.gbif.ws.NotFoundException;
 
 import java.io.BufferedWriter;
@@ -90,6 +92,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
@@ -195,6 +198,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset, DatasetL
 
   // The messagePublisher can be optional
   private final MessagePublisher messagePublisher;
+  private final ConceptClient conceptClient;
 
   public DatasetResource(
       MapperServiceLocator mapperServiceLocator,
@@ -206,7 +210,8 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset, DatasetL
       DoiIssuingService doiIssuingService,
       PipelineProcessMapper pipelineProcessMapper,
       WithMyBatis withMyBatis,
-      @Autowired(required = false) MessagePublisher messagePublisher) {
+      @Autowired(required = false) MessagePublisher messagePublisher,
+      ConceptClient conceptClient) {
     super(
         mapperServiceLocator.getDatasetMapper(),
         mapperServiceLocator,
@@ -229,6 +234,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset, DatasetL
     this.messagePublisher = messagePublisher;
     this.withMyBatis = withMyBatis;
     this.emlWriter = EMLWriter.newInstance(false);
+    this.conceptClient = conceptClient;
   }
 
   @Target({ElementType.METHOD, ElementType.TYPE})
@@ -350,6 +356,11 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset, DatasetL
           name = "endpointType",
           description = "Type of the endpoint of the dataset.",
           schema = @Schema(implementation = EndpointType.class),
+          in = ParameterIn.QUERY),
+        @Parameter(
+          name = "category",
+          description = "Category of the dataset.",
+          schema = @Schema(implementation = Set.class),
           in = ParameterIn.QUERY),
         @Parameter(name = "request", hidden = true),
         @Parameter(name = "searchRequest", hidden = true),
@@ -888,6 +899,9 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset, DatasetL
   @Secured({ADMIN_ROLE, EDITOR_ROLE, IPT_ROLE})
   @Override
   public UUID create(@RequestBody @Trim Dataset dataset) {
+    // Validate vocabulary values
+    Vocabularies.checkDatasetVocabsValues(conceptClient, dataset);
+
     if (dataset.getDoi() == null) {
       dataset.setDoi(doiIssuingService.newDatasetDOI());
     }
@@ -939,6 +953,9 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset, DatasetL
 
   @Override
   public void update(Dataset dataset) {
+
+    Vocabularies.checkDatasetVocabsValues(conceptClient, dataset);
+
     Dataset old = super.get(dataset.getKey());
     if (old == null) {
       throw new IllegalArgumentException("Dataset " + dataset.getKey() + " not existing");

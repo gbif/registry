@@ -269,8 +269,8 @@ public class Interpreter {
 
     NameUsageMatchRequest nameUsageMatchRequest = NameUsageMatchRequest.builder()
       .withScientificName(scientificName)
-      .withAuthorship(scientificNameAuthorship)
-      .withRank(taxonRank)
+      //.withAuthorship(scientificNameAuthorship)
+      //.withRank(taxonRank)
       .withGenericName(genericName)
       .withSpecificEpithet(specificEpithet)
       .withInfraspecificEpithet(infraspecificEpithet)

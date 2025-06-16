@@ -21,6 +21,7 @@ import org.gbif.api.model.collections.request.CollectionSearchRequest;
 import org.gbif.api.model.collections.request.InstitutionSearchRequest;
 import org.gbif.api.model.collections.request.SearchRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
+import org.gbif.api.model.registry.Dataset;
 import org.gbif.vocabulary.api.ConceptListParams;
 import org.gbif.vocabulary.api.ConceptView;
 import org.gbif.vocabulary.client.ConceptClient;
@@ -61,6 +62,12 @@ public class Vocabularies {
 
   public static final String COLLECTION_DESCRIPTOR_GROUP_TYPE = "CollectionDescriptorGroupTypes";
 
+  // Dataset vocabulary fields
+  public static final String DATASET_CATEGORY = "DatasetCategory";
+
+  // Map of vocabulary names to field getters for datasets
+  private static final Map<String, Function<Dataset, java.util.Collection<String>>> DATASET_VOCAB_FIELDS = new HashMap<>();
+
   private static final Cache<String, Set<String>> childrenConceptsCache =
       new Cache2kBuilder<String, Set<String>>() {}.eternal(true).build();
 
@@ -74,6 +81,8 @@ public class Vocabularies {
     COLLECTION_VOCAB_FIELDS.put(
         ACCESSION_STATUS, c -> Collections.singletonList(c.getAccessionStatus()));
     COLLECTION_VOCAB_FIELDS.put(PRESERVATION_TYPE, Collection::getPreservationTypes);
+
+    DATASET_VOCAB_FIELDS.put(DATASET_CATEGORY, d -> d.getCategory() != null ? new ArrayList<>(d.getCategory()) : Collections.emptyList());
 
     INSTITUTION_SEARCH_REQ_VOCAB_FIELDS.add(
         SearchRequestField.of(
@@ -134,6 +143,21 @@ public class Vocabularies {
     }
   }
 
+  public static void checkDatasetVocabsValues(ConceptClient conceptClient, Dataset dataset) {
+    StringJoiner errors = new StringJoiner(";\n");
+    DATASET_VOCAB_FIELDS.forEach(
+        (vocabName, getter) ->
+            getter.apply(dataset).stream()
+                .filter(s -> !Strings.isNullOrEmpty(s))
+                .forEach(
+                    conceptValue ->
+                        checkConcept(conceptClient, vocabName, conceptValue, errors)));
+
+    if (errors.length() > 0) {
+      throw new IllegalArgumentException(errors.toString());
+    }
+  }
+
   public static void checkDescriptorGroupTags(ConceptClient conceptClient, Set<String> tags) {
     if (tags != null && !tags.isEmpty()) {
       StringJoiner errors = new StringJoiner(";\n");
@@ -158,6 +182,8 @@ public class Vocabularies {
 
     if (conceptFound == null) {
       errors.add(conceptValue + " is not a concept of the " + vocabName + " vocabulary");
+    } else if (conceptFound.getConcept() != null && conceptFound.getConcept().getDeprecated() != null) {
+      errors.add(conceptValue + " is a deprecated concept in the " + vocabName + " vocabulary");
     }
   }
 

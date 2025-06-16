@@ -19,6 +19,7 @@ import java.io.Serializable;
 import java.net.URI;
 import java.util.Date;
 import java.util.Objects;
+import java.util.Set;
 import java.util.StringJoiner;
 
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -79,6 +80,11 @@ public class DerivedDataset implements Serializable {
     description = "The time the derived dataset was last modified."
   )
   private Date modified;
+
+  @Schema(
+    description = "Categories that describe the derived dataset."
+  )
+  private Set<String> category;
 
   public DOI getDoi() {
     return doi;
@@ -168,6 +174,14 @@ public class DerivedDataset implements Serializable {
     this.modified = modified;
   }
 
+  public Set<String> getCategory() {
+    return category;
+  }
+
+  public void setCategory(Set<String> category) {
+    this.category = category;
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;
@@ -183,7 +197,8 @@ public class DerivedDataset implements Serializable {
         && Objects.equals(modifiedBy, derivedDataset1.modifiedBy)
         && Objects.equals(registrationDate, derivedDataset1.registrationDate)
         && Objects.equals(created, derivedDataset1.created)
-        && Objects.equals(modified, derivedDataset1.modified);
+        && Objects.equals(modified, derivedDataset1.modified)
+        && Objects.equals(category, derivedDataset1.category);
   }
 
   @Override
@@ -199,7 +214,8 @@ public class DerivedDataset implements Serializable {
         modifiedBy,
         registrationDate,
         created,
-        modified);
+        modified,
+        category);
   }
 
   @Override
@@ -216,6 +232,7 @@ public class DerivedDataset implements Serializable {
         .add("registrationDate=" + registrationDate)
         .add("created=" + created)
         .add("modified=" + modified)
+        .add("category=" + category)
         .toString();
   }
 }

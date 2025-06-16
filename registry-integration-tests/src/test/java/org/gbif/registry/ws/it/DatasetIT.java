@@ -63,8 +63,12 @@ import java.io.InputStreamReader;
 import java.net.URI;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
@@ -1352,5 +1356,234 @@ class DatasetIT extends NetworkEntityIT<Dataset> {
   private Dataset newAndCreate(int expectedCount, ServiceType serviceType) {
     Dataset newDataset = newEntity(serviceType);
     return create(newDataset, serviceType, expectedCount);
+  }
+
+  // Dataset Category Tests
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  public void testDatasetCategoryCreation(ServiceType serviceType) {
+    DatasetService service = (DatasetService) getService(serviceType);
+    Dataset dataset = newEntity(serviceType);
+
+    // Test with single category
+    dataset.setCategory(Collections.singleton("Biodiversity"));
+    UUID key = service.create(dataset);
+    Dataset created = service.get(key);
+
+    assertNotNull(created.getCategory());
+    assertEquals(1, created.getCategory().size());
+    assertTrue(created.getCategory().contains("Biodiversity"));
+  }
+
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  public void testDatasetCategoryUpdate(ServiceType serviceType) {
+    DatasetService service = (DatasetService) getService(serviceType);
+    Dataset dataset = newEntity(serviceType);
+    dataset.setCategory(Collections.singleton("Biodiversity"));
+    UUID key = service.create(dataset);
+
+    // Update with multiple categories
+    Dataset updateDataset = service.get(key);
+    Set<String> newCategories = new HashSet<>(Arrays.asList("Biodiversity", "Ecology", "Conservation"));
+    updateDataset.setCategory(newCategories);
+    service.update(updateDataset);
+
+    Dataset updated = service.get(key);
+    assertNotNull(updated.getCategory());
+    assertEquals(3, updated.getCategory().size());
+    assertTrue(updated.getCategory().contains("Biodiversity"));
+    assertTrue(updated.getCategory().contains("Ecology"));
+    assertTrue(updated.getCategory().contains("Conservation"));
+  }
+
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  public void testDatasetCategoryRemoval(ServiceType serviceType) {
+    DatasetService service = (DatasetService) getService(serviceType);
+    Dataset dataset = newEntity(serviceType);
+    dataset.setCategory(Collections.singleton("Biodiversity"));
+    UUID key = service.create(dataset);
+
+    // Remove category
+    Dataset updateDataset = service.get(key);
+    updateDataset.setCategory(null);
+    service.update(updateDataset);
+
+    Dataset updated = service.get(key);
+    assertNull(updated.getCategory());
+  }
+
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  public void testDatasetCategoryValidation(ServiceType serviceType) {
+    DatasetService service = (DatasetService) getService(serviceType);
+    Dataset dataset = newEntity(serviceType);
+
+    // Test with invalid category (should be validated by Vocabularies.checkDatasetVocabsValues)
+    dataset.setCategory(Collections.singleton("foo"));
+
+    // This should throw an exception if validation is working
+    assertThrows(IllegalArgumentException.class, () -> service.create(dataset));
+  }
+
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  public void testDatasetCategoryCaseSensitivity(ServiceType serviceType) {
+    DatasetService service = (DatasetService) getService(serviceType);
+    Dataset dataset = newEntity(serviceType);
+
+    // Test with different case variations
+    dataset.setCategory(new HashSet<>(Arrays.asList("biodiversity", "BIODIVERSITY", "Biodiversity")));
+    UUID key = service.create(dataset);
+
+    Dataset created = service.get(key);
+    assertNotNull(created.getCategory());
+    assertEquals(3, created.getCategory().size());
+  }
+
+  // Category Search Tests
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  public void testCategorySearch(ServiceType serviceType) {
+    // Create dataset with Biodiversity category
+    Dataset dataset1 = newEntity(serviceType);
+    dataset1.setCategory(Collections.singleton("Biodiversity"));
+    dataset1.setTitle("Biodiversity Dataset");
+    create(dataset1, serviceType, 1);
+
+    // Create dataset with Ecology category
+    Dataset dataset2 = newEntity(serviceType);
+    dataset2.setCategory(Collections.singleton("Ecology"));
+    dataset2.setTitle("Ecology Dataset");
+    create(dataset2, serviceType, 2);
+
+    // Create dataset with multiple categories
+    Dataset dataset3 = newEntity(serviceType);
+    dataset3.setCategory(new HashSet<>(Arrays.asList("Biodiversity", "Conservation")));
+    dataset3.setTitle("Biodiversity Conservation Dataset");
+    create(dataset3, serviceType, 3);
+
+    DatasetSearchUpdateUtils.awaitUpdates(datasetRealtimeIndexer, esServer);
+
+    // Debug: Check if datasets are indexed
+    DatasetSearchRequest debugReq = new DatasetSearchRequest();
+    debugReq.setQ("Biodiversity Dataset");
+    SearchResponse<DatasetSearchResult, DatasetSearchParameter> debugResp = searchService.search(debugReq);
+    System.out.println("Debug: Found " + debugResp.getCount() + " datasets with title search");
+    
+    // Debug: Check all datasets
+    DatasetSearchRequest allReq = new DatasetSearchRequest();
+    SearchResponse<DatasetSearchResult, DatasetSearchParameter> allResp = searchService.search(allReq);
+    System.out.println("Debug: Total datasets in index: " + allResp.getCount());
+    
+    // Debug: Check if categories are in search results
+    for (DatasetSearchResult result : allResp.getResults()) {
+      System.out.println("Debug: Dataset " + result.getKey() + " has categories: " + result.getCategory());
+    }
+
+    // Test search by specific category
+    DatasetSearchRequest req = new DatasetSearchRequest();
+    req.addCategory("Biodiversity");
+    SearchResponse<DatasetSearchResult, DatasetSearchParameter> resp = searchService.search(req);
+    System.out.println("Debug: Category search found " + resp.getCount() + " datasets");
+    assertEquals(Long.valueOf(2), resp.getCount(), "Should find 2 datasets with Biodiversity category");
+
+    // Test search by another category
+    req = new DatasetSearchRequest();
+    req.addCategory("Ecology");
+    resp = searchService.search(req);
+    assertEquals(Long.valueOf(1), resp.getCount(), "Should find 1 dataset with Ecology category");
+
+    // Test search by category that doesn't exist
+    req = new DatasetSearchRequest();
+    req.addCategory("NonExistentCategory");
+    resp = searchService.search(req);
+    assertEquals(Long.valueOf(0), resp.getCount(), "Should find 0 datasets with non-existent category");
+  }
+
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  public void testCategorySearchWithMultipleFilters(ServiceType serviceType) {
+    Dataset dataset = newEntity(serviceType);
+    dataset.setCategory(Collections.singleton("Biodiversity"));
+    dataset.setType(DatasetType.OCCURRENCE);
+    dataset.setTitle("Biodiversity Occurrence Dataset");
+    create(dataset, serviceType, 1);
+
+    // Create another dataset with different type and category
+    Dataset dataset2 = newEntity(serviceType);
+    dataset2.setCategory(Collections.singleton("Ecology"));
+    dataset2.setType(DatasetType.CHECKLIST);
+    dataset2.setTitle("Ecology Checklist Dataset");
+    create(dataset2, serviceType, 2);
+
+    DatasetSearchUpdateUtils.awaitUpdates(datasetRealtimeIndexer, esServer);
+
+    // Test search with category and type filters
+    DatasetSearchRequest req = new DatasetSearchRequest();
+    req.addCategory("Biodiversity");
+    req.addTypeFilter(DatasetType.OCCURRENCE);
+    SearchResponse<DatasetSearchResult, DatasetSearchParameter> resp = searchService.search(req);
+    assertEquals(Long.valueOf(1), resp.getCount(), "Should find 1 dataset with Biodiversity category and OCCURRENCE type");
+
+    // Test search with category and different type
+    req = new DatasetSearchRequest();
+    req.addCategory("Biodiversity");
+    req.addTypeFilter(DatasetType.CHECKLIST);
+    resp = searchService.search(req);
+    assertEquals(Long.valueOf(0), resp.getCount(), "Should find 0 datasets with Biodiversity category and CHECKLIST type");
+  }
+
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  public void testCategorySearchWithTextQuery(ServiceType serviceType) {
+    // Create dataset with category and specific title
+    Dataset dataset = newEntity(serviceType);
+    dataset.setCategory(Collections.singleton("Biodiversity"));
+    dataset.setTitle("Biodiversity Dataset with Special Title");
+    create(dataset, serviceType, 1);
+
+    DatasetSearchUpdateUtils.awaitUpdates(datasetRealtimeIndexer, esServer);
+
+    // Test search with category filter and text query
+    DatasetSearchRequest req = new DatasetSearchRequest();
+    req.addCategory("Biodiversity");
+    req.setQ("Special Title");
+    SearchResponse<DatasetSearchResult, DatasetSearchParameter> resp = searchService.search(req);
+    assertEquals(Long.valueOf(1), resp.getCount(), "Should find 1 dataset with Biodiversity category and matching title");
+
+    // Test search with category filter and non-matching text query
+    req = new DatasetSearchRequest();
+    req.addCategory("Biodiversity");
+    req.setQ("XyZ123UnlikelyToExist");
+    resp = searchService.search(req);
+    assertEquals(Long.valueOf(0), resp.getCount(), "Should find 0 datasets with Biodiversity category and non-matching title");
+  }
+
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  public void testCategorySearchResultContainsCategories(ServiceType serviceType) {
+    // Create dataset with multiple categories
+    Dataset dataset = newEntity(serviceType);
+    Set<String> categories = new HashSet<>(Arrays.asList("Biodiversity", "Ecology", "Conservation"));
+    dataset.setCategory(categories);
+    dataset.setTitle("Multi-Category Dataset");
+    create(dataset, serviceType, 1);
+
+    DatasetSearchUpdateUtils.awaitUpdates(datasetRealtimeIndexer, esServer);
+
+    // Test that search result contains the categories
+    DatasetSearchRequest req = new DatasetSearchRequest();
+    req.addCategory("Biodiversity");
+    SearchResponse<DatasetSearchResult, DatasetSearchParameter> resp = searchService.search(req);
+    assertEquals(Long.valueOf(1), resp.getCount(), "Should find 1 dataset");
+
+    DatasetSearchResult result = resp.getResults().get(0);
+    assertNotNull(result.getCategory(), "Search result should have category field");
+    assertEquals(3, result.getCategory().size(), "Search result should contain all 3 categories");
+    assertTrue(result.getCategory().contains("Biodiversity"), "Search result should contain Biodiversity category");
+    assertTrue(result.getCategory().contains("Ecology"), "Search result should contain Ecology category");
+    assertTrue(result.getCategory().contains("Conservation"), "Search result should contain Conservation category");
   }
 }

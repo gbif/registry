@@ -166,6 +166,6 @@
   <include file="liquibase/158-taxon-keys-string.xml" />
   <include file="liquibase/159-descriptor-group-tags.xml" />
   <include file="liquibase/160-vocab-managed-fields-grscicoll.xml" />
-  <include file="liquibase/161-migrate-institution-facets.xml" />
-  <include file="liquibase/162-migrate-collection-facets.xml" />
+  <include file="liquibase/161-migrate-grscicoll-facets.xml" />
+  <include file="liquibase/162-dataset-category.xml" />
 </databaseChangeLog>

@@ -1,4 +1,4 @@
-# vocabulary-facet-updater-config.yml
+# vocabulary-synchronizer-config.yml
 
 # Database configuration for the Registry's database
 # This is where the 'facets' table resides and will be updated.
@@ -28,8 +28,11 @@ poolSize: 1
 vocabulariesToProcess:
   - "Discipline"
   - "InstitutionType"
+  - "InstitutionalGovernance"
   - "CollectionContentType"
   - "PreservationType"
+  - "AccessionStatus"
+  - "DatasetCategory"
 
 
 apiRootUrl: "http://api.gbif-dev.org/v1"
