@@ -12,8 +12,8 @@ import lombok.extern.slf4j.Slf4j;
 
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
-import org.gbif.registry.persistence.dto.GrSciCollVocabFacetDto;
-import org.gbif.registry.persistence.mapper.GrScicollVocabFacetMapper;
+import org.gbif.registry.persistence.mapper.dto.GrSciCollVocabConceptDto;
+import org.gbif.registry.persistence.mapper.GrScicollVocabConceptMapper;
 import org.gbif.vocabulary.api.ConceptListParams;
 import org.gbif.vocabulary.api.ConceptView;
 import org.gbif.vocabulary.client.ConceptClient;
@@ -24,28 +24,28 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Service
-public class VocabularyFacetService {
+public class VocabularyConceptService {
 
-  private final GrScicollVocabFacetMapper grScicollVocabFacetMapper;
+  private final GrScicollVocabConceptMapper grScicollVocabConceptMapper;
   private final ConceptClient conceptClient;
   private static final int DEFAULT_PAGE_SIZE = 100; // Default size for paging
 
   @Autowired
-  public VocabularyFacetService(GrScicollVocabFacetMapper grScicollVocabFacetMapper, ConceptClient conceptClient) {
-    this.grScicollVocabFacetMapper = grScicollVocabFacetMapper;
+  public VocabularyConceptService(GrScicollVocabConceptMapper grScicollVocabConceptMapper, ConceptClient conceptClient) {
+    this.grScicollVocabConceptMapper = grScicollVocabConceptMapper;
     this.conceptClient = conceptClient;
   }
 
   @Transactional
-  public void populateFacetsForVocabulary(String vocabularyName) throws Exception {
-    log.info("Starting facet population for vocabulary: {} using ConceptClient", vocabularyName);
+  public void populateConceptsForVocabulary(String vocabularyName) throws Exception {
+    log.info("Starting concept population for vocabulary: {} using ConceptClient", vocabularyName);
 
     // 1. Fetch all concepts and their labels for the vocabulary using ConceptClient
     List<ConceptView> allConcepts = fetchAllConcepts(vocabularyName);
 
     if (allConcepts.isEmpty()) {
-      log.warn("No concepts found for vocabulary: {}. Deleting existing facets if any.", vocabularyName);
-      grScicollVocabFacetMapper.deleteByVocabularyName(vocabularyName);
+      log.warn("No concepts found for vocabulary: {}. Deleting existing concepts if any.", vocabularyName);
+      grScicollVocabConceptMapper.deleteByVocabularyName(vocabularyName);
       return;
     }
 
@@ -56,8 +56,8 @@ public class VocabularyFacetService {
         .collect(Collectors.toMap(cv -> cv.getConcept().getName(), cv -> cv, (cv1, cv2) -> cv1)); // Merge strategy for duplicate keys
 
 
-    // 2. Create Facet DTOs
-    List<GrSciCollVocabFacetDto> facetDtos = new ArrayList<>();
+    // 2. Create Concept DTOs
+    List<GrSciCollVocabConceptDto> conceptDtos = new ArrayList<>();
     for (ConceptView conceptView : allConcepts) {
       if (conceptView.getConcept() == null || conceptView.getConcept().getName() == null) {
         log.warn("Skipping concept view with null concept or null concept name: {}", conceptView);
@@ -67,24 +67,24 @@ public class VocabularyFacetService {
       String displayName = conceptView.getConcept().getName();
       String ltreePath = buildLtreePath(conceptView, conceptViewMap, vocabularyName);
 
-      facetDtos.add(
-        GrSciCollVocabFacetDto.builder()
+      conceptDtos.add(
+        GrSciCollVocabConceptDto.builder()
           .vocabularyName(vocabularyName)
           .name(displayName)
           .path(ltreePath)
           .build());
     }
 
-    // 3. Delete existing facets and add new ones
-    log.debug("Deleting existing facets for vocabulary: {}", vocabularyName);
-    grScicollVocabFacetMapper.deleteByVocabularyName(vocabularyName);
+    // 3. Delete existing concepts and add new ones
+    log.debug("Deleting existing concepts for vocabulary: {}", vocabularyName);
+    grScicollVocabConceptMapper.deleteByVocabularyName(vocabularyName);
 
-    log.debug("Inserting {} new facet entries for vocabulary: {}", facetDtos.size(), vocabularyName);
-    for (GrSciCollVocabFacetDto dto : facetDtos) {
-      grScicollVocabFacetMapper.create(dto);
+    log.debug("Inserting {} new concept entries for vocabulary: {}", conceptDtos.size(), vocabularyName);
+    for (GrSciCollVocabConceptDto dto : conceptDtos) {
+      grScicollVocabConceptMapper.create(dto);
     }
 
-    log.info("Successfully populated facets for vocabulary: {}", vocabularyName);
+    log.info("Successfully populated concepts for vocabulary: {}", vocabularyName);
   }
 
   private List<ConceptView> fetchAllConcepts(String vocabularyName) {

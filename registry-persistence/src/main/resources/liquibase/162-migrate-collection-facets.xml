@@ -1,9 +1,9 @@
 <databaseChangeLog
-    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+  xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
 
-  <changeSet id="163" author="rns886" runInTransaction="false">
+<changeSet id="162" author="rns886" runInTransaction="false" ignore="true">
     <sql splitStatements="false" stripComments="true">
       <![CDATA[
         -- Migration script to populate collection_facet_links table with existing collection data
@@ -14,26 +14,28 @@
           collection_record RECORD;
           content_type_value TEXT;
           preservation_type_value TEXT;
+          accession_status_value TEXT;
           found_facet_id INTEGER;
           total_collections INTEGER := 0;
           processed_collections INTEGER := 0;
           content_type_links INTEGER := 0;
           preservation_type_links INTEGER := 0;
+          accession_status_links INTEGER := 0;
           start_time TIMESTAMP := clock_timestamp();
         BEGIN
           -- Get total count for progress reporting
           SELECT COUNT(*) INTO total_collections FROM collection WHERE deleted IS NULL;
-          
+
           RAISE NOTICE 'Starting collection facet migration for % collections at %', total_collections, start_time;
-          
+
           -- Process each collection
-          FOR collection_record IN 
-            SELECT key, content_type, preservation_type 
-            FROM collection 
+          FOR collection_record IN
+            SELECT key, content_type, preservation_type, accession_status
+            FROM collection
             WHERE deleted IS NULL
           LOOP
             processed_collections := processed_collections + 1;
-            
+
             -- Process content types (array field)
             IF collection_record.content_type IS NOT NULL THEN
               -- Use FOREACH to iterate over array elements
@@ -43,10 +45,10 @@
                 IF content_type_value IS NULL OR trim(content_type_value) = '' THEN
                   CONTINUE;
                 END IF;
-                
+
                 -- Convert format from potential UPPER_CASE_WITH_UNDERSCORES to CamelCase
                 -- Handle common patterns in collection content types
-                content_type_value := CASE 
+                content_type_value := CASE
                   -- Biological content types
                   WHEN content_type_value = 'BIOLOGICAL_OTHER' THEN 'Biological'
                   WHEN content_type_value = 'BIOLOGICAL_PRESERVED_ORGANISMS' THEN 'Biological'
@@ -97,26 +99,26 @@
                   WHEN content_type_value = 'PlantDerived' THEN 'PlantDerived'
                   ELSE content_type_value -- Keep as-is if no mapping found
                 END;
-                
+
                 -- Find facet ID for CollectionContentType
-                SELECT id INTO found_facet_id 
-                FROM grscicoll_vocab_facet 
-                WHERE vocabulary_name = 'CollectionContentType' 
+                SELECT id INTO found_facet_id
+                FROM grscicoll_vocab_concept
+                WHERE vocabulary_name = 'CollectionContentType'
                 AND name = content_type_value;
-                
+
                 IF found_facet_id IS NOT NULL THEN
                   -- Insert facet link (ON CONFLICT DO NOTHING handles duplicates)
-                  INSERT INTO collection_facet_links (collection_key, facet_id)
+                  INSERT INTO collection_concept_links (collection_key, concept_id)
                   VALUES (collection_record.key, found_facet_id)
-                  ON CONFLICT (collection_key, facet_id) DO NOTHING;
-                  
+                  ON CONFLICT (collection_key, concept_id) DO NOTHING;
+
                   content_type_links := content_type_links + 1;
                 ELSE
                   RAISE NOTICE 'No facet found for CollectionContentType: % (collection: %)', content_type_value, collection_record.key;
                 END IF;
               END LOOP;
             END IF;
-            
+
             -- Process preservation types (array field)
             IF collection_record.preservation_type IS NOT NULL THEN
               -- Use FOREACH to iterate over array elements
@@ -126,10 +128,10 @@
                 IF preservation_type_value IS NULL OR trim(preservation_type_value) = '' THEN
                   CONTINUE;
                 END IF;
-                
+
                 -- Convert format from potential UPPER_CASE_WITH_UNDERSCORES to CamelCase
                 -- Handle common patterns in preservation types
-                preservation_type_value := CASE 
+                preservation_type_value := CASE
                   WHEN preservation_type_value = 'SAMPLE_DRIED' THEN 'SampleDried'
                   WHEN preservation_type_value = 'SAMPLE_CRYOPRESERVED' THEN 'SampleCryopreserved'
                   WHEN preservation_type_value = 'SAMPLE_FLUID_PRESERVED' THEN 'SampleFluidPreserved'
@@ -153,46 +155,103 @@
                   WHEN preservation_type_value = 'STORAGE_OUTDOORS' THEN 'StorageOutdoors'
                   ELSE preservation_type_value -- Keep as-is if already in correct format
                 END;
-                
+
                 -- Find facet ID for PreservationType
-                SELECT id INTO found_facet_id 
-                FROM grscicoll_vocab_facet 
-                WHERE vocabulary_name = 'PreservationType' 
+                SELECT id INTO found_facet_id
+                FROM grscicoll_vocab_concept
+                WHERE vocabulary_name = 'PreservationType'
                 AND name = preservation_type_value;
-                
+
                 IF found_facet_id IS NOT NULL THEN
                   -- Insert facet link (ON CONFLICT DO NOTHING handles duplicates)
-                  INSERT INTO collection_facet_links (collection_key, facet_id)
+                  INSERT INTO collection_concept_links (collection_key, concept_id)
                   VALUES (collection_record.key, found_facet_id)
-                  ON CONFLICT (collection_key, facet_id) DO NOTHING;
-                  
+                  ON CONFLICT (collection_key, concept_id) DO NOTHING;
+
                   preservation_type_links := preservation_type_links + 1;
                 ELSE
                   RAISE NOTICE 'No facet found for PreservationType: % (collection: %)', preservation_type_value, collection_record.key;
                 END IF;
               END LOOP;
             END IF;
-            
+
+            -- Process accession status (single value field)
+            IF collection_record.accession_status IS NOT NULL AND trim(collection_record.accession_status) != '' THEN
+              accession_status_value := collection_record.accession_status;
+
+              -- Normalize accession status value to CamelCase
+              accession_status_value := CASE
+                WHEN accession_status_value = 'INSTITUTIONAL' THEN 'Institutional'
+                WHEN accession_status_value = 'PROJECT' THEN 'Project'
+                WHEN accession_status_value = 'PRIVATE' THEN 'Private'
+                WHEN accession_status_value = 'UNKNOWN' THEN 'Unknown'
+                ELSE accession_status_value -- Keep as-is if already in correct format
+              END;
+
+              -- Find facet ID for AccessionStatus
+              SELECT id INTO found_facet_id
+              FROM grscicoll_vocab_concept
+              WHERE vocabulary_name = 'AccessionStatus'
+              AND name = accession_status_value;
+
+              IF found_facet_id IS NOT NULL THEN
+                -- Insert facet link (ON CONFLICT DO NOTHING handles duplicates)
+                INSERT INTO collection_concept_links (collection_key, concept_id)
+                VALUES (collection_record.key, found_facet_id)
+                ON CONFLICT (collection_key, concept_id) DO NOTHING;
+
+                accession_status_links := accession_status_links + 1;
+              ELSE
+                RAISE NOTICE 'No facet found for AccessionStatus: % (collection: %)', accession_status_value, collection_record.key;
+              END IF;
+            END IF;
+
             -- Progress reporting every 1000 collections
             IF processed_collections % 1000 = 0 THEN
-              RAISE NOTICE 'Processed % of % collections (%.1f%%) - Content type links: %, Preservation type links: %', 
-                processed_collections, total_collections, 
+              RAISE NOTICE 'Processed % of % collections (%.1f%%) - Content type links: %, Preservation type links: %, Accession status links: %',
+                processed_collections, total_collections,
                 (processed_collections::FLOAT / total_collections * 100),
-                content_type_links, preservation_type_links;
+                content_type_links, preservation_type_links, accession_status_links;
             END IF;
           END LOOP;
-          
-          RAISE NOTICE 'Collection facet migration completed in % seconds', 
+
+          RAISE NOTICE 'Collection facet migration completed in % seconds',
             EXTRACT(EPOCH FROM (clock_timestamp() - start_time));
-          RAISE NOTICE 'Final stats: % collections processed, % content type links created, % preservation type links created', 
-            processed_collections, content_type_links, preservation_type_links;
-            
+          RAISE NOTICE 'Final stats: % collections processed, % content type links created, % preservation type links created, % accession status links created',
+            processed_collections, content_type_links, preservation_type_links, accession_status_links;
+
         EXCEPTION
           WHEN OTHERS THEN
             RAISE NOTICE 'Error during collection facet migration: %', SQLERRM;
             RAISE;
         END $$;
+
+        -- Verify the migration results
+        SELECT
+            'CollectionContentType' as vocabulary,
+            COUNT(*) as concept_links_created
+        FROM collection_concept_links ccl
+        JOIN grscicoll_vocab_concept c ON ccl.concept_id = c.id
+        WHERE c.vocabulary_name = 'CollectionContentType'
+
+        UNION ALL
+
+        SELECT
+            'PreservationType' as vocabulary,
+            COUNT(*) as concept_links_created
+        FROM collection_concept_links ccl
+        JOIN grscicoll_vocab_concept c ON ccl.concept_id = c.id
+        WHERE c.vocabulary_name = 'PreservationType'
+
+        UNION ALL
+
+        SELECT
+            'AccessionStatus' as vocabulary,
+            COUNT(*) as concept_links_created
+        FROM collection_concept_links ccl
+        JOIN grscicoll_vocab_concept c ON ccl.concept_id = c.id
+        WHERE c.vocabulary_name = 'AccessionStatus';
       ]]>
     </sql>
   </changeSet>
-</databaseChangeLog> 
+</databaseChangeLog>

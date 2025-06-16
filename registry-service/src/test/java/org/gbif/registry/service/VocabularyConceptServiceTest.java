@@ -1,8 +1,8 @@
 package org.gbif.registry.service;
 
 import org.gbif.api.model.common.paging.PagingResponse;
-import org.gbif.registry.persistence.dto.GrSciCollVocabFacetDto;
-import org.gbif.registry.persistence.mapper.GrScicollVocabFacetMapper;
+import org.gbif.registry.persistence.mapper.dto.GrSciCollVocabConceptDto;
+import org.gbif.registry.persistence.mapper.GrScicollVocabConceptMapper;
 import org.gbif.vocabulary.api.ConceptListParams;
 import org.gbif.vocabulary.api.ConceptView;
 import org.gbif.vocabulary.client.ConceptClient;
@@ -33,27 +33,25 @@ import static org.mockito.ArgumentMatchers.eq;
 
 
 @ExtendWith(MockitoExtension.class)
-public class VocabularyFacetServiceTest {
+public class VocabularyConceptServiceTest {
 
     @Mock
-    private GrScicollVocabFacetMapper grScicollVocabFacetMapper;
+    private GrScicollVocabConceptMapper grScicollVocabConceptMapper;
 
     @Mock
     private ConceptClient conceptClient;
 
     @InjectMocks
-    private VocabularyFacetService vocabularyFacetService;
+    private VocabularyConceptService vocabularyConceptService;
 
     @Captor
-    private ArgumentCaptor<GrSciCollVocabFacetDto> facetDtoCaptor;
+    private ArgumentCaptor<GrSciCollVocabConceptDto> conceptDtoCaptor;
 
     @Captor
     private ArgumentCaptor<String> stringCaptor;
 
-    // Test cases will be added here
-
     @Test
-    public void testPopulateFacets_EmptyVocabulary() throws Exception {
+    public void testPopulateConceptsEmptyVocabulary() throws Exception {
         String vocabularyName = "emptyVocab";
 
         PagingResponse<ConceptView> emptyResponse = new PagingResponse<>();
@@ -63,11 +61,11 @@ public class VocabularyFacetServiceTest {
         when(conceptClient.listConceptsLatestRelease(anyString(), any(ConceptListParams.class)))
             .thenReturn(emptyResponse);
 
-        vocabularyFacetService.populateFacetsForVocabulary(vocabularyName);
+        vocabularyConceptService.populateConceptsForVocabulary(vocabularyName);
 
-        verify(grScicollVocabFacetMapper).deleteByVocabularyName(stringCaptor.capture());
+        verify(grScicollVocabConceptMapper).deleteByVocabularyName(stringCaptor.capture());
         assertEquals(vocabularyName, stringCaptor.getValue());
-        verify(grScicollVocabFacetMapper, never()).create(any(GrSciCollVocabFacetDto.class));
+        verify(grScicollVocabConceptMapper, never()).create(any(GrSciCollVocabConceptDto.class));
     }
 
     private ConceptView createConceptView(Long key, String name, Long parentKey) {
@@ -84,7 +82,7 @@ public class VocabularyFacetServiceTest {
     }
 
     @Test
-    public void testPopulateFacets_FlatVocabulary() throws Exception {
+    public void testPopulateConceptsFlatVocabulary() throws Exception {
         String vocabularyName = "flatVocab";
         ConceptView concept1 = createConceptView(1L, "Term1", null);
         ConceptView concept2 = createConceptView(2L, "Term2", null);
@@ -96,27 +94,27 @@ public class VocabularyFacetServiceTest {
         when(conceptClient.listConceptsLatestRelease(eq(vocabularyName), any(ConceptListParams.class)))
             .thenReturn(response);
 
-        vocabularyFacetService.populateFacetsForVocabulary(vocabularyName);
+        vocabularyConceptService.populateConceptsForVocabulary(vocabularyName);
 
-        verify(grScicollVocabFacetMapper).deleteByVocabularyName(vocabularyName);
-        verify(grScicollVocabFacetMapper, times(2)).create(facetDtoCaptor.capture());
+        verify(grScicollVocabConceptMapper).deleteByVocabularyName(vocabularyName);
+        verify(grScicollVocabConceptMapper, times(2)).create(conceptDtoCaptor.capture());
 
-        List<GrSciCollVocabFacetDto> capturedDtos = facetDtoCaptor.getAllValues();
+        List<GrSciCollVocabConceptDto> capturedDtos = conceptDtoCaptor.getAllValues();
         assertEquals(2, capturedDtos.size());
 
-        GrSciCollVocabFacetDto dto1 = capturedDtos.stream().filter(d -> d.getName().equals("Term1")).findFirst().orElse(null);
+        GrSciCollVocabConceptDto dto1 = capturedDtos.stream().filter(d -> d.getName().equals("Term1")).findFirst().orElse(null);
         assertEquals("Term1", dto1.getName());
         assertEquals("term1", dto1.getPath());
         assertEquals(vocabularyName, dto1.getVocabularyName());
 
-        GrSciCollVocabFacetDto dto2 = capturedDtos.stream().filter(d -> d.getName().equals("Term2")).findFirst().orElse(null);
+        GrSciCollVocabConceptDto dto2 = capturedDtos.stream().filter(d -> d.getName().equals("Term2")).findFirst().orElse(null);
         assertEquals("Term2", dto2.getName());
         assertEquals("term2", dto2.getPath());
         assertEquals(vocabularyName, dto2.getVocabularyName());
     }
 
     @Test
-    public void testPopulateFacets_NestedVocabulary() throws Exception {
+    public void testPopulateConceptsNestedVocabulary() throws Exception {
         String vocabularyName = "nestedVocab";
         ConceptView parent = createConceptView(1L, "Parent", null);
         ConceptView child1 = createConceptView(2L, "Child1", 1L);
@@ -131,12 +129,12 @@ public class VocabularyFacetServiceTest {
         when(conceptClient.listConceptsLatestRelease(eq(vocabularyName), any(ConceptListParams.class)))
             .thenReturn(response);
 
-        vocabularyFacetService.populateFacetsForVocabulary(vocabularyName);
+        vocabularyConceptService.populateConceptsForVocabulary(vocabularyName);
 
-        verify(grScicollVocabFacetMapper).deleteByVocabularyName(vocabularyName);
-        verify(grScicollVocabFacetMapper, times(4)).create(facetDtoCaptor.capture());
+        verify(grScicollVocabConceptMapper).deleteByVocabularyName(vocabularyName);
+        verify(grScicollVocabConceptMapper, times(4)).create(conceptDtoCaptor.capture());
 
-        List<GrSciCollVocabFacetDto> capturedDtos = facetDtoCaptor.getAllValues();
+        List<GrSciCollVocabConceptDto> capturedDtos = conceptDtoCaptor.getAllValues();
         assertEquals(4, capturedDtos.size());
 
         Map<String, String> expectedPaths = Map.of(
@@ -146,7 +144,7 @@ public class VocabularyFacetServiceTest {
             "Grandchild1", "parent.child1.grandchild1"
         );
 
-        for (GrSciCollVocabFacetDto dto : capturedDtos) {
+        for (GrSciCollVocabConceptDto dto : capturedDtos) {
             assertEquals(vocabularyName, dto.getVocabularyName());
             assertTrue(expectedPaths.containsKey(dto.getName()), "Unexpected concept name: " + dto.getName());
             assertEquals(expectedPaths.get(dto.getName()), dto.getPath(), "Path mismatch for " + dto.getName());
@@ -154,7 +152,7 @@ public class VocabularyFacetServiceTest {
     }
 
     @Test
-    public void testPopulateFacets_NameSanitization() throws Exception {
+    public void testPopulateConceptsNameSanitization() throws Exception {
         String vocabularyName = "sanitizeVocab";
         ConceptView concept1 = createConceptView(1L, "Term With Spaces", null);
         ConceptView concept2 = createConceptView(2L, "Term-With-Hyphens_And_Underscores", null);
@@ -169,12 +167,12 @@ public class VocabularyFacetServiceTest {
         when(conceptClient.listConceptsLatestRelease(eq(vocabularyName), any(ConceptListParams.class)))
             .thenReturn(response);
 
-        vocabularyFacetService.populateFacetsForVocabulary(vocabularyName);
+        vocabularyConceptService.populateConceptsForVocabulary(vocabularyName);
 
-        verify(grScicollVocabFacetMapper).deleteByVocabularyName(vocabularyName);
-        verify(grScicollVocabFacetMapper, times(5)).create(facetDtoCaptor.capture());
+        verify(grScicollVocabConceptMapper).deleteByVocabularyName(vocabularyName);
+        verify(grScicollVocabConceptMapper, times(5)).create(conceptDtoCaptor.capture());
 
-        List<GrSciCollVocabFacetDto> capturedDtos = facetDtoCaptor.getAllValues();
+        List<GrSciCollVocabConceptDto> capturedDtos = conceptDtoCaptor.getAllValues();
         Map<String, String> expectedPaths = Map.of(
             "Term With Spaces", "term_with_spaces",
             "Term-With-Hyphens_And_Underscores", "term-with-hyphens_and_underscores",
@@ -183,7 +181,7 @@ public class VocabularyFacetServiceTest {
             "Child Of Space", "parent_with_space.child_of_space"
         );
 
-        for (GrSciCollVocabFacetDto dto : capturedDtos) {
+        for (GrSciCollVocabConceptDto dto : capturedDtos) {
             assertEquals(vocabularyName, dto.getVocabularyName());
             assertTrue(expectedPaths.containsKey(dto.getName()), "Unexpected concept name in sanitization test: " + dto.getName());
             assertEquals(expectedPaths.get(dto.getName()), dto.getPath(), "Path mismatch for sanitized name " + dto.getName());
@@ -191,7 +189,7 @@ public class VocabularyFacetServiceTest {
     }
 
     @Test
-    public void testPopulateFacets_Paging() throws Exception {
+    public void testPopulateConceptsPaging() throws Exception {
         String vocabularyName = "pagedVocab";
 
         ConceptView concept1 = createConceptView(1L, "Page1Term1", null);
@@ -211,13 +209,13 @@ public class VocabularyFacetServiceTest {
             .thenReturn(page1Response)
             .thenReturn(page2Response);
 
-        vocabularyFacetService.populateFacetsForVocabulary(vocabularyName);
+        vocabularyConceptService.populateConceptsForVocabulary(vocabularyName);
 
-        verify(grScicollVocabFacetMapper).deleteByVocabularyName(vocabularyName);
+        verify(grScicollVocabConceptMapper).deleteByVocabularyName(vocabularyName);
         // Expect 3 concepts to be processed in total
-        verify(grScicollVocabFacetMapper, times(3)).create(facetDtoCaptor.capture());
+        verify(grScicollVocabConceptMapper, times(3)).create(conceptDtoCaptor.capture());
 
-        List<GrSciCollVocabFacetDto> capturedDtos = facetDtoCaptor.getAllValues();
+        List<GrSciCollVocabConceptDto> capturedDtos = conceptDtoCaptor.getAllValues();
         assertEquals(3, capturedDtos.size());
         assertTrue(capturedDtos.stream().anyMatch(d -> d.getName().equals("Page1Term1") && d.getPath().equals("page1term1")));
         assertTrue(capturedDtos.stream().anyMatch(d -> d.getName().equals("Page1Term2") && d.getPath().equals("page1term2")));
@@ -228,7 +226,7 @@ public class VocabularyFacetServiceTest {
     }
 
     @Test
-    public void testPopulateFacets_OrphanParent() throws Exception {
+    public void testPopulateConceptsOrphanParent() throws Exception {
         String vocabularyName = "orphanVocab";
         // Parent with key 1L is deliberately missing from the response
         ConceptView childWithOrphanParent = createConceptView(2L, "OrphanChild", 1L); // ParentKey 1L does not exist
@@ -242,30 +240,30 @@ public class VocabularyFacetServiceTest {
         when(conceptClient.listConceptsLatestRelease(eq(vocabularyName), any(ConceptListParams.class)))
             .thenReturn(response);
 
-        vocabularyFacetService.populateFacetsForVocabulary(vocabularyName);
+        vocabularyConceptService.populateConceptsForVocabulary(vocabularyName);
 
-        verify(grScicollVocabFacetMapper).deleteByVocabularyName(vocabularyName);
-        verify(grScicollVocabFacetMapper, times(2)).create(facetDtoCaptor.capture());
+        verify(grScicollVocabConceptMapper).deleteByVocabularyName(vocabularyName);
+        verify(grScicollVocabConceptMapper, times(2)).create(conceptDtoCaptor.capture());
 
-        List<GrSciCollVocabFacetDto> capturedDtos = facetDtoCaptor.getAllValues();
+        List<GrSciCollVocabConceptDto> capturedDtos = conceptDtoCaptor.getAllValues();
         assertEquals(2, capturedDtos.size());
 
-        GrSciCollVocabFacetDto orphanDto = capturedDtos.stream().filter(d -> d.getName().equals("OrphanChild")).findFirst().orElse(null);
+        GrSciCollVocabConceptDto orphanDto = capturedDtos.stream().filter(d -> d.getName().equals("OrphanChild")).findFirst().orElse(null);
         assertEquals("OrphanChild", orphanDto.getName());
         // The service logs a warning and prepends _orphanparent_
         assertEquals("_orphanparent_.orphanchild", orphanDto.getPath());
         assertEquals(vocabularyName, orphanDto.getVocabularyName());
 
-        GrSciCollVocabFacetDto standaloneDto = capturedDtos.stream().filter(d -> d.getName().equals("Standalone")).findFirst().orElse(null);
+        GrSciCollVocabConceptDto standaloneDto = capturedDtos.stream().filter(d -> d.getName().equals("Standalone")).findFirst().orElse(null);
         assertEquals("Standalone", standaloneDto.getName());
         assertEquals("standalone", standaloneDto.getPath());
         assertEquals(vocabularyName, standaloneDto.getVocabularyName());
     }
 
     @Test
-    public void testPopulateFacets_MaxDepth() throws Exception {
+    public void testPopulateConceptsMaxDepth() throws Exception {
         String vocabularyName = "deepVocab";
-        final int MAX_DEPTH = 20; // As defined in VocabularyFacetService
+        final int MAX_DEPTH = 20; // As defined in VocabularyConceptsService
         List<ConceptView> concepts = new ArrayList<>();
         ConceptView parent = null;
         Long parentKey = null;
@@ -288,15 +286,15 @@ public class VocabularyFacetServiceTest {
         when(conceptClient.listConceptsLatestRelease(eq(vocabularyName), any(ConceptListParams.class)))
             .thenReturn(response);
 
-        vocabularyFacetService.populateFacetsForVocabulary(vocabularyName);
+        vocabularyConceptService.populateConceptsForVocabulary(vocabularyName);
 
-        verify(grScicollVocabFacetMapper).deleteByVocabularyName(vocabularyName);
+        verify(grScicollVocabConceptMapper).deleteByVocabularyName(vocabularyName);
         // All concepts should still be processed and created
-        verify(grScicollVocabFacetMapper, times(MAX_DEPTH + 5)).create(facetDtoCaptor.capture());
+        verify(grScicollVocabConceptMapper, times(MAX_DEPTH + 5)).create(conceptDtoCaptor.capture());
 
-        List<GrSciCollVocabFacetDto> capturedDtos = facetDtoCaptor.getAllValues();
-        GrSciCollVocabFacetDto deepDto = null;
-        for (GrSciCollVocabFacetDto dto : capturedDtos) {
+        List<GrSciCollVocabConceptDto> capturedDtos = conceptDtoCaptor.getAllValues();
+        GrSciCollVocabConceptDto deepDto = null;
+        for (GrSciCollVocabConceptDto dto : capturedDtos) {
             if (dto.getName().equals("Level" + (MAX_DEPTH + 4))) {
                 deepDto = dto;
                 break;

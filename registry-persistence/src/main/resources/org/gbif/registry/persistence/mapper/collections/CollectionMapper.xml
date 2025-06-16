@@ -232,20 +232,20 @@
       INNER JOIN collection_identifier ci on ci.collection_key = c.key
       INNER JOIN identifier id on id.key = ci.identifier_key
     </if>
-    <!-- Hierarchical facet-based filtering for content types -->
+    <!-- Hierarchical concept-based filtering for content types -->
     <if test="params.contentTypes != null and params.contentTypes.size > 0">
-      INNER JOIN collection_facet_links cfl_content ON cfl_content.collection_key = c.key
-      INNER JOIN grscicoll_vocab_facet f_content ON cfl_content.facet_id = f_content.id
+      INNER JOIN collection_concept_links cfl_content ON cfl_content.collection_key = c.key
+      INNER JOIN grscicoll_vocab_concept f_content ON cfl_content.concept_id = f_content.id
         AND f_content.vocabulary_name = 'CollectionContentType'
         AND f_content.name IN
         <foreach item="item" collection="params.contentTypes" open="(" separator="," close=")">
           #{item,jdbcType=VARCHAR}
         </foreach>
     </if>
-    <!-- Hierarchical facet-based filtering for preservation types -->
+    <!-- Hierarchical concept-based filtering for preservation types -->
     <if test="params.preservationTypes != null and params.preservationTypes.size > 0">
-      INNER JOIN collection_facet_links cfl_preservation ON cfl_preservation.collection_key = c.key
-      INNER JOIN grscicoll_vocab_facet f_preservation ON cfl_preservation.facet_id = f_preservation.id
+      INNER JOIN collection_concept_links cfl_preservation ON cfl_preservation.collection_key = c.key
+      INNER JOIN grscicoll_vocab_concept f_preservation ON cfl_preservation.concept_id = f_preservation.id
         AND f_preservation.vocabulary_name = 'PreservationType'
         AND f_preservation.name IN
         <foreach item="item" collection="params.preservationTypes" open="(" separator="," close=")">

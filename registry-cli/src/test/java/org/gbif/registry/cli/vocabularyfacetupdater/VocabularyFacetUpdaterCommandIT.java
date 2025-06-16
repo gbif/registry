@@ -16,7 +16,7 @@ package org.gbif.registry.cli.vocabularyfacetupdater;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.registry.cli.common.spring.SpringContextBuilder;
 import org.gbif.registry.database.BaseDBTest;
-import org.gbif.registry.service.VocabularyFacetService;
+import org.gbif.registry.service.VocabularyConceptService;
 import org.gbif.registry.service.WithMyBatis;
 import org.gbif.vocabulary.api.ConceptListParams;
 import org.gbif.vocabulary.api.ConceptView;
@@ -29,7 +29,6 @@ import java.sql.ResultSet;
 import java.util.List;
 import java.util.Set;
 
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -54,7 +53,7 @@ import static org.mockito.Mockito.when;
 @DisabledIfSystemProperty(named = "test.vocabulary.facet", matches = "false")
 public class VocabularyFacetUpdaterCommandIT extends BaseDBTest {
 
-  private static VocabularyFacetService vocabularyFacetService;
+  private static VocabularyConceptService vocabularyConceptService;
   private static ApplicationContext ctx;
   private static ConceptClient mockConceptClient;
 
@@ -76,18 +75,18 @@ public class VocabularyFacetUpdaterCommandIT extends BaseDBTest {
     VocabularyFacetUpdaterConfiguration config = new VocabularyFacetUpdaterConfiguration();
     config.setDbConfig(toDbConfig(PG_CONTAINER));
     config.apiRootUrl = "http://test-api.example.com/v1/"; // Mock URL
-    config.vocabulariesToProcess = Set.of("CollectionContentType", "PreservationType");
+    config.vocabulariesToProcess = Set.of("Discipline", "InstitutionType", "InstitutionalGovernance", "CollectionContentType", "PreservationType", "AccessionStatus");
 
     // Build the Spring context with mock ConceptClient
     ctx = SpringContextBuilder.create()
         .withVocabularyFacetUpdaterConfiguration(config)
         .withComponents(
-            VocabularyFacetService.class,
+            VocabularyConceptService.class,
             WithMyBatis.class,
             TestConfiguration.class)
         .build();
 
-    vocabularyFacetService = ctx.getBean(VocabularyFacetService.class);
+    vocabularyConceptService = ctx.getBean(VocabularyConceptService.class);
   }
 
   private static void setupMockConceptClient() {
@@ -117,6 +116,54 @@ public class VocabularyFacetUpdaterCommandIT extends BaseDBTest {
     when(mockConceptClient.listConceptsLatestRelease(eq("PreservationType"), any(ConceptListParams.class)))
         .thenReturn(preservationTypeResponse);
 
+    // Mock Discipline vocabulary
+    PagingResponse<ConceptView> disciplineResponse = new PagingResponse<>();
+    disciplineResponse.setResults(List.of(
+        createConceptView(30L, "LifeSciences", null),
+        createConceptView(31L, "Botany", 30L), // Child of LifeSciences
+        createConceptView(32L, "Zoology", 30L) // Child of LifeSciences
+    ));
+    disciplineResponse.setEndOfRecords(true);
+
+    when(mockConceptClient.listConceptsLatestRelease(eq("Discipline"), any(ConceptListParams.class)))
+        .thenReturn(disciplineResponse);
+
+    // Mock InstitutionType vocabulary
+    PagingResponse<ConceptView> institutionTypeResponse = new PagingResponse<>();
+    institutionTypeResponse.setResults(List.of(
+        createConceptView(40L, "Museum", null),
+        createConceptView(41L, "University", null),
+        createConceptView(42L, "Herbarium", 40L) // Child of Museum
+    ));
+    institutionTypeResponse.setEndOfRecords(true);
+
+    when(mockConceptClient.listConceptsLatestRelease(eq("InstitutionType"), any(ConceptListParams.class)))
+        .thenReturn(institutionTypeResponse);
+
+    // Mock InstitutionalGovernance vocabulary
+    PagingResponse<ConceptView> institutionalGovernanceResponse = new PagingResponse<>();
+    institutionalGovernanceResponse.setResults(List.of(
+        createConceptView(50L, "Government", null),
+        createConceptView(51L, "Academic", null),
+        createConceptView(52L, "Private", null)
+    ));
+    institutionalGovernanceResponse.setEndOfRecords(true);
+
+    when(mockConceptClient.listConceptsLatestRelease(eq("InstitutionalGovernance"), any(ConceptListParams.class)))
+        .thenReturn(institutionalGovernanceResponse);
+
+    // Mock AccessionStatus vocabulary
+    PagingResponse<ConceptView> accessionStatusResponse = new PagingResponse<>();
+    accessionStatusResponse.setResults(List.of(
+        createConceptView(60L, "Institutional", null),
+        createConceptView(61L, "Project", null),
+        createConceptView(62L, "Private", null)
+    ));
+    accessionStatusResponse.setEndOfRecords(true);
+
+    when(mockConceptClient.listConceptsLatestRelease(eq("AccessionStatus"), any(ConceptListParams.class)))
+        .thenReturn(accessionStatusResponse);
+
     // Mock non-existent vocabulary
     PagingResponse<ConceptView> emptyResponse = new PagingResponse<>();
     emptyResponse.setResults(List.of());
@@ -141,8 +188,8 @@ public class VocabularyFacetUpdaterCommandIT extends BaseDBTest {
   public void prepareDatabase() throws Exception {
     Connection con = PG_CONTAINER.createConnection("");
 
-    // Clear grscicoll_vocab_facet table
-    PreparedStatement stmt = con.prepareStatement("DELETE FROM grscicoll_vocab_facet");
+    // Clear grscicoll_vocab_concept table
+    PreparedStatement stmt = con.prepareStatement("DELETE FROM grscicoll_vocab_concept");
     stmt.executeUpdate();
 
     con.close();
@@ -155,13 +202,13 @@ public class VocabularyFacetUpdaterCommandIT extends BaseDBTest {
     assertFacetCount("PreservationType", 0);
 
     // Run the vocabulary facet updater for CollectionContentType
-    vocabularyFacetService.populateFacetsForVocabulary("CollectionContentType");
+    vocabularyConceptService.populateConceptsForVocabulary("CollectionContentType");
 
     // Verify expected number of facets were created (4 concepts in mock)
     assertFacetCount("CollectionContentType", 4);
 
     // Run for PreservationType
-    vocabularyFacetService.populateFacetsForVocabulary("PreservationType");
+    vocabularyConceptService.populateConceptsForVocabulary("PreservationType");
 
     // Verify expected number of facets were created (4 concepts in mock)
     assertFacetCount("PreservationType", 4);
@@ -185,7 +232,7 @@ public class VocabularyFacetUpdaterCommandIT extends BaseDBTest {
     assertEquals(1, initialCount, "Should have 1 existing facet");
 
     // Run the updater (this should replace existing facets)
-    vocabularyFacetService.populateFacetsForVocabulary("CollectionContentType");
+    vocabularyConceptService.populateConceptsForVocabulary("CollectionContentType");
 
     // Verify mock data replaced the existing facet
     assertFacetCount("CollectionContentType", 4); // Should have 4 mock concepts
@@ -197,7 +244,7 @@ public class VocabularyFacetUpdaterCommandIT extends BaseDBTest {
   public void testNonExistentVocabulary() throws Exception {
     // Test with non-existent vocabulary - should not crash
     assertDoesNotThrow(() -> {
-      vocabularyFacetService.populateFacetsForVocabulary("NonExistentVocabulary");
+      vocabularyConceptService.populateConceptsForVocabulary("NonExistentVocabulary");
     });
 
     // Should not create any facets
@@ -212,7 +259,7 @@ public class VocabularyFacetUpdaterCommandIT extends BaseDBTest {
   private int getFacetCount(String vocabularyName) throws Exception {
     Connection con = PG_CONTAINER.createConnection("");
     PreparedStatement stmt = con.prepareStatement(
-        "SELECT COUNT(*) FROM grscicoll_vocab_facet WHERE vocabulary_name = ?");
+        "SELECT COUNT(*) FROM grscicoll_vocab_concept WHERE vocabulary_name = ?");
     stmt.setString(1, vocabularyName);
 
     ResultSet rs = stmt.executeQuery();
@@ -226,7 +273,7 @@ public class VocabularyFacetUpdaterCommandIT extends BaseDBTest {
   private void insertTestFacet(String vocabularyName, String name, String path) throws Exception {
     Connection con = PG_CONTAINER.createConnection("");
     PreparedStatement stmt = con.prepareStatement(
-        "INSERT INTO grscicoll_vocab_facet (vocabulary_name, name, path) VALUES (?, ?, ?::ltree)");
+        "INSERT INTO grscicoll_vocab_concept (vocabulary_name, name, path) VALUES (?, ?, ?::ltree)");
     stmt.setString(1, vocabularyName);
     stmt.setString(2, name);
     stmt.setString(3, path);
@@ -240,7 +287,7 @@ public class VocabularyFacetUpdaterCommandIT extends BaseDBTest {
 
     // Verify that hierarchical paths exist
     PreparedStatement stmt = con.prepareStatement(
-        "SELECT COUNT(*) FROM grscicoll_vocab_facet WHERE vocabulary_name = ? AND nlevel(path) > 1");
+        "SELECT COUNT(*) FROM grscicoll_vocab_concept WHERE vocabulary_name = ? AND nlevel(path) > 1");
     stmt.setString(1, vocabularyName);
 
     ResultSet rs = stmt.executeQuery();
@@ -259,7 +306,7 @@ public class VocabularyFacetUpdaterCommandIT extends BaseDBTest {
   private void assertFacetExists(String vocabularyName, String facetName) throws Exception {
     Connection con = PG_CONTAINER.createConnection("");
     PreparedStatement stmt = con.prepareStatement(
-        "SELECT COUNT(*) FROM grscicoll_vocab_facet WHERE vocabulary_name = ? AND name = ?");
+        "SELECT COUNT(*) FROM grscicoll_vocab_concept WHERE vocabulary_name = ? AND name = ?");
     stmt.setString(1, vocabularyName);
     stmt.setString(2, facetName);
 
@@ -274,7 +321,7 @@ public class VocabularyFacetUpdaterCommandIT extends BaseDBTest {
   private void assertFacetNotExists(String vocabularyName, String facetName) throws Exception {
     Connection con = PG_CONTAINER.createConnection("");
     PreparedStatement stmt = con.prepareStatement(
-        "SELECT COUNT(*) FROM grscicoll_vocab_facet WHERE vocabulary_name = ? AND name = ?");
+        "SELECT COUNT(*) FROM grscicoll_vocab_concept WHERE vocabulary_name = ? AND name = ?");
     stmt.setString(1, vocabularyName);
     stmt.setString(2, facetName);
 

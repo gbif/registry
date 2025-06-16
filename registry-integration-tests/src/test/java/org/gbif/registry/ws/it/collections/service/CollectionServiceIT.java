@@ -46,8 +46,8 @@ import org.gbif.registry.persistence.mapper.collections.params.DuplicatesSearchP
 import org.gbif.registry.service.collections.duplicates.CollectionDuplicatesService;
 import org.gbif.registry.service.collections.utils.LatimerCoreConverter;
 import org.gbif.registry.test.mocks.ConceptClientMock;
-import org.gbif.registry.persistence.mapper.GrScicollVocabFacetMapper;
-import org.gbif.registry.ws.it.collections.FacetTestSetup;
+import org.gbif.registry.persistence.mapper.GrScicollVocabConceptMapper;
+import org.gbif.registry.ws.it.collections.ConceptTestSetup;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeEach;
@@ -60,7 +60,7 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
   private final CollectionService collectionService;
   private final CollectionDuplicatesService duplicatesService;
   private final InstitutionService institutionService;
-  private final GrScicollVocabFacetMapper grScicollVocabFacetMapper;
+  private final GrScicollVocabConceptMapper grScicollVocabConceptMapper;
 
   @Autowired
   public CollectionServiceIT(
@@ -72,7 +72,7 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
       InstallationService installationService,
       SimplePrincipalProvider principalProvider,
       CollectionDuplicatesService duplicatesService,
-      GrScicollVocabFacetMapper grScicollVocabFacetMapper) {
+      GrScicollVocabConceptMapper grScicollVocabConceptMapper) {
     super(
         collectionService,
         datasetService,
@@ -85,17 +85,17 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
     this.collectionService = collectionService;
     this.duplicatesService = duplicatesService;
     this.institutionService = institutionService;
-    this.grScicollVocabFacetMapper = grScicollVocabFacetMapper;
+    this.grScicollVocabConceptMapper = grScicollVocabConceptMapper;
   }
 
   @BeforeEach
   public void setupFacets() {
-    FacetTestSetup.setupCommonFacets(grScicollVocabFacetMapper);
+    ConceptTestSetup.setupCommonConcepts(grScicollVocabConceptMapper);
   }
 
   @AfterEach
   public void cleanupFacets() {
-    FacetTestSetup.cleanupTestFacets(grScicollVocabFacetMapper);
+    ConceptTestSetup.cleanupTestConcepts(grScicollVocabConceptMapper);
   }
 
   @Test

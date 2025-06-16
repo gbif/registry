@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.gbif.registry.persistence.mapper.GrScicollVocabConceptMapper">
+
+  <insert id="create" parameterType="org.gbif.registry.persistence.mapper.dto.GrSciCollVocabConceptDto" useGeneratedKeys="true" keyProperty="id">
+    INSERT INTO grscicoll_vocab_concept (vocabulary_name, name, path)
+    VALUES (
+      #{vocabularyName,jdbcType=VARCHAR},
+      #{name,jdbcType=VARCHAR},
+      #{path,jdbcType=OTHER,typeHandler=org.gbif.registry.persistence.facet.LtreeTypeHandler}
+    )
+  </insert>
+
+  <update id="update" parameterType="org.gbif.registry.persistence.mapper.dto.GrSciCollVocabConceptDto">
+    UPDATE grscicoll_vocab_concept
+    SET
+      vocabulary_name = #{vocabularyName,jdbcType=VARCHAR},
+      name = #{name,jdbcType=VARCHAR},
+      path = #{path,jdbcType=OTHER,typeHandler=org.gbif.registry.persistence.facet.LtreeTypeHandler}
+    WHERE
+      id = #{id,jdbcType=INTEGER}
+  </update>
+
+  <delete id="deleteByVocabularyName">
+    DELETE FROM grscicoll_vocab_concept
+    WHERE vocabulary_name = #{vocabularyName,jdbcType=VARCHAR}
+  </delete>
+
+  <!-- Get concept ID by vocabulary name and concept name -->
+  <select id="getConceptIdByVocabularyAndName" resultType="java.lang.Integer">
+    SELECT id
+    FROM grscicoll_vocab_concept
+    WHERE vocabulary_name = #{vocabularyName,jdbcType=VARCHAR}
+      AND name = #{conceptName,jdbcType=VARCHAR}
+  </select>
+
+  <!-- Insert institution concept link -->
+  <insert id="insertInstitutionConcept">
+    INSERT INTO institution_concept_links (institution_key, concept_id)
+    VALUES (
+      #{institutionKey,jdbcType=OTHER},
+      #{conceptId,jdbcType=INTEGER}
+    )
+    ON CONFLICT (institution_key, concept_id) DO NOTHING
+  </insert>
+
+  <!-- Delete all concept links for an institution -->
+  <delete id="deleteInstitutionConcepts">
+    DELETE FROM institution_concept_links
+    WHERE institution_key = #{institutionKey,jdbcType=OTHER}
+  </delete>
+
+  <!-- Insert collection concept link -->
+  <insert id="insertCollectionConcept">
+    INSERT INTO collection_concept_links (collection_key, concept_id)
+    VALUES (
+      #{collectionKey,jdbcType=OTHER},
+      #{conceptId,jdbcType=INTEGER}
+    )
+    ON CONFLICT (collection_key, concept_id) DO NOTHING
+  </insert>
+
+  <!-- Delete all concept links for a collection -->
+  <delete id="deleteCollectionConcepts">
+    DELETE FROM collection_concept_links
+    WHERE collection_key = #{collectionKey,jdbcType=OTHER}
+  </delete>
+
+</mapper>

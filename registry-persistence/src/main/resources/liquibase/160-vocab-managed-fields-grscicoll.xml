@@ -1,46 +1,46 @@
 <databaseChangeLog
   xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+  xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
 
-  <changeSet id="160" author="auzun">
+<changeSet id="160" author="auzun">
     <sql splitStatements="false" stripComments="true">
       <![CDATA[
         -- Enable ltree extension if not already enabled
         CREATE EXTENSION IF NOT EXISTS ltree;
 
-        -- Table for storing facet definitions and their hierarchy
-        CREATE TABLE grscicoll_vocab_facet (
+        -- Table for storing concept definitions and their hierarchy
+        CREATE TABLE grscicoll_vocab_concept (
             id SERIAL PRIMARY KEY,
             vocabulary_name TEXT NOT NULL, -- e.g., 'DISCIPLINE', 'INSTITUTION_TYPE'
             name TEXT NOT NULL,            -- Display name, e.g., 'Botany', 'Herpetology'
             path LTREE NOT NULL,           -- LTREE path, e.g., 'LifeSciences.Botany'
-            CONSTRAINT uq_grscicoll_vocab_facet_vocab_path UNIQUE (vocabulary_name, path),
-            CONSTRAINT uq_grscicoll_vocab_facet_vocab_name UNIQUE (vocabulary_name, name)
+            CONSTRAINT uq_grscicoll_vocab_concept_vocab_path UNIQUE (vocabulary_name, path),
+            CONSTRAINT uq_grscicoll_vocab_concept_vocab_name UNIQUE (vocabulary_name, name)
         );
 
         -- GiST index for efficient hierarchical queries on path
-        CREATE INDEX idx_grscicoll_vocab_facet_path_gist ON grscicoll_vocab_facet USING GIST (path);
+        CREATE INDEX idx_grscicoll_vocab_concept_path_gist ON grscicoll_vocab_concept USING GIST (path);
         -- B-tree index for lookups by vocabulary and name
-        CREATE INDEX idx_grscicoll_vocab_facet_vocabulary_name ON grscicoll_vocab_facet (vocabulary_name, name);
+        CREATE INDEX idx_grscicoll_vocab_concept_vocabulary_name ON grscicoll_vocab_concept (vocabulary_name, name);
 
-        -- Link table for institutions and their facets
-        CREATE TABLE institution_facet_links (
+        -- Link table for institutions and their concepts
+        CREATE TABLE institution_concept_links (
             institution_key UUID NOT NULL REFERENCES institution(key) ON DELETE CASCADE,
-            facet_id INTEGER NOT NULL REFERENCES grscicoll_vocab_facet(id) ON DELETE CASCADE,
-            PRIMARY KEY (institution_key, facet_id)
+            concept_id INTEGER NOT NULL REFERENCES grscicoll_vocab_concept(id) ON DELETE CASCADE,
+            PRIMARY KEY (institution_key, concept_id)
         );
-        CREATE INDEX idx_ifl_institution_key ON institution_facet_links(institution_key);
-        CREATE INDEX idx_ifl_facet_id ON institution_facet_links(facet_id);
+        CREATE INDEX idx_icl_institution_key ON institution_concept_links(institution_key);
+        CREATE INDEX idx_icl_concept_id ON institution_concept_links(concept_id);
 
-        -- Link table for collections and their facets
-        CREATE TABLE collection_facet_links (
+        -- Link table for collections and their concepts
+        CREATE TABLE collection_concept_links (
             collection_key UUID NOT NULL REFERENCES collection(key) ON DELETE CASCADE,
-            facet_id INTEGER NOT NULL REFERENCES grscicoll_vocab_facet(id) ON DELETE CASCADE,
-            PRIMARY KEY (collection_key, facet_id)
+            concept_id INTEGER NOT NULL REFERENCES grscicoll_vocab_concept(id) ON DELETE CASCADE,
+            PRIMARY KEY (collection_key, concept_id)
         );
-        CREATE INDEX idx_cfl_collection_key ON collection_facet_links(collection_key);
-        CREATE INDEX idx_cfl_facet_id ON collection_facet_links(facet_id);
+        CREATE INDEX idx_ccl_collection_key ON collection_concept_links(collection_key);
+        CREATE INDEX idx_ccl_concept_id ON collection_concept_links(concept_id);
       ]]>
     </sql>
   </changeSet>

@@ -52,8 +52,8 @@ import org.gbif.api.vocabulary.collections.InstitutionFacetParameter;
 import org.gbif.registry.database.TestCaseDatabaseInitializer;
 import org.gbif.registry.service.collections.CollectionsSearchService;
 import org.gbif.registry.test.mocks.NameUsageMatchingServiceMock;
-import org.gbif.registry.persistence.mapper.GrScicollVocabFacetMapper;
-import org.gbif.registry.ws.it.collections.FacetTestSetup;
+import org.gbif.registry.persistence.mapper.GrScicollVocabConceptMapper;
+import org.gbif.registry.ws.it.collections.ConceptTestSetup;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.AfterEach;
@@ -73,7 +73,7 @@ public class CollectionsSearchIT extends BaseServiceIT {
   private final InstitutionService institutionService;
   private final CollectionService collectionService;
   private final DescriptorsService descriptorsService;
-  private final GrScicollVocabFacetMapper grScicollVocabFacetMapper;
+  private final GrScicollVocabConceptMapper grScicollVocabConceptMapper;
 
   private final Institution i1 = new Institution();
   private final Institution i11 = new Institution();
@@ -89,20 +89,20 @@ public class CollectionsSearchIT extends BaseServiceIT {
       InstitutionService institutionService,
       CollectionService collectionService,
       DescriptorsService descriptorsService,
-      GrScicollVocabFacetMapper grScicollVocabFacetMapper) {
+      GrScicollVocabConceptMapper grScicollVocabConceptMapper) {
     super(simplePrincipalProvider);
     this.searchService = collectionsSearchService;
     this.institutionService = institutionService;
     this.collectionService = collectionService;
     this.descriptorsService = descriptorsService;
-    this.grScicollVocabFacetMapper = grScicollVocabFacetMapper;
+    this.grScicollVocabConceptMapper = grScicollVocabConceptMapper;
   }
 
   @SneakyThrows
   @BeforeEach
   public void loadData() {
     // Setup facets first
-    FacetTestSetup.setupCommonFacets(grScicollVocabFacetMapper);
+    ConceptTestSetup.setupCommonConcepts(grScicollVocabConceptMapper);
 
     i1.setCode("I1");
     i1.setName("Institution 1");
@@ -194,7 +194,7 @@ public class CollectionsSearchIT extends BaseServiceIT {
 
   @AfterEach
   public void cleanup() {
-    FacetTestSetup.cleanupTestFacets(grScicollVocabFacetMapper);
+    ConceptTestSetup.cleanupTestConcepts(grScicollVocabConceptMapper);
   }
 
   @Test

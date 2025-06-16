@@ -7,7 +7,7 @@ import org.gbif.common.messaging.MessageListener;
 import org.gbif.registry.cli.common.spring.SpringContextBuilder;
 import org.gbif.registry.ws.config.WebMvcConfig;
 import org.gbif.registry.service.WithMyBatis;
-import org.gbif.registry.service.VocabularyFacetService;
+import org.gbif.registry.service.VocabularyConceptService;
 
 
 import org.springframework.context.ApplicationContext;
@@ -35,14 +35,14 @@ public class VocabularyFacetUpdaterService extends AbstractIdleService {
     ctx = SpringContextBuilder.create()
         .withVocabularyFacetUpdaterConfiguration(config)
         .withComponents(
-            VocabularyFacetService.class,
+            VocabularyConceptService.class,
             WithMyBatis.class,
             WebMvcConfig.class)
         .build();
 
     // Create the callback for handling vocabulary released messages
     VocabularyFacetUpdaterCallback callback = new VocabularyFacetUpdaterCallback(
-        ctx.getBean(VocabularyFacetService.class),
+        ctx.getBean(VocabularyConceptService.class),
         config.getVocabulariesToProcess());
 
     // Set up the message listener

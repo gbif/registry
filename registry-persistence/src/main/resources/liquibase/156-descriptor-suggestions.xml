@@ -18,7 +18,7 @@
             description TEXT,
             format TEXT,
             proposed TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-            proposed_by VARCHAR CHECK (assert_min_length(proposed_by, 3)),
+            proposed_by VARCHAR NOT NULL CHECK (assert_min_length(proposed_by, 3)),
             proposer_email VARCHAR NOT NULL CHECK (assert_min_length(proposer_email, 3)),
             applied TIMESTAMP WITH TIME ZONE,
             applied_by VARCHAR CHECK (assert_min_length(applied_by, 3)),

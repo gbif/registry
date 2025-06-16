@@ -2,7 +2,7 @@ package org.gbif.registry.cli.vocabularyfacetupdater;
 
 import org.gbif.common.messaging.AbstractMessageCallback;
 import org.gbif.common.messaging.api.messages.VocabularyReleasedMessage;
-import org.gbif.registry.service.VocabularyFacetService;
+import org.gbif.registry.service.VocabularyConceptService;
 
 import java.util.Set;
 
@@ -14,7 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 public class VocabularyFacetUpdaterCallback extends
   AbstractMessageCallback<VocabularyReleasedMessage> {
 
-  private final VocabularyFacetService vocabularyFacetService;
+  private final VocabularyConceptService vocabularyConceptService;
   private final Set<String> vocabulariesToProcess; // From configuration
 
   @Override
@@ -30,7 +30,7 @@ public class VocabularyFacetUpdaterCallback extends
       try {
         log.info("Processing vocabulary: {} for facet update.", message.getVocabularyName());
         // Call the service using only the vocabulary name
-        vocabularyFacetService.populateFacetsForVocabulary(message.getVocabularyName());
+        vocabularyConceptService.populateConceptsForVocabulary(message.getVocabularyName());
         log.info("Successfully processed vocabulary: {} for facet update.", message.getVocabularyName());
       } catch (Exception e) {
         log.error(

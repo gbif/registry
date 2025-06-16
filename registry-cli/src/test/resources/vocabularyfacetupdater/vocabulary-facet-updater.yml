@@ -28,8 +28,10 @@ poolSize: 1
 vocabulariesToProcess:
   - "Discipline"
   - "InstitutionType"
+  - "InstitutionalGovernance"
   - "CollectionContentType"
   - "PreservationType"
+  - "AccessionStatus"
 
 
 apiRootUrl: "http://api.gbif-dev.org/v1"

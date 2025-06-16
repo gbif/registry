@@ -33,7 +33,7 @@ import org.gbif.api.vocabulary.License;
 import org.gbif.api.vocabulary.collections.CollectionFacetParameter;
 import org.gbif.api.vocabulary.collections.InstitutionFacetParameter;
 import org.gbif.registry.database.TestCaseDatabaseInitializer;
-import org.gbif.registry.persistence.dto.GrSciCollVocabFacetDto;
+import org.gbif.registry.persistence.mapper.dto.GrSciCollVocabConceptDto;
 import org.gbif.registry.persistence.mapper.collections.AddressMapper;
 import org.gbif.registry.persistence.mapper.collections.CollectionMapper;
 import org.gbif.registry.persistence.mapper.collections.CollectionsSearchMapper;
@@ -52,8 +52,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.gbif.registry.persistence.mapper.GrScicollVocabFacetMapper;
-import org.gbif.registry.ws.it.collections.FacetTestSetup;
+import org.gbif.registry.persistence.mapper.GrScicollVocabConceptMapper;
+import org.gbif.registry.ws.it.collections.ConceptTestSetup;
 
 public class CollectionsSearchMapperIT extends BaseItTest {
 
@@ -66,7 +66,7 @@ public class CollectionsSearchMapperIT extends BaseItTest {
   private AddressMapper addressMapper;
   private DescriptorsMapper descriptorsMapper;
   private CollectionsSearchMapper collectionsSearchMapper;
-  private GrScicollVocabFacetMapper grScicollVocabFacetMapper;
+  private GrScicollVocabConceptMapper grScicollVocabConceptMapper;
 
   @Autowired
   public CollectionsSearchMapperIT(
@@ -75,7 +75,7 @@ public class CollectionsSearchMapperIT extends BaseItTest {
       AddressMapper addressMapper,
       DescriptorsMapper descriptorsMapper,
       CollectionsSearchMapper collectionsSearchMapper,
-      GrScicollVocabFacetMapper grScicollVocabFacetMapper,
+      GrScicollVocabConceptMapper grScicollVocabConceptMapper,
       SimplePrincipalProvider principalProvider,
       EsManageServer esServer) {
     super(principalProvider, esServer);
@@ -84,17 +84,17 @@ public class CollectionsSearchMapperIT extends BaseItTest {
     this.addressMapper = addressMapper;
     this.descriptorsMapper = descriptorsMapper;
     this.collectionsSearchMapper = collectionsSearchMapper;
-    this.grScicollVocabFacetMapper = grScicollVocabFacetMapper;
+    this.grScicollVocabConceptMapper = grScicollVocabConceptMapper;
   }
 
   @BeforeEach
   public void setupFacets() {
-    FacetTestSetup.setupCommonFacets(grScicollVocabFacetMapper);
+    ConceptTestSetup.setupCommonConcepts(grScicollVocabConceptMapper);
   }
 
   @AfterEach
   public void cleanupFacets() {
-    FacetTestSetup.cleanupTestFacets(grScicollVocabFacetMapper);
+    ConceptTestSetup.cleanupTestConcepts(grScicollVocabConceptMapper);
   }
 
   @Test
@@ -213,15 +213,15 @@ public class CollectionsSearchMapperIT extends BaseItTest {
     institutionMapper.create(i1);
 
     // Create institution facet links for i1
-    Integer ty1FacetId = grScicollVocabFacetMapper.getFacetIdByVocabularyAndName("InstitutionType", "ty1");
-    Integer ty2FacetId = grScicollVocabFacetMapper.getFacetIdByVocabularyAndName("InstitutionType", "ty2");
-    Integer di1FacetId = grScicollVocabFacetMapper.getFacetIdByVocabularyAndName("Discipline", "di1");
-    Integer di2FacetId = grScicollVocabFacetMapper.getFacetIdByVocabularyAndName("Discipline", "di2");
+    Integer ty1FacetId = grScicollVocabConceptMapper.getConceptIdByVocabularyAndName("InstitutionType", "ty1");
+    Integer ty2FacetId = grScicollVocabConceptMapper.getConceptIdByVocabularyAndName("InstitutionType", "ty2");
+    Integer di1FacetId = grScicollVocabConceptMapper.getConceptIdByVocabularyAndName("Discipline", "di1");
+    Integer di2FacetId = grScicollVocabConceptMapper.getConceptIdByVocabularyAndName("Discipline", "di2");
 
-    grScicollVocabFacetMapper.insertInstitutionFacetLink(i1Key, ty1FacetId);
-    grScicollVocabFacetMapper.insertInstitutionFacetLink(i1Key, ty2FacetId);
-    grScicollVocabFacetMapper.insertInstitutionFacetLink(i1Key, di1FacetId);
-    grScicollVocabFacetMapper.insertInstitutionFacetLink(i1Key, di2FacetId);
+    grScicollVocabConceptMapper.insertInstitutionConcept(i1Key, ty1FacetId);
+    grScicollVocabConceptMapper.insertInstitutionConcept(i1Key, ty2FacetId);
+    grScicollVocabConceptMapper.insertInstitutionConcept(i1Key, di1FacetId);
+    grScicollVocabConceptMapper.insertInstitutionConcept(i1Key, di2FacetId);
 
     UUID i2Key = UUID.randomUUID();
     Institution i2 = new Institution();
@@ -242,7 +242,7 @@ public class CollectionsSearchMapperIT extends BaseItTest {
     institutionMapper.create(i2);
 
     // Create institution facet links for i2 (only has ty1 type)
-    grScicollVocabFacetMapper.insertInstitutionFacetLink(i2Key, ty1FacetId);
+    grScicollVocabConceptMapper.insertInstitutionConcept(i2Key, ty1FacetId);
 
     UUID c1Key = UUID.randomUUID();
     Collection c1 = new Collection();
@@ -275,26 +275,26 @@ public class CollectionsSearchMapperIT extends BaseItTest {
 
     // Create facet links for collection facets that need to work in tests
     // For c1 with preservationTypes: StorageControlledAtmosphere, SampleCryopreserved
-    Integer storageControlledId = grScicollVocabFacetMapper.getFacetIdByVocabularyAndName("PreservationType", "StorageControlledAtmosphere");
-    Integer sampleCryopreservedId = grScicollVocabFacetMapper.getFacetIdByVocabularyAndName("PreservationType", "SampleCryopreserved");
+    Integer storageControlledId = grScicollVocabConceptMapper.getConceptIdByVocabularyAndName("PreservationType", "StorageControlledAtmosphere");
+    Integer sampleCryopreservedId = grScicollVocabConceptMapper.getConceptIdByVocabularyAndName("PreservationType", "SampleCryopreserved");
     if (storageControlledId == null) {
-      GrSciCollVocabFacetDto facet = new GrSciCollVocabFacetDto();
+      GrSciCollVocabConceptDto facet = new GrSciCollVocabConceptDto();
       facet.setVocabularyName("PreservationType");
       facet.setName("StorageControlledAtmosphere");
       facet.setPath("StorageControlledAtmosphere");
-      grScicollVocabFacetMapper.create(facet);
+      grScicollVocabConceptMapper.create(facet);
       storageControlledId = facet.getId();
     }
     if (sampleCryopreservedId == null) {
-      GrSciCollVocabFacetDto facet = new GrSciCollVocabFacetDto();
+      GrSciCollVocabConceptDto facet = new GrSciCollVocabConceptDto();
       facet.setVocabularyName("PreservationType");
       facet.setName("SampleCryopreserved");
       facet.setPath("SampleCryopreserved");
-      grScicollVocabFacetMapper.create(facet);
+      grScicollVocabConceptMapper.create(facet);
       sampleCryopreservedId = facet.getId();
     }
-    grScicollVocabFacetMapper.insertCollectionFacetLink(c1Key, storageControlledId);
-    grScicollVocabFacetMapper.insertCollectionFacetLink(c1Key, sampleCryopreservedId);
+    grScicollVocabConceptMapper.insertCollectionConcept(c1Key, storageControlledId);
+    grScicollVocabConceptMapper.insertCollectionConcept(c1Key, sampleCryopreservedId);
 
     DescriptorGroup descriptorGroup = new DescriptorGroup();
     descriptorGroup.setCollectionKey(c1Key);
@@ -507,10 +507,10 @@ public class CollectionsSearchMapperIT extends BaseItTest {
   @Test
   public void hierarchicalFacetsTest() {
     // Get facet IDs from the setup data
-    Integer biologicalFacetId = grScicollVocabFacetMapper.getFacetIdByVocabularyAndName("CollectionContentType", "Biological");
-    Integer archaeologicalFacetId = grScicollVocabFacetMapper.getFacetIdByVocabularyAndName("CollectionContentType", "Archaeological");
-    Integer sampleDriedFacetId = grScicollVocabFacetMapper.getFacetIdByVocabularyAndName("PreservationType", "SampleDried");
-    Integer storageIndoorsFacetId = grScicollVocabFacetMapper.getFacetIdByVocabularyAndName("PreservationType", "StorageIndoors");
+    Integer biologicalFacetId = grScicollVocabConceptMapper.getConceptIdByVocabularyAndName("CollectionContentType", "Biological");
+    Integer archaeologicalFacetId = grScicollVocabConceptMapper.getConceptIdByVocabularyAndName("CollectionContentType", "Archaeological");
+    Integer sampleDriedFacetId = grScicollVocabConceptMapper.getConceptIdByVocabularyAndName("PreservationType", "SampleDried");
+    Integer storageIndoorsFacetId = grScicollVocabConceptMapper.getConceptIdByVocabularyAndName("PreservationType", "StorageIndoors");
 
     // Create test collection with hierarchical facet data
     UUID c1Key = UUID.randomUUID();
@@ -526,10 +526,10 @@ public class CollectionsSearchMapperIT extends BaseItTest {
     collectionMapper.create(c1);
 
     // Create facet links manually since EventListener might not be active in tests
-    grScicollVocabFacetMapper.insertCollectionFacetLink(c1Key, biologicalFacetId);
-    grScicollVocabFacetMapper.insertCollectionFacetLink(c1Key, archaeologicalFacetId);
-    grScicollVocabFacetMapper.insertCollectionFacetLink(c1Key, sampleDriedFacetId);
-    grScicollVocabFacetMapper.insertCollectionFacetLink(c1Key, storageIndoorsFacetId);
+    grScicollVocabConceptMapper.insertCollectionConcept(c1Key, biologicalFacetId);
+    grScicollVocabConceptMapper.insertCollectionConcept(c1Key, archaeologicalFacetId);
+    grScicollVocabConceptMapper.insertCollectionConcept(c1Key, sampleDriedFacetId);
+    grScicollVocabConceptMapper.insertCollectionConcept(c1Key, storageIndoorsFacetId);
 
     // Test hierarchical content type facets
     List<FacetDto> facetDtos =
@@ -570,10 +570,10 @@ public class CollectionsSearchMapperIT extends BaseItTest {
   @Test
   public void hierarchicalFacetFilteringTest() {
     // Get facet IDs from the setup data
-    Integer biologicalFacetId = grScicollVocabFacetMapper.getFacetIdByVocabularyAndName("CollectionContentType", "Biological");
-    Integer archaeologicalFacetId = grScicollVocabFacetMapper.getFacetIdByVocabularyAndName("CollectionContentType", "Archaeological");
-    Integer sampleDriedFacetId = grScicollVocabFacetMapper.getFacetIdByVocabularyAndName("PreservationType", "SampleDried");
-    Integer storageIndoorsFacetId = grScicollVocabFacetMapper.getFacetIdByVocabularyAndName("PreservationType", "StorageIndoors");
+    Integer biologicalFacetId = grScicollVocabConceptMapper.getConceptIdByVocabularyAndName("CollectionContentType", "Biological");
+    Integer archaeologicalFacetId = grScicollVocabConceptMapper.getConceptIdByVocabularyAndName("CollectionContentType", "Archaeological");
+    Integer sampleDriedFacetId = grScicollVocabConceptMapper.getConceptIdByVocabularyAndName("PreservationType", "SampleDried");
+    Integer storageIndoorsFacetId = grScicollVocabConceptMapper.getConceptIdByVocabularyAndName("PreservationType", "StorageIndoors");
 
     // Create test collections with specific content types for hierarchical testing
     UUID c3Key = UUID.randomUUID();
@@ -591,10 +591,10 @@ public class CollectionsSearchMapperIT extends BaseItTest {
     collectionMapper.create(c3);
 
     // Create facet links manually since EventListener might not be active in tests
-    grScicollVocabFacetMapper.insertCollectionFacetLink(c3Key, biologicalFacetId);
-    grScicollVocabFacetMapper.insertCollectionFacetLink(c3Key, archaeologicalFacetId);
-    grScicollVocabFacetMapper.insertCollectionFacetLink(c3Key, sampleDriedFacetId);
-    grScicollVocabFacetMapper.insertCollectionFacetLink(c3Key, storageIndoorsFacetId);
+    grScicollVocabConceptMapper.insertCollectionConcept(c3Key, biologicalFacetId);
+    grScicollVocabConceptMapper.insertCollectionConcept(c3Key, archaeologicalFacetId);
+    grScicollVocabConceptMapper.insertCollectionConcept(c3Key, sampleDriedFacetId);
+    grScicollVocabConceptMapper.insertCollectionConcept(c3Key, storageIndoorsFacetId);
 
     // Test that hierarchical filtering works with facet-based approach
     List<CollectionSearchDto> results = collectionsSearchMapper.searchCollections(

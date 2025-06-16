@@ -51,9 +51,11 @@ import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.validation.groups.Default;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import java.util.Objects;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static org.gbif.registry.security.UserRoles.*;
@@ -82,6 +84,7 @@ public class BaseCollectionEntityService<
   protected final EventManager eventManager;
   protected final WithMyBatis withMyBatis;
   protected final ConceptClient conceptClient;
+  protected final GrScicollVocabConceptMapper grScicollVocabConceptMapper;
 
   protected BaseCollectionEntityService(
       BaseMapper<T> baseMapper,
@@ -98,7 +101,8 @@ public class BaseCollectionEntityService<
       Class<T> objectClass,
       EventManager eventManager,
       WithMyBatis withMyBatis,
-      ConceptClient conceptClient) {
+      ConceptClient conceptClient,
+      GrScicollVocabConceptMapper grScicollVocabConceptMapper) {
     this.baseMapper = baseMapper;
     this.addressMapper = addressMapper;
     this.contactMapper = contactMapper;
@@ -114,6 +118,7 @@ public class BaseCollectionEntityService<
     this.eventManager = eventManager;
     this.withMyBatis = withMyBatis;
     this.conceptClient = conceptClient;
+    this.grScicollVocabConceptMapper = grScicollVocabConceptMapper;
   }
 
   @Override
@@ -467,6 +472,8 @@ public class BaseCollectionEntityService<
     entity.setKey(UUID.randomUUID());
     baseMapper.create(entity);
 
+    updateCollectionEntityConcepts(entity);
+
     eventManager.post(CreateCollectionEntityEvent.newInstance(entity));
 
     return entity.getKey();
@@ -536,6 +543,9 @@ public class BaseCollectionEntityService<
     T newEntity = get(entity.getKey());
 
     eventManager.post(UpdateCollectionEntityEvent.newInstance(newEntity, entityOld));
+
+    // Update concept links synchronously within the same transaction
+    updateCollectionEntityConcepts(newEntity);
   }
 
   public T lockFields(T entityOld, T entityNew) {
@@ -916,5 +926,175 @@ public class BaseCollectionEntityService<
       throw new IllegalArgumentException(
           "Cannot set a deleted " + entityClass.getSimpleName() + " as master source");
     }
+  }
+
+  /**
+   * Updates concept links for Collection and Institution entities synchronously.
+   * This replaces the async event-based approach for better transactional consistency.
+   * 
+   * Uses dynamic vocabulary detection instead of hardcoded assumptions about which
+   * vocabularies are hierarchical, making it adaptable to vocabulary structure changes.
+   */
+  private void updateCollectionEntityConcepts(T entity) {
+    if (entity == null || entity.getKey() == null) {
+      log.warn("Cannot update concept links for null entity or entity without key");
+      return;
+    }
+
+    try {
+      if (entity instanceof Collection) {
+        updateConceptLinksForEntity((Collection) entity);
+      } else if (entity instanceof Institution) {
+        updateConceptLinksForEntity((Institution) entity);
+      }
+    } catch (Exception e) {
+      log.error("Error updating concept links for entity {}: {}", entity.getKey(), e.getMessage(), e);
+      throw new RuntimeException("Failed to update concept links", e);
+    }
+  }
+
+  /**
+   * Updates concept links for any Collection entity by dynamically checking
+   * which vocabularies have concepts available in the system.
+   */
+  private void updateConceptLinksForEntity(Collection collection) {
+    log.debug("Updating concept links for collection: {}", collection.getKey());
+
+    // Delete existing concept links for this collection
+    grScicollVocabConceptMapper.deleteCollectionConcepts(collection.getKey());
+
+    // Dynamically handle all Collection vocabulary fields
+    createConceptLinksFromVocabularyFields(
+        collection.getKey(),
+        "CollectionContentType", collection.getContentTypes(),
+        "PreservationType", collection.getPreservationTypes(),
+        "AccessionStatus", collection.getAccessionStatus() != null ? 
+            Collections.singletonList(collection.getAccessionStatus()) : Collections.emptyList()
+    );
+
+    log.debug("Successfully updated concept links for collection: {}", collection.getKey());
+  }
+
+  /**
+   * Updates concept links for any Institution entity by dynamically checking
+   * which vocabularies have concepts available in the system.
+   */
+  private void updateConceptLinksForEntity(Institution institution) {
+    log.debug("Updating concept links for institution: {}", institution.getKey());
+
+    // Delete existing concept links for this institution
+    grScicollVocabConceptMapper.deleteInstitutionConcepts(institution.getKey());
+
+    // Dynamically handle all Institution vocabulary fields
+    createConceptLinksFromVocabularyFields(
+        institution.getKey(),
+        "Discipline", institution.getDisciplines(),
+        "InstitutionType", institution.getTypes(),
+        "InstitutionalGovernance", institution.getInstitutionalGovernances()
+    );
+
+    log.debug("Successfully updated concept links for institution: {}", institution.getKey());
+  }
+
+  /**
+   * Creates concept links from vocabulary fields using a flexible approach.
+   * Only creates links for vocabularies that actually have concepts in the system.
+   * This makes the system adaptable to vocabulary structure changes.
+   * 
+   * @param entityKey The entity key (collection or institution)
+   * @param vocabularyFieldPairs Variable arguments of vocabulary name and field values
+   */
+  private void createConceptLinksFromVocabularyFields(UUID entityKey, Object... vocabularyFieldPairs) {
+    if (vocabularyFieldPairs.length % 2 != 0) {
+      throw new IllegalArgumentException("vocabularyFieldPairs must contain pairs of (vocabularyName, fieldValues)");
+    }
+
+    for (int i = 0; i < vocabularyFieldPairs.length; i += 2) {
+      String vocabularyName = (String) vocabularyFieldPairs[i];
+      @SuppressWarnings("unchecked")
+      List<String> fieldValues = (List<String>) vocabularyFieldPairs[i + 1];
+
+      if (fieldValues == null || fieldValues.isEmpty()) {
+        log.debug("No {} values found for entity: {}", vocabularyName, entityKey);
+        continue;
+      }
+
+      // Filter valid values
+      List<String> validValues = fieldValues.stream()
+          .filter(Objects::nonNull)
+          .filter(value -> !value.trim().isEmpty())
+          .collect(Collectors.toList());
+
+      if (validValues.isEmpty()) {
+        log.debug("No valid {} values found for entity: {}", vocabularyName, entityKey);
+        continue;
+      }
+
+      // Try to create concept links - only if concepts exist for this vocabulary
+      createConceptLinksForVocabulary(entityKey, vocabularyName, validValues);
+    }
+  }
+
+  /**
+   * Creates concept links for a specific vocabulary and values.
+   * Only creates links if the vocabulary has concepts defined in the system.
+   * This prevents assumptions about vocabulary structure.
+   */
+  private void createConceptLinksForVocabulary(UUID entityKey, String vocabularyName, List<String> values) {
+    List<Integer> conceptIds = new ArrayList<>();
+    int foundConcepts = 0;
+    int missingConcepts = 0;
+
+    for (String value : values) {
+      try {
+        Integer conceptId = grScicollVocabConceptMapper.getConceptIdByVocabularyAndName(vocabularyName, value);
+        if (conceptId != null) {
+          conceptIds.add(conceptId);
+          foundConcepts++;
+        } else {
+          missingConcepts++;
+          log.debug("No concept found for {}: {} (entity: {})", vocabularyName, value, entityKey);
+        }
+      } catch (Exception e) {
+        log.error("Error looking up concept for {} = {} (entity: {}): {}", 
+                 vocabularyName, value, entityKey, e.getMessage());
+        missingConcepts++;
+      }
+    }
+
+    // Only create links if we found at least some concepts
+    if (!conceptIds.isEmpty()) {
+      for (Integer conceptId : conceptIds) {
+        try {
+          // Use appropriate method based on entity type
+          if (isCollectionEntity(entityKey)) {
+            grScicollVocabConceptMapper.insertCollectionConcept(entityKey, conceptId);
+          } else {
+            grScicollVocabConceptMapper.insertInstitutionConcept(entityKey, conceptId);
+          }
+          log.debug("Created {} concept link for entity: {} with concept ID: {}", 
+                   vocabularyName, entityKey, conceptId);
+        } catch (Exception e) {
+          log.error("Error creating {} concept link for entity {} with concept ID {}: {}", 
+                   vocabularyName, entityKey, conceptId, e.getMessage());
+        }
+      }
+
+      log.debug("Successfully created {} {} concept links for entity: {} ({} found, {} missing)", 
+               conceptIds.size(), vocabularyName, entityKey, foundConcepts, missingConcepts);
+    } else if (missingConcepts > 0) {
+      log.debug("No concepts found for vocabulary {} - skipping concept link creation for entity: {} ({} values checked)", 
+               vocabularyName, entityKey, missingConcepts);
+    }
+  }
+
+  /**
+   * Determines if an entity key belongs to a Collection (vs Institution).
+   * This is a simple heuristic - in a more complex system, you might want to 
+   * pass entity type explicitly or query the database.
+   */
+  private boolean isCollectionEntity(UUID entityKey) {
+    // Since we're in BaseCollectionEntityService<T>, we can check the objectClass
+    return objectClass.equals(Collection.class);
   }
 }

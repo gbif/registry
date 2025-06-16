@@ -35,6 +35,8 @@ public class InstitutionListParams extends ListParams {
   @Nullable InstitutionFacetParameter facet;
 
   public boolean isArrayFieldFacet() {
-    return facet == InstitutionFacetParameter.TYPE || facet == InstitutionFacetParameter.DISCIPLINE;
+    return facet == InstitutionFacetParameter.TYPE
+      || facet == InstitutionFacetParameter.DISCIPLINE
+      || facet == InstitutionFacetParameter.INSTITUTIONAL_GOVERNANCE;
   }
 }
