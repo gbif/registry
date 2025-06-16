@@ -3,7 +3,7 @@
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
 
-  <changeSet id="157" author="auzun">
+  <changeSet id="159" author="auzun">
     <sql splitStatements="false" stripComments="true">
       <![CDATA[
         -- Add the tags column as a text array
