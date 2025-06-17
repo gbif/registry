@@ -257,17 +257,20 @@ public class DatasetJsonConverter {
             BigDecimal.valueOf(occurrencePercentage)
                 .setScale(scale, RoundingMode.HALF_UP)
                 .doubleValue()));
-    DatasetMetrics datasetMetrics = gbifWsClient.getDatasetSpeciesMetrics(datasetKey);
 
-    if (Objects.nonNull(datasetMetrics)) {
-      nameUsagesPercentage = datasetMetrics.getUsagesCount() / getNameUsagesCount().doubleValue();
-      nameUsagesPercentage =
+    if (DatasetType.CHECKLIST.name().equals(dataset.get("type").asText())) {
+      DatasetMetrics datasetMetrics = gbifWsClient.getDatasetSpeciesMetrics(datasetKey);
+
+      if (Objects.nonNull(datasetMetrics)) {
+        nameUsagesPercentage = datasetMetrics.getUsagesCount() / getNameUsagesCount().doubleValue();
+        nameUsagesPercentage =
           Double.isInfinite(nameUsagesPercentage) || Double.isNaN(nameUsagesPercentage)
-              ? 0D
-              : nameUsagesPercentage;
-      dataset.put("nameUsagesCount", datasetMetrics.getUsagesCount());
-    } else {
-      dataset.put("nameUsagesCount", 0);
+            ? 0D
+            : nameUsagesPercentage;
+        dataset.put("nameUsagesCount", datasetMetrics.getUsagesCount());
+      } else {
+        dataset.put("nameUsagesCount", 0);
+      }
     }
 
     // Contribution of NameUsages
@@ -407,7 +410,6 @@ public class DatasetJsonConverter {
     occurrenceSearchRequest.addParameter(OccurrenceSearchParameter.DATASET_KEY, datasetKey);
     SearchResponse<Occurrence, OccurrenceSearchParameter> response =
       gbifWsClient.occurrenceSearch(occurrenceSearchRequest);
-    addRecordCounts(datasetJsonNode, response.getCount());
     ArrayNode dwcaExtensions = datasetJsonNode.putArray("dwcaExtensions");
     response
       .getFacets()
