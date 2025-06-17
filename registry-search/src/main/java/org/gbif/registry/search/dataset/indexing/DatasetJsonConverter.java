@@ -171,6 +171,11 @@ public class DatasetJsonConverter {
     }
     addMachineTags(dataset, datasetAsJson);
     // addOccurrenceCoverage(dataset, datasetAsJson);
+    //Is a Dwc-A installation?
+
+    if (dataset.getEndpoints().stream().anyMatch(e -> EndpointType.DWC_ARCHIVE == e.getType())) {
+      addDwcaExtensions(datasetAsJson);
+    }
     return datasetAsJson;
   }
 
@@ -215,10 +220,6 @@ public class DatasetJsonConverter {
               dataset.put("hostingCountry", hostingOrg.getCountry().getIso2LetterCode());
             }
           }
-        }
-        //Is a Dwc-A installation?
-        if (installation.getEndpoints().stream().anyMatch(e -> EndpointType.DWC_ARCHIVE == e.getType())) {
-          addDwcaExtensions(dataset);
         }
       }
     }
@@ -397,9 +398,7 @@ public class DatasetJsonConverter {
 
   private void addDwcaExtensions(ObjectNode datasetJsonNode) {
     String datasetKey = datasetJsonNode.get("key").textValue();
-    Set<OccurrenceSearchParameter> facets =
-      Set.of(
-        OccurrenceSearchParameter.DWCA_EXTENSION);
+    Set<OccurrenceSearchParameter> facets = Set.of(OccurrenceSearchParameter.DWCA_EXTENSION);
     OccurrenceSearchRequest occurrenceSearchRequest = new OccurrenceSearchRequest();
     occurrenceSearchRequest.setLimit(0);
     occurrenceSearchRequest.setOffset(0);
