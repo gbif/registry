@@ -28,6 +28,8 @@ import org.gbif.api.model.registry.Tag;
 import org.gbif.api.model.registry.eml.KeywordCollection;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.DatasetType;
+import org.gbif.api.vocabulary.EndpointType;
+import org.gbif.api.vocabulary.InstallationType;
 import org.gbif.api.vocabulary.License;
 import org.gbif.api.vocabulary.MaintenanceUpdateFrequency;
 import org.gbif.registry.search.dataset.indexing.checklistbank.ChecklistbankPersistenceService;
@@ -214,6 +216,10 @@ public class DatasetJsonConverter {
             }
           }
         }
+        //Is a Dwc-A installation?
+        if (installation.getEndpoints().stream().anyMatch(e -> EndpointType.DWC_ARCHIVE == e.getType())) {
+          addDwcaExtensions(dataset);
+        }
       }
     }
     if (dataset.has("publishingOrganizationKey")) {
@@ -384,6 +390,33 @@ public class DatasetJsonConverter {
                 facet.getCounts().forEach(count -> yearNode.add(count.getName()));
               }
             });
+  }
+
+  private void addDwcaExtensions(ObjectNode datasetJsonNode) {
+    String datasetKey = datasetJsonNode.get("key").textValue();
+    Set<OccurrenceSearchParameter> facets =
+      Set.of(
+        OccurrenceSearchParameter.DWCA_EXTENSION);
+    OccurrenceSearchRequest occurrenceSearchRequest = new OccurrenceSearchRequest();
+    occurrenceSearchRequest.setLimit(0);
+    occurrenceSearchRequest.setOffset(0);
+    occurrenceSearchRequest.setFacetMultiSelect(false);
+    occurrenceSearchRequest.setFacetLimit(MAX_FACET_LIMIT);
+    occurrenceSearchRequest.setFacetMinCount(1);
+    occurrenceSearchRequest.setFacets(facets);
+    occurrenceSearchRequest.addParameter(OccurrenceSearchParameter.DATASET_KEY, datasetKey);
+    SearchResponse<Occurrence, OccurrenceSearchParameter> response =
+      gbifWsClient.occurrenceSearch(occurrenceSearchRequest);
+    addRecordCounts(datasetJsonNode, response.getCount());
+    ArrayNode dwcaExtensions = datasetJsonNode.putArray("dwcaExtensions");
+    response
+      .getFacets()
+      .forEach(
+        facet -> {
+          if (OccurrenceSearchParameter.DWCA_EXTENSION == facet.getField()) {
+            facet.getCounts().forEach(count -> dwcaExtensions.add(count.getName()));
+          }
+        });
   }
 
   private void addTaxonKeys(Dataset dataset, ObjectNode datasetObjectNode) {
