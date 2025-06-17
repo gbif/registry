@@ -175,6 +175,7 @@
         "end": { "type": "date" },
         "date": { "type": "date" }
       }
-    }
+    },
+    "dwcaExtensions": {"type": "keyword"}
   }
 }
