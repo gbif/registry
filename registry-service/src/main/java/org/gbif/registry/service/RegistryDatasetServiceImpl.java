@@ -404,4 +404,16 @@ public class RegistryDatasetServiceImpl implements RegistryDatasetService {
 
     return result;
   }
+
+  @Override
+  public void createDwcaData(UUID datasetKey, Dataset.DwcA dwcA) {
+    datasetMapper.createDwcaDataset(datasetKey, dwcA);
+  }
+
+  @Override
+  public void updateDwcaData(UUID datasetKey, Dataset.DwcA dwcA) {
+    datasetMapper.updateDwcaDataset(datasetKey, dwcA);
+  }
+
+
 }

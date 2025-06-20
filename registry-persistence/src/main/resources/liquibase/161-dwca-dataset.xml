@@ -1,0 +1,24 @@
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+  <changeSet id="161" author="fmendez" runInTransaction="false">
+    <sql splitStatements="false" stripComments="true">
+      <![CDATA[
+        --
+        --  dwca
+        --
+        CREATE TABLE dwca_dataset
+        (
+          dataset_key uuid NOT NULL PRIMARY KEY REFERENCES dataset(key),
+          row_type text NOT NULL,
+          extensions text[] NOT NULL,
+          modified timestamp with time zone NOT NULL DEFAULT now(),
+          deleted timestamp with time zone
+        );
+      ]]>
+    </sql>
+  </changeSet>
+
+</databaseChangeLog>
