@@ -142,6 +142,7 @@ public class CollectionsSearchIT extends BaseServiceIT {
         ExportFormat.TSV,
         "My personal descriptor set",
         "description",
+        Set.of("test-tag"),
         c1.getKey());
 
     descriptorsService.createDescriptorGroup(
@@ -150,6 +151,7 @@ public class CollectionsSearchIT extends BaseServiceIT {
         ExportFormat.TSV,
         "My descriptor set 2",
         "description",
+        Set.of("test-tag"),
         c1.getKey());
 
     c2.setCode("C2");
@@ -167,6 +169,7 @@ public class CollectionsSearchIT extends BaseServiceIT {
         ExportFormat.TSV,
         "My descriptor set 3",
         "unusual description",
+        Set.of("test-tag"),
         c2.getKey());
 
     c3.setCode("C3");
