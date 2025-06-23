@@ -9,6 +9,8 @@ import org.gbif.api.model.collections.descriptors.DescriptorChangeSuggestion;
 import org.gbif.api.model.collections.suggestions.Type;
 import org.gbif.api.model.collections.suggestions.Status;
 import org.gbif.api.model.common.paging.Pageable;
+import org.gbif.api.vocabulary.Country;
+
 import org.springframework.stereotype.Repository;
 
 @Repository
@@ -45,13 +47,15 @@ public interface DescriptorChangeSuggestionMapper {
    * @param type Filter by type (CREATE, UPDATE, DELETE)
    * @param proposerEmail Filter by proposer's email
    * @param collectionKey Filter by collection key
+   * @param country Filter by country
    * @return List of descriptor change suggestions
    */
   List<DescriptorChangeSuggestion> list(@Param("page") Pageable pageable,
     @Param("status") Status status,
     @Param("type") Type type,
     @Param("proposerEmail") String proposerEmail,
-    @Param("collectionKey") UUID collectionKey);
+    @Param("collectionKey") UUID collectionKey,
+    @Param("country") Country country);
 
 
   /**
@@ -61,10 +65,12 @@ public interface DescriptorChangeSuggestionMapper {
    * @param type Filter by type
    * @param proposerEmail Filter by proposer's email
    * @param collectionKey Filter by collection key
+   * @param country Filter by country
    * @return Total number of matching suggestions
    */
   long count(@Param("status") Status status,
     @Param("type") Type type,
     @Param("proposerEmail") String proposerEmail,
-    @Param("collectionKey") UUID collectionKey);
+    @Param("collectionKey") UUID collectionKey,
+    @Param("country") Country country);
 }
