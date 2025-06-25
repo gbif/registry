@@ -25,6 +25,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -55,6 +56,7 @@ public class DwcaDataIndexer {
     DatasetClient datasetClient = datasetClient(configuration);
     for (String baseDir : configuration.getBaseDirectories()) {
       log.info("Retrieving directories from: {}", baseDir);
+      AtomicInteger processedCount = new AtomicInteger(0);
       try (Stream<Path> paths = Files.list(Paths.get(baseDir))) {
         List<Path> subDirs = paths
           .filter(d -> Files.isDirectory(d) && isDirectoryNotEmpty(d))
@@ -71,7 +73,8 @@ public class DwcaDataIndexer {
             } else {
               log.warn("Dataset with key {} not found, skipping update.", datasetKey);
             }
-            log.info("Indexed DwC-A file from directory: {}", subDir);
+            int count = processedCount.incrementAndGet();
+            log.info("Indexed DwC-A file from directory: {} (Processed: {})", subDir, count);
           } catch (Exception e) {
             log.error("Error processing directory {}", subDir, e);
           }
@@ -80,6 +83,7 @@ public class DwcaDataIndexer {
         log.error("Error listing subdirectories in {}", baseDir, e);
       }
     }
+    log.info("Indexing completed for all directories.");
   }
 
   /**
