@@ -23,6 +23,7 @@ import java.io.FileInputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -53,8 +54,13 @@ public class DwcaDataIndexer {
   private static void indexDwcaData(DwcaIndexerConfiguration configuration) {
     DatasetClient datasetClient = datasetClient(configuration);
     for (String baseDir : configuration.getBaseDirectories()) {
+      log.info("Retrieving directories from: {}", baseDir);
       try (Stream<Path> paths = Files.list(Paths.get(baseDir))) {
-        paths.filter(d -> Files.isDirectory(d) && isDirectoryNotEmpty(d)).forEach(subDir -> {
+        List<Path> subDirs = paths
+          .filter(d -> Files.isDirectory(d) && isDirectoryNotEmpty(d))
+          .collect(Collectors.toList());
+        log.info("Found {} non-empty subdirectories in base directory: {}", subDirs.size(), baseDir);
+        subDirs.parallelStream().forEach(subDir -> {
           try {
             Archive archive = DwcFiles.fromLocationSkipValidation(subDir);
             UUID datasetKey = UUID.fromString(subDir.getFileName().toString());
