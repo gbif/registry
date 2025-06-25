@@ -219,6 +219,7 @@ public class RegistryDatasetServiceImpl implements RegistryDatasetService {
     target.setIdentifiers(supplementary.getIdentifiers());
     target.setMachineTags(supplementary.getMachineTags());
     target.setTags(supplementary.getTags());
+    target.setDwca(supplementary.getDwca());
 
     return target;
   }
