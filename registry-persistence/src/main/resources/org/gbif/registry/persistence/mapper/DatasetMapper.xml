@@ -7,7 +7,7 @@
     <id property="key" column="key"/>
     <association property="citation" resultMap="CITATION_MAP"/>
     <association property="numConstituents" column="key" select="countConstituents"/>
-    <association property="dwca" column="key" select="selectDwcaDataset"/>
+    <association property="dwca" column="key" select="selectDwcaDataset" fetchType="eager"/>
     <collection property="contacts" column="key" select="listContacts"/>
     <collection property="endpoints" column="key" select="listEndpoints"/>
     <collection property="machineTags" column="key" select="listMachineTags"/>
@@ -562,9 +562,9 @@
   </update>
 
   <select id="selectDwcaDataset" resultMap="DWCA_MAP">
-    SELECT dwca.row_type, dwca.extensions, modified
+    SELECT dwca.row_type, dwca.extensions, dwca.modified
     FROM dwca_dataset dwca
-    WHERE dwca.dataset_key = #{datasetKey,jdbcType=OTHER} AND dwca.deleted IS NULL
+    WHERE dwca.dataset_key = #{key}
   </select>
 
 </mapper>
