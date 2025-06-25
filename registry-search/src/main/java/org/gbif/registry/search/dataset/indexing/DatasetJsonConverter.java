@@ -28,8 +28,6 @@ import org.gbif.api.model.registry.Tag;
 import org.gbif.api.model.registry.eml.KeywordCollection;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.DatasetType;
-import org.gbif.api.vocabulary.EndpointType;
-import org.gbif.api.vocabulary.InstallationType;
 import org.gbif.api.vocabulary.License;
 import org.gbif.api.vocabulary.MaintenanceUpdateFrequency;
 import org.gbif.registry.search.dataset.indexing.checklistbank.ChecklistbankPersistenceService;
@@ -43,7 +41,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.EnumSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -94,7 +91,6 @@ public class DatasetJsonConverter {
   private static final String GRIDDED_DATASET_NAMESPACE = "griddedDataSet.jwaller.gbif.org";
   private static final String GRIDDED_DATASET_NAME = "griddedDataset";
 
-  private final SAXParserFactory saxFactory = SAXParserFactory.newInstance();
   private final TimeSeriesExtractor timeSeriesExtractor =
       new TimeSeriesExtractor(1000, 2400, 1800, 2050);
 
@@ -170,12 +166,6 @@ public class DatasetJsonConverter {
       addTaxonKeys(dataset, datasetAsJson);
     }
     addMachineTags(dataset, datasetAsJson);
-    // addOccurrenceCoverage(dataset, datasetAsJson);
-    //Is a Dwc-A installation?
-
-    if (dataset.getEndpoints().stream().anyMatch(e -> EndpointType.DWC_ARCHIVE == e.getType())) {
-      addDwcaExtensions(datasetAsJson);
-    }
     return datasetAsJson;
   }
 
@@ -394,30 +384,6 @@ public class DatasetJsonConverter {
                 facet.getCounts().forEach(count -> yearNode.add(count.getName()));
               }
             });
-  }
-
-  private void addDwcaExtensions(ObjectNode datasetJsonNode) {
-    String datasetKey = datasetJsonNode.get("key").textValue();
-    Set<OccurrenceSearchParameter> facets = Set.of(OccurrenceSearchParameter.DWCA_EXTENSION);
-    OccurrenceSearchRequest occurrenceSearchRequest = new OccurrenceSearchRequest();
-    occurrenceSearchRequest.setLimit(0);
-    occurrenceSearchRequest.setOffset(0);
-    occurrenceSearchRequest.setFacetMultiSelect(false);
-    occurrenceSearchRequest.setFacetLimit(MAX_FACET_LIMIT);
-    occurrenceSearchRequest.setFacetMinCount(1);
-    occurrenceSearchRequest.setFacets(facets);
-    occurrenceSearchRequest.addParameter(OccurrenceSearchParameter.DATASET_KEY, datasetKey);
-    SearchResponse<Occurrence, OccurrenceSearchParameter> response =
-      gbifWsClient.occurrenceSearch(occurrenceSearchRequest);
-    ArrayNode dwcaExtensions = datasetJsonNode.putArray("dwcaExtensions");
-    response
-      .getFacets()
-      .forEach(
-        facet -> {
-          if (OccurrenceSearchParameter.DWCA_EXTENSION == facet.getField()) {
-            facet.getCounts().forEach(count -> dwcaExtensions.add(count.getName()));
-          }
-        });
   }
 
   private void addTaxonKeys(Dataset dataset, ObjectNode datasetObjectNode) {
