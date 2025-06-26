@@ -93,10 +93,6 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
     ConceptTestSetup.setupCommonConcepts(grScicollVocabConceptMapper);
   }
 
-  @AfterEach
-  public void cleanupFacets() {
-    ConceptTestSetup.cleanupTestConcepts(grScicollVocabConceptMapper);
-  }
 
   @Test
   public void listTest() {

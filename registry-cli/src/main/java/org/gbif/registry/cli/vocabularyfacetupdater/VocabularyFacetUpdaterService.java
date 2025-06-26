@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.gbif.common.messaging.DefaultMessageRegistry;
 import org.gbif.common.messaging.MessageListener;
 import org.gbif.registry.cli.common.spring.SpringContextBuilder;
-import org.gbif.registry.ws.config.WebMvcConfig;
+
 import org.gbif.registry.service.WithMyBatis;
 import org.gbif.registry.service.VocabularyConceptService;
 
@@ -21,7 +21,7 @@ public class VocabularyFacetUpdaterService extends AbstractIdleService {
 
   private final VocabularyFacetUpdaterConfiguration config;
   private MessageListener listener;
-  private ApplicationContext ctx;
+
 
   public VocabularyFacetUpdaterService(VocabularyFacetUpdaterConfiguration config) {
     this.config = config;
@@ -29,6 +29,7 @@ public class VocabularyFacetUpdaterService extends AbstractIdleService {
 
   @Override
   protected void startUp() throws Exception {
+    ApplicationContext ctx;
     log.info("Starting VocabularyFacetUpdaterService with parameters: {}", config);
 
     // Build the Spring context with database and concept client configuration
@@ -36,8 +37,7 @@ public class VocabularyFacetUpdaterService extends AbstractIdleService {
         .withVocabularyFacetUpdaterConfiguration(config)
         .withComponents(
             VocabularyConceptService.class,
-            WithMyBatis.class,
-            WebMvcConfig.class)
+            WithMyBatis.class)
         .build();
 
     // Create the callback for handling vocabulary released messages

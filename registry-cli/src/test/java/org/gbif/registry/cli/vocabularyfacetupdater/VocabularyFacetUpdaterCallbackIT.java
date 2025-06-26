@@ -41,6 +41,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 
 import static org.gbif.registry.cli.util.EmbeddedPostgresTestUtils.toDbConfig;
+import static org.gbif.registry.cli.util.RegistryCliUtils.loadConfig;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -50,7 +51,6 @@ import static org.mockito.Mockito.when;
 /**
  * Integration test for VocabularyFacetUpdaterCallback that tests the actual
  * message handling workflow end-to-end with real database operations.
- * Similar to DoiUpdaterListenerIT pattern.
  */
 @DisabledIfSystemProperty(named = "test.vocabulary.facet", matches = "false")
 public class VocabularyFacetUpdaterCallbackIT extends BaseDBTest {
@@ -70,18 +70,16 @@ public class VocabularyFacetUpdaterCallbackIT extends BaseDBTest {
 
   @BeforeAll
   public static void beforeAll() throws Exception {
+
+    VocabularyFacetUpdaterConfiguration config = loadConfig("vocabularyfacetupdater/vocabulary-facet-updater.yml", VocabularyFacetUpdaterConfiguration.class);
+    config.setDbConfig(toDbConfig(PG_CONTAINER));
+
     // Create mock ConceptClient with test data
     mockConceptClient = mock(ConceptClient.class);
     setupMockConceptClient();
 
-    VocabularyFacetUpdaterConfiguration config = new VocabularyFacetUpdaterConfiguration();
-    config.setDbConfig(toDbConfig(PG_CONTAINER));
-    config.apiRootUrl = "http://test-api.example.com/v1/"; // Mock URL
-    config.vocabulariesToProcess = Set.of("Discipline", "InstitutionType", "InstitutionalGovernance", "CollectionContentType", "PreservationType", "AccessionStatus");
-
-    // Build the Spring context with mock ConceptClient
     ApplicationContext ctx = SpringContextBuilder.create()
-        .withVocabularyFacetUpdaterConfiguration(config)
+        .withDbConfiguration(config.getDbConfig())
         .withComponents(
             VocabularyConceptService.class,
             WithMyBatis.class,
@@ -179,14 +177,6 @@ public class VocabularyFacetUpdaterCallbackIT extends BaseDBTest {
 
     when(mockConceptClient.listConceptsLatestRelease(eq("UnsupportedVocabulary"), any(ConceptListParams.class)))
         .thenReturn(unsupportedResponse);
-
-    // Mock empty vocabulary
-    PagingResponse<ConceptView> emptyResponse = new PagingResponse<>();
-    emptyResponse.setResults(List.of());
-    emptyResponse.setEndOfRecords(true);
-
-    when(mockConceptClient.listConceptsLatestRelease(eq("EmptyVocabulary"), any(ConceptListParams.class)))
-        .thenReturn(emptyResponse);
   }
 
   private static ConceptView createConceptView(Long key, String name, Long parentKey) {
@@ -194,21 +184,55 @@ public class VocabularyFacetUpdaterCallbackIT extends BaseDBTest {
     concept.setKey(key);
     concept.setName(name);
     concept.setParentKey(parentKey);
+    concept.setVocabularyKey(getVocabularyKey(name));
 
     ConceptView conceptView = new ConceptView();
     conceptView.setConcept(concept);
     return conceptView;
   }
 
+  private static long getVocabularyKey(String conceptName) {
+    // Map concept names to vocabulary keys based on the vocabulary they belong to
+    if ("Biological".equals(conceptName) || "Archaeological".equals(conceptName) ||
+        "Paleontological".equals(conceptName) || "Anthropological".equals(conceptName)) {
+      return 1004L; // CollectionContentType
+    } else if ("SampleDried".equals(conceptName) || "StorageIndoors".equals(conceptName) ||
+               "StorageControlledAtmosphere".equals(conceptName)) {
+      return 1005L; // PreservationType
+    } else if ("LifeSciences".equals(conceptName) || "Botany".equals(conceptName) ||
+               "Zoology".equals(conceptName)) {
+      return 1001L; // Discipline
+    } else if ("Museum".equals(conceptName) || "University".equals(conceptName) ||
+               "Herbarium".equals(conceptName)) {
+      return 1002L; // InstitutionType
+    } else if ("Government".equals(conceptName) || "Academic".equals(conceptName) ||
+               "Private".equals(conceptName)) {
+      return 1003L; // InstitutionalGovernance
+    } else if ("Institutional".equals(conceptName) || "Project".equals(conceptName)) {
+      return 1006L; // AccessionStatus
+    } else {
+      return Math.abs(conceptName.hashCode()) % 10000L + 1000L; // Fallback
+    }
+  }
+
   @BeforeEach
   public void prepareDatabase() throws Exception {
     Connection con = PG_CONTAINER.createConnection("");
 
-    // Clear grscicoll_vocab_concept table
-    PreparedStatement stmt = con.prepareStatement("DELETE FROM grscicoll_vocab_concept");
+    // Clear all concept-related data to ensure test isolation
+    PreparedStatement stmt = con.prepareStatement("DELETE FROM collection_concept_links");
+    stmt.executeUpdate();
+
+    stmt = con.prepareStatement("DELETE FROM institution_concept_links");
+    stmt.executeUpdate();
+
+    stmt = con.prepareStatement("DELETE FROM grscicoll_vocab_concept");
     stmt.executeUpdate();
 
     con.close();
+
+    // Reset mock to default state for each test
+    setupMockConceptClient();
   }
 
   @Test
@@ -220,7 +244,7 @@ public class VocabularyFacetUpdaterCallbackIT extends BaseDBTest {
     VocabularyReleasedMessage message = createVocabularyReleasedMessage(
         "CollectionContentType",
         "1.0",
-        "https://api.gbif.org/v1/vocabularies/CollectionContentType/releases/1.0");
+        "https://api.gbif-dev.org/v1/vocabularies/CollectionContentType/releases/1.0");
 
     // When: Handle the message
     callback.handleMessage(message);
@@ -241,37 +265,13 @@ public class VocabularyFacetUpdaterCallbackIT extends BaseDBTest {
     VocabularyReleasedMessage message = createVocabularyReleasedMessage(
         "UnsupportedVocabulary",
         "1.0",
-        "https://api.gbif.org/v1/vocabularies/UnsupportedVocabulary/releases/1.0");
+        "https://api.gbif-dev.org/v1/vocabularies/UnsupportedVocabulary/releases/1.0");
 
     // When: Handle the message
     callback.handleMessage(message);
 
     // Then: Verify no facets were created (vocabulary not in config)
     assertFacetCount("UnsupportedVocabulary", 0);
-  }
-
-  @Test
-  public void handleMessageForEmptyVocabularyShouldClearExistingFacets() throws Exception {
-    // Given: Insert existing facets
-    insertTestFacet("EmptyVocabulary", "OldConcept", "oldconcept");
-    assertFacetCount("EmptyVocabulary", 1);
-
-    // Create a separate callback for empty vocabulary (add to config temporarily)
-    VocabularyFacetUpdaterCallback tempCallback = new VocabularyFacetUpdaterCallback(
-        vocabularyConceptService,
-        Set.of("CollectionContentType", "PreservationType", "EmptyVocabulary"));
-
-    // Create a mock message for empty vocabulary
-    VocabularyReleasedMessage message = mock(VocabularyReleasedMessage.class);
-    when(message.getVocabularyName()).thenReturn("EmptyVocabulary");
-    when(message.getVersion()).thenReturn("2.0");
-    when(message.getReleaseDownloadUrl()).thenReturn(URI.create("https://api.gbif.org/v1/vocabularies/EmptyVocabulary/releases/2.0"));
-
-    // When: Handle the message
-    tempCallback.handleMessage(message);
-
-    // Then: Verify existing facets were cleared
-    assertFacetCount("EmptyVocabulary", 0);
   }
 
   @Test
@@ -295,6 +295,78 @@ public class VocabularyFacetUpdaterCallbackIT extends BaseDBTest {
     assertFacetExists("PreservationType", "SampleDried");
   }
 
+  @Test
+  public void handleMessageForDeprecatedConceptsShouldUpdateStatus() throws Exception {
+    // Given: Insert existing active concept
+    long existingConceptKey = System.currentTimeMillis() % 100000L + 60000L;
+    insertTestFacetWithKey("CollectionContentType", "TestConcept", "testconcept", existingConceptKey);
+    assertFacetCount("CollectionContentType", 1);
+
+    // Create a mock for CollectionContentType with deprecated concept (same key)
+    PagingResponse<ConceptView> deprecatedResponse = new PagingResponse<>();
+    Concept deprecatedConcept = new Concept();
+    deprecatedConcept.setKey(existingConceptKey); // Use the same key as inserted concept
+    deprecatedConcept.setName("TestConcept");
+    deprecatedConcept.setVocabularyKey(1004L);
+    deprecatedConcept.setDeprecated(java.time.ZonedDateTime.now()); // Mark as deprecated
+    deprecatedConcept.setDeprecatedBy("test-user");
+
+    ConceptView deprecatedConceptView = new ConceptView();
+    deprecatedConceptView.setConcept(deprecatedConcept);
+
+    deprecatedResponse.setResults(List.of(deprecatedConceptView));
+    deprecatedResponse.setEndOfRecords(true);
+
+    // Set up mock for this specific test
+    when(mockConceptClient.listConceptsLatestRelease(eq("CollectionContentType"), any(ConceptListParams.class)))
+        .thenReturn(deprecatedResponse);
+
+    // Create a separate callback for this test
+    VocabularyFacetUpdaterCallback tempCallback = new VocabularyFacetUpdaterCallback(
+        vocabularyConceptService,
+        Set.of("CollectionContentType"));
+
+    // Create a mock message
+    VocabularyReleasedMessage message = createMockMessage("CollectionContentType", "2.0");
+
+    // When: Handle the message
+    tempCallback.handleMessage(message);
+
+    // Then: Verify the concept is now marked as deprecated but still exists
+    assertFacetCount("CollectionContentType", 1);
+
+    // Check that the concept is marked as deprecated
+    Connection con = PG_CONTAINER.createConnection("");
+    PreparedStatement stmt = con.prepareStatement(
+        "SELECT deprecated, deprecated_by FROM grscicoll_vocab_concept WHERE vocabulary_name = ? AND name = ?");
+    stmt.setString(1, "CollectionContentType");
+    stmt.setString(2, "TestConcept");
+
+    ResultSet rs = stmt.executeQuery();
+    rs.next();
+    assertNotNull(rs.getTimestamp("deprecated"), "Concept should be marked as deprecated");
+    assertEquals("test-user", rs.getString("deprecated_by"), "Deprecated by should be set");
+
+    con.close();
+  }
+
+  private void insertTestFacetWithKey(String vocabularyName, String name, String path, long conceptKey) throws Exception {
+    Connection con = PG_CONTAINER.createConnection("");
+    PreparedStatement stmt = con.prepareStatement(
+        "INSERT INTO grscicoll_vocab_concept (concept_key, vocabulary_key, vocabulary_name, name, path) VALUES (?, ?, ?, ?, ?::ltree)");
+
+    long vocabularyKey = getVocabularyKey(name);
+
+    stmt.setLong(1, conceptKey);
+    stmt.setLong(2, vocabularyKey);
+    stmt.setString(3, vocabularyName);
+    stmt.setString(4, name);
+    stmt.setString(5, path);
+    stmt.executeUpdate();
+
+    con.close();
+  }
+
   private VocabularyReleasedMessage createVocabularyReleasedMessage(String vocabularyName, String version, String downloadUrl) {
     return createMockMessage(vocabularyName, version);
   }
@@ -303,7 +375,7 @@ public class VocabularyFacetUpdaterCallbackIT extends BaseDBTest {
     VocabularyReleasedMessage message = mock(VocabularyReleasedMessage.class);
     when(message.getVocabularyName()).thenReturn(vocabularyName);
     when(message.getVersion()).thenReturn(version);
-    when(message.getReleaseDownloadUrl()).thenReturn(URI.create("https://api.gbif.org/v1/vocabularies/" + vocabularyName + "/releases/" + version));
+    when(message.getReleaseDownloadUrl()).thenReturn(URI.create("https://api.gbif-dev.org/v1/vocabularies/" + vocabularyName + "/releases/" + version));
     return message;
   }
 
@@ -324,18 +396,6 @@ public class VocabularyFacetUpdaterCallbackIT extends BaseDBTest {
 
     con.close();
     return count;
-  }
-
-  private void insertTestFacet(String vocabularyName, String name, String path) throws Exception {
-    Connection con = PG_CONTAINER.createConnection("");
-    PreparedStatement stmt = con.prepareStatement(
-        "INSERT INTO grscicoll_vocab_concept (vocabulary_name, name, path) VALUES (?, ?, ?::ltree)");
-    stmt.setString(1, vocabularyName);
-    stmt.setString(2, name);
-    stmt.setString(3, path);
-    stmt.executeUpdate();
-
-    con.close();
   }
 
   private void assertFacetExists(String vocabularyName, String facetName) throws Exception {

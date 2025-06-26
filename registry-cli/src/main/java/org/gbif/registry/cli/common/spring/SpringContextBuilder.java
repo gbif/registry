@@ -232,7 +232,13 @@ public class SpringContextBuilder {
                   ImmutableMap.of(
                       "api.root.url", vocabularyFacetUpdaterConfiguration.getApiRootUrl())));
       ctx.registerBean(VocabularyFacetUpdaterConfiguration.class, () -> vocabularyFacetUpdaterConfiguration);
-      packages.add("org.gbif.registry.cli.config");
+
+      ctx.registerBean("conceptClient", org.gbif.vocabulary.client.ConceptClient.class, () ->
+          new org.gbif.ws.client.ClientBuilder()
+              .withObjectMapper(org.gbif.ws.json.JacksonJsonObjectMapperProvider.getObjectMapperWithBuilderSupport()
+                  .registerModule(new com.fasterxml.jackson.datatype.jsr310.JavaTimeModule()))
+              .withUrl(vocabularyFacetUpdaterConfiguration.getApiRootUrl())
+              .build(org.gbif.vocabulary.client.ConceptClient.class));
     }
 
     ctx.getEnvironment()

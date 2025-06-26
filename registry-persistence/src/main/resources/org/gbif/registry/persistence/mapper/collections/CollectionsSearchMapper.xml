@@ -466,11 +466,11 @@
             COUNT(DISTINCT i.key) as count
           FROM institution i
           JOIN institution_concept_links icl ON i.key = icl.institution_key
-          JOIN grscicoll_vocab_concept vc ON icl.concept_id = vc.id
+          JOIN grscicoll_vocab_concept vc ON icl.concept_key = vc.concept_key
           JOIN vocabulary_name vn ON vc.vocabulary_name = vn.vocab_name
           <include refid="org.gbif.registry.persistence.mapper.collections.InstitutionMapper.LIST_FILTER"/>
           AND vc.name IS NOT NULL
-          GROUP BY vc.id, vc.name
+          GROUP BY vc.concept_key, vc.name
           <if test="params.facetMinCount != null">
             HAVING COUNT(DISTINCT i.key) >= #{params.facetMinCount}
           </if>
@@ -518,10 +518,10 @@
               WHEN #{params.facet.name} = 'INSTITUTIONAL_GOVERNANCE' THEN 'InstitutionalGovernance'
             END AS vocab_name
         )
-        SELECT COUNT(DISTINCT vc.id)
+        SELECT COUNT(DISTINCT vc.concept_key)
         FROM institution i
         JOIN institution_concept_links icl ON i.key = icl.institution_key
-        JOIN grscicoll_vocab_concept vc ON icl.concept_id = vc.id
+        JOIN grscicoll_vocab_concept vc ON icl.concept_key = vc.concept_key
         JOIN vocabulary_name vn ON vc.vocabulary_name = vn.vocab_name
         <include refid="org.gbif.registry.persistence.mapper.collections.InstitutionMapper.LIST_FILTER"/>
         AND vc.name IS NOT NULL
@@ -585,7 +585,7 @@
             COUNT(DISTINCT c.key) as count
           FROM collection c
           JOIN collection_concept_links ccl ON c.key = ccl.collection_key
-          JOIN grscicoll_vocab_concept vc ON ccl.concept_id = vc.id
+          JOIN grscicoll_vocab_concept vc ON ccl.concept_key = vc.concept_key
           JOIN vocabulary_name vn ON vc.vocabulary_name = vn.vocab_name
           <if test="params.descriptorSearch or params.descriptorFacet">
             INNER JOIN collection_descriptor_group cdg ON cdg.collection_key = c.key AND cdg.deleted IS NULL
@@ -594,7 +594,7 @@
           <include refid="org.gbif.registry.persistence.mapper.collections.CollectionMapper.LIST_FILTER"/>
           <include refid="DESCRIPTORS_FILTER"/>
           AND vc.name IS NOT NULL
-          GROUP BY vc.id, vc.name
+          GROUP BY vc.concept_key, vc.name
           <if test="params.facetMinCount != null">
             HAVING COUNT(DISTINCT c.key) >= #{params.facetMinCount}
           </if>
@@ -639,11 +639,11 @@
   <select id="collectionFacetCardinality" resultType="Long">
     <choose>
       <when test="params.facet.name.equals('CONTENT_TYPE')">
-        SELECT COUNT(DISTINCT ancestor_concept.id)
+        SELECT COUNT(DISTINCT ancestor_concept.concept_key)
         FROM
           collection c
           JOIN collection_concept_links cfl ON c.key = cfl.collection_key
-          JOIN grscicoll_vocab_concept specific_concept ON cfl.concept_id = specific_concept.id AND specific_concept.vocabulary_name = 'CollectionContentType'
+          JOIN grscicoll_vocab_concept specific_concept ON cfl.concept_key = specific_concept.concept_key AND specific_concept.vocabulary_name = 'CollectionContentType'
           JOIN grscicoll_vocab_concept ancestor_concept ON specific_concept.path &lt;@ ancestor_concept.path AND ancestor_concept.vocabulary_name = 'CollectionContentType'
         <if test="params.descriptorSearch or params.descriptorFacet">
           INNER JOIN collection_descriptor_group cdg ON cdg.collection_key = c.key AND cdg.deleted IS NULL
@@ -655,11 +655,11 @@
         AND ancestor_concept.vocabulary_name = 'CollectionContentType'
       </when>
       <when test="params.facet.name.equals('PRESERVATION_TYPE')">
-        SELECT COUNT(DISTINCT ancestor_concept.id)
+        SELECT COUNT(DISTINCT ancestor_concept.concept_key)
         FROM
           collection c
           JOIN collection_concept_links cfl ON c.key = cfl.collection_key
-          JOIN grscicoll_vocab_concept specific_concept ON cfl.concept_id = specific_concept.id AND specific_concept.vocabulary_name = 'PreservationType'
+          JOIN grscicoll_vocab_concept specific_concept ON cfl.concept_key = specific_concept.concept_key AND specific_concept.vocabulary_name = 'PreservationType'
           JOIN grscicoll_vocab_concept ancestor_concept ON specific_concept.path &lt;@ ancestor_concept.path AND ancestor_concept.vocabulary_name = 'PreservationType'
         <if test="params.descriptorSearch or params.descriptorFacet">
           INNER JOIN collection_descriptor_group cdg ON cdg.collection_key = c.key AND cdg.deleted IS NULL

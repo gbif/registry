@@ -27,7 +27,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.List;
-import java.util.Set;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -39,6 +38,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 
 import static org.gbif.registry.cli.util.EmbeddedPostgresTestUtils.toDbConfig;
+import static org.gbif.registry.cli.util.RegistryCliUtils.loadConfig;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -68,18 +68,16 @@ public class VocabularyFacetUpdaterCommandIT extends BaseDBTest {
 
   @BeforeAll
   public static void beforeAll() throws Exception {
+
+    VocabularyFacetUpdaterConfiguration config = loadConfig("vocabularyfacetupdater/vocabulary-facet-updater.yml", VocabularyFacetUpdaterConfiguration.class);
+    config.setDbConfig(toDbConfig(PG_CONTAINER));
+
     // Create mock ConceptClient with test data
     mockConceptClient = mock(ConceptClient.class);
     setupMockConceptClient();
 
-    VocabularyFacetUpdaterConfiguration config = new VocabularyFacetUpdaterConfiguration();
-    config.setDbConfig(toDbConfig(PG_CONTAINER));
-    config.apiRootUrl = "http://test-api.example.com/v1/"; // Mock URL
-    config.vocabulariesToProcess = Set.of("Discipline", "InstitutionType", "InstitutionalGovernance", "CollectionContentType", "PreservationType", "AccessionStatus");
-
-    // Build the Spring context with mock ConceptClient
     ctx = SpringContextBuilder.create()
-        .withVocabularyFacetUpdaterConfiguration(config)
+        .withDbConfiguration(config.getDbConfig())
         .withComponents(
             VocabularyConceptService.class,
             WithMyBatis.class,
@@ -178,18 +176,49 @@ public class VocabularyFacetUpdaterCommandIT extends BaseDBTest {
     concept.setKey(key);
     concept.setName(name);
     concept.setParentKey(parentKey);
+    concept.setVocabularyKey(getVocabularyKey(name));
 
     ConceptView conceptView = new ConceptView();
     conceptView.setConcept(concept);
     return conceptView;
   }
 
+  private static long getVocabularyKey(String conceptName) {
+    // Map concept names to vocabulary keys based on the vocabulary they belong to
+    if ("Biological".equals(conceptName) || "Archaeological".equals(conceptName) ||
+        "Paleontological".equals(conceptName) || "Anthropological".equals(conceptName)) {
+      return 1004L; // CollectionContentType
+    } else if ("SampleDried".equals(conceptName) || "StorageIndoors".equals(conceptName) ||
+               "StorageControlledAtmosphere".equals(conceptName) || "SampleCryopreserved".equals(conceptName)) {
+      return 1005L; // PreservationType
+    } else if ("LifeSciences".equals(conceptName) || "Botany".equals(conceptName) ||
+               "Zoology".equals(conceptName)) {
+      return 1001L; // Discipline
+    } else if ("Museum".equals(conceptName) || "University".equals(conceptName) ||
+               "Herbarium".equals(conceptName)) {
+      return 1002L; // InstitutionType
+    } else if ("Government".equals(conceptName) || "Academic".equals(conceptName) ||
+               "Private".equals(conceptName)) {
+      return 1003L; // InstitutionalGovernance
+    } else if ("Institutional".equals(conceptName) || "Project".equals(conceptName)) {
+      return 1006L; // AccessionStatus
+    } else {
+      return Math.abs(conceptName.hashCode()) % 10000L + 1000L; // Fallback
+    }
+  }
+
   @BeforeEach
   public void prepareDatabase() throws Exception {
     Connection con = PG_CONTAINER.createConnection("");
 
-    // Clear grscicoll_vocab_concept table
-    PreparedStatement stmt = con.prepareStatement("DELETE FROM grscicoll_vocab_concept");
+    // Clear all concept-related data to ensure test isolation
+    PreparedStatement stmt = con.prepareStatement("DELETE FROM collection_concept_links");
+    stmt.executeUpdate();
+
+    stmt = con.prepareStatement("DELETE FROM institution_concept_links");
+    stmt.executeUpdate();
+
+    stmt = con.prepareStatement("DELETE FROM grscicoll_vocab_concept");
     stmt.executeUpdate();
 
     con.close();
@@ -231,13 +260,13 @@ public class VocabularyFacetUpdaterCommandIT extends BaseDBTest {
     int initialCount = getFacetCount("CollectionContentType");
     assertEquals(1, initialCount, "Should have 1 existing facet");
 
-    // Run the updater (this should replace existing facets)
+    // Run the updater (this should add new concepts but keep existing ones)
     vocabularyConceptService.populateConceptsForVocabulary("CollectionContentType");
 
-    // Verify mock data replaced the existing facet
-    assertFacetCount("CollectionContentType", 4); // Should have 4 mock concepts
+    // Verify new concepts were added (4 mock concepts + 1 existing = 5 total)
+    assertFacetCount("CollectionContentType", 5); // Should have 4 mock concepts + 1 existing
     assertFacetExists("CollectionContentType", "Biological");
-    assertFacetNotExists("CollectionContentType", "ExistingType"); // Old facet should be gone
+    assertFacetExists("CollectionContentType", "ExistingType"); // Old facet should still exist
   }
 
   @Test
@@ -273,10 +302,17 @@ public class VocabularyFacetUpdaterCommandIT extends BaseDBTest {
   private void insertTestFacet(String vocabularyName, String name, String path) throws Exception {
     Connection con = PG_CONTAINER.createConnection("");
     PreparedStatement stmt = con.prepareStatement(
-        "INSERT INTO grscicoll_vocab_concept (vocabulary_name, name, path) VALUES (?, ?, ?::ltree)");
-    stmt.setString(1, vocabularyName);
-    stmt.setString(2, name);
-    stmt.setString(3, path);
+        "INSERT INTO grscicoll_vocab_concept (concept_key, vocabulary_key, vocabulary_name, name, path) VALUES (?, ?, ?, ?, ?::ltree)");
+
+    // Generate a unique test concept key
+    long conceptKey = System.currentTimeMillis() % 100000L + 50000L; // Use timestamp-based unique key
+    long vocabularyKey = getVocabularyKey(name);
+
+    stmt.setLong(1, conceptKey);
+    stmt.setLong(2, vocabularyKey);
+    stmt.setString(3, vocabularyName);
+    stmt.setString(4, name);
+    stmt.setString(5, path);
     stmt.executeUpdate();
 
     con.close();
@@ -316,20 +352,5 @@ public class VocabularyFacetUpdaterCommandIT extends BaseDBTest {
 
     con.close();
     assertTrue(count > 0, "Facet '" + facetName + "' should exist for vocabulary " + vocabularyName);
-  }
-
-  private void assertFacetNotExists(String vocabularyName, String facetName) throws Exception {
-    Connection con = PG_CONTAINER.createConnection("");
-    PreparedStatement stmt = con.prepareStatement(
-        "SELECT COUNT(*) FROM grscicoll_vocab_concept WHERE vocabulary_name = ? AND name = ?");
-    stmt.setString(1, vocabularyName);
-    stmt.setString(2, facetName);
-
-    ResultSet rs = stmt.executeQuery();
-    rs.next();
-    int count = rs.getInt(1);
-
-    con.close();
-    assertEquals(0, count, "Facet '" + facetName + "' should not exist for vocabulary " + vocabularyName);
   }
 }

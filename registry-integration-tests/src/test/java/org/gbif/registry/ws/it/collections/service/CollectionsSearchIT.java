@@ -56,7 +56,6 @@ import org.gbif.registry.persistence.mapper.GrScicollVocabConceptMapper;
 import org.gbif.registry.ws.it.collections.ConceptTestSetup;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -190,11 +189,6 @@ public class CollectionsSearchIT extends BaseServiceIT {
     addressC3.setCountry(Country.PORTUGAL);
     c3.setMailingAddress(addressC3);
     collectionService.create(c3);
-  }
-
-  @AfterEach
-  public void cleanup() {
-    ConceptTestSetup.cleanupTestConcepts(grScicollVocabConceptMapper);
   }
 
   @Test

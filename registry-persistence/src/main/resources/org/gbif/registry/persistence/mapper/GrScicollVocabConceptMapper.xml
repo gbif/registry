@@ -2,46 +2,125 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="org.gbif.registry.persistence.mapper.GrScicollVocabConceptMapper">
 
-  <insert id="create" parameterType="org.gbif.registry.persistence.mapper.dto.GrSciCollVocabConceptDto" useGeneratedKeys="true" keyProperty="id">
-    INSERT INTO grscicoll_vocab_concept (vocabulary_name, name, path)
+  <!-- Insert concept if not exists -->
+  <insert id="create" parameterType="org.gbif.registry.persistence.mapper.dto.GrSciCollVocabConceptDto">
+    INSERT INTO grscicoll_vocab_concept (concept_key, vocabulary_key, vocabulary_name, name, path, parent_key, replaced_by_key, deprecated, deprecated_by)
     VALUES (
+      #{conceptKey,jdbcType=BIGINT},
+      #{vocabularyKey,jdbcType=BIGINT},
       #{vocabularyName,jdbcType=VARCHAR},
       #{name,jdbcType=VARCHAR},
-      #{path,jdbcType=OTHER,typeHandler=org.gbif.registry.persistence.facet.LtreeTypeHandler}
+      #{path,jdbcType=OTHER,typeHandler=org.gbif.registry.persistence.facet.LtreeTypeHandler},
+      #{parentKey,jdbcType=BIGINT},
+      #{replacedByKey,jdbcType=BIGINT},
+      #{deprecated,jdbcType=TIMESTAMP},
+      #{deprecatedBy,jdbcType=VARCHAR}
     )
+    ON CONFLICT (concept_key) DO NOTHING
   </insert>
 
+  <!-- Update changeable fields (deprecated, deprecated_by, replaced_by_key) -->
   <update id="update" parameterType="org.gbif.registry.persistence.mapper.dto.GrSciCollVocabConceptDto">
     UPDATE grscicoll_vocab_concept
     SET
-      vocabulary_name = #{vocabularyName,jdbcType=VARCHAR},
-      name = #{name,jdbcType=VARCHAR},
-      path = #{path,jdbcType=OTHER,typeHandler=org.gbif.registry.persistence.facet.LtreeTypeHandler}
-    WHERE
-      id = #{id,jdbcType=INTEGER}
+      deprecated = #{deprecated,jdbcType=TIMESTAMP},
+      deprecated_by = #{deprecatedBy,jdbcType=VARCHAR},
+      replaced_by_key = #{replacedByKey,jdbcType=BIGINT}
+    WHERE concept_key = #{conceptKey,jdbcType=BIGINT}
   </update>
 
-  <delete id="deleteByVocabularyName">
-    DELETE FROM grscicoll_vocab_concept
-    WHERE vocabulary_name = #{vocabularyName,jdbcType=VARCHAR}
-  </delete>
+  <!-- Get concept by concept key -->
+  <select id="getByConceptKey" resultType="org.gbif.registry.persistence.mapper.dto.GrSciCollVocabConceptDto">
+    SELECT
+      concept_key as conceptKey,
+      vocabulary_key as vocabularyKey,
+      vocabulary_name as vocabularyName,
+      name,
+      path,
+      parent_key as parentKey,
+      replaced_by_key as replacedByKey,
+      deprecated,
+      deprecated_by as deprecatedBy
+    FROM grscicoll_vocab_concept
+    WHERE concept_key = #{conceptKey,jdbcType=BIGINT}
+  </select>
 
-  <!-- Get concept ID by vocabulary name and concept name -->
-  <select id="getConceptIdByVocabularyAndName" resultType="java.lang.Integer">
-    SELECT id
+  <!-- Get concept key by vocabulary name and concept name -->
+  <select id="getConceptKeyByVocabularyAndName" resultType="java.lang.Long">
+    SELECT concept_key
     FROM grscicoll_vocab_concept
     WHERE vocabulary_name = #{vocabularyName,jdbcType=VARCHAR}
       AND name = #{conceptName,jdbcType=VARCHAR}
   </select>
 
+  <!-- Get all concepts for a vocabulary -->
+  <select id="getAllConceptsByVocabulary" resultType="org.gbif.registry.persistence.mapper.dto.GrSciCollVocabConceptDto">
+    SELECT
+      concept_key as conceptKey,
+      vocabulary_key as vocabularyKey,
+      vocabulary_name as vocabularyName,
+      name,
+      path,
+      parent_key as parentKey,
+      replaced_by_key as replacedByKey,
+      deprecated,
+      deprecated_by as deprecatedBy
+    FROM grscicoll_vocab_concept
+    WHERE vocabulary_name = #{vocabularyName,jdbcType=VARCHAR}
+  </select>
+
+  <!-- Get existing institution concept links for a vocabulary -->
+  <select id="getInstitutionConceptLinksByVocabulary" resultType="org.gbif.registry.persistence.mapper.dto.GrsciCollConceptLinkDto">
+    SELECT
+      icl.institution_key as entityKey,
+      icl.concept_key as conceptKey,
+      vc.name as conceptName
+    FROM institution_concept_links icl
+    JOIN grscicoll_vocab_concept vc ON icl.concept_key = vc.concept_key
+    WHERE vc.vocabulary_name = #{vocabularyName,jdbcType=VARCHAR}
+  </select>
+
+  <!-- Get existing collection concept links for a vocabulary -->
+  <select id="getCollectionConceptLinksByVocabulary" resultType="org.gbif.registry.persistence.mapper.dto.GrsciCollConceptLinkDto">
+    SELECT
+      ccl.collection_key as entityKey,
+      ccl.concept_key as conceptKey,
+      vc.name as conceptName
+    FROM collection_concept_links ccl
+    JOIN grscicoll_vocab_concept vc ON ccl.concept_key = vc.concept_key
+    WHERE vc.vocabulary_name = #{vocabularyName,jdbcType=VARCHAR}
+  </select>
+
+  <!-- Get active concept key following replacement chain -->
+  <select id="getActiveConceptKey" resultType="java.lang.Long">
+    WITH RECURSIVE concept_chain AS (
+      -- Base case: start with the given concept
+      SELECT concept_key, replaced_by_key, deprecated
+      FROM grscicoll_vocab_concept
+      WHERE concept_key = #{conceptKey,jdbcType=BIGINT}
+
+      UNION ALL
+
+      -- Recursive case: follow the replacement chain
+      SELECT c.concept_key, c.replaced_by_key, c.deprecated
+      FROM grscicoll_vocab_concept c
+      INNER JOIN concept_chain cc ON c.concept_key = cc.replaced_by_key
+      WHERE c.deprecated IS NULL
+    )
+    SELECT concept_key
+    FROM concept_chain
+    WHERE deprecated IS NULL
+    LIMIT 1
+  </select>
+
   <!-- Insert institution concept link -->
   <insert id="insertInstitutionConcept">
-    INSERT INTO institution_concept_links (institution_key, concept_id)
+    INSERT INTO institution_concept_links (institution_key, concept_key)
     VALUES (
       #{institutionKey,jdbcType=OTHER},
-      #{conceptId,jdbcType=INTEGER}
+      #{conceptKey,jdbcType=BIGINT}
     )
-    ON CONFLICT (institution_key, concept_id) DO NOTHING
+    ON CONFLICT (institution_key, concept_key) DO NOTHING
   </insert>
 
   <!-- Delete all concept links for an institution -->
@@ -50,20 +129,34 @@
     WHERE institution_key = #{institutionKey,jdbcType=OTHER}
   </delete>
 
+  <!-- Delete specific institution concept link -->
+  <delete id="deleteInstitutionConcept">
+    DELETE FROM institution_concept_links
+    WHERE institution_key = #{institutionKey,jdbcType=OTHER}
+      AND concept_key = #{conceptKey,jdbcType=BIGINT}
+  </delete>
+
   <!-- Insert collection concept link -->
   <insert id="insertCollectionConcept">
-    INSERT INTO collection_concept_links (collection_key, concept_id)
+    INSERT INTO collection_concept_links (collection_key, concept_key)
     VALUES (
       #{collectionKey,jdbcType=OTHER},
-      #{conceptId,jdbcType=INTEGER}
+      #{conceptKey,jdbcType=BIGINT}
     )
-    ON CONFLICT (collection_key, concept_id) DO NOTHING
+    ON CONFLICT (collection_key, concept_key) DO NOTHING
   </insert>
 
   <!-- Delete all concept links for a collection -->
   <delete id="deleteCollectionConcepts">
     DELETE FROM collection_concept_links
     WHERE collection_key = #{collectionKey,jdbcType=OTHER}
+  </delete>
+
+  <!-- Delete specific collection concept link -->
+  <delete id="deleteCollectionConcept">
+    DELETE FROM collection_concept_links
+    WHERE collection_key = #{collectionKey,jdbcType=OTHER}
+      AND concept_key = #{conceptKey,jdbcType=BIGINT}
   </delete>
 
 </mapper>

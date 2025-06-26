@@ -260,7 +260,7 @@
     <!-- Hierarchical concept-based filtering for types -->
     <if test="params.types != null and params.types.size > 0">
       INNER JOIN institution_concept_links icl_type ON icl_type.institution_key = i.key
-              INNER JOIN grscicoll_vocab_concept c_type ON icl_type.concept_id = c_type.id
+              INNER JOIN grscicoll_vocab_concept c_type ON icl_type.concept_key = c_type.concept_key
         AND c_type.vocabulary_name = 'InstitutionType'
         AND c_type.name IN
         <foreach item="item" collection="params.types" open="(" separator="," close=")">
@@ -270,7 +270,7 @@
     <!-- Hierarchical concept-based filtering for disciplines -->
     <if test="params.disciplines != null and params.disciplines.size > 0">
       INNER JOIN institution_concept_links icl_discipline ON icl_discipline.institution_key = i.key
-              INNER JOIN grscicoll_vocab_concept c_discipline ON icl_discipline.concept_id = c_discipline.id
+              INNER JOIN grscicoll_vocab_concept c_discipline ON icl_discipline.concept_key = c_discipline.concept_key
         AND c_discipline.vocabulary_name = 'Discipline'
         AND c_discipline.name IN
         <foreach item="item" collection="params.disciplines" open="(" separator="," close=")">

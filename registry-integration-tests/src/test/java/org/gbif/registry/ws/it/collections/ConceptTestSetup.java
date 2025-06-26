@@ -9,6 +9,9 @@ import org.gbif.registry.persistence.mapper.dto.GrSciCollVocabConceptDto;
  */
 public class ConceptTestSetup {
 
+  // Counter for generating unique concept keys in tests
+  private static long conceptKeyCounter = 10000L;
+
   /**
    * Sets up common concept data needed for GRSciColl tests.
    * Creates facets for:
@@ -54,6 +57,7 @@ public class ConceptTestSetup {
     createConceptIfNotExists(grScicollVocabConceptMapper, "Discipline", "Botany", "Botany");
     createConceptIfNotExists(grScicollVocabConceptMapper, "Discipline", "Archaeology", "Archaeology");
     createConceptIfNotExists(grScicollVocabConceptMapper, "Discipline", "Anthropology", "Anthropology");
+    createConceptIfNotExists(grScicollVocabConceptMapper, "Discipline", "Biological", "Biological");
   }
 
   /**
@@ -63,28 +67,19 @@ public class ConceptTestSetup {
   private static void createConceptIfNotExists(
     GrScicollVocabConceptMapper grScicollVocabConceptMapper, String vocabularyName, String name, String path) {
     // Check if concept already exists
-    Integer existingId = grScicollVocabConceptMapper.getConceptIdByVocabularyAndName(vocabularyName, name);
+    Long existingId = grScicollVocabConceptMapper.getConceptKeyByVocabularyAndName(vocabularyName, name);
     if (existingId != null) {
       return; // Concept already exists, skip creation
     }
 
-    // Create new concept
+    // Create new concept with a unique test key
     GrSciCollVocabConceptDto conceptDto = new GrSciCollVocabConceptDto();
+    conceptDto.setConceptKey(++conceptKeyCounter); // Generate unique key for test
+    conceptDto.setVocabularyKey((long) vocabularyName.hashCode()); // Use hash of vocabulary name
     conceptDto.setVocabularyName(vocabularyName);
     conceptDto.setName(name);
     conceptDto.setPath(path);
     grScicollVocabConceptMapper.create(conceptDto);
-  }
-
-  /**
-   * Cleans up all test concepts. Should be called in @AfterEach or similar cleanup methods.
-   */
-  public static void cleanupTestConcepts(GrScicollVocabConceptMapper grScicollVocabConceptMapper) {
-    grScicollVocabConceptMapper.deleteByVocabularyName("CollectionContentType");
-    grScicollVocabConceptMapper.deleteByVocabularyName("PreservationType");
-    grScicollVocabConceptMapper.deleteByVocabularyName("AccessionStatus");
-    grScicollVocabConceptMapper.deleteByVocabularyName("InstitutionType");
-    grScicollVocabConceptMapper.deleteByVocabularyName("Discipline");
-    grScicollVocabConceptMapper.deleteByVocabularyName("InstitutionalGovernance");
+    grScicollVocabConceptMapper.update(conceptDto);
   }
 }

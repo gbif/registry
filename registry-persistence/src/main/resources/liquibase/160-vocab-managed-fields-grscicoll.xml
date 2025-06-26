@@ -8,39 +8,49 @@
       <![CDATA[
         -- Enable ltree extension if not already enabled
         CREATE EXTENSION IF NOT EXISTS ltree;
+        -- Drop the old table and recreate with vocabulary keys
+        DROP TABLE IF EXISTS collection_concept_links;
+        DROP TABLE IF EXISTS institution_concept_links;
+        DROP TABLE IF EXISTS grscicoll_vocab_concept;
 
-        -- Table for storing concept definitions and their hierarchy
+        -- Create new concept table using vocabulary keys
         CREATE TABLE grscicoll_vocab_concept (
-            id SERIAL PRIMARY KEY,
-            vocabulary_name TEXT NOT NULL, -- e.g., 'DISCIPLINE', 'INSTITUTION_TYPE'
-            name TEXT NOT NULL,            -- Display name, e.g., 'Botany', 'Herpetology'
-            path LTREE NOT NULL,           -- LTREE path, e.g., 'LifeSciences.Botany'
-            CONSTRAINT uq_grscicoll_vocab_concept_vocab_path UNIQUE (vocabulary_name, path),
+            concept_key BIGINT PRIMARY KEY,
+            vocabulary_key BIGINT NOT NULL,
+            vocabulary_name TEXT NOT NULL,
+            name TEXT NOT NULL,
+            path LTREE NOT NULL,
+            parent_key BIGINT,
+            replaced_by_key BIGINT,
+            deprecated TIMESTAMP WITH TIME ZONE,
+            deprecated_by VARCHAR(255),
+
             CONSTRAINT uq_grscicoll_vocab_concept_vocab_name UNIQUE (vocabulary_name, name)
         );
 
-        -- GiST index for efficient hierarchical queries on path
+        -- Indexes for performance
         CREATE INDEX idx_grscicoll_vocab_concept_path_gist ON grscicoll_vocab_concept USING GIST (path);
-        -- B-tree index for lookups by vocabulary and name
-        CREATE INDEX idx_grscicoll_vocab_concept_vocabulary_name ON grscicoll_vocab_concept (vocabulary_name, name);
+        CREATE INDEX idx_grscicoll_vocab_concept_vocabulary ON grscicoll_vocab_concept (vocabulary_name);
+        CREATE INDEX idx_grscicoll_vocab_concept_deprecated ON grscicoll_vocab_concept (vocabulary_name, deprecated);
+        CREATE INDEX idx_grscicoll_vocab_concept_replaced_by ON grscicoll_vocab_concept (replaced_by_key);
 
-        -- Link table for institutions and their concepts
+        -- Link table for institutions using vocabulary concept keys
         CREATE TABLE institution_concept_links (
             institution_key UUID NOT NULL REFERENCES institution(key) ON DELETE CASCADE,
-            concept_id INTEGER NOT NULL REFERENCES grscicoll_vocab_concept(id) ON DELETE CASCADE,
-            PRIMARY KEY (institution_key, concept_id)
+            concept_key BIGINT NOT NULL REFERENCES grscicoll_vocab_concept(concept_key) ON DELETE CASCADE,
+            PRIMARY KEY (institution_key, concept_key)
         );
         CREATE INDEX idx_icl_institution_key ON institution_concept_links(institution_key);
-        CREATE INDEX idx_icl_concept_id ON institution_concept_links(concept_id);
+        CREATE INDEX idx_icl_concept_key ON institution_concept_links(concept_key);
 
-        -- Link table for collections and their concepts
+        -- Link table for collections using vocabulary concept keys
         CREATE TABLE collection_concept_links (
             collection_key UUID NOT NULL REFERENCES collection(key) ON DELETE CASCADE,
-            concept_id INTEGER NOT NULL REFERENCES grscicoll_vocab_concept(id) ON DELETE CASCADE,
-            PRIMARY KEY (collection_key, concept_id)
+            concept_key BIGINT NOT NULL REFERENCES grscicoll_vocab_concept(concept_key) ON DELETE CASCADE,
+            PRIMARY KEY (collection_key, concept_key)
         );
         CREATE INDEX idx_ccl_collection_key ON collection_concept_links(collection_key);
-        CREATE INDEX idx_ccl_concept_id ON collection_concept_links(concept_id);
+        CREATE INDEX idx_ccl_concept_key ON collection_concept_links(concept_key);
       ]]>
     </sql>
   </changeSet>

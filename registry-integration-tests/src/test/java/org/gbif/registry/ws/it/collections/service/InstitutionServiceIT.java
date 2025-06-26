@@ -49,7 +49,6 @@ import org.geojson.FeatureCollection;
 import org.geojson.Point;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.AfterEach;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /** Tests the {@link InstitutionService}. */
@@ -84,11 +83,6 @@ public class InstitutionServiceIT extends BaseCollectionEntityServiceIT<Institut
   @BeforeEach
   public void setupFacets() {
     ConceptTestSetup.setupCommonConcepts(grScicollVocabConceptMapper);
-  }
-
-  @AfterEach
-  public void cleanupFacets() {
-    ConceptTestSetup.cleanupTestConcepts(grScicollVocabConceptMapper);
   }
 
   @Test

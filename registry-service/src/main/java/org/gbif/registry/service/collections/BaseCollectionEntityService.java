@@ -31,6 +31,7 @@ import org.gbif.registry.events.EventManager;
 import org.gbif.registry.events.collections.*;
 import org.gbif.registry.persistence.mapper.*;
 import org.gbif.registry.persistence.mapper.collections.*;
+import org.gbif.registry.persistence.mapper.dto.GrSciCollVocabConceptDto;
 import org.gbif.registry.security.SecurityContextCheck;
 import org.gbif.registry.service.WithMyBatis;
 import org.gbif.registry.service.collections.utils.IdentifierValidatorUtils;
@@ -56,6 +57,8 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.Objects;
+import java.util.Set;
+import java.util.HashSet;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static org.gbif.registry.security.UserRoles.*;
@@ -931,7 +934,7 @@ public class BaseCollectionEntityService<
   /**
    * Updates concept links for Collection and Institution entities synchronously.
    * This replaces the async event-based approach for better transactional consistency.
-   * 
+   *
    * Uses dynamic vocabulary detection instead of hardcoded assumptions about which
    * vocabularies are hierarchical, making it adaptable to vocabulary structure changes.
    */
@@ -968,7 +971,7 @@ public class BaseCollectionEntityService<
         collection.getKey(),
         "CollectionContentType", collection.getContentTypes(),
         "PreservationType", collection.getPreservationTypes(),
-        "AccessionStatus", collection.getAccessionStatus() != null ? 
+        "AccessionStatus", collection.getAccessionStatus() != null ?
             Collections.singletonList(collection.getAccessionStatus()) : Collections.emptyList()
     );
 
@@ -1000,7 +1003,7 @@ public class BaseCollectionEntityService<
    * Creates concept links from vocabulary fields using a flexible approach.
    * Only creates links for vocabularies that actually have concepts in the system.
    * This makes the system adaptable to vocabulary structure changes.
-   * 
+   *
    * @param entityKey The entity key (collection or institution)
    * @param vocabularyFieldPairs Variable arguments of vocabulary name and field values
    */
@@ -1041,30 +1044,34 @@ public class BaseCollectionEntityService<
    * This prevents assumptions about vocabulary structure.
    */
   private void createConceptLinksForVocabulary(UUID entityKey, String vocabularyName, List<String> values) {
-    List<Integer> conceptIds = new ArrayList<>();
+    List<Long> conceptIds = new ArrayList<>();
+    Set<Long> allConceptIds = new HashSet<>(); // Use Set to avoid duplicates
     int foundConcepts = 0;
     int missingConcepts = 0;
 
     for (String value : values) {
       try {
-        Integer conceptId = grScicollVocabConceptMapper.getConceptIdByVocabularyAndName(vocabularyName, value);
+        Long conceptId = grScicollVocabConceptMapper.getConceptKeyByVocabularyAndName(vocabularyName, value);
         if (conceptId != null) {
           conceptIds.add(conceptId);
+          allConceptIds.add(conceptId);
           foundConcepts++;
+
+          // For hierarchical vocabularies, also add parent concept links
+          addParentConceptLinks(entityKey, vocabularyName, conceptId, allConceptIds);
         } else {
           missingConcepts++;
           log.debug("No concept found for {}: {} (entity: {})", vocabularyName, value, entityKey);
         }
       } catch (Exception e) {
-        log.error("Error looking up concept for {} = {} (entity: {}): {}", 
+        log.error("Error looking up concept for {} = {} (entity: {}): {}",
                  vocabularyName, value, entityKey, e.getMessage());
         missingConcepts++;
       }
     }
 
-    // Only create links if we found at least some concepts
-    if (!conceptIds.isEmpty()) {
-      for (Integer conceptId : conceptIds) {
+    if (!allConceptIds.isEmpty()) {
+      for (Long conceptId : allConceptIds) {
         try {
           // Use appropriate method based on entity type
           if (isCollectionEntity(entityKey)) {
@@ -1072,25 +1079,51 @@ public class BaseCollectionEntityService<
           } else {
             grScicollVocabConceptMapper.insertInstitutionConcept(entityKey, conceptId);
           }
-          log.debug("Created {} concept link for entity: {} with concept ID: {}", 
+          log.debug("Created {} concept link for entity: {} with concept ID: {}",
                    vocabularyName, entityKey, conceptId);
         } catch (Exception e) {
-          log.error("Error creating {} concept link for entity {} with concept ID {}: {}", 
+          log.error("Error creating {} concept link for entity {} with concept ID {}: {}",
                    vocabularyName, entityKey, conceptId, e.getMessage());
         }
       }
 
-      log.debug("Successfully created {} {} concept links for entity: {} ({} found, {} missing)", 
-               conceptIds.size(), vocabularyName, entityKey, foundConcepts, missingConcepts);
+      log.debug("Successfully created {} {} concept links for entity: {} ({} direct, {} total with parents, {} missing)",
+               allConceptIds.size(), vocabularyName, entityKey, conceptIds.size(), allConceptIds.size(), missingConcepts);
     } else if (missingConcepts > 0) {
-      log.debug("No concepts found for vocabulary {} - skipping concept link creation for entity: {} ({} values checked)", 
+      log.debug("No concepts found for vocabulary {} - skipping concept link creation for entity: {} ({} values checked)",
                vocabularyName, entityKey, missingConcepts);
     }
   }
 
   /**
+   * Recursively adds parent concept links for hierarchical vocabularies.
+   * This ensures that filtering by parent concepts works correctly.
+   */
+  private void addParentConceptLinks(UUID entityKey, String vocabularyName, Long conceptId, Set<Long> allConceptIds) {
+    try {
+      GrSciCollVocabConceptDto concept = grScicollVocabConceptMapper.getByConceptKey(conceptId);
+      if (concept != null && concept.getParentKey() != null) {
+        // Check if parent concept exists and belongs to the same vocabulary
+        GrSciCollVocabConceptDto parentConcept = grScicollVocabConceptMapper.getByConceptKey(concept.getParentKey());
+        if (parentConcept != null && vocabularyName.equals(parentConcept.getVocabularyName())) {
+          // Add parent concept to the set (Set prevents duplicates)
+          allConceptIds.add(concept.getParentKey());
+          log.debug("Added parent concept link for entity: {} with parent concept ID: {} (parent of: {})",
+                   entityKey, concept.getParentKey(), conceptId);
+
+          // Recursively add grandparent concepts
+          addParentConceptLinks(entityKey, vocabularyName, concept.getParentKey(), allConceptIds);
+        }
+      }
+    } catch (Exception e) {
+      log.error("Error adding parent concept links for entity: {} concept: {}: {}",
+               entityKey, conceptId, e.getMessage());
+    }
+  }
+
+  /**
    * Determines if an entity key belongs to a Collection (vs Institution).
-   * This is a simple heuristic - in a more complex system, you might want to 
+   * This is a simple heuristic - in a more complex system, you might want to
    * pass entity type explicitly or query the database.
    */
   private boolean isCollectionEntity(UUID entityKey) {
