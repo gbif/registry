@@ -10,6 +10,7 @@ pipeline {
     buildDiscarder(logRotator(numToKeepStr: '5'))
     skipStagesAfterUnstable()
     timestamps()
+    disableConcurrentBuilds()
   }
   triggers {
     snapshotDependencies()
