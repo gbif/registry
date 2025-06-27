@@ -89,6 +89,15 @@ pipeline {
           }
       }
     }
+    stage('Trigger downstream jobs') {
+       steps {
+            script {
+                dependencies.findDownstreamJobsWithSnapshotDependencies("${env.JOB_NAME}", "${env.BUILD_ID}").each{
+                    j -> build job: j, wait: false, propagate: false
+                }
+            }
+       }
+    }
   }
     post {
       success {
