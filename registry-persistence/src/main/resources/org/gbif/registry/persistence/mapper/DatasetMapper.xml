@@ -28,7 +28,7 @@
   </resultMap>
 
   <resultMap id="DWCA_MAP" type="DwcA" autoMapping="false">
-    <result property="rowType" column="row_type" />
+    <result property="coreType" column="core_type" />
     <result property="extensions" column="extensions" typeHandler="org.gbif.mybatis.type.StringArrayTypeHandler"/>
     <result property="modified" column="modified"/>
   </resultMap>
@@ -543,10 +543,10 @@
 
   <!-- DwC-A -->
   <insert id="createDwcaDataset" parameterType="map">
-    INSERT INTO dwca_dataset(dataset_key,row_type,extensions,modified)
+    INSERT INTO dwca_dataset(dataset_key,core_type,extensions,modified)
     VALUES(
     #{datasetKey,jdbcType=OTHER},
-    #{dwca.rowType,jdbcType=VARCHAR},
+    #{dwca.coreType,jdbcType=VARCHAR},
     #{dwca.extensions,jdbcType=ARRAY,typeHandler=org.gbif.mybatis.type.StringArrayTypeHandler},
     now()
     )
@@ -555,14 +555,14 @@
   <!-- Update contact type and is_primary -->
   <update id="updateDwcaDataset" parameterType="map">
     UPDATE dwca_dataset
-    SET row_type=#{dwca.rowType,jdbcType=VARCHAR},
+    SET core_type=#{dwca.coreType,jdbcType=VARCHAR},
     extensions=#{dwca.extensions,jdbcType=ARRAY,typeHandler=org.gbif.mybatis.type.StringArrayTypeHandler},
     modified= now()
     WHERE dataset_key=#{datasetKey,jdbcType=OTHER}
   </update>
 
   <select id="selectDwcaDataset" resultMap="DWCA_MAP">
-    SELECT dwca.row_type, dwca.extensions, dwca.modified
+    SELECT dwca.core_type, dwca.extensions, dwca.modified
     FROM dwca_dataset dwca
     WHERE dwca.dataset_key = #{key}
   </select>

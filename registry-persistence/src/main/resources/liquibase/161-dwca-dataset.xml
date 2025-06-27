@@ -12,7 +12,7 @@
         CREATE TABLE dwca_dataset
         (
           dataset_key uuid NOT NULL PRIMARY KEY REFERENCES dataset(key),
-          row_type text NOT NULL,
+          core_type text NOT NULL,
           extensions text[] NOT NULL,
           modified timestamp with time zone NOT NULL DEFAULT now(),
           deleted timestamp with time zone

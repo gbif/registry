@@ -179,7 +179,7 @@
     "dwca": {
         "type": "object",
         "properties": {
-            "rowType": { "type": "keyword" },
+            "coreType": { "type": "keyword" },
             "extensions": { "type": "keyword" }
         }
     }
