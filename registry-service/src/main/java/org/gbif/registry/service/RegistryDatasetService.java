@@ -24,6 +24,8 @@ import java.util.Map;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 
 public interface RegistryDatasetService {
 
@@ -39,4 +41,24 @@ public interface RegistryDatasetService {
   byte[] getMetadataDocument(int metadataKey);
 
   List<DerivedDatasetUsage> ensureDerivedDatasetDatasetUsagesValid(Map<String, Long> data);
+
+  /**
+   * Add a new Contact to a target entity.
+   *
+   * @param targetEntityKey key of target entity
+   * @param contact         Contact to add
+   *
+   * @return key of Contact added
+   */
+  void createDwcaData(@NotNull UUID datasetKey, @NotNull @Valid Dataset.DwcA dwcA);
+
+  /**
+   * Add a new Contact to a target entity.
+   *
+   * @param targetEntityKey key of target entity
+   * @param contact         Contact to add
+   *
+   * @return key of Contact added
+   */
+  void updateDwcaData(@NotNull UUID datasetKey, @NotNull @Valid Dataset.DwcA dwcA);
 }

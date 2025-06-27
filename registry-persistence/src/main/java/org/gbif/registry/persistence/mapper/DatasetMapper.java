@@ -76,4 +76,10 @@ public interface DatasetMapper extends BaseNetworkEntityMapper<Dataset> {
   List<Grid> listGrids(@Param("datasetKey") UUID datasetKey);
 
   Dataset getLightweight(@Param("key") UUID key);
+
+
+  void createDwcaDataset(@Param("datasetKey") UUID datasetKey, @Param("dwca") Dataset.DwcA dwcaDataset);
+
+  void updateDwcaDataset(@Param("datasetKey") UUID datasetKey, @Param("dwca") Dataset.DwcA dwcaDataset);
+
 }
