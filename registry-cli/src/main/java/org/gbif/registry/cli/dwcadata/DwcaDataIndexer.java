@@ -147,7 +147,7 @@ public class DwcaDataIndexer {
    */
   private static Dataset.DwcA fromArchive(Archive archive) {
     Dataset.DwcA dwca = new Dataset.DwcA();
-    dwca.setRowType(archive.getCore().getRowType().qualifiedName());
+    dwca.setCoreType(archive.getCore().getRowType().qualifiedName());
     dwca.setExtensions(archive.getExtensions().stream()
         .map(ext -> ext.getRowType().qualifiedName())
         .collect(Collectors.toList()));
