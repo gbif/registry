@@ -1554,6 +1554,27 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset, DatasetL
     return listByDOI(new DOI(prefix, suffix).getDoiName(), page);
   }
 
+
+  @Hidden
+  @PostMapping(value = "{datasetKey}/dwca", consumes = MediaType.APPLICATION_JSON_VALUE)
+  @Trim
+  @Transactional
+  @Secured(ADMIN_ROLE)
+  @Override
+  public void createDwcaData(@PathVariable("datasetKey") UUID datasetKey, @RequestBody @Trim Dataset.DwcA dwcA) {
+    registryDatasetService.createDwcaData(datasetKey, dwcA);
+  }
+
+  @Hidden
+  @PutMapping(value = "{datasetKey}/dwca", consumes = MediaType.APPLICATION_JSON_VALUE)
+  @Trim
+  @Transactional
+  @Secured(ADMIN_ROLE)
+  @Override
+  public void updateDwcaData(@PathVariable("datasetKey") UUID datasetKey, @RequestBody @Trim Dataset.DwcA dwcA) {
+    registryDatasetService.updateDwcaData(datasetKey, dwcA);
+  }
+
   /** Encapsulates the params to pass in the body for the crawAll method. */
   private static class CrawlAllParams {
 

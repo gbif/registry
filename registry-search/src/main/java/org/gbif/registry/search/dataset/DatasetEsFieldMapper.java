@@ -68,7 +68,8 @@ public class DatasetEsFieldMapper implements EsFieldMapper<DatasetSearchParamete
           .put(DatasetSearchParameter.DOI, "doi")
           .put(DatasetSearchParameter.NETWORK_KEY, "networkKeys")
           .put(DatasetSearchParameter.ENDPOINT_TYPE, "endpoints.type")
-          .put(DatasetSearchParameter.DWCA_EXTENSION, "dwcaExtensions")
+          .put(DatasetSearchParameter.DWCA_EXTENSION, "dwca.extensions")
+          .put(DatasetSearchParameter.DWCA_CORE_TYPE, "dwca.coreType")
           .build();
 
   public static final Map<String, Integer> CARDINALITIES =

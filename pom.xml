@@ -105,6 +105,8 @@
     <gbif-vocabulary.version>2.0.7-SNAPSHOT</gbif-vocabulary.version>
     <gbif-kvs.version>3.0-SNAPSHOT</gbif-kvs.version>
     <checklistbank.version>3.0.0</checklistbank.version>
+    <dwc-api.version>2.0.1</dwc-api.version>
+    <dwca-io.version>3.0.0</dwca-io.version>
 
     <!-- Third party -->
     <commons-digester.version>3.2</commons-digester.version>
@@ -445,6 +447,16 @@
         <groupId>org.gbif.kvs</groupId>
         <artifactId>kvs-rest-clients</artifactId>
         <version>${gbif-kvs.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.gbif</groupId>
+        <artifactId>dwc-api</artifactId>
+        <version>${dwc-api.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.gbif</groupId>
+        <artifactId>dwca-io</artifactId>
+        <version>${dwca-io.version}</version>
       </dependency>
 
       <!-- Third party dependencies -->

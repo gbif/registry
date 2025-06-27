@@ -240,6 +240,10 @@ public class MyBatisConfiguration {
       configuration
           .getTypeAliasRegistry()
           .registerAlias("IDigBioCollectionDto", IDigBioCollectionDto.class);
+
+      configuration
+        .getTypeAliasRegistry()
+        .registerAlias("DwcA", Dataset.DwcA.class);
     };
   }
 }
