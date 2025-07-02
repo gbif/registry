@@ -31,7 +31,7 @@ import org.gbif.api.service.collections.DescriptorsService;
 import org.gbif.api.util.GrSciCollUtils;
 import org.gbif.api.vocabulary.collections.Source;
 import org.gbif.registry.database.TestCaseDatabaseInitializer;
-import org.gbif.registry.test.mocks.NubResourceClientMock;
+import org.gbif.registry.test.mocks.NameUsageMatchingServiceMock;
 import org.gbif.registry.ws.it.collections.service.BaseServiceIT;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 import org.junit.jupiter.api.Test;
@@ -120,7 +120,7 @@ public class DescriptorsServiceIT extends BaseServiceIT {
             .listDescriptors(
                 DescriptorSearchRequest.builder()
                     .usageKey(
-                        Collections.singletonList(NubResourceClientMock.DEFAULT_USAGE.getKey()))
+                        Collections.singletonList(NameUsageMatchingServiceMock.DEFAULT_USAGE.getKey()))
                     .build())
             .getResults()
             .size());
@@ -132,7 +132,7 @@ public class DescriptorsServiceIT extends BaseServiceIT {
                 DescriptorSearchRequest.builder()
                     .taxonKey(
                         Collections.singletonList(
-                            NubResourceClientMock.DEFAULT_HIGHEST_USAGE.getKey()))
+                            NameUsageMatchingServiceMock.DEFAULT_HIGHEST_USAGE.getKey()))
                     .build())
             .getResults()
             .size());

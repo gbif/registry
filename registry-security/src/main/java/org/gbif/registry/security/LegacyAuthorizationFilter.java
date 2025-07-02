@@ -19,6 +19,8 @@ import org.gbif.ws.security.LegacyRequestAuthorization;
 import org.gbif.ws.util.CommonWsUtils;
 
 import java.io.IOException;
+import java.util.Base64;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.UUID;
 
@@ -27,12 +29,17 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
+
+import com.google.common.base.Splitter;
+import com.google.common.base.Strings;
 
 /**
  * A filter that will intercept legacy web service requests to /registry/* and perform
@@ -43,16 +50,20 @@ public class LegacyAuthorizationFilter extends OncePerRequestFilter {
 
   private static final Logger LOG = LoggerFactory.getLogger(LegacyAuthorizationFilter.class);
 
+  private static final Splitter COLON_SPLITTER = Splitter.on(":").limit(2);
+  private static final String BASIC_AUTH_HEADER = "Basic ";
   private static final String DOT = ".";
   private static final String SLASH = "/";
-  private static final String REGISTRY_END_SIDE_SLASH_MAPPING = "registry/";
-  private static final String RESOURCE_MAPPING = "/resource";
-  private static final String UPDATE_BOTH_SIDE_SLASH_MAPPING = "/update/";
-  private static final String REGISTER_MAPPING = "/register";
-  private static final String SERVICE_MAPPING = "/service";
-  private static final String IPT_MAPPING = "/ipt";
-  private static final String RESOURCE_BOTH_SIDE_SLASH_MAPPING = "/resource/";
-  private static final String NETWORK_MAPPING = "/network";
+  private static final String GBRDS_REQUEST_INDICATOR = "registry/";
+  private static final String DATASET_REQUEST_INDICATOR = "/resource";
+  private static final String UPDATE_REQUEST_INDICATOR = "/update/";
+  private static final String REGISTER_REQUEST_INDICATOR = "/register";
+  private static final String ENDPOINT_REQUEST_INDICATOR = "/service";
+  private static final String VALIDATION_REQUEST_INDICATOR = "/validation";
+  private static final String INSTALLATION_REQUEST_INDICATOR = "/ipt";
+  private static final String DATASET_UPDATE_OR_DELETE_REQUEST_INDICATOR = "/resource/";
+  private static final String NETWORK_REQUEST_INDICATOR = "/network";
+  private static final String IPT_AUTH_PREFIX = "IPT__";
 
   private final LegacyAuthorizationService legacyAuthorizationService;
 
@@ -66,71 +77,173 @@ public class LegacyAuthorizationFilter extends OncePerRequestFilter {
       throws ServletException, IOException {
     String path = request.getRequestURI().toLowerCase();
 
-    // is it a legacy web service request?
-    if (path.contains(REGISTRY_END_SIDE_SLASH_MAPPING)) {
-      if ("GET".equalsIgnoreCase(request.getMethod())) {
+    if (isGbrdsRequest(path)) {
+      LOG.debug("GBRDS authorization request received");
+      if (isGetRequest(request)) {
         filterGetRequests(request);
-      } else if ("POST".equalsIgnoreCase(request.getMethod())
-          || "PUT".equalsIgnoreCase(request.getMethod())
-          || "DELETE".equalsIgnoreCase(request.getMethod())) {
+      } else if (isPostPutDeleteRequest(request)) {
         filterPostPutDeleteRequests(request, path);
       }
+    } else {
+      LOG.debug("Skipping request {}, not GBRDS", path);
     }
+
+    if (isValidationRequest(request, path)) {
+      LOG.debug("Validation request from IPT received");
+      handleValidationRequest(request);
+    } else {
+      LOG.debug("Skipping request {}, not a validation request from IPT", path);
+    }
+
     // otherwise, just do nothing (request unchanged)
     filterChain.doFilter(request, response);
   }
 
-  private void filterPostPutDeleteRequests(HttpServletRequest httpRequest, String path) {
-    // legacy installation request
-    if (path.contains(IPT_MAPPING)) {
-      // register installation?
-      if (path.endsWith(REGISTER_MAPPING)) {
-        authorizeOrganizationChange(httpRequest);
-      }
-      // update installation?
-      else if (path.contains(UPDATE_BOTH_SIDE_SLASH_MAPPING)) {
-        UUID installationKey = retrieveKeyFromRequestPath(httpRequest);
-        authorizeInstallationChange(httpRequest, installationKey);
-      }
-      // register dataset?
-      else if (path.endsWith(RESOURCE_MAPPING)) {
-        authorizeOrganizationChange(httpRequest);
-      }
-      // update dataset, delete dataset?
-      else if (path.contains(RESOURCE_BOTH_SIDE_SLASH_MAPPING)) {
-        UUID datasetKey = retrieveKeyFromRequestPath(httpRequest);
-        authorizeOrganizationDatasetChange(httpRequest, datasetKey);
-      }
-    }
-    // legacy dataset request
-    else if (path.contains(RESOURCE_MAPPING)) {
-      // register dataset?
-      if (path.endsWith(RESOURCE_MAPPING)) {
-        authorizeOrganizationChange(httpRequest);
-      } else if (path.contains(NETWORK_MAPPING)) {
-        UUID datasetKey = retrieveKeyFromMiddleRequestPath(httpRequest);
-        authorizeOrganizationDatasetChange(httpRequest, datasetKey);
-      }
-      // update dataset, delete dataset?
-      else if (path.contains(RESOURCE_BOTH_SIDE_SLASH_MAPPING)) {
-        UUID datasetKey = retrieveKeyFromRequestPath(httpRequest);
-        authorizeOrganizationDatasetChange(httpRequest, datasetKey);
-      }
-    }
-    // legacy endpoint request, add endpoint?
-    else if (path.endsWith(SERVICE_MAPPING)) {
-      UUID datasetKey = retrieveDatasetKeyFromFormOrQueryParameters(httpRequest);
-      authorizeOrganizationDatasetChange(httpRequest, datasetKey);
+  /**
+   * Filter GET requests.
+   *
+   * @param httpRequest a request
+   */
+  private void filterGetRequests(HttpServletRequest httpRequest) {
+    if (isOrganisationRequest(httpRequest)) {
+      handleOrganisationRequest(httpRequest);
     }
   }
 
-  private void filterGetRequests(HttpServletRequest httpRequest) {
-    // E.g. validate organization request, identified by param op=login
-    if (CommonWsUtils.getFirst(httpRequest.getParameterMap(), "op") != null
-        && CommonWsUtils.getFirst(httpRequest.getParameterMap(), "op").equalsIgnoreCase("login")) {
-      UUID organizationKey = retrieveKeyFromRequestPath(httpRequest);
-      authorizeOrganizationChange(httpRequest, organizationKey);
+  /**
+   * Filter POST, PUT and DELETE requests.
+   *
+   * @param httpRequest a request
+   * @param path a request path
+   */
+  private void filterPostPutDeleteRequests(HttpServletRequest httpRequest, String path) {
+    if (isInstallationRequest(path)) {
+      handleInstallationRequest(httpRequest, path);
+    } else if (isDatasetRequest(path)) {
+      handleDatasetRequest(httpRequest, path);
+    } else if (isEndpointRequest(path)) {
+      handleEndpointRequest(httpRequest);
     }
+  }
+
+  /**
+   * Handles dataset requests by determining the specific action based on the request path.
+   * Supported operations include:
+   *
+   * <ul>
+   *   <li><strong>Register a new dataset:</strong> requests like <code>/registry/ipt/resource</code></li>
+   *   <li><strong>Add dataset to a network or remove from it:</strong> requests like <code>/registry/resource/{resourceKey}/network/{networkKey}</code></li>
+   *   <li><strong>Update or delete a dataset:</strong> requests like <code>/registry/ipt/resource/{resourceKey}</code></li>
+   * </ul>
+   *
+   * @param httpRequest the request
+   * @param path the request path
+   */
+  private void handleDatasetRequest(HttpServletRequest httpRequest, String path) {
+    if (isRegisterDatasetRequest(path)) {
+      handleRegisterDatasetRequest(httpRequest);
+    } else if (isAddDatasetToNetworkRequest(path)) {
+      handleAddOrRemoveDatasetToNetworkRequest(httpRequest);
+    } else if (isUpdateOrDeleteDatasetRequest(path)) {
+      handleUpdateOrDeleteDatasetRequest(httpRequest);
+    } else {
+      LOG.warn("Unrecognized dataset request: {}", path);
+    }
+  }
+
+  /**
+   * Handles installation requests by determining the specific action based on the request path.
+   * Supported operations include:
+   *
+   * <ul>
+   *   <li><strong>Register a new installation:</strong> requests like <code>/registry/ipt/register</code></li>
+   *   <li><strong>Update an existing installation:</strong> requests like <code>/registry/ipt/update/{iptKey}</code></li>
+   * </ul>
+   *
+   * @param httpRequest the request
+   * @param path the request path
+   */
+  private void handleInstallationRequest(HttpServletRequest httpRequest, String path) {
+    if (isRegisterInstallationRequest(path)) {
+      handleRegisterInstallationRequest(httpRequest);
+    } else if (isUpdateInstallationRequest(path)) {
+      handleUpdateInstallationRequest(httpRequest);
+    } else {
+      LOG.warn("Unrecognized installation request: {}", path);
+    }
+  }
+
+  /**
+   * Handles endpoint requests.
+   *
+   * @param httpRequest the request
+   */
+  private void handleEndpointRequest(HttpServletRequest httpRequest) {
+    UUID datasetKey = retrieveDatasetKeyFromFormOrQueryParameters(httpRequest);
+    authorizeOrganizationDatasetChange(httpRequest, datasetKey);
+  }
+
+  private void handleValidationRequest(HttpServletRequest httpRequest) {
+    authorizeValidation(httpRequest);
+  }
+
+  /**
+   * Handles <strong>register a new dataset</strong> requests like <code>/registry/ipt/resource</code>
+   *
+   * @param httpRequest a request
+   */
+  private void handleRegisterDatasetRequest(HttpServletRequest httpRequest) {
+    authorizeOrganizationChange(httpRequest);
+  }
+
+  /**
+   * Handles <strong>add dataset to a network or remove from it</strong> requests like
+   * <code>/registry/resource/{resourceKey}/network/{networkKey}
+   *
+   * @param httpRequest a request
+   */
+  private void handleAddOrRemoveDatasetToNetworkRequest(HttpServletRequest httpRequest) {
+    UUID datasetKey = retrieveKeyFromMiddleRequestPath(httpRequest);
+    authorizeOrganizationDatasetChange(httpRequest, datasetKey);
+  }
+
+  /**
+   * Handles <strong>update or delete a dataset</strong> requests like <code>/registry/ipt/resource/{resourceKey}
+   *
+   * @param httpRequest a request
+   */
+  private void handleUpdateOrDeleteDatasetRequest(HttpServletRequest httpRequest) {
+    UUID datasetKey = retrieveKeyFromRequestPath(httpRequest);
+    authorizeOrganizationDatasetChange(httpRequest, datasetKey);
+  }
+
+  /**
+   * Handles <strong>register a new installation</strong> requests like <code>/registry/ipt/register</code>
+   *
+   * @param httpRequest a request
+   */
+  private void handleRegisterInstallationRequest(HttpServletRequest httpRequest) {
+    authorizeOrganizationChange(httpRequest);
+  }
+
+  /**
+   * Handles <strong>update an existing installation</strong> requests like <code>/registry/ipt/update/{iptKey}</code>
+   *
+   * @param httpRequest a request
+   */
+  private void handleUpdateInstallationRequest(HttpServletRequest httpRequest) {
+    UUID installationKey = retrieveKeyFromRequestPath(httpRequest);
+    authorizeInstallationChange(httpRequest, installationKey);
+  }
+
+  /**
+   * Handle organization requests like <code>/registry/organisation/{organisationKey}?op=login</code>
+   *
+   * @param httpRequest a request
+   */
+  private void handleOrganisationRequest(HttpServletRequest httpRequest) {
+    UUID organizationKey = retrieveKeyFromRequestPath(httpRequest);
+    authorizeOrganizationChange(httpRequest, organizationKey);
   }
 
   /**
@@ -148,6 +261,14 @@ public class LegacyAuthorizationFilter extends OncePerRequestFilter {
       throw new WebApplicationException(
           "Request to register not authorized", HttpStatus.UNAUTHORIZED);
     }
+  }
+
+  /**
+   * Authorize a validation request.
+   */
+  private void authorizeValidation(HttpServletRequest request) {
+    LegacyRequestAuthorization authorization = legacyAuthorizationService.authenticate(request);
+    SecurityContextHolder.getContext().setAuthentication(authorization);
   }
 
   /**
@@ -244,8 +365,8 @@ public class LegacyAuthorizationFilter extends OncePerRequestFilter {
     String path = request.getRequestURI();
     String key =
         path.substring(
-            path.lastIndexOf(RESOURCE_BOTH_SIDE_SLASH_MAPPING)
-                + RESOURCE_BOTH_SIDE_SLASH_MAPPING.length());
+            path.lastIndexOf(DATASET_UPDATE_OR_DELETE_REQUEST_INDICATOR)
+                + DATASET_UPDATE_OR_DELETE_REQUEST_INDICATOR.length());
 
     if (key.contains(SLASH)) {
       key = key.substring(0, key.indexOf(SLASH));
@@ -279,5 +400,99 @@ public class LegacyAuthorizationFilter extends OncePerRequestFilter {
       throw new WebApplicationException(
           "Dataset key is not present in the parameters", HttpStatus.BAD_REQUEST);
     }
+  }
+
+  /**
+   * Is it "Legacy" GBRDS API request from the IPT?
+   * Check whether the request contains "registry/"
+   *
+   * @param path a request path
+   * @return true or false
+   */
+  private boolean isGbrdsRequest(String path) {
+    return path.contains(GBRDS_REQUEST_INDICATOR);
+  }
+
+  /**
+   * Is it GET request?
+   *
+   * @param request a request
+   * @return true or false
+   */
+  private boolean isGetRequest(HttpServletRequest request) {
+    return StringUtils.equalsIgnoreCase(request.getMethod(), "GET");
+  }
+
+  /**
+   * Is it POST, PUT or DELETE request?
+   *
+   * @param request a request
+   * @return true or false
+   */
+  private boolean isPostPutDeleteRequest(HttpServletRequest request) {
+    return StringUtils.equalsAnyIgnoreCase(request.getMethod(), "POST", "PUT", "DELETE");
+  }
+
+  private boolean isEndpointRequest(String path) {
+    return path.endsWith(ENDPOINT_REQUEST_INDICATOR);
+  }
+
+  private boolean isValidationRequest(HttpServletRequest request, String path) {
+    String authentication = request.getHeader(HttpHeaders.AUTHORIZATION);
+    if (Strings.isNullOrEmpty(authentication) || !authentication.startsWith(BASIC_AUTH_HEADER)) {
+      return false;
+    }
+
+    // should contain /validation in the path
+    if (!path.contains(VALIDATION_REQUEST_INDICATOR)) {
+      return false;
+    }
+
+    byte[] decryptedBytes = Base64.getDecoder().decode(authentication.substring(BASIC_AUTH_HEADER.length()));
+    String decrypted = new String(decryptedBytes);
+    Iterator<String> iter = COLON_SPLITTER.split(decrypted).iterator();
+    String rawUsername = iter.next();
+
+    // should contain "IPT__" prefix in the username
+    return rawUsername.startsWith(IPT_AUTH_PREFIX);
+  }
+
+  private boolean isDatasetRequest(String path) {
+    return path.contains(DATASET_REQUEST_INDICATOR);
+  }
+
+  private boolean isInstallationRequest(String path) {
+    return path.contains(INSTALLATION_REQUEST_INDICATOR) && !path.contains(DATASET_REQUEST_INDICATOR);
+  }
+
+  private boolean isUpdateInstallationRequest(String path) {
+    return path.contains(UPDATE_REQUEST_INDICATOR);
+  }
+
+  private boolean isRegisterInstallationRequest(String path) {
+    return path.endsWith(REGISTER_REQUEST_INDICATOR);
+  }
+
+  private boolean isRegisterDatasetRequest(String path) {
+    return path.endsWith(DATASET_REQUEST_INDICATOR);
+  }
+
+  private boolean isAddDatasetToNetworkRequest(String path) {
+    return path.contains(NETWORK_REQUEST_INDICATOR);
+  }
+
+  private boolean isUpdateOrDeleteDatasetRequest(String path) {
+    return path.contains(DATASET_UPDATE_OR_DELETE_REQUEST_INDICATOR);
+  }
+
+  /**
+   * Whether request contains param op=login
+   *
+   * @param httpRequest a request
+   * @return true or false
+   */
+  private boolean isOrganisationRequest(HttpServletRequest httpRequest) {
+    return CommonWsUtils.getFirst(httpRequest.getParameterMap(), "op") != null
+        && CommonWsUtils.getFirst(httpRequest.getParameterMap(), "op").equalsIgnoreCase("login");
   }
 }

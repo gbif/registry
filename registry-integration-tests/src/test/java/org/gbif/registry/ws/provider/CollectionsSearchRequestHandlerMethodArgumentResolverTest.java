@@ -103,10 +103,10 @@ public class CollectionsSearchRequestHandlerMethodArgumentResolverTest {
         (CollectionDescriptorsSearchRequest)
             resolver.resolveArgument(methodParameter, mavContainer, webRequest, binderFactory);
 
-    assertEquals(Arrays.asList(1, 2), searchRequest.getUsageKey());
+    assertEquals(Arrays.asList("1", "2"), searchRequest.getUsageKey());
     assertEquals(Arrays.asList("n1", "n2"), searchRequest.getUsageName());
-    assertEquals(Arrays.asList(Rank.KINGDOM, Rank.PHYLUM), searchRequest.getUsageRank());
-    assertEquals(Arrays.asList(11, 22), searchRequest.getTaxonKey());
+    assertEquals(Arrays.asList(Rank.KINGDOM.toString(), Rank.PHYLUM.toString()), searchRequest.getUsageRank());
+    assertEquals(Arrays.asList("11", "22"), searchRequest.getTaxonKey());
     assertEquals(Arrays.asList("ide1", "ide2"), searchRequest.getIdentifiedBy());
     assertEquals(Arrays.asList("t1", "t2"), searchRequest.getTypeStatus());
     assertEquals(Arrays.asList("rec1", "rec2"), searchRequest.getRecordedBy());

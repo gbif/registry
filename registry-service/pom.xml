@@ -3,7 +3,7 @@
     <parent>
         <artifactId>registry-parent</artifactId>
         <groupId>org.gbif.registry</groupId>
-        <version>4.0.20-SNAPSHOT</version>
+        <version>4.1.0-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -92,26 +92,36 @@
         <artifactId>resilience4j-retry</artifactId>
       </dependency>
 
-        <!-- Test dependencies -->
-        <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter-engine</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.mockito</groupId>
-            <artifactId>mockito-core</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.mockito</groupId>
-            <artifactId>mockito-junit-jupiter</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.gbif.registry</groupId>
-            <artifactId>registry-security</artifactId>
-        </dependency>
+      <dependency>
+        <groupId>org.gbif.checklistbank</groupId>
+        <artifactId>checklistbank-ws-client</artifactId>
+      </dependency>
+
+      <dependency>
+        <groupId>org.gbif.kvs</groupId>
+        <artifactId>kvs-rest-clients</artifactId>
+      </dependency>
+
+      <!-- Test dependencies -->
+      <dependency>
+          <groupId>org.junit.jupiter</groupId>
+          <artifactId>junit-jupiter-engine</artifactId>
+          <scope>test</scope>
+      </dependency>
+      <dependency>
+          <groupId>org.mockito</groupId>
+          <artifactId>mockito-core</artifactId>
+          <scope>test</scope>
+      </dependency>
+      <dependency>
+          <groupId>org.mockito</groupId>
+          <artifactId>mockito-junit-jupiter</artifactId>
+          <scope>test</scope>
+      </dependency>
+      <dependency>
+          <groupId>org.gbif.registry</groupId>
+          <artifactId>registry-security</artifactId>
+      </dependency>
     </dependencies>
 
     <build>

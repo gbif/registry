@@ -20,21 +20,19 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.Singular;
-import org.gbif.api.model.checklistbank.NameUsage;
-import org.gbif.api.model.checklistbank.NameUsageMatch;
-import org.gbif.api.v2.NameUsageMatch2;
 import org.gbif.api.v2.RankedName;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.OccurrenceIssue;
-import org.gbif.api.vocabulary.Rank;
-import org.gbif.checklistbank.ws.client.NubResourceClient;
 import org.gbif.common.parsers.CountryParser;
 import org.gbif.common.parsers.NumberParser;
 import org.gbif.common.parsers.core.OccurrenceParseResult;
 import org.gbif.common.parsers.core.ParseResult;
 import org.gbif.common.parsers.date.MultiinputTemporalParser;
 import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.kvs.species.NameUsageMatchRequest;
 import org.gbif.registry.service.collections.utils.Vocabularies;
+import org.gbif.rest.client.species.NameUsageMatchResponse;
+import org.gbif.rest.client.species.NameUsageMatchingService;
 import org.gbif.vocabulary.client.ConceptClient;
 import org.gbif.vocabulary.model.search.LookupResult;
 
@@ -232,7 +230,7 @@ public class Interpreter {
   }
 
   public static InterpretedResult<TaxonData> interpretTaxonomy(
-      Map<String, String> valuesMap, NubResourceClient nubResourceClient) {
+      Map<String, String> valuesMap, NameUsageMatchingService nameUsageMatchingService) {
     if (valuesMap.isEmpty()) {
       return InterpretedResult.empty();
     }
@@ -269,31 +267,28 @@ public class Interpreter {
       return InterpretedResult.empty();
     }
 
-    NameUsage nameUsageParam = new NameUsage();
-    nameUsageParam.setKingdom(kingdom);
-    nameUsageParam.setPhylum(phylum);
-    nameUsageParam.setClazz(clazz);
-    nameUsageParam.setOrder(order);
-    nameUsageParam.setFamily(family);
-    nameUsageParam.setGenus(genus);
-    nameUsageParam.setTaxonID(taxonID);
+    NameUsageMatchRequest nameUsageMatchRequest = NameUsageMatchRequest.builder()
+      .withScientificName(scientificName)
+      .withScientificNameAuthorship(scientificNameAuthorship)
+      .withTaxonRank(taxonRank)
+      .withGenericName(genericName)
+      .withSpecificEpithet(specificEpithet)
+      .withInfraspecificEpithet(infraspecificEpithet)
+      .withKingdom(kingdom)
+      .withPhylum(phylum)
+      .withClazz(clazz)
+      .withOrder(order)
+      .withFamily(family)
+      .withGenus(genus)
+      .withTaxonID(taxonID)
+      .withStrict(false)
+      .withVerbose(false).build();
 
-    // TODO: also do backbone match by ID??
-    NameUsageMatch2 nameUsageMatch =
-        nubResourceClient.match2(
-            scientificName,
-            scientificNameAuthorship,
-            taxonRank,
-            genericName,
-            specificEpithet,
-            infraspecificEpithet,
-            nameUsageParam,
-            false,
-            false);
+    NameUsageMatchResponse nameUsageMatchResponse = nameUsageMatchingService.match(nameUsageMatchRequest);
 
-    if (nameUsageMatch == null
-        || isEmptyResponse(nameUsageMatch)
-        || checkFuzzy(nameUsageMatch, nameUsageParam)) {
+    if (nameUsageMatchResponse == null
+        || isEmptyResponse(nameUsageMatchResponse)
+        || checkFuzzy(nameUsageMatchRequest, nameUsageMatchResponse)) {
 
       return InterpretedResult.<TaxonData>builder()
           .result(
@@ -304,35 +299,35 @@ public class Interpreter {
           .issues(Collections.singletonList(TAXON_MATCH_NONE.getId()))
           .build();
     } else {
-      NameUsageMatch.MatchType matchType = nameUsageMatch.getDiagnostics().getMatchType();
+      NameUsageMatchResponse.MatchType matchType = nameUsageMatchResponse.getDiagnostics().getMatchType();
 
       List<String> issues = new ArrayList<>();
-      if (NameUsageMatch.MatchType.NONE == matchType) {
+      if (NameUsageMatchResponse.MatchType.NONE == matchType) {
         issues.add(TAXON_MATCH_NONE.getId());
-      } else if (NameUsageMatch.MatchType.FUZZY == matchType) {
+      } else if (NameUsageMatchResponse.MatchType.VARIANT == matchType) {
         issues.add(TAXON_MATCH_FUZZY.getId());
-      } else if (NameUsageMatch.MatchType.HIGHERRANK == matchType) {
+      } else if (NameUsageMatchResponse.MatchType.HIGHERRANK == matchType) {
         issues.add(TAXON_MATCH_HIGHERRANK.getId());
       }
 
       TaxonData.TaxonDataBuilder taxonDataBuilder = TaxonData.builder();
-      Set<Integer> taxonKeys = new HashSet<>();
+      Set<String> taxonKeys = new HashSet<>();
       taxonDataBuilder.taxonKeys(taxonKeys);
-      if (nameUsageMatch.getUsage() != null) {
+      if (nameUsageMatchResponse.getUsage() != null) {
         taxonDataBuilder
-            .usageName(nameUsageMatch.getUsage().getName())
-            .usageKey(nameUsageMatch.getUsage().getKey())
-            .usageRank(nameUsageMatch.getUsage().getRank());
-        taxonKeys.add(nameUsageMatch.getUsage().getKey());
+            .usageName(nameUsageMatchResponse.getUsage().getName())
+            .usageKey(String.valueOf(nameUsageMatchResponse.getUsage().getKey()))
+            .usageRank(nameUsageMatchResponse.getUsage().getRank());
+        taxonKeys.add(String.valueOf(nameUsageMatchResponse.getUsage().getKey()));
       }
 
-      if (nameUsageMatch.getClassification() != null) {
-        nameUsageMatch
+      if (nameUsageMatchResponse.getClassification() != null) {
+        nameUsageMatchResponse
             .getClassification()
             .forEach(
-                c -> {
-                  taxonDataBuilder.rankedName(c);
-                  taxonKeys.add(c.getKey());
+                rankedName -> {
+                  taxonDataBuilder.rankedName(new RankedName(rankedName.getKey(), rankedName.getName(), rankedName.getRank(),  null));
+                  taxonKeys.add(String.valueOf(rankedName.getKey()));
                 });
       }
 
@@ -366,31 +361,31 @@ public class Interpreter {
         .orElse(Collections.emptyList());
   }
 
-  private static boolean isEmptyResponse(NameUsageMatch2 response) {
+  private static boolean isEmptyResponse(NameUsageMatchResponse response) {
     return response == null || response.getUsage() == null || response.getDiagnostics() == null;
   }
 
-  private static boolean checkFuzzy(NameUsageMatch2 usageMatch, NameUsage nameUsageParam) {
-    boolean isFuzzy = NameUsageMatch.MatchType.FUZZY == usageMatch.getDiagnostics().getMatchType();
+  private static boolean checkFuzzy(NameUsageMatchRequest nameUsageRequest, NameUsageMatchResponse usageMatchResponse) {
+    boolean isFuzzy = NameUsageMatchResponse.MatchType.VARIANT == usageMatchResponse.getDiagnostics().getMatchType();
     boolean isEmptyTaxa =
-        Strings.isNullOrEmpty(nameUsageParam.getKingdom())
-            && Strings.isNullOrEmpty(nameUsageParam.getPhylum())
-            && Strings.isNullOrEmpty(nameUsageParam.getClazz())
-            && Strings.isNullOrEmpty(nameUsageParam.getOrder())
-            && Strings.isNullOrEmpty(nameUsageParam.getFamily());
+        Strings.isNullOrEmpty(nameUsageRequest.getKingdom())
+            && Strings.isNullOrEmpty(nameUsageRequest.getPhylum())
+            && Strings.isNullOrEmpty(nameUsageRequest.getClazz())
+            && Strings.isNullOrEmpty(nameUsageRequest.getOrder())
+            && Strings.isNullOrEmpty(nameUsageRequest.getFamily());
     return isFuzzy && isEmptyTaxa;
   }
 
   @Data
   @Builder
   static class TaxonData {
-    private Integer usageKey;
+    private String usageKey;
     private String usageName;
-    private Rank usageRank;
+    private String usageRank;
 
     @Singular("rankedName")
     private List<RankedName> taxonClassification;
 
-    private Set<Integer> taxonKeys;
+    private Set<String> taxonKeys;
   }
 }

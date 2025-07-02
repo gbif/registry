@@ -19,6 +19,7 @@ import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.DatasetSubtype;
 import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.api.vocabulary.EndpointType;
+import org.gbif.api.vocabulary.Extension;
 import org.gbif.api.vocabulary.License;
 import org.gbif.registry.search.dataset.common.EsFieldMapper;
 
@@ -67,6 +68,8 @@ public class DatasetEsFieldMapper implements EsFieldMapper<DatasetSearchParamete
           .put(DatasetSearchParameter.DOI, "doi")
           .put(DatasetSearchParameter.NETWORK_KEY, "networkKeys")
           .put(DatasetSearchParameter.ENDPOINT_TYPE, "endpoints.type")
+          .put(DatasetSearchParameter.DWCA_EXTENSION, "dwca.extensions")
+          .put(DatasetSearchParameter.DWCA_CORE_TYPE, "dwca.coreType")
           .build();
 
   public static final Map<String, Integer> CARDINALITIES =
@@ -78,6 +81,7 @@ public class DatasetEsFieldMapper implements EsFieldMapper<DatasetSearchParamete
           .put("type", DatasetType.values().length)
           .put("subtype", DatasetSubtype.values().length)
           .put("endpoints.type", EndpointType.values().length)
+          .put("dwcaExtensions", Extension.values().length)
           .build();
 
   private static final String[] EXCLUDE_FIELDS = new String[] {"all"};
