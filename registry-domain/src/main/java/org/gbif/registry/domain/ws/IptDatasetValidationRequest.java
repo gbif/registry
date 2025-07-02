@@ -11,25 +11,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.gbif.registry.test.mocks;
+package org.gbif.registry.domain.ws;
 
-import org.gbif.occurrence.query.TitleLookupService;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.UUID;
 
-/** Mock service, returns always the keys as titles. */
-public class TitleLookupServiceMock implements TitleLookupService {
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
 
-  @Override
-  public String getDatasetTitle(String datasetKey) {
-    return datasetKey;
-  }
+@Data
+@EqualsAndHashCode
+@ToString
+public class IptDatasetValidationRequest {
 
-  @Override
-  public String getSpeciesName(String speciesKey) {
-    return speciesKey;
-  }
+  private String sourceId;
+  private UUID installationKey;
+  private Set<String> notificationEmails = new HashSet<>();
 
-  @Override
-  public String getSpeciesName(String speciesKey, String checklistKey) {
-    return speciesKey;
-  }
 }

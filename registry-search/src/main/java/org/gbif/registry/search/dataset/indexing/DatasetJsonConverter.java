@@ -41,7 +41,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.EnumSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -49,8 +48,6 @@ import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
-import javax.xml.parsers.SAXParserFactory;
 
 import org.apache.commons.lang3.StringUtils;
 import org.elasticsearch.action.search.SearchRequest;
@@ -92,7 +89,6 @@ public class DatasetJsonConverter {
   private static final String GRIDDED_DATASET_NAMESPACE = "griddedDataSet.jwaller.gbif.org";
   private static final String GRIDDED_DATASET_NAME = "griddedDataset";
 
-  private final SAXParserFactory saxFactory = SAXParserFactory.newInstance();
   private final TimeSeriesExtractor timeSeriesExtractor =
       new TimeSeriesExtractor(1000, 2400, 1800, 2050);
 
@@ -168,7 +164,6 @@ public class DatasetJsonConverter {
       addTaxonKeys(dataset, datasetAsJson);
     }
     addMachineTags(dataset, datasetAsJson);
-    // addOccurrenceCoverage(dataset, datasetAsJson);
     return datasetAsJson;
   }
 
@@ -251,17 +246,20 @@ public class DatasetJsonConverter {
             BigDecimal.valueOf(occurrencePercentage)
                 .setScale(scale, RoundingMode.HALF_UP)
                 .doubleValue()));
-    DatasetMetrics datasetMetrics = gbifWsClient.getDatasetSpeciesMetrics(datasetKey);
 
-    if (Objects.nonNull(datasetMetrics)) {
-      nameUsagesPercentage = datasetMetrics.getUsagesCount() / getNameUsagesCount().doubleValue();
-      nameUsagesPercentage =
+    if (DatasetType.CHECKLIST.name().equals(dataset.get("type").asText())) {
+      DatasetMetrics datasetMetrics = gbifWsClient.getDatasetSpeciesMetrics(datasetKey);
+
+      if (Objects.nonNull(datasetMetrics)) {
+        nameUsagesPercentage = datasetMetrics.getUsagesCount() / getNameUsagesCount().doubleValue();
+        nameUsagesPercentage =
           Double.isInfinite(nameUsagesPercentage) || Double.isNaN(nameUsagesPercentage)
-              ? 0D
-              : nameUsagesPercentage;
-      dataset.put("nameUsagesCount", datasetMetrics.getUsagesCount());
-    } else {
-      dataset.put("nameUsagesCount", 0);
+            ? 0D
+            : nameUsagesPercentage;
+        dataset.put("nameUsagesCount", datasetMetrics.getUsagesCount());
+      } else {
+        dataset.put("nameUsagesCount", 0);
+      }
     }
 
     // Contribution of NameUsages
@@ -352,7 +350,7 @@ public class DatasetJsonConverter {
   private void addFacetsData(ObjectNode datasetJsonNode) {
     String datasetKey = datasetJsonNode.get("key").textValue();
     Set<OccurrenceSearchParameter> facets =
-        EnumSet.of(
+        Set.of(
             OccurrenceSearchParameter.COUNTRY, OccurrenceSearchParameter.CONTINENT,
             OccurrenceSearchParameter.TAXON_KEY, OccurrenceSearchParameter.YEAR);
     OccurrenceSearchRequest occurrenceSearchRequest = new OccurrenceSearchRequest();

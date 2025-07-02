@@ -339,7 +339,7 @@ public class CollectionResourceIT
   public void listDescriptorsTest() {
     Descriptor descriptor = new Descriptor();
     descriptor.setDescriptorGroupKey(1L);
-    descriptor.setUsageRank(Rank.ABERRATION);
+    descriptor.setUsageRank(Rank.ABERRATION.toString());
     descriptor.setCountry(Country.SPAIN);
 
     UUID collectionKey = UUID.randomUUID();
@@ -371,7 +371,7 @@ public class CollectionResourceIT
     UUID collectionKey = UUID.randomUUID();
     Descriptor descriptor = new Descriptor();
     descriptor.setDescriptorGroupKey(1L);
-    descriptor.setUsageRank(Rank.ABERRATION);
+    descriptor.setUsageRank(Rank.ABERRATION.toString());
     descriptor.setCountry(Country.SPAIN);
 
     DescriptorGroup descriptorGroup = new DescriptorGroup();
