@@ -199,6 +199,8 @@ public class CollectionsSearchRequestHandlerMethodArgumentResolverTest {
     parameterMap.put("CODE", new String[] {"c1"});
     parameterMap.put("name", new String[] {"n1"});
     parameterMap.put("contact", new String[] {"b600ae47-97a9-4b63-85f3-21d4f52523a1"});
+    parameterMap.put("contactUserId", new String[] {"user123"});
+    parameterMap.put("contactEmail", new String[] {"test@example.com"});
     parameterMap.put("identifier", new String[] {"ide1", "ide2"});
     parameterMap.put(
         "identifierType",
@@ -227,6 +229,8 @@ public class CollectionsSearchRequestHandlerMethodArgumentResolverTest {
     when(webRequest.getParameterMap()).thenReturn(parameterMap);
     when(webRequest.getParameter("hl")).thenReturn("true");
     when(webRequest.getParameter("q")).thenReturn("query");
+    when(webRequest.getParameter("contactUserId")).thenReturn("user123");
+    when(webRequest.getParameter("contactEmail")).thenReturn("test@example.com");
     when(webRequest.getParameter("sortBy"))
         .thenReturn(CollectionsSortField.NUMBER_SPECIMENS.name());
     when(webRequest.getParameter("sortOrder")).thenReturn(SortOrder.ASC.name());
@@ -245,6 +249,8 @@ public class CollectionsSearchRequestHandlerMethodArgumentResolverTest {
     assertEquals(
         Collections.singletonList(UUID.fromString("b600ae47-97a9-4b63-85f3-21d4f52523a1")),
         searchRequest.getContact());
+    assertEquals("user123", searchRequest.getContactUserId());
+    assertEquals("test@example.com", searchRequest.getContactEmail());
     assertEquals(Arrays.asList("ide1", "ide2"), searchRequest.getIdentifier());
     assertEquals(
         Arrays.asList(IdentifierType.CITES, IdentifierType.GRSCICOLL_URI),

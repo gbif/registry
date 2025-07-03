@@ -200,6 +200,8 @@ public class DefaultCollectionService extends BaseCollectionEntityService<Collec
             .institutionKeys(new ArrayList<>(institutionKeys))
             .sortBy(searchRequest.getSortBy())
             .sortOrder(searchRequest.getSortOrder())
+            .contactUserId(searchRequest.getContactUserId())
+            .contactEmail(searchRequest.getContactEmail())
             .page(page)
             .build();
 

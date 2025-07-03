@@ -167,4 +167,5 @@
   <include file="liquibase/159-descriptor-group-tags.xml" />
   <include file="liquibase/160-fix-catalog-url-array-constraints.xml" />
   <include file="liquibase/161-dwca-dataset.xml" />
+  <include file="liquibase/162-index-contact.xml" />
 </databaseChangeLog>
