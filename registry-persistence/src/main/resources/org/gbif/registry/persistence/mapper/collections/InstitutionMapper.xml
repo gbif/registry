@@ -262,6 +262,10 @@
     <if test="params.source != null || params.sourceId != null">
       INNER JOIN master_sync_metadata m ON i.master_sync_metadata_key = m.key
     </if>
+    <if test="params.contactUserId != null || params.contactEmail != null">
+      INNER JOIN institution_collection_contact icc ON icc.institution_key = i.key
+      INNER JOIN collection_contact cc ON cc.key = icc.collection_contact_key
+    </if>
     <where>
       <include refid="org.gbif.registry.persistence.mapper.collections.Common.COMMON_LIST_FILTER">
         <property name="alias" value="i."/>

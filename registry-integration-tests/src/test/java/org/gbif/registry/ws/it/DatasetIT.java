@@ -18,6 +18,7 @@ import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.common.search.SearchResponse;
 import org.gbif.api.model.registry.Citation;
+import org.gbif.api.model.registry.Contact;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Identifier;
 import org.gbif.api.model.registry.Installation;
@@ -361,6 +362,13 @@ class DatasetIT extends NetworkEntityIT<Dataset> {
     d.setType(DatasetType.CHECKLIST);
     d.setLicense(License.CC0_1_0);
     d.setLanguage(Language.AFRIKAANS);
+
+    Contact contact = new Contact();
+    contact.setFirstName("Test");
+    contact.setLastName("Testson");
+    contact.setUserId(java.util.Collections.singletonList("test-user-123"));
+    contact.setEmail(java.util.Collections.singletonList("test-contact@gbif.org"));
+    d.getContacts().add(contact);
     create(d, serviceType, 1);
 
     DatasetSearchUpdateUtils.awaitUpdates(datasetRealtimeIndexer, esServer);
@@ -380,6 +388,17 @@ class DatasetIT extends NetworkEntityIT<Dataset> {
         Long.valueOf(1),
         resp.getCount(),
         "Elasticsearch does not have the expected number of results for query[" + req + "]");
+
+
+    req = new DatasetSearchRequest();
+    req.addParameter(DatasetSearchParameter.CONTACT_EMAIL, "test-contact@gbif.org");
+    resp = searchService.search(req);
+    assertEquals(Long.valueOf(1), resp.getCount(), "Elasticsearch does not have the expected number of results for query[" + req + "]");
+
+    req = new DatasetSearchRequest();
+    req.addParameter(DatasetSearchParameter.CONTACT_USER_ID, "test-user-123");
+    resp = searchService.search(req);
+    assertEquals(Long.valueOf(1), resp.getCount(), "Elasticsearch does not have the expected number of results for query[" + req + "]");
   }
 
   @ParameterizedTest
@@ -1172,7 +1191,15 @@ class DatasetIT extends NetworkEntityIT<Dataset> {
     Dataset d1 = newEntity(Country.SPAIN, serviceType);
     d1.setDescription("first dataset");
     d1.setType(DatasetType.OCCURRENCE);
+
     UUID key1 = getService(serviceType).create(d1);
+
+    Contact contact = new Contact();
+    contact.setFirstName("Test");
+    contact.setLastName("User");
+    contact.setUserId(java.util.Collections.singletonList("test-user-456"));
+    contact.setEmail(java.util.Collections.singletonList("test-contact@gbif.org"));
+    service.addContact(key1, contact);
     Identifier id1 = newTestIdentifier(d1, IdentifierType.DOI, "doi:1");
     service.addIdentifier(key1, id1);
     MachineTag mt1 = new MachineTag("ns", "mt1", "mtV1");
@@ -1186,6 +1213,14 @@ class DatasetIT extends NetworkEntityIT<Dataset> {
     assertResultsOfSize(service.list(new DatasetRequestSearchParams()), 2);
 
     DatasetRequestSearchParams searchParams = new DatasetRequestSearchParams();
+    searchParams.setContactEmail("test-contact@gbif.org");
+    assertResultsOfSize(service.list(searchParams), 1);
+
+    searchParams = new DatasetRequestSearchParams();
+    searchParams.setContactUserId("test-user-456");
+    assertResultsOfSize(service.list(searchParams), 1);
+
+    searchParams = new DatasetRequestSearchParams();
     searchParams.setType(DatasetType.OCCURRENCE);
     assertResultsOfSize(service.list(searchParams), 1);
 
