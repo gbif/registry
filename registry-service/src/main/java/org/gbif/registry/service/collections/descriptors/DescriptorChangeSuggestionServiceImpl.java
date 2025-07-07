@@ -12,13 +12,19 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.descriptors.DescriptorChangeSuggestion;
 import org.gbif.api.model.collections.descriptors.DescriptorChangeSuggestionRequest;
+import org.gbif.api.model.common.GbifUser;
+import org.gbif.api.vocabulary.UserRole;
 import org.gbif.api.model.collections.suggestions.Status;
 import org.gbif.api.model.collections.suggestions.Type;
 import org.gbif.api.model.common.paging.Pageable;
@@ -31,6 +37,11 @@ import org.gbif.api.vocabulary.Country;
 import org.gbif.registry.events.EventManager;
 import org.gbif.registry.events.collections.EventType;
 import org.gbif.registry.events.collections.SubEntityCollectionEvent;
+import org.gbif.registry.mail.BaseEmailModel;
+import org.gbif.registry.mail.EmailSender;
+import org.gbif.registry.mail.collections.CollectionsEmailManager;
+import org.gbif.registry.mail.config.CollectionsMailConfigurationProperties;
+import org.gbif.registry.persistence.mapper.UserMapper;
 import org.gbif.registry.persistence.mapper.collections.DescriptorChangeSuggestionMapper;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -55,15 +66,28 @@ public class DescriptorChangeSuggestionServiceImpl implements DescriptorChangeSu
   private final DescriptorsService descriptorsService;
   private final EventManager eventManager;
   private final CollectionService collectionService;
+  private final EmailSender emailSender;
+  private final CollectionsEmailManager emailManager;
+  private final CollectionsMailConfigurationProperties collectionsMailConfigurationProperties;
+  private final UserMapper userMapper;
 
   @Autowired
   public DescriptorChangeSuggestionServiceImpl(DescriptorChangeSuggestionMapper suggestionMapper,
     DescriptorsService descriptorsService,
-    EventManager eventManager, CollectionService collectionService) {
+    EventManager eventManager,
+    CollectionService collectionService,
+    EmailSender emailSender,
+    CollectionsEmailManager emailManager,
+    CollectionsMailConfigurationProperties collectionsMailConfigurationProperties,
+    UserMapper userMapper) {
     this.suggestionMapper = suggestionMapper;
     this.descriptorsService = descriptorsService;
     this.eventManager = eventManager;
     this.collectionService = collectionService;
+    this.emailSender = emailSender;
+    this.emailManager = emailManager;
+    this.collectionsMailConfigurationProperties = collectionsMailConfigurationProperties;
+    this.userMapper = userMapper;
   }
 
   @Override
@@ -103,6 +127,29 @@ public class DescriptorChangeSuggestionServiceImpl implements DescriptorChangeSu
         DescriptorChangeSuggestion.class,
         suggestion.getKey(),
         EventType.CREATE));
+
+    // send email
+    if (Boolean.TRUE.equals(collectionsMailConfigurationProperties.getEnabled())) {
+      try {
+        BaseEmailModel emailModel =
+            emailManager.generateNewDescriptorSuggestionEmailModel(
+                suggestion.getKey(),
+                request.getCollectionKey(),
+                collection.getName(),
+                suggestion.getCountry(),
+                suggestion.getType(),
+                suggestion.getTitle(),
+                suggestion.getDescription(),
+                suggestion.getFormat() != null ? suggestion.getFormat().name() : "",
+                suggestion.getComments(),
+                suggestion.getTags(),
+                suggestion.getProposerEmail(),
+                findRecipientsWithPermissions(request.getCollectionKey(), suggestion.getCountry()));
+        emailSender.send(emailModel);
+      } catch (Exception e) {
+        log.error("Couldn't send email for new descriptor suggestion", e);
+      }
+    }
 
     return suggestion;
   }
@@ -251,6 +298,30 @@ public class DescriptorChangeSuggestionServiceImpl implements DescriptorChangeSu
         suggestion.getKey(),
         EventType.APPLY_SUGGESTION));
 
+    // send email
+    if (Boolean.TRUE.equals(collectionsMailConfigurationProperties.getEnabled())) {
+      try {
+        Collection collection = collectionService.get(suggestion.getCollectionKey());
+        BaseEmailModel emailModel =
+            emailManager.generateAppliedDescriptorSuggestionEmailModel(
+                suggestion.getKey(),
+                suggestion.getCollectionKey(),
+                collection.getName(),
+                suggestion.getCountry(),
+                suggestion.getType(),
+                suggestion.getTitle(),
+                suggestion.getDescription(),
+                suggestion.getFormat() != null ? suggestion.getFormat().name() : "",
+                suggestion.getComments(),
+                suggestion.getTags(),
+                suggestion.getProposerEmail(),
+                Collections.singleton(suggestion.getProposerEmail()));
+        emailSender.send(emailModel);
+      } catch (Exception e) {
+        log.error("Couldn't send email for applied descriptor suggestion", e);
+      }
+    }
+
     log.info("Applied descriptor suggestion with key: {}", key);
   }
 
@@ -286,6 +357,30 @@ public class DescriptorChangeSuggestionServiceImpl implements DescriptorChangeSu
         DescriptorChangeSuggestion.class,
         suggestion.getKey(),
         EventType.DISCARD_SUGGESTION));
+
+    // send email
+    if (Boolean.TRUE.equals(collectionsMailConfigurationProperties.getEnabled())) {
+      try {
+        Collection collection = collectionService.get(suggestion.getCollectionKey());
+        BaseEmailModel emailModel =
+            emailManager.generateDiscardedDescriptorSuggestionEmailModel(
+                suggestion.getKey(),
+                suggestion.getCollectionKey(),
+                collection.getName(),
+                suggestion.getCountry(),
+                suggestion.getType(),
+                suggestion.getTitle(),
+                suggestion.getDescription(),
+                suggestion.getFormat() != null ? suggestion.getFormat().name() : "",
+                suggestion.getComments(),
+                suggestion.getTags(),
+                suggestion.getProposerEmail(),
+                Collections.singleton(suggestion.getProposerEmail()));
+        emailSender.send(emailModel);
+      } catch (Exception e) {
+        log.error("Couldn't send email for discarded descriptor suggestion", e);
+      }
+    }
 
     log.info("Discarded descriptor suggestion with key: {}", key);
   }
@@ -366,5 +461,44 @@ public class DescriptorChangeSuggestionServiceImpl implements DescriptorChangeSu
         log.error("Failed to delete suggestion file for key: {}", suggestion.getKey(), e);
       }
     }
+  }
+
+  private Set<String> findRecipientsWithPermissions(UUID collectionKey, Country country) {
+    // first we try to find users that has permissions on the collection
+    if (collectionKey != null) {
+      for (UserRole role : Arrays.asList(UserRole.GRSCICOLL_EDITOR, UserRole.GRSCICOLL_MEDIATOR)) {
+        List<GbifUser> users =
+            userMapper.search(
+                null,
+                Collections.singleton(role),
+                Collections.singleton(collectionKey),
+                null,
+                null,
+                new PagingRequest());
+
+        if (!users.isEmpty()) {
+          return users.stream().map(GbifUser::getEmail).collect(Collectors.toSet());
+        }
+      }
+    }
+
+    if (country != null) {
+      for (UserRole role : Arrays.asList(UserRole.GRSCICOLL_EDITOR, UserRole.GRSCICOLL_MEDIATOR)) {
+        List<GbifUser> users =
+            userMapper.search(
+                null,
+                Collections.singleton(role),
+                null,
+                null,
+                Collections.singleton(country),
+                new PagingRequest());
+
+        if (!users.isEmpty()) {
+          return users.stream().map(GbifUser::getEmail).collect(Collectors.toSet());
+        }
+      }
+    }
+
+    return Collections.emptySet();
   }
 }
