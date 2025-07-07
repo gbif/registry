@@ -16,6 +16,7 @@ package org.gbif.registry.mail.collections;
 import org.gbif.api.model.collections.CollectionEntityType;
 import org.gbif.api.model.collections.suggestions.Type;
 import org.gbif.api.vocabulary.Country;
+import org.gbif.registry.domain.mail.DescriptorChangeSuggestionDataModel;
 import org.gbif.registry.domain.mail.GrscicollChangeSuggestionDataModel;
 import org.gbif.registry.domain.mail.GrscicollMasterSourceDeletedDataModel;
 import org.gbif.registry.mail.BaseEmailModel;
@@ -26,6 +27,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Set;
@@ -121,6 +123,96 @@ public class CollectionsEmailManager {
         recipients);
   }
 
+  public BaseEmailModel generateNewDescriptorSuggestionEmailModel(
+      long suggestionKey,
+      UUID collectionKey,
+      String collectionName,
+      Country collectionCountry,
+      Type suggestionType,
+      String title,
+      String description,
+      String format,
+      List<String> comments,
+      Set<String> tags,
+      String proposerEmail,
+      Set<String> recipients)
+      throws IOException {
+    return buildDescriptorSuggestionBaseEmailModel(
+        suggestionKey,
+        collectionKey,
+        collectionName,
+        collectionCountry,
+        CollectionsEmailType.NEW_DESCRIPTOR_SUGGESTION,
+        suggestionType,
+        title,
+        description,
+        format,
+        comments,
+        tags,
+        proposerEmail,
+        recipients);
+  }
+
+  public BaseEmailModel generateAppliedDescriptorSuggestionEmailModel(
+      long suggestionKey,
+      UUID collectionKey,
+      String collectionName,
+      Country collectionCountry,
+      Type suggestionType,
+      String title,
+      String description,
+      String format,
+      List<String> comments,
+      Set<String> tags,
+      String proposerEmail,
+      Set<String> recipients)
+      throws IOException {
+    return buildDescriptorSuggestionBaseEmailModel(
+        suggestionKey,
+        collectionKey,
+        collectionName,
+        collectionCountry,
+        CollectionsEmailType.APPLIED_DESCRIPTOR_SUGGESTION,
+        suggestionType,
+        title,
+        description,
+        format,
+        comments,
+        tags,
+        proposerEmail,
+        recipients);
+  }
+
+  public BaseEmailModel generateDiscardedDescriptorSuggestionEmailModel(
+      long suggestionKey,
+      UUID collectionKey,
+      String collectionName,
+      Country collectionCountry,
+      Type suggestionType,
+      String title,
+      String description,
+      String format,
+      List<String> comments,
+      Set<String> tags,
+      String proposerEmail,
+      Set<String> recipients)
+      throws IOException {
+    return buildDescriptorSuggestionBaseEmailModel(
+        suggestionKey,
+        collectionKey,
+        collectionName,
+        collectionCountry,
+        CollectionsEmailType.DISCARDED_DESCRIPTOR_SUGGESTION,
+        suggestionType,
+        title,
+        description,
+        format,
+        comments,
+        tags,
+        proposerEmail,
+        recipients);
+  }
+
   public BaseEmailModel generateMasterSourceDeletedEmailModel(
       UUID collectionEntityKey,
       String collectionEntityName,
@@ -206,6 +298,67 @@ public class CollectionsEmailManager {
       templateDataModel.setEntityType(entityType);
       templateDataModel.setEntityName(entityName);
       templateDataModel.setEntityCountry(entityCountry != null ? entityCountry.name() : "");
+
+      Set<String> finalRecipients = new HashSet<>();
+      Set<String> ccRecipients = new HashSet<>();
+      if (recipients != null && !recipients.isEmpty()) {
+        finalRecipients = recipients;
+        ccRecipients = Collections.singleton(collectionsMailConfigurationProperties.getRecipient());
+      } else {
+        finalRecipients.add(collectionsMailConfigurationProperties.getRecipient());
+      }
+
+      baseEmailModel =
+          emailTemplateProcessors.buildEmail(
+              emailType,
+              finalRecipients,
+              collectionsMailConfigurationProperties.getFrom(),
+              templateDataModel,
+              Locale.ENGLISH,
+              ccRecipients);
+    } catch (TemplateException e) {
+      throw new IOException(e);
+    }
+
+    return baseEmailModel;
+  }
+
+  private BaseEmailModel buildDescriptorSuggestionBaseEmailModel(
+      long suggestionKey,
+      UUID collectionKey,
+      String collectionName,
+      Country collectionCountry,
+      CollectionsEmailType emailType,
+      Type suggestionType,
+      String title,
+      String description,
+      String format,
+      List<String> comments,
+      Set<String> tags,
+      String proposerEmail,
+      Set<String> recipients)
+      throws IOException {
+    BaseEmailModel baseEmailModel;
+    try {
+      URL suggestionUrl = new URL(
+          grscicollRegistryPortalUrl
+              + "collection/"
+              + collectionKey
+              + "?descriptorSuggestionId="
+              + suggestionKey);
+
+      DescriptorChangeSuggestionDataModel templateDataModel =
+          new DescriptorChangeSuggestionDataModel();
+      templateDataModel.setChangeSuggestionUrl(suggestionUrl);
+      templateDataModel.setSuggestionType(suggestionType);
+      templateDataModel.setCollectionName(collectionName);
+      templateDataModel.setCollectionCountry(collectionCountry != null ? collectionCountry.name() : "");
+      templateDataModel.setTitle(title);
+      templateDataModel.setDescription(description);
+      templateDataModel.setFormat(format);
+      templateDataModel.setComments(comments);
+      templateDataModel.setTags(tags);
+      templateDataModel.setProposerEmail(proposerEmail);
 
       Set<String> finalRecipients = new HashSet<>();
       Set<String> ccRecipients = new HashSet<>();
