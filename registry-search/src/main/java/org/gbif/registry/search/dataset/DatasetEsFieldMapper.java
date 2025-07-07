@@ -70,6 +70,8 @@ public class DatasetEsFieldMapper implements EsFieldMapper<DatasetSearchParamete
           .put(DatasetSearchParameter.ENDPOINT_TYPE, "endpoints.type")
           .put(DatasetSearchParameter.DWCA_EXTENSION, "dwca.extensions")
           .put(DatasetSearchParameter.DWCA_CORE_TYPE, "dwca.coreType")
+          .put(DatasetSearchParameter.CONTACT_USER_ID, "contacts.userId.keyword")
+          .put(DatasetSearchParameter.CONTACT_EMAIL, "contacts.email.keyword")
           .build();
 
   public static final Map<String, Integer> CARDINALITIES =
@@ -170,7 +172,9 @@ public class DatasetEsFieldMapper implements EsFieldMapper<DatasetSearchParamete
       "countryCoverage",
       "doi",
       "networkKeys",
-      "networkTitle"
+      "networkTitle",
+      "contacts.userId.keyword",
+      "contacts.email.keyword"
     };
   }
 

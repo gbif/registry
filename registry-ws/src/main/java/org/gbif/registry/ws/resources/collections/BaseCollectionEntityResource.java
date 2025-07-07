@@ -252,6 +252,16 @@ public abstract class BaseCollectionEntityResource<
             description = "Sort order to use with the sortBy parameter",
             schema = @Schema(implementation = SortOrder.class),
             in = ParameterIn.QUERY),
+        @Parameter(
+            name = "contactUserId",
+            description = "Filter by contact user ID",
+            schema = @Schema(implementation = String.class),
+            in = ParameterIn.QUERY),
+        @Parameter(
+            name = "contactEmail",
+            description = "Filter by contact email",
+            schema = @Schema(implementation = String.class),
+            in = ParameterIn.QUERY),
         @Parameter(name = "searchRequest", hidden = true)
       })
   @CommonParameters.QParameter

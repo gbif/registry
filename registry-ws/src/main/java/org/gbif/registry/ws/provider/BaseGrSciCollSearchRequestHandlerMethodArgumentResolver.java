@@ -103,6 +103,17 @@ public abstract class BaseGrSciCollSearchRequestHandlerMethodArgumentResolver
     extractMultivalueParam(params, "source", Source::valueOf).ifPresent(request::setSource);
     extractMultivalueParam(params, "sourceId").ifPresent(request::setSourceId);
     extractMultivalueCountryParam(params, "country").ifPresent(request::setCountry);
+    
+    // Contact parameters
+    String contactUserId = webRequest.getParameter("contactUserId");
+    if (contactUserId != null && !contactUserId.trim().isEmpty()) {
+      request.setContactUserId(contactUserId.trim());
+    }
+    
+    String contactEmail = webRequest.getParameter("contactEmail");
+    if (contactEmail != null && !contactEmail.trim().isEmpty()) {
+      request.setContactEmail(contactEmail.trim());
+    }
 
     String[] gbifRegionParams = params.get("gbifRegion".toLowerCase());
     if (gbifRegionParams != null && gbifRegionParams.length > 0) {

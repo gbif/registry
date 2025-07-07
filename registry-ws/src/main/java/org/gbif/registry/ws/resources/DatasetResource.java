@@ -351,6 +351,16 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset, DatasetL
           description = "Type of the endpoint of the dataset.",
           schema = @Schema(implementation = EndpointType.class),
           in = ParameterIn.QUERY),
+        @Parameter(
+          name = "contactUserId",
+          description = "Filter datasets by contact user ID (e.g., ORCID).",
+          schema = @Schema(implementation = String.class),
+          in = ParameterIn.QUERY),
+        @Parameter(
+          name = "contactEmail",
+          description = "Filter datasets by contact email address.",
+          schema = @Schema(implementation = String.class),
+          in = ParameterIn.QUERY),
         @Parameter(name = "request", hidden = true),
         @Parameter(name = "searchRequest", hidden = true),
         @Parameter(name = "suggestRequest", hidden = true)
@@ -515,6 +525,8 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset, DatasetL
             .mtNamespace(request.getMachineTagNamespace())
             .mtName(request.getMachineTagName())
             .mtValue(request.getMachineTagValue())
+            .contactUserId(request.getContactUserId())
+            .contactEmail(request.getContactEmail())
             .page(request.getPage())
             .build();
 

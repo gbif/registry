@@ -33,6 +33,8 @@ public class OrganizationListParams extends BaseListParams {
   @Nullable private Country country;
   @Nullable private UUID endorsedByNodeKey;
   @Nullable private Range<Integer> numPublishedDatasets;
+  @Nullable private String contactUserId;
+  @Nullable private String contactEmail;
 
   public static OrganizationListParams from(BaseListParams params) {
     return BaseListParams.copy(OrganizationListParams.builder().build(), params);
