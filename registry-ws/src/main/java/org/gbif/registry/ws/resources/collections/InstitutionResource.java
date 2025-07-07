@@ -33,8 +33,6 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.util.List;
 import java.util.UUID;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 import javax.servlet.http.HttpServletResponse;
 import org.gbif.api.annotation.NullToNotFound;
 import org.gbif.api.annotation.Trim;
@@ -54,9 +52,6 @@ import org.gbif.api.util.iterables.Iterables;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.GbifRegion;
 import org.gbif.api.vocabulary.IdentifierType;
-import org.gbif.api.vocabulary.collections.Discipline;
-import org.gbif.api.vocabulary.collections.InstitutionGovernance;
-import org.gbif.api.vocabulary.collections.InstitutionType;
 import org.gbif.api.vocabulary.collections.Source;
 import org.gbif.registry.service.collections.batch.InstitutionBatchService;
 import org.gbif.registry.service.collections.duplicates.InstitutionDuplicatesService;
@@ -124,20 +119,22 @@ public class InstitutionResource
       value = {
         @Parameter(
             name = "type",
-            description = "Type of a GrSciColl institution",
-            schema = @Schema(implementation = InstitutionType.class),
+            description = "Type of a GrSciColl institution. Accepts multiple values, for example "
+              + "`type=Museum&type=BotanicalGarden",
+            schema = @Schema(implementation = String.class),
             in = ParameterIn.QUERY),
         @Parameter(
             name = "institutionalGovernance",
-            description = "Instutional governance of a GrSciColl institution",
-            schema = @Schema(implementation = InstitutionGovernance.class),
+            description = "Institutional governance of a GrSciColl institution. Accepts multiple values, for example "
+              + "`InstitutionalGovernance=NonProfit&InstitutionalGovernance=Local`",
+            schema = @Schema(implementation = String.class),
             in = ParameterIn.QUERY),
         @Parameter(
-            name = "disciplines",
+            name = "discipline",
             description =
                 "Discipline of a GrSciColl institution. Accepts multiple values, for example "
-                    + "`discipline=ARCHAEOLOGY_PREHISTORIC&discipline=ARCHAEOLOGY_HISTORIC`",
-            schema = @Schema(implementation = Discipline.class),
+                    + "`discipline=Zoology&discipline=Biological`",
+            schema = @Schema(implementation = String.class),
             in = ParameterIn.QUERY),
         @Parameter(
             name = "sourceId",

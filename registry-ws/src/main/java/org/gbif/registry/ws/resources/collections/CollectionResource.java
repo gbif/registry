@@ -83,9 +83,6 @@ import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.GbifRegion;
 import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.api.vocabulary.Rank;
-import org.gbif.api.vocabulary.collections.AccessionStatus;
-import org.gbif.api.vocabulary.collections.CollectionContentType;
-import org.gbif.api.vocabulary.collections.PreservationType;
 import org.gbif.api.vocabulary.collections.Source;
 import org.gbif.registry.service.collections.batch.CollectionBatchService;
 import org.gbif.registry.service.collections.duplicates.CollectionDuplicatesService;
@@ -180,20 +177,21 @@ public class CollectionResource
             name = "contentType",
             description =
                 "Content type of a GrSciColl collection. Accepts multiple values, for example "
-                    + "`contentType=PALEONTOLOGICAL_OTHER&contentType=EARTH_PLANETARY_MINERALS`.",
-            schema = @Schema(implementation = CollectionContentType.class),
+                    + "`contentType=Paleontological&contentType=EarthPlanetary`.",
+            schema = @Schema(implementation = String.class),
             in = ParameterIn.QUERY),
         @Parameter(
             name = "preservationType",
             description =
                 "Preservation type of a GrSciColl collection. Accepts multiple values, for example "
-                    + "`preservationType=SAMPLE_CRYOPRESERVED&preservationType=SAMPLE_FLUID_PRESERVED`.",
-            schema = @Schema(implementation = PreservationType.class),
+                    + "`preservationType=SampleCryopreserved&preservationType=SampleFluidPreserved`.",
+            schema = @Schema(implementation = String.class),
             in = ParameterIn.QUERY),
         @Parameter(
             name = "accessionStatus",
-            description = "Accession status of a GrSciColl collection",
-            schema = @Schema(implementation = AccessionStatus.class),
+            description = "Accession status of a GrSciColl collection. Accepts multiple values, for example "
+                    + "`accessionStatus=Institutional&accessionStatus=Project",
+            schema = @Schema(implementation = String.class),
             in = ParameterIn.QUERY),
         @Parameter(
             name = "personalCollection",
