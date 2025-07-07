@@ -423,6 +423,10 @@
     <if test="params.networkKey != null">
       INNER JOIN dataset_network dn ON dn.dataset_key = d.key
     </if>
+    <if test="params.contactUserId != null or params.contactEmail != null">
+      INNER JOIN dataset_contact dc ON dc.dataset_key = d.key
+      INNER JOIN contact c ON c.key = dc.contact_key
+    </if>
     <where>
       <choose>
         <when test="params.deleted != null and params.deleted">
@@ -469,6 +473,12 @@
       </if>
       <if test="params.isSubdataset != null and params.isSubdataset">
         AND d.parent_dataset_key IS NOT NULL
+      </if>
+      <if test="params.contactUserId != null">
+        AND c.user_id @> ARRAY[#{params.contactUserId}::text]
+      </if>
+      <if test="params.contactEmail != null">
+        AND c.email @> ARRAY[#{params.contactEmail}::text]
       </if>
     </where>
   </sql>

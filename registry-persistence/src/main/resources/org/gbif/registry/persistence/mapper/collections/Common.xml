@@ -215,6 +215,12 @@
       <property name="values" value="params.sourceId"/>
       <property name="field" value="m.source_id"/>
     </include>
+    <if test="params.contactUserId != null">
+      AND get_user_ids_values(cc.user_ids) @> ARRAY[#{params.contactUserId}::text]
+    </if>
+    <if test="params.contactEmail != null">
+      AND cc.email @> ARRAY[#{params.contactEmail}::text]
+    </if>
   </sql>
 
 </mapper>

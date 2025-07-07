@@ -232,6 +232,10 @@
       INNER JOIN collection_identifier ci on ci.collection_key = c.key
       INNER JOIN identifier id on id.key = ci.identifier_key
     </if>
+    <if test="params.contactUserId != null || params.contactEmail != null" >
+      INNER JOIN collection_collection_contact ccc on ccc.collection_key = c.key
+      INNER JOIN collection_contact cc on cc.key = ccc.collection_contact_key
+    </if>
     LEFT JOIN address addr ON addr.key = c.address_key
     LEFT JOIN address mail_addr ON mail_addr.key = c.mailing_address_key
     <if test="params.source != null || params.sourceId != null">
