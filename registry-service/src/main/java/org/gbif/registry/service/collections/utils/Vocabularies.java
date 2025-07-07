@@ -205,6 +205,16 @@ public class Vocabularies {
 
   private static Set<String> findChildren(
       ConceptClient conceptClient, String vocabName, String conceptName, Set<String> allChildren) {
+
+    List<LookupResult> lookupResults = lookupLatestRelease(vocabName, conceptName, conceptClient);
+    final String actualConceptName;
+
+    if (lookupResults != null && !lookupResults.isEmpty()) {
+      actualConceptName = lookupResults.get(0).getConceptName();
+    } else {
+      actualConceptName = conceptName;
+    }
+
     PagingResponse<ConceptView> result =
         Retry.decorateSupplier(
                 RETRY,
@@ -212,7 +222,7 @@ public class Vocabularies {
                     conceptClient.listConceptsLatestRelease(
                         vocabName,
                         ConceptListParams.builder()
-                            .name(conceptName)
+                            .name(actualConceptName)
                             .includeChildren(true)
                             .build()))
             .get();
