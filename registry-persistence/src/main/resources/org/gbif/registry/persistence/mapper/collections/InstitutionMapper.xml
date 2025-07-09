@@ -270,15 +270,15 @@
       <include refid="org.gbif.registry.persistence.mapper.collections.Common.COMMON_LIST_FILTER">
         <property name="alias" value="i."/>
       </include>
-      <include refid="org.gbif.registry.persistence.mapper.collections.Common.MULTIVALUE_ARRAY_FIELD_FILTER">
+      <include refid="org.gbif.registry.persistence.mapper.collections.Common.MULTIVALUE_ARRAY_FIELD_FILTER_CASE_INSENSITIVE">
         <property name="values" value="params.types"/>
         <property name="field" value="i.type"/>
       </include>
-      <include refid="org.gbif.registry.persistence.mapper.collections.Common.MULTIVALUE_ARRAY_FIELD_FILTER">
+      <include refid="org.gbif.registry.persistence.mapper.collections.Common.MULTIVALUE_ARRAY_FIELD_FILTER_CASE_INSENSITIVE">
         <property name="values" value="params.institutionalGovernances"/>
         <property name="field" value="i.institutional_governance"/>
       </include>
-      <include refid="org.gbif.registry.persistence.mapper.collections.Common.MULTIVALUE_ARRAY_FIELD_FILTER">
+      <include refid="org.gbif.registry.persistence.mapper.collections.Common.MULTIVALUE_ARRAY_FIELD_FILTER_CASE_INSENSITIVE">
         <property name="values" value="params.disciplines"/>
         <property name="field" value="i.discipline"/>
       </include>

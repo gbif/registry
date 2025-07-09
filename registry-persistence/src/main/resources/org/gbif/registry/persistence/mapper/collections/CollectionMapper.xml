@@ -245,15 +245,15 @@
       <include refid="org.gbif.registry.persistence.mapper.collections.Common.COMMON_LIST_FILTER">
         <property name="alias" value="c."/>
       </include>
-      <include refid="org.gbif.registry.persistence.mapper.collections.Common.MULTIVALUE_ARRAY_FIELD_FILTER">
+      <include refid="org.gbif.registry.persistence.mapper.collections.Common.MULTIVALUE_ARRAY_FIELD_FILTER_CASE_INSENSITIVE">
         <property name="values" value="params.contentTypes"/>
         <property name="field" value="c.content_type"/>
       </include>
-      <include refid="org.gbif.registry.persistence.mapper.collections.Common.MULTIVALUE_ARRAY_FIELD_FILTER">
+      <include refid="org.gbif.registry.persistence.mapper.collections.Common.MULTIVALUE_ARRAY_FIELD_FILTER_CASE_INSENSITIVE">
         <property name="values" value="params.preservationTypes"/>
         <property name="field" value="c.preservation_type"/>
       </include>
-      <include refid="org.gbif.registry.persistence.mapper.collections.Common.MULTIVALUE_FILTER">
+      <include refid="org.gbif.registry.persistence.mapper.collections.Common.MULTIVALUE_FILTER_CASE_INSENSITIVE">
         <property name="values" value="params.accessionStatus"/>
         <property name="field" value="c.accession_status"/>
       </include>
