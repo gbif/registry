@@ -389,6 +389,46 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
                     .build())
             .getResults()
             .size());
+
+    // Test case-insensitive search for contentType
+    assertEquals(
+        2,
+        collectionService
+            .list(
+                CollectionSearchRequest.builder()
+                    .contentTypes(Collections.singletonList("archaeological"))
+                    .limit(DEFAULT_PAGE.getLimit())
+                    .offset(DEFAULT_PAGE.getOffset())
+                    .build())
+            .getResults()
+            .size());
+
+    // Test case-insensitive search for preservationType
+    assertEquals(
+        2,
+        collectionService
+            .list(
+                CollectionSearchRequest.builder()
+                    .preservationTypes(Collections.singletonList("sampledried"))
+                    .limit(DEFAULT_PAGE.getLimit())
+                    .offset(DEFAULT_PAGE.getOffset())
+                    .build())
+            .getResults()
+            .size());
+
+    // Test case insensitive search for accessionStatus
+    assertEquals(
+        2,
+        collectionService
+            .list(
+                CollectionSearchRequest.builder()
+                    .accessionStatus(Collections.singletonList("institutional"))
+                    .limit(DEFAULT_PAGE.getLimit())
+                    .offset(DEFAULT_PAGE.getOffset())
+                    .build())
+            .getResults()
+            .size());
+
     assertEquals(
         1,
         collectionService
