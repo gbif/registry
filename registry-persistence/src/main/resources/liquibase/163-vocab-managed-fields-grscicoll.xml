@@ -1,0 +1,57 @@
+<databaseChangeLog
+  xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+<changeSet id="160" author="auzun">
+    <sql splitStatements="false" stripComments="true">
+      <![CDATA[
+        -- Enable ltree extension if not already enabled
+        CREATE EXTENSION IF NOT EXISTS ltree;
+        -- Drop the old table and recreate with vocabulary keys
+        DROP TABLE IF EXISTS collection_concept_links;
+        DROP TABLE IF EXISTS institution_concept_links;
+        DROP TABLE IF EXISTS grscicoll_vocab_concept;
+
+        -- Create new concept table using vocabulary keys
+        CREATE TABLE grscicoll_vocab_concept (
+            concept_key BIGINT PRIMARY KEY,
+            vocabulary_key BIGINT NOT NULL,
+            vocabulary_name TEXT NOT NULL,
+            name TEXT NOT NULL,
+            path LTREE NOT NULL,
+            parent_key BIGINT,
+            replaced_by_key BIGINT,
+            deprecated TIMESTAMP WITH TIME ZONE,
+            deprecated_by VARCHAR(255),
+
+            CONSTRAINT uq_grscicoll_vocab_concept_vocab_name UNIQUE (vocabulary_name, name)
+        );
+
+        -- Indexes for performance
+        CREATE INDEX idx_grscicoll_vocab_concept_path_gist ON grscicoll_vocab_concept USING GIST (path);
+        CREATE INDEX idx_grscicoll_vocab_concept_vocabulary ON grscicoll_vocab_concept (vocabulary_name);
+        CREATE INDEX idx_grscicoll_vocab_concept_deprecated ON grscicoll_vocab_concept (vocabulary_name, deprecated);
+        CREATE INDEX idx_grscicoll_vocab_concept_replaced_by ON grscicoll_vocab_concept (replaced_by_key);
+
+        -- Link table for institutions using vocabulary concept keys
+        CREATE TABLE institution_concept_links (
+            institution_key UUID NOT NULL REFERENCES institution(key) ON DELETE CASCADE,
+            concept_key BIGINT NOT NULL REFERENCES grscicoll_vocab_concept(concept_key) ON DELETE CASCADE,
+            PRIMARY KEY (institution_key, concept_key)
+        );
+        CREATE INDEX idx_icl_institution_key ON institution_concept_links(institution_key);
+        CREATE INDEX idx_icl_concept_key ON institution_concept_links(concept_key);
+
+        -- Link table for collections using vocabulary concept keys
+        CREATE TABLE collection_concept_links (
+            collection_key UUID NOT NULL REFERENCES collection(key) ON DELETE CASCADE,
+            concept_key BIGINT NOT NULL REFERENCES grscicoll_vocab_concept(concept_key) ON DELETE CASCADE,
+            PRIMARY KEY (collection_key, concept_key)
+        );
+        CREATE INDEX idx_ccl_collection_key ON collection_concept_links(collection_key);
+        CREATE INDEX idx_ccl_concept_key ON collection_concept_links(concept_key);
+      ]]>
+    </sql>
+  </changeSet>
+</databaseChangeLog>

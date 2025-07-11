@@ -24,6 +24,7 @@ import org.gbif.api.vocabulary.License;
 import org.gbif.registry.search.dataset.common.SearchResultConverter;
 
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -86,6 +87,8 @@ public class DatasetSearchResultConverter
     getStringValue(fields, "doi").map(DOI::new).ifPresent(d::setDoi);
 
     getUUIDListValue(fields, "networkKeys").ifPresent(d::setNetworkKeys);
+
+    getCategoryValue(fields, "category").ifPresent(d::setCategory);
 
     return d;
   }
@@ -189,6 +192,34 @@ public class DatasetSearchResultConverter
     return Optional.ofNullable(fields.get(esField))
         .map(v -> (List<Map<String, Object>>) v)
         .filter(v -> !v.isEmpty());
+  }
+
+  private static Optional<Set<String>> getCategoryValue(Map<String, Object> fields, String esField) {
+    return Optional.ofNullable(fields.get(esField))
+        .map(v -> (List<Map<String, Object>>) v)
+        .filter(v -> !v.isEmpty())
+        .map(categoryObjects -> {
+          Set<String> categories = new HashSet<>();
+          for (Map<String, Object> categoryObj : categoryObjects) {
+            // Add concept (category name)
+            String concept = (String) categoryObj.get("concept");
+            if (concept != null) {
+              categories.add(concept);
+            }
+            
+            // Add lineage values (parent categories)
+            Object lineageObj = categoryObj.get("lineage");
+            if (lineageObj instanceof List) {
+              List<?> lineage = (List<?>) lineageObj;
+              for (Object lineageItem : lineage) {
+                if (lineageItem instanceof String) {
+                  categories.add((String) lineageItem);
+                }
+              }
+            }
+          }
+          return categories;
+        });
   }
 
   private static <T> Optional<T> getValue(

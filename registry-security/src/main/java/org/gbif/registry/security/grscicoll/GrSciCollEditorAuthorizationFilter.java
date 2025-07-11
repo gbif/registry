@@ -13,20 +13,6 @@
  */
 package org.gbif.registry.security.grscicoll;
 
-import static org.gbif.registry.security.SecurityContextCheck.checkUserInRole;
-import static org.gbif.registry.security.SecurityContextCheck.ensureUserSetInSecurityContext;
-
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import java.io.IOException;
-import java.text.MessageFormat;
-import java.util.UUID;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import javax.servlet.FilterChain;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.Institution;
 import org.gbif.api.model.collections.merge.ConvertToCollectionParams;
@@ -36,6 +22,18 @@ import org.gbif.registry.security.AuthenticationFacade;
 import org.gbif.registry.security.UserRoles;
 import org.gbif.ws.WebApplicationException;
 import org.gbif.ws.server.GbifHttpServletRequestWrapper;
+
+import java.io.IOException;
+import java.text.MessageFormat;
+import java.util.UUID;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import javax.servlet.FilterChain;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -43,6 +41,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import static org.gbif.registry.security.SecurityContextCheck.checkUserInRole;
+import static org.gbif.registry.security.SecurityContextCheck.ensureUserSetInSecurityContext;
 
 /**
  * For requests authenticated with a GRSCICOLL_EDITOR role two levels of authorization need to be

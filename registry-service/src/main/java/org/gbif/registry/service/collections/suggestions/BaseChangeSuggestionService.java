@@ -13,21 +13,6 @@
  */
 package org.gbif.registry.service.collections.suggestions;
 
-import static com.google.common.base.Preconditions.checkArgument;
-import static org.gbif.registry.security.UserRoles.*;
-import static org.gbif.registry.service.collections.utils.MasterSourceUtils.COLLECTION_LOCKABLE_FIELDS;
-import static org.gbif.registry.service.collections.utils.MasterSourceUtils.IH_SYNC_USER;
-import static org.gbif.registry.service.collections.utils.MasterSourceUtils.hasExternalMasterSource;
-
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Strings;
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.ParameterizedType;
-import java.math.BigDecimal;
-import java.util.*;
-import java.util.stream.Collectors;
 import org.gbif.api.model.collections.*;
 import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.suggestions.Change;
@@ -65,6 +50,13 @@ import org.gbif.registry.security.grscicoll.GrSciCollAuthorizationService;
 import org.gbif.registry.service.collections.merge.MergeService;
 import org.gbif.registry.service.collections.utils.MasterSourceUtils;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.ParameterizedType;
+import java.math.BigDecimal;
+import java.util.*;
+import java.util.stream.Collectors;
+
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -72,6 +64,16 @@ import org.slf4j.LoggerFactory;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Strings;
+
+import static com.google.common.base.Preconditions.checkArgument;
+import static org.gbif.registry.security.UserRoles.*;
+import static org.gbif.registry.service.collections.utils.MasterSourceUtils.COLLECTION_LOCKABLE_FIELDS;
+import static org.gbif.registry.service.collections.utils.MasterSourceUtils.IH_SYNC_USER;
+import static org.gbif.registry.service.collections.utils.MasterSourceUtils.hasExternalMasterSource;
 
 public abstract class BaseChangeSuggestionService<
         T extends

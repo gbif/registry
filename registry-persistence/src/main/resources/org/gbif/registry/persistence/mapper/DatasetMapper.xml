@@ -37,7 +37,7 @@
     key,parent_dataset_key,duplicate_of_dataset_key,installation_key,publishing_organization_key,
     external,type,sub_type,title,alias,abbreviation,description,language,
     homepage,logo_url,citation,citation_identifier,rights,locked_for_auto_update,created,created_by,
-    modified,modified_by,doi,license,maintenance_update_frequency,version
+    modified,modified_by,doi,license,maintenance_update_frequency,version,category
   </sql>
 
   <sql id="DATASET_FIELDS">
@@ -46,7 +46,7 @@
     d.homepage,d.logo_url,
     COALESCE(d.citation, o.title || ': ' || d.title) as citation,
     d.citation_identifier,d.rights,d.locked_for_auto_update,d.created,d.created_by,
-    d.modified,d.modified_by,d.deleted,d.doi,d.license,d.maintenance_update_frequency,d.version
+    d.modified,d.modified_by,d.deleted,d.doi,d.license,d.maintenance_update_frequency,d.version,d.category
   </sql>
 
   <!--
@@ -91,7 +91,8 @@
     doi = #{doi,jdbcType=VARCHAR},
     license = #{license,jdbcType=OTHER},
     maintenance_update_frequency = #{maintenanceUpdateFrequency,jdbcType=OTHER},
-    version = #{version}
+    version = #{version},
+    category = #{category,jdbcType=ARRAY,typeHandler=org.gbif.registry.persistence.mapper.handler.SetArrayTypeHandler}
   </sql>
 
   <sql id="WRITABLE_DATASET_FIELD_TYPES">
@@ -121,7 +122,8 @@
     #{doi,jdbcType=VARCHAR},
     #{license,jdbcType=OTHER},
     #{maintenanceUpdateFrequency,jdbcType=OTHER},
-    #{version}
+    #{version},
+    #{category,jdbcType=ARRAY,typeHandler=org.gbif.registry.persistence.mapper.handler.SetArrayTypeHandler}
   </sql>
 
   <select id="countConstituents" resultType="int">
@@ -576,5 +578,22 @@
     FROM dwca_dataset dwca
     WHERE dwca.dataset_key = #{key}
   </select>
+
+  <!-- Dataset Category Management -->
+  <select id="findDatasetsWithDeprecatedCategories" resultType="java.util.UUID">
+    SELECT DISTINCT d.key
+    FROM dataset d
+    WHERE d.deleted IS NULL
+      AND d.category IS NOT NULL
+      AND d.category &amp;&amp; #{deprecatedCategories,jdbcType=ARRAY,typeHandler=org.gbif.registry.persistence.mapper.handler.SetArrayTypeHandler}
+  </select>
+
+  <update id="removeDeprecatedCategory">
+    UPDATE dataset
+    SET category = array_remove(category, #{deprecatedCategory,jdbcType=VARCHAR})
+    WHERE key = #{datasetKey,jdbcType=OTHER}
+      AND category IS NOT NULL
+      AND #{deprecatedCategory,jdbcType=VARCHAR} = ANY(category)
+  </update>
 
 </mapper>
