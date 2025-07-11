@@ -41,27 +41,27 @@ public class VocabularySynchronizerCommandIT extends BaseDBTest {
   public void prepareDatabase() throws Exception {
     // Initialize config
     config = new VocabularySynchronizerConfiguration();
-    
+
     // Prepare test data
-    Connection con = PG_CONTAINER.createConnection("");
-    String sql = getFileData("vocabularysynchronizer/prepare_test_data.sql");
-    if (sql != null && !sql.trim().isEmpty()) {
-      PreparedStatement stmt = con.prepareStatement(sql);
-      stmt.executeUpdate();
+    try (Connection con = PG_CONTAINER.createConnection("")) {
+      String sql = getFileData("vocabularysynchronizer/prepare_test_data.sql");
+      if (sql != null && !sql.trim().isEmpty()) {
+        PreparedStatement stmt = con.prepareStatement(sql);
+        stmt.executeUpdate();
+      }
     }
-    con.close();
   }
 
   @AfterEach
   public void after() throws Exception {
     // Clean up test data
-    Connection con = PG_CONTAINER.createConnection("");
-    String sql = getFileData("vocabularysynchronizer/clean_test_data.sql");
-    if (sql != null && !sql.trim().isEmpty()) {
-      PreparedStatement stmt = con.prepareStatement(sql);
-      stmt.executeUpdate();
+    try (Connection con = PG_CONTAINER.createConnection("")) {
+      String sql = getFileData("vocabularysynchronizer/clean_test_data.sql");
+      if (sql != null && !sql.trim().isEmpty()) {
+        PreparedStatement stmt = con.prepareStatement(sql);
+        stmt.executeUpdate();
+      }
     }
-    con.close();
   }
 
   @Test

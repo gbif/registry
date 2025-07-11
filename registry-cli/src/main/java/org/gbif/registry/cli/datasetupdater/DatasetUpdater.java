@@ -67,11 +67,6 @@ public class DatasetUpdater {
   }
 
   private DatasetUpdater(DatasetUpdaterConfiguration cfg) {
-    LOG.info(
-        "Connecting to registry {}.{} as user {}",
-        cfg.db.serverName,
-        cfg.db.databaseName,
-        cfg.db.user);
     this.context = prepareContext(cfg);
     this.datasetResource = context.getBean(DatasetResource.class);
   }
