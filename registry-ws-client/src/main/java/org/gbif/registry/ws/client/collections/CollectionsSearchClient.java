@@ -13,9 +13,6 @@
  */
 package org.gbif.registry.ws.client.collections;
 
-import java.util.List;
-import java.util.Set;
-import lombok.AllArgsConstructor;
 import org.gbif.api.model.collections.request.CollectionDescriptorsSearchRequest;
 import org.gbif.api.model.collections.request.InstitutionFacetedSearchRequest;
 import org.gbif.api.model.collections.search.CollectionSearchResponse;
@@ -26,11 +23,17 @@ import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.collections.CollectionFacetParameter;
 import org.gbif.api.vocabulary.collections.InstitutionFacetParameter;
 import org.gbif.registry.domain.collections.TypeParam;
+
+import java.util.List;
+import java.util.Set;
+
 import org.springframework.cloud.openfeign.SpringQueryMap;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
+
+import lombok.AllArgsConstructor;
 
 @RequestMapping("grscicoll")
 public interface CollectionsSearchClient {

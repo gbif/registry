@@ -13,9 +13,11 @@
  */
 package org.gbif.registry.ws.provider;
 
-import java.util.Arrays;
 import org.gbif.api.util.VocabularyUtils;
 import org.gbif.api.vocabulary.Country;
+
+import java.util.Arrays;
+
 import org.springframework.core.MethodParameter;
 import org.springframework.web.bind.support.WebDataBinderFactory;
 import org.springframework.web.context.request.NativeWebRequest;

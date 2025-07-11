@@ -68,6 +68,7 @@ public class DatasetEsFieldMapper implements EsFieldMapper<DatasetSearchParamete
           .put(DatasetSearchParameter.DOI, "doi")
           .put(DatasetSearchParameter.NETWORK_KEY, "networkKeys")
           .put(DatasetSearchParameter.ENDPOINT_TYPE, "endpoints.type")
+          .put(DatasetSearchParameter.CATEGORY, "category.lineage")
           .put(DatasetSearchParameter.DWCA_EXTENSION, "dwca.extensions")
           .put(DatasetSearchParameter.DWCA_CORE_TYPE, "dwca.coreType")
           .put(DatasetSearchParameter.CONTACT_USER_ID, "contacts.userId.keyword")
@@ -173,6 +174,8 @@ public class DatasetEsFieldMapper implements EsFieldMapper<DatasetSearchParamete
       "doi",
       "networkKeys",
       "networkTitle",
+      "category",
+      "networkTitle",
       "contacts.userId.keyword",
       "contacts.email.keyword"
     };
@@ -192,6 +195,7 @@ public class DatasetEsFieldMapper implements EsFieldMapper<DatasetSearchParamete
                 .field("networkTitle", 4.0f)
                 .field("metadata", 3.0f)
                 .field("projectId", 2.0f)
+                .field("category.lineage", 5.0f)
                 .field("all", 1.0f)
                 .tieBreaker(0.2f)
                 .minimumShouldMatch("25%")

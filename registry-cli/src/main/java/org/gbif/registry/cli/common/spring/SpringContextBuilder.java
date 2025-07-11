@@ -13,11 +13,6 @@
  */
 package org.gbif.registry.cli.common.spring;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.google.common.collect.ImmutableMap;
 import org.gbif.api.ws.mixin.Mixins;
 import org.gbif.common.messaging.ConnectionParameters;
 import org.gbif.common.messaging.DefaultMessagePublisher;
@@ -33,6 +28,7 @@ import org.gbif.registry.cli.common.stubs.MessagePublisherStub;
 import org.gbif.registry.cli.datasetindex.batchindexer.DatasetBatchIndexer;
 import org.gbif.registry.cli.doisynchronizer.DoiSynchronizerConfiguration;
 import org.gbif.registry.cli.doiupdater.DoiUpdaterConfiguration;
+import org.gbif.registry.cli.vocabularysynchronizer.VocabularySynchronizerConfiguration;
 import org.gbif.registry.directory.config.DirectoryClientConfiguration;
 import org.gbif.registry.identity.service.BaseIdentityAccessService;
 import org.gbif.registry.persistence.config.MyBatisConfiguration;
@@ -41,6 +37,12 @@ import org.gbif.registry.ws.resources.scheduled.UpdateDownloadStatsService;
 import org.gbif.ws.security.Md5EncodeServiceImpl;
 import org.gbif.ws.security.SecretKeySigningService;
 import org.gbif.ws.security.SigningService;
+
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
+
 import org.mybatis.spring.annotation.MapperScan;
 import org.mybatis.spring.boot.autoconfigure.MybatisAutoConfiguration;
 import org.springframework.boot.actuate.autoconfigure.elasticsearch.ElasticSearchRestHealthContributorAutoConfiguration;
@@ -55,10 +57,11 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.FilterType;
 import org.springframework.core.env.MapPropertySource;
 
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.google.common.collect.ImmutableMap;
 
 /** Utility class to create Spring contexts to be used later in CLI applications. */
 public class SpringContextBuilder {
@@ -76,6 +79,10 @@ public class SpringContextBuilder {
   private DataCiteConfiguration dataCiteConfiguration;
 
   private MessagingConfiguration messagingConfiguration;
+
+  private VocabularySynchronizerConfiguration vocabularySynchronizerConfiguration;
+
+  private String conceptClientApiUrl;
 
   private SpringContextBuilder() {}
 
@@ -116,6 +123,20 @@ public class SpringContextBuilder {
     return this;
   }
 
+  public SpringContextBuilder withVocabularySynchronizerConfiguration(
+      VocabularySynchronizerConfiguration vocabularySynchronizerConfiguration) {
+    this.vocabularySynchronizerConfiguration = vocabularySynchronizerConfiguration;
+    this.conceptClientApiUrl = vocabularySynchronizerConfiguration.apiRootUrl;
+    return this;
+  }
+
+  public SpringContextBuilder withDatasetUpdaterConfiguration(
+      org.gbif.registry.cli.datasetupdater.DatasetUpdaterConfiguration datasetUpdaterConfiguration) {
+    this.dbConfiguration = datasetUpdaterConfiguration.db;
+    this.conceptClientApiUrl = datasetUpdaterConfiguration.apiRootUrl;
+    return this;
+  }
+
   public SpringContextBuilder withComponents(Class<?>... componentClasses) {
     this.componentClasses = componentClasses;
     return this;
@@ -123,6 +144,11 @@ public class SpringContextBuilder {
 
   public SpringContextBuilder withScanPackages(String... basePackages) {
     this.basePackages = basePackages;
+    return this;
+  }
+
+  public SpringContextBuilder withConceptClientApiUrl(String conceptClientApiUrl) {
+    this.conceptClientApiUrl = conceptClientApiUrl;
     return this;
   }
 
@@ -210,6 +236,26 @@ public class SpringContextBuilder {
       ctx.register(BaseIdentityAccessService.class);
       ctx.register(OccurrenceDownloadResource.class);
       ctx.register(UpdateDownloadStatsService.class);
+    }
+
+    if (vocabularySynchronizerConfiguration != null) {
+      ctx.getEnvironment()
+          .getPropertySources()
+          .addLast(
+              new MapPropertySource(
+                  "vocabularySynchronizerConfigProperties",
+                  ImmutableMap.of(
+                      "api.root.url", vocabularySynchronizerConfiguration.apiRootUrl)));
+      ctx.registerBean(VocabularySynchronizerConfiguration.class, () -> vocabularySynchronizerConfiguration);
+    }
+
+    if (conceptClientApiUrl != null) {
+      ctx.registerBean("conceptClient", org.gbif.vocabulary.client.ConceptClient.class, () ->
+          new org.gbif.ws.client.ClientBuilder()
+              .withObjectMapper(org.gbif.ws.json.JacksonJsonObjectMapperProvider.getObjectMapperWithBuilderSupport()
+                  .registerModule(new com.fasterxml.jackson.datatype.jsr310.JavaTimeModule()))
+              .withUrl(conceptClientApiUrl)
+              .build(org.gbif.vocabulary.client.ConceptClient.class));
     }
 
     ctx.getEnvironment()

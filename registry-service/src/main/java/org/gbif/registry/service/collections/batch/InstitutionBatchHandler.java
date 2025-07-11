@@ -13,13 +13,6 @@
  */
 package org.gbif.registry.service.collections.batch;
 
-import com.google.common.base.Strings;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-import java.util.stream.Collectors;
 import org.gbif.api.model.collections.CollectionEntityType;
 import org.gbif.api.model.collections.Institution;
 import org.gbif.api.model.collections.request.InstitutionSearchRequest;
@@ -29,10 +22,20 @@ import org.gbif.registry.persistence.mapper.collections.BatchMapper;
 import org.gbif.registry.security.grscicoll.GrSciCollAuthorizationService;
 import org.gbif.registry.service.collections.batch.FileFields.InstitutionFields;
 import org.gbif.registry.service.collections.batch.model.ParsedData;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
+
+import com.google.common.base.Strings;
 
 @Service
 public class InstitutionBatchHandler extends BaseBatchHandler<Institution> {

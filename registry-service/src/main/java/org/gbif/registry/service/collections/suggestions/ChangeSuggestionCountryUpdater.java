@@ -13,8 +13,6 @@
  */
 package org.gbif.registry.service.collections.suggestions;
 
-import com.google.common.eventbus.Subscribe;
-
 import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.CollectionEntity;
 import org.gbif.api.model.collections.CollectionEntityType;
@@ -35,6 +33,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+
+import com.google.common.eventbus.Subscribe;
 
 /**
  * Event listener that updates the country field in change_suggestion and descriptor_change_suggestion tables

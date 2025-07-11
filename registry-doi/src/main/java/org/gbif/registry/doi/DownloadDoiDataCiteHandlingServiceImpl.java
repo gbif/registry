@@ -13,15 +13,16 @@
  */
 package org.gbif.registry.doi;
 
-import com.google.common.base.Preconditions;
-import java.util.EnumSet;
 import org.gbif.api.model.common.GbifUser;
 import org.gbif.api.model.occurrence.Download;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
 import org.springframework.stereotype.Service;
+
+import com.google.common.base.Preconditions;
 
 @Service
 public class DownloadDoiDataCiteHandlingServiceImpl implements DownloadDoiDataCiteHandlingService {
