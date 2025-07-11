@@ -6,7 +6,8 @@
   <resultMap id="DATASET_MAP" type="org.gbif.api.model.registry.Dataset" autoMapping="true">
     <id property="key" column="key"/>
     <association property="citation" resultMap="CITATION_MAP"/>
-    <association property="numConstituents" column="key" select="countConstituents" />
+    <association property="numConstituents" column="key" select="countConstituents"/>
+    <association property="dwca" column="key" select="selectDwcaDataset" fetchType="eager"/>
     <collection property="contacts" column="key" select="listContacts"/>
     <collection property="endpoints" column="key" select="listEndpoints"/>
     <collection property="machineTags" column="key" select="listMachineTags"/>
@@ -22,8 +23,14 @@
 
   <!-- maps a citation object  -->
   <resultMap id="CITATION_MAP" type="org.gbif.api.model.registry.Citation" autoMapping="false">
-    <result property="text" column="citation" />
-    <result property="identifier" column="citation_identifier" />
+    <result property="text" column="citation"/>
+    <result property="identifier" column="citation_identifier"/>
+  </resultMap>
+
+  <resultMap id="DWCA_MAP" type="DwcA" autoMapping="false">
+    <result property="coreType" column="core_type" />
+    <result property="extensions" column="extensions" typeHandler="org.gbif.mybatis.type.StringArrayTypeHandler"/>
+    <result property="modified" column="modified"/>
   </resultMap>
 
   <sql id="WRITABLE_DATASET_FIELDS">
@@ -418,6 +425,10 @@
     <if test="params.networkKey != null">
       INNER JOIN dataset_network dn ON dn.dataset_key = d.key
     </if>
+    <if test="params.contactUserId != null or params.contactEmail != null">
+      INNER JOIN dataset_contact dc ON dc.dataset_key = d.key
+      INNER JOIN contact c ON c.key = dc.contact_key
+    </if>
     <where>
       <choose>
         <when test="params.deleted != null and params.deleted">
@@ -464,6 +475,12 @@
       </if>
       <if test="params.isSubdataset != null and params.isSubdataset">
         AND d.parent_dataset_key IS NOT NULL
+      </if>
+      <if test="params.contactUserId != null">
+        AND c.user_id @> ARRAY[#{params.contactUserId}::text]
+      </if>
+      <if test="params.contactEmail != null">
+        AND c.email @> ARRAY[#{params.contactEmail}::text]
       </if>
     </where>
   </sql>
@@ -534,6 +551,32 @@
       dg.max_percent
     FROM dataset_gridded dg
     WHERE dg.dataset_key = #{datasetKey,jdbcType=OTHER}
+  </select>
+
+  <!-- DwC-A -->
+  <insert id="createDwcaDataset" parameterType="map">
+    INSERT INTO dwca_dataset(dataset_key,core_type,extensions,modified)
+    VALUES(
+    #{datasetKey,jdbcType=OTHER},
+    #{dwca.coreType,jdbcType=VARCHAR},
+    #{dwca.extensions,jdbcType=ARRAY,typeHandler=org.gbif.mybatis.type.StringArrayTypeHandler},
+    now()
+    )
+  </insert>
+
+  <!-- Update contact type and is_primary -->
+  <update id="updateDwcaDataset" parameterType="map">
+    UPDATE dwca_dataset
+    SET core_type=#{dwca.coreType,jdbcType=VARCHAR},
+    extensions=#{dwca.extensions,jdbcType=ARRAY,typeHandler=org.gbif.mybatis.type.StringArrayTypeHandler},
+    modified= now()
+    WHERE dataset_key=#{datasetKey,jdbcType=OTHER}
+  </update>
+
+  <select id="selectDwcaDataset" resultMap="DWCA_MAP">
+    SELECT dwca.core_type, dwca.extensions, dwca.modified
+    FROM dwca_dataset dwca
+    WHERE dwca.dataset_key = #{key}
   </select>
 
   <!-- Dataset Category Management -->

@@ -222,6 +222,8 @@ public class DefaultInstitutionService extends BaseCollectionEntityService<Insti
         .deleted(deleted)
         .sortBy(searchRequest.getSortBy())
         .sortOrder(searchRequest.getSortOrder())
+        .contactUserId(searchRequest.getContactUserId())
+        .contactEmail(searchRequest.getContactEmail())
         .page(page)
         .build();
   }

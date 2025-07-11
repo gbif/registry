@@ -362,6 +362,16 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset, DatasetL
           description = "Category of the dataset.",
           schema = @Schema(implementation = Set.class),
           in = ParameterIn.QUERY),
+        @Parameter(
+          name = "contactUserId",
+          description = "Filter datasets by contact user ID (e.g., ORCID).",
+          schema = @Schema(implementation = String.class),
+          in = ParameterIn.QUERY),
+        @Parameter(
+          name = "contactEmail",
+          description = "Filter datasets by contact email address.",
+          schema = @Schema(implementation = String.class),
+          in = ParameterIn.QUERY),
         @Parameter(name = "request", hidden = true),
         @Parameter(name = "searchRequest", hidden = true),
         @Parameter(name = "suggestRequest", hidden = true)
@@ -526,6 +536,8 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset, DatasetL
             .mtNamespace(request.getMachineTagNamespace())
             .mtName(request.getMachineTagName())
             .mtValue(request.getMachineTagValue())
+            .contactUserId(request.getContactUserId())
+            .contactEmail(request.getContactEmail())
             .page(request.getPage())
             .build();
 
@@ -1569,6 +1581,27 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset, DatasetL
   public PagingResponse<Dataset> listByDOI(
       @PathVariable("prefix") String prefix, @PathVariable("suffix") String suffix, Pageable page) {
     return listByDOI(new DOI(prefix, suffix).getDoiName(), page);
+  }
+
+
+  @Hidden
+  @PostMapping(value = "{datasetKey}/dwca", consumes = MediaType.APPLICATION_JSON_VALUE)
+  @Trim
+  @Transactional
+  @Secured(ADMIN_ROLE)
+  @Override
+  public void createDwcaData(@PathVariable("datasetKey") UUID datasetKey, @RequestBody @Trim Dataset.DwcA dwcA) {
+    registryDatasetService.createDwcaData(datasetKey, dwcA);
+  }
+
+  @Hidden
+  @PutMapping(value = "{datasetKey}/dwca", consumes = MediaType.APPLICATION_JSON_VALUE)
+  @Trim
+  @Transactional
+  @Secured(ADMIN_ROLE)
+  @Override
+  public void updateDwcaData(@PathVariable("datasetKey") UUID datasetKey, @RequestBody @Trim Dataset.DwcA dwcA) {
+    registryDatasetService.updateDwcaData(datasetKey, dwcA);
   }
 
   /** Encapsulates the params to pass in the body for the crawAll method. */

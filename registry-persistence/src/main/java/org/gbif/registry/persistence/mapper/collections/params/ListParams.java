@@ -59,6 +59,8 @@ public abstract class ListParams {
   @Nullable SortOrder sortOrder;
   @Nullable Boolean deleted;
   @Nullable List<UUID> replacedBy;
+  @Nullable String contactUserId;
+  @Nullable String contactEmail;
   @Nullable Pageable page;
   @Nullable Pageable facetPage;
   @Nullable Integer facetMinCount;

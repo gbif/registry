@@ -1,0 +1,49 @@
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+  <changeSet id="160" author="auzun" runInTransaction="false">
+    <sql splitStatements="false" stripComments="true">
+      <![CDATA[
+        -- Drop existing incorrect constraints that try to apply single-value validation to arrays
+        ALTER TABLE collection DROP CONSTRAINT IF EXISTS collection_catalog_url_check;
+        ALTER TABLE collection DROP CONSTRAINT IF EXISTS collection_api_url_check;
+        ALTER TABLE institution DROP CONSTRAINT IF EXISTS institution_catalog_url_check;
+        ALTER TABLE institution DROP CONSTRAINT IF EXISTS institution_api_url_check;
+
+        -- Create a function to validate URL arrays
+        CREATE OR REPLACE FUNCTION assert_is_http_array(input varchar[]) RETURNS boolean AS $$
+        BEGIN
+          -- NULL or empty array should return TRUE (allowing NULL values)
+          IF input IS NULL OR array_length(input, 1) IS NULL THEN
+            RETURN TRUE;
+          END IF;
+
+          -- Check each URL in the array
+          FOR i IN 1..array_length(input, 1) LOOP
+            -- Skip NULL elements
+            IF input[i] IS NOT NULL THEN
+              -- Check if URL starts with http:// OR https://
+              IF NOT ((position('http://' in trim(input[i])) = 1) OR (position('https://' in trim(input[i])) = 1)) THEN
+                RETURN FALSE;
+              END IF;
+            END IF;
+          END LOOP;
+
+          RETURN TRUE;
+        END; $$ LANGUAGE plpgsql;
+
+        -- Set search path for the new function
+        ALTER FUNCTION assert_is_http_array SET search_path = public;
+
+        -- Add the corrected constraints for array fields
+        ALTER TABLE collection ADD CONSTRAINT collection_catalog_url_check CHECK (assert_is_http_array(catalog_url));
+        ALTER TABLE collection ADD CONSTRAINT collection_api_url_check CHECK (assert_is_http_array(api_url));
+        ALTER TABLE institution ADD CONSTRAINT institution_catalog_url_check CHECK (assert_is_http_array(catalog_url));
+        ALTER TABLE institution ADD CONSTRAINT institution_api_url_check CHECK (assert_is_http_array(api_url));
+      ]]>
+    </sql>
+  </changeSet>
+
+</databaseChangeLog>

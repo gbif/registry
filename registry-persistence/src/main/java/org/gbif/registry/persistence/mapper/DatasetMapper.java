@@ -91,4 +91,10 @@ public interface DatasetMapper extends BaseNetworkEntityMapper<Dataset> {
    * @param deprecatedCategory the deprecated category name to remove
    */
   void removeDeprecatedCategory(@Param("datasetKey") UUID datasetKey, @Param("deprecatedCategory") String deprecatedCategory);
+
+
+  void createDwcaDataset(@Param("datasetKey") UUID datasetKey, @Param("dwca") Dataset.DwcA dwcaDataset);
+
+  void updateDwcaDataset(@Param("datasetKey") UUID datasetKey, @Param("dwca") Dataset.DwcA dwcaDataset);
+
 }

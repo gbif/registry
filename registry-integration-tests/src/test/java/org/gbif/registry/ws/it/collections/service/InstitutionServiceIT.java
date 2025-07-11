@@ -104,6 +104,14 @@ public class InstitutionServiceIT extends BaseCollectionEntityServiceIT<Institut
     institution1.setAlternativeCodes(Collections.singletonList(new AlternativeCode("alt", "test")));
     UUID key1 = institutionService.create(institution1);
 
+    // Add contact to institution
+    Contact contact = new Contact();
+    contact.setFirstName("Test");
+    contact.setLastName("User");
+    contact.setUserIds(Collections.singletonList(new UserId(IdType.ORCID, "0000-0000-0000-0001")));
+    contact.setEmail(Collections.singletonList("test-contact@gbif.org"));
+    institutionService.addContactPerson(key1, contact);
+
     Institution institution2 = testData.newEntity();
     institution2.setCode("c2");
     institution2.setName("n2");
@@ -309,6 +317,32 @@ public class InstitutionServiceIT extends BaseCollectionEntityServiceIT<Institut
             .list(
                 InstitutionSearchRequest.builder()
                     .q("  ")
+                    .limit(DEFAULT_PAGE.getLimit())
+                    .offset(DEFAULT_PAGE.getOffset())
+                    .build())
+            .getResults()
+            .size());
+
+    // Test contact email search
+    assertEquals(
+        1,
+        institutionService
+            .list(
+                InstitutionSearchRequest.builder()
+                    .contactEmail("test-contact@gbif.org")
+                    .limit(DEFAULT_PAGE.getLimit())
+                    .offset(DEFAULT_PAGE.getOffset())
+                    .build())
+            .getResults()
+            .size());
+
+    // Test contact userId search
+    assertEquals(
+        1,
+        institutionService
+            .list(
+                InstitutionSearchRequest.builder()
+                    .contactUserId("0000-0000-0000-0001")
                     .limit(DEFAULT_PAGE.getLimit())
                     .offset(DEFAULT_PAGE.getOffset())
                     .build())

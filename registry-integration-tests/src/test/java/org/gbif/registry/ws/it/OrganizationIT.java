@@ -17,6 +17,7 @@ import java.math.BigDecimal;
 
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
+import org.gbif.api.model.registry.Contact;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Identifier;
 import org.gbif.api.model.registry.Installation;
@@ -57,6 +58,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.server.LocalServerPort;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * This is parameterized to run the same test routines for the following:
@@ -210,6 +212,13 @@ public class OrganizationIT extends NetworkEntityIT<Organization> {
     o1.setCountry(Country.SPAIN);
     UUID key1 = getService(serviceType).create(o1);
 
+    Contact contact = new Contact();
+    contact.setFirstName("Test");
+    contact.setLastName("User");
+    contact.setUserId(java.util.Collections.singletonList("test-user-456"));
+    contact.setEmail(java.util.Collections.singletonList("test-contact@gbif.org"));
+    service.addContact(key1, contact);
+
     Identifier id1 = newTestIdentifier(o1, IdentifierType.DOI, "doi:1");
     service.addIdentifier(key1, id1);
     MachineTag mt1 = new MachineTag("ns", "mt1", "mtV1");
@@ -224,6 +233,14 @@ public class OrganizationIT extends NetworkEntityIT<Organization> {
     assertResultsOfSize(service.list(new OrganizationRequestSearchParams()), 2);
 
     OrganizationRequestSearchParams searchParams = new OrganizationRequestSearchParams();
+    searchParams.setContactEmail("test-contact@gbif.org");
+    assertResultsOfSize(service.list(searchParams), 1);
+
+    searchParams = new OrganizationRequestSearchParams();
+    searchParams.setContactUserId("test-user-456");
+    assertResultsOfSize(service.list(searchParams), 1);
+
+    searchParams = new OrganizationRequestSearchParams();
     searchParams.setCountry(Country.SPAIN);
     assertResultsOfSize(service.list(searchParams), 1);
 
@@ -328,5 +345,115 @@ public class OrganizationIT extends NetworkEntityIT<Organization> {
   @Override
   protected UUID keyForCreateAsEditorTest(Organization entity) {
     return entity.getEndorsingNodeKey();
+  }
+
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  public void testByNumOfPublishedDataset(ServiceType serviceType) {
+    OrganizationService service = (OrganizationService) getService(serviceType);
+    NodeService nodeService = getService(serviceType, nodeResource, nodeClient);
+
+    Node node = testDataFactory.newNode();
+    nodeService.create(node);
+    node = nodeService.list(new PagingRequest()).getResults().get(0);
+
+    // Create organization with 0 published datasets
+    Organization org0 = testDataFactory.newOrganization(node.getKey());
+    org0.setTitle("Organization with 0 datasets");
+    org0.setEndorsementApproved(true);
+    UUID orgKey0 = service.create(org0);
+
+    // Create organization with 2 published datasets
+    Organization org2 = testDataFactory.newOrganization(node.getKey());
+    org2.setTitle("Organization with 2 datasets");
+    org2.setEndorsementApproved(true);
+    UUID orgKey2 = service.create(org2);
+
+    Installation installation2 = testDataFactory.newPersistedInstallation(orgKey2);
+    testDataFactory.newPersistedDataset(orgKey2, installation2.getKey());
+    testDataFactory.newPersistedDataset(orgKey2, installation2.getKey());
+
+    // Create organization with 5 published datasets
+    Organization org5 = testDataFactory.newOrganization(node.getKey());
+    org5.setTitle("Organization with 5 datasets");
+    org5.setEndorsementApproved(true);
+    UUID orgKey5 = service.create(org5);
+
+    Installation installation5 = testDataFactory.newPersistedInstallation(orgKey5);
+    for (int i = 0; i < 5; i++) {
+      testDataFactory.newPersistedDataset(orgKey5, installation5.getKey());
+    }
+
+    // Create organization with 10 published datasets
+    Organization org10 = testDataFactory.newOrganization(node.getKey());
+    org10.setTitle("Organization with 10 datasets");
+    org10.setEndorsementApproved(true);
+    UUID orgKey10 = service.create(org10);
+
+    Installation installation10 = testDataFactory.newPersistedInstallation(orgKey10);
+    for (int i = 0; i < 10; i++) {
+      testDataFactory.newPersistedDataset(orgKey10, installation10.getKey());
+    }
+
+    // Test exact match: numPublishedDatasets=2
+    OrganizationRequestSearchParams searchParams = new OrganizationRequestSearchParams();
+    searchParams.setIsEndorsed(true);
+    searchParams.setNumPublishedDatasets(Range.closed(2, 2)); // exactly 2
+    PagingResponse<Organization> response = service.list(searchParams);
+    assertEquals(1, response.getResults().size(), "Should find exactly 1 organization with 2 datasets");
+    assertEquals(orgKey2, response.getResults().get(0).getKey());
+
+    // Test exact match: numPublishedDatasets=0
+    searchParams.setNumPublishedDatasets(Range.closed(0, 0)); // exactly 0
+    response = service.list(searchParams);
+    assertEquals(1, response.getResults().size(), "Should find exactly 1 organization with 0 datasets");
+    assertEquals(orgKey0, response.getResults().get(0).getKey());
+
+    // Test minimum: numPublishedDatasets >= 5 (equivalent to "5,*")
+    searchParams.setNumPublishedDatasets(Range.closed(5, null)); // at least 5
+    response = service.list(searchParams);
+    assertEquals(2, response.getResults().size(), "Should find 2 organizations with >= 5 datasets");
+    assertTrue(response.getResults().stream().anyMatch(o -> o.getKey().equals(orgKey5)));
+    assertTrue(response.getResults().stream().anyMatch(o -> o.getKey().equals(orgKey10)));
+
+    // Test maximum: numPublishedDatasets <= 2 (equivalent to "*,2")
+    searchParams.setNumPublishedDatasets(Range.closed(null, 2)); // at most 2
+    response = service.list(searchParams);
+    assertEquals(2, response.getResults().size(), "Should find 2 organizations with <= 2 datasets");
+    assertTrue(response.getResults().stream().anyMatch(o -> o.getKey().equals(orgKey0)));
+    assertTrue(response.getResults().stream().anyMatch(o -> o.getKey().equals(orgKey2)));
+
+    // Test range: 2 <= numPublishedDatasets <= 5 (equivalent to "2,5")
+    searchParams.setNumPublishedDatasets(Range.closed(2, 5)); // between 2 and 5
+    response = service.list(searchParams);
+    assertEquals(2, response.getResults().size(), "Should find 2 organizations with 2-5 datasets");
+    assertTrue(response.getResults().stream().anyMatch(o -> o.getKey().equals(orgKey2)));
+    assertTrue(response.getResults().stream().anyMatch(o -> o.getKey().equals(orgKey5)));
+
+    // Test minimum only: numPublishedDatasets >= 1 (equivalent to "1,*")
+    searchParams.setNumPublishedDatasets(Range.closed(1, null)); // at least 1
+    response = service.list(searchParams);
+    assertEquals(3, response.getResults().size(), "Should find 3 organizations with >= 1 dataset");
+    assertTrue(response.getResults().stream().anyMatch(o -> o.getKey().equals(orgKey2)));
+    assertTrue(response.getResults().stream().anyMatch(o -> o.getKey().equals(orgKey5)));
+    assertTrue(response.getResults().stream().anyMatch(o -> o.getKey().equals(orgKey10)));
+
+    // Test maximum only: numPublishedDatasets <= 7 (equivalent to "*,7")
+    searchParams.setNumPublishedDatasets(Range.closed(null, 7)); // at most 7
+    response = service.list(searchParams);
+    assertEquals(3, response.getResults().size(), "Should find 3 organizations with <= 7 datasets");
+    assertTrue(response.getResults().stream().anyMatch(o -> o.getKey().equals(orgKey0)));
+    assertTrue(response.getResults().stream().anyMatch(o -> o.getKey().equals(orgKey2)));
+    assertTrue(response.getResults().stream().anyMatch(o -> o.getKey().equals(orgKey5)));
+
+    // Test no range restriction: numPublishedDatasets = null (equivalent to "*")
+    searchParams.setNumPublishedDatasets(null); // all organizations
+    response = service.list(searchParams);
+    assertEquals(4, response.getResults().size(), "Should find all 4 organizations");
+
+    // Test empty range: should find no organizations
+    searchParams.setNumPublishedDatasets(Range.closed(15, 20)); // between 15 and 20
+    response = service.list(searchParams);
+    assertEquals(0, response.getResults().size(), "Should find no organizations with 15-20 datasets");
   }
 }

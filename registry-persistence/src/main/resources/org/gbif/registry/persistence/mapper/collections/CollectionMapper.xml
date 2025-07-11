@@ -232,6 +232,10 @@
       INNER JOIN collection_identifier ci on ci.collection_key = c.key
       INNER JOIN identifier id on id.key = ci.identifier_key
     </if>
+    <if test="params.contactUserId != null || params.contactEmail != null" >
+      INNER JOIN collection_collection_contact ccc on ccc.collection_key = c.key
+      INNER JOIN collection_contact cc on cc.key = ccc.collection_contact_key
+    </if>
     <!-- Hierarchical concept-based filtering for content types -->
     <if test="params.contentTypes != null and params.contentTypes.size > 0">
       INNER JOIN collection_concept_links cfl_content ON cfl_content.collection_key = c.key
@@ -261,7 +265,15 @@
       <include refid="org.gbif.registry.persistence.mapper.collections.Common.COMMON_LIST_FILTER">
         <property name="alias" value="c."/>
       </include>
-      <include refid="org.gbif.registry.persistence.mapper.collections.Common.MULTIVALUE_FILTER">
+      <include refid="org.gbif.registry.persistence.mapper.collections.Common.MULTIVALUE_ARRAY_FIELD_FILTER_CASE_INSENSITIVE">
+        <property name="values" value="params.contentTypes"/>
+        <property name="field" value="c.content_type"/>
+      </include>
+      <include refid="org.gbif.registry.persistence.mapper.collections.Common.MULTIVALUE_ARRAY_FIELD_FILTER_CASE_INSENSITIVE">
+        <property name="values" value="params.preservationTypes"/>
+        <property name="field" value="c.preservation_type"/>
+      </include>
+      <include refid="org.gbif.registry.persistence.mapper.collections.Common.MULTIVALUE_FILTER_CASE_INSENSITIVE">
         <property name="values" value="params.accessionStatus"/>
         <property name="field" value="c.accession_status"/>
       </include>

@@ -114,6 +114,14 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
     collection1.setDisplayOnNHCPortal(false);
     UUID key1 = collectionService.create(collection1);
 
+    // Add contact to collection
+    Contact contact = new Contact();
+    contact.setFirstName("Test");
+    contact.setLastName("User");
+    contact.setUserIds(Collections.singletonList(new UserId(IdType.ORCID, "0000-0000-0000-0001")));
+    contact.setEmail(Collections.singletonList("test-contact@gbif.org"));
+    collectionService.addContactPerson(key1, contact);
+
     Collection collection2 = testData.newEntity();
     collection2.setCode("c2");
     collection2.setName("n2");
@@ -255,6 +263,32 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
             .getResults()
             .size());
 
+    // Test contact email search
+    assertEquals(
+        1,
+        collectionService
+            .list(
+                CollectionSearchRequest.builder()
+                    .contactEmail("test-contact@gbif.org")
+                    .limit(DEFAULT_PAGE.getLimit())
+                    .offset(DEFAULT_PAGE.getOffset())
+                    .build())
+            .getResults()
+            .size());
+
+    // Test contact userId search
+    assertEquals(
+        1,
+        collectionService
+            .list(
+                CollectionSearchRequest.builder()
+                    .contactUserId("0000-0000-0000-0001")
+                    .limit(DEFAULT_PAGE.getLimit())
+                    .offset(DEFAULT_PAGE.getOffset())
+                    .build())
+            .getResults()
+            .size());
+
     // code and name params
     assertEquals(
         1,
@@ -368,6 +402,46 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
                     .build())
             .getResults()
             .size());
+
+    // Test case-insensitive search for contentType
+    assertEquals(
+        2,
+        collectionService
+            .list(
+                CollectionSearchRequest.builder()
+                    .contentTypes(Collections.singletonList("archaeological"))
+                    .limit(DEFAULT_PAGE.getLimit())
+                    .offset(DEFAULT_PAGE.getOffset())
+                    .build())
+            .getResults()
+            .size());
+
+    // Test case-insensitive search for preservationType
+    assertEquals(
+        2,
+        collectionService
+            .list(
+                CollectionSearchRequest.builder()
+                    .preservationTypes(Collections.singletonList("sampledried"))
+                    .limit(DEFAULT_PAGE.getLimit())
+                    .offset(DEFAULT_PAGE.getOffset())
+                    .build())
+            .getResults()
+            .size());
+
+    // Test case insensitive search for accessionStatus
+    assertEquals(
+        2,
+        collectionService
+            .list(
+                CollectionSearchRequest.builder()
+                    .accessionStatus(Collections.singletonList("institutional"))
+                    .limit(DEFAULT_PAGE.getLimit())
+                    .offset(DEFAULT_PAGE.getOffset())
+                    .build())
+            .getResults()
+            .size());
+
     assertEquals(
         1,
         collectionService
@@ -982,6 +1056,18 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
                 .offset(DEFAULT_PAGE.getOffset())
                 .build());
     assertEquals(1, response.getResults().size());
+
+    assertEquals(
+      1,
+      collectionService
+        .list(
+          CollectionSearchRequest.builder()
+            .contactEmail("aa1@aa.com")
+            .limit(DEFAULT_PAGE.getLimit())
+            .offset(DEFAULT_PAGE.getOffset())
+            .build())
+        .getResults()
+        .size());
   }
 
   @Test

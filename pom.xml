@@ -11,7 +11,7 @@
 
   <groupId>org.gbif.registry</groupId>
   <artifactId>registry-parent</artifactId>
-  <version>4.1.0-SNAPSHOT</version>
+  <version>4.1.2-SNAPSHOT</version>
   <name>GBIF Registry Parent</name>
   <description>GBIF Registry project</description>
 
@@ -89,22 +89,24 @@
     <micrometer.version>1.12.2</micrometer.version>
 
     <!-- GBIF -->
-    <gbif-api.version>2.1.8-SNAPSHOT</gbif-api.version>
+    <gbif-api.version>2.1.10</gbif-api.version>
     <gbif-common.version>0.59</gbif-common.version>
-    <gbif-common-mybatis.version>2.0.1-SNAPSHOT</gbif-common-mybatis.version>
-    <gbif-common-ws.version>2.0.10-SNAPSHOT</gbif-common-ws.version>
+    <gbif-common-mybatis.version>2.0.0</gbif-common-mybatis.version>
+    <gbif-common-ws.version>2.0.10-java11</gbif-common-ws.version>
     <gbif-directory.version>1.14</gbif-directory.version>
     <gbif-doi.version>3.0.0</gbif-doi.version>
-    <gbif-download-query-tools.version>2.1.0-java11-SNAPSHOT</gbif-download-query-tools.version>
+    <gbif-download-query-tools.version>2.0.3-java11</gbif-download-query-tools.version>
     <gbif-httputils.version>0.10</gbif-httputils.version>
     <gbif-metadata-profile.version>2.6</gbif-metadata-profile.version>
     <gbif-parsers.version>0.67</gbif-parsers.version>
     <gbif-postal-service.version>1.8.1</gbif-postal-service.version>
     <xoai.version>4.1.0-gbif-4</xoai.version>
-    <gbif-occurrence.version>1.1.0-SNAPSHOT</gbif-occurrence.version>
+    <gbif-occurrence.version>1.0.28</gbif-occurrence.version>
     <gbif-vocabulary.version>2.0.2</gbif-vocabulary.version>
-    <gbif-kvs.version>3.0-SNAPSHOT</gbif-kvs.version>
+    <gbif-kvs.version>3.0</gbif-kvs.version>
     <checklistbank.version>3.0.0</checklistbank.version>
+    <dwc-api.version>2.0.1</dwc-api.version>
+    <dwca-io.version>3.0.0</dwca-io.version>
 
     <!-- Third party -->
     <commons-digester.version>3.2</commons-digester.version>
@@ -445,6 +447,16 @@
         <groupId>org.gbif.kvs</groupId>
         <artifactId>kvs-rest-clients</artifactId>
         <version>${gbif-kvs.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.gbif</groupId>
+        <artifactId>dwc-api</artifactId>
+        <version>${dwc-api.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.gbif</groupId>
+        <artifactId>dwca-io</artifactId>
+        <version>${dwca-io.version}</version>
       </dependency>
 
       <!-- Third party dependencies -->

@@ -100,27 +100,33 @@ public class CollectionConverter {
           StringBuilder sb = new StringBuilder();
           if (!Strings.isNullOrEmpty(tc.getDescription())) {
             sb.append(tc.getDescription().trim());
-
-            if (!tc.getCoverages().isEmpty()) {
-              sb.append(": ");
-            }
           }
 
-          tc.getCoverages()
-              .forEach(
-                  c -> {
-                    boolean hasScientificName = false;
-                    if (!Strings.isNullOrEmpty(c.getScientificName())) {
-                      sb.append(c.getScientificName().trim());
-                      hasScientificName = true;
-                    }
-                    if (!Strings.isNullOrEmpty(c.getCommonName())) {
-                      if (hasScientificName) {
-                        sb.append(", ");
-                      }
-                      sb.append(c.getCommonName().trim());
-                    }
-                  });
+          String joinedCoverages =
+              tc.getCoverages().stream()
+                  .map(
+                      c -> {
+                        StringBuilder nameBuilder = new StringBuilder();
+                        if (!Strings.isNullOrEmpty(c.getScientificName())) {
+                          nameBuilder.append(c.getScientificName().trim());
+                        }
+                        if (!Strings.isNullOrEmpty(c.getCommonName())) {
+                          if (nameBuilder.length() > 0) {
+                            nameBuilder.append(", ");
+                          }
+                          nameBuilder.append(c.getCommonName().trim());
+                        }
+                        return nameBuilder.toString();
+                      })
+                  .filter(s -> !s.isEmpty())
+                  .collect(Collectors.joining("; "));
+
+          if (!joinedCoverages.isEmpty()) {
+            if (sb.length() > 0) {
+              sb.append(": ");
+            }
+            sb.append(joinedCoverages);
+          }
 
           return sb.toString();
         };
@@ -139,24 +145,27 @@ public class CollectionConverter {
     geographicCoverage = normalizePunctuationSigns(geographicCoverage).trim();
     existingCollection.setGeographicCoverage(geographicCoverage);
 
-    String temporalCoverage = dataset.getTemporalCoverages().stream()
-        .map(tc -> {
-            if (tc instanceof DateRange) {
-                DateRange dr = (DateRange) tc;
-                return String.format("%s - %s",
-                    dr.getStart() != null ? DATE_FORMAT.format(dr.getStart()) : "",
-                    dr.getEnd() != null ? DATE_FORMAT.format(dr.getEnd()) : "");
-            } else if (tc instanceof SingleDate) {
-                SingleDate sd = (SingleDate) tc;
-                return sd.getDate() != null ? DATE_FORMAT.format(sd.getDate()) : "";
-            } else if (tc instanceof VerbatimTimePeriod) {
-                VerbatimTimePeriod vtp = (VerbatimTimePeriod) tc;
-                return vtp.getPeriod() != null ? vtp.getPeriod() : "";
-            }
-            return "";
-        })
-        .filter(s -> !s.isEmpty())
-        .collect(Collectors.joining("; "));
+    String temporalCoverage =
+        dataset.getTemporalCoverages().stream()
+            .map(
+                tc -> {
+                  if (tc instanceof DateRange) {
+                    DateRange dr = (DateRange) tc;
+                    return String.format(
+                        "%s - %s",
+                        dr.getStart() != null ? DATE_FORMAT.format(dr.getStart()) : "",
+                        dr.getEnd() != null ? DATE_FORMAT.format(dr.getEnd()) : "");
+                  } else if (tc instanceof SingleDate) {
+                    SingleDate sd = (SingleDate) tc;
+                    return sd.getDate() != null ? DATE_FORMAT.format(sd.getDate()) : "";
+                  } else if (tc instanceof VerbatimTimePeriod) {
+                    VerbatimTimePeriod vtp = (VerbatimTimePeriod) tc;
+                    return vtp.getPeriod() != null ? vtp.getPeriod() : "";
+                  }
+                  return "";
+                })
+            .filter(s -> !s.isEmpty())
+            .collect(Collectors.joining("; "));
     temporalCoverage = normalizePunctuationSigns(temporalCoverage).trim();
     existingCollection.setTemporalCoverage(temporalCoverage);
 

@@ -176,6 +176,13 @@
         "date": { "type": "date" }
       }
     },
+    "dwca": {
+        "type": "object",
+        "properties": {
+            "coreType": { "type": "keyword" },
+            "extensions": { "type": "keyword" }
+        }
+    },
     "category": {
       "type": "object",
       "properties": {

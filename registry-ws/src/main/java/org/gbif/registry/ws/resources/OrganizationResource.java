@@ -332,6 +332,11 @@ public class OrganizationResource
             name = "networkKey",
             description = "Filter for organizations publishing datasets belonging to a network.",
             schema = @Schema(implementation = UUID.class),
+            in = ParameterIn.QUERY),
+        @Parameter(
+            name = "numPublishedDatasets",
+            description = "Filter by number of published datasets. Examples: '5' (exactly 5), '1,*' (at least 1), '*,10' (at most 10), '5,15' (between 5 and 15).",
+            schema = @Schema(implementation = String.class),
             in = ParameterIn.QUERY)
       })
   @ApiResponse(responseCode = "200", description = "Organization search successful")
@@ -362,6 +367,9 @@ public class OrganizationResource
             .mtNamespace(request.getMachineTagNamespace())
             .mtName(request.getMachineTagName())
             .mtValue(request.getMachineTagValue())
+            .numPublishedDatasets(request.getNumPublishedDatasets())
+            .contactUserId(request.getContactUserId())
+            .contactEmail(request.getContactEmail())
             .page(request.getPage())
             .build();
 
@@ -474,6 +482,21 @@ public class OrganizationResource
             name = "networkKey",
             description = "Filter for organizations publishing datasets belonging to a network.",
             schema = @Schema(implementation = UUID.class),
+            in = ParameterIn.QUERY),
+        @Parameter(
+            name = "numPublishedDatasets",
+            description = "Filter by number of published datasets. Examples: '5' (exactly 5), '1,*' (at least 1), '*,10' (at most 10), '5,15' (between 5 and 15).",
+            schema = @Schema(implementation = String.class),
+            in = ParameterIn.QUERY),
+        @Parameter(
+            name = "contactUserId",
+            description = "Filter organizations by contact user ID (e.g., ORCID).",
+            schema = @Schema(implementation = String.class),
+            in = ParameterIn.QUERY),
+        @Parameter(
+            name = "contactEmail",
+            description = "Filter organizations by contact email address.",
+            schema = @Schema(implementation = String.class),
             in = ParameterIn.QUERY)
       })
   @Pageable.OffsetLimitParameters
@@ -563,6 +586,11 @@ public class OrganizationResource
         name = "networkKey",
         description = "Filter for organizations publishing datasets belonging to a network.",
         schema = @Schema(implementation = UUID.class),
+        in = ParameterIn.QUERY),
+      @Parameter(
+        name = "numPublishedDatasets",
+        description = "Filter by number of published datasets. Examples: '5' (exactly 5), '1,*' (at least 1), '*,10' (at most 10), '5,15' (between 5 and 15).",
+        schema = @Schema(implementation = String.class),
         in = ParameterIn.QUERY)
     })
   @ApiResponse(responseCode = "200", description = "Organization search successful")
@@ -588,6 +616,9 @@ public class OrganizationResource
         .mtNamespace(request.getMachineTagNamespace())
         .mtName(request.getMachineTagName())
         .mtValue(request.getMachineTagValue())
+        .numPublishedDatasets(request.getNumPublishedDatasets())
+        .contactUserId(request.getContactUserId())
+        .contactEmail(request.getContactEmail())
         .page(null)
         .build();
 
