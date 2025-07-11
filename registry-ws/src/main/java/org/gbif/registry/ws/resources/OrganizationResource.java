@@ -13,8 +13,6 @@
  */
 package org.gbif.registry.ws.resources;
 
-import org.apache.ibatis.annotations.Param;
-
 import org.gbif.api.annotation.NullToNotFound;
 import org.gbif.api.annotation.Trim;
 import org.gbif.api.documentation.CommonParameters;
@@ -55,6 +53,7 @@ import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.validation.groups.Default;
 
+import org.apache.ibatis.annotations.Param;
 import org.geojson.Feature;
 import org.geojson.FeatureCollection;
 import org.geojson.Point;

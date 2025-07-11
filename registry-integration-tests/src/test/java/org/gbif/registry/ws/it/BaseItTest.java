@@ -13,11 +13,6 @@
  */
 package org.gbif.registry.ws.it;
 
-import static org.gbif.registry.ws.it.fixtures.TestConstants.IT_APP_KEY2;
-
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
 import org.gbif.api.vocabulary.UserRole;
 import org.gbif.registry.database.BaseDBTest;
 import org.gbif.registry.search.test.EsManageServer;
@@ -26,6 +21,11 @@ import org.gbif.ws.client.ClientBuilder;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 import org.gbif.ws.json.JacksonJsonObjectMapperProvider;
 import org.gbif.ws.security.KeyStore;
+
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -38,6 +38,8 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
+
+import static org.gbif.registry.ws.it.fixtures.TestConstants.IT_APP_KEY2;
 
 /** Base class for IT tests that initializes data sources and basic security settings. */
 @ExtendWith(SpringExtension.class)

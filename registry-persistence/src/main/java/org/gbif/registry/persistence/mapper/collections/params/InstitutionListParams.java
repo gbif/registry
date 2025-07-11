@@ -13,12 +13,15 @@
  */
 package org.gbif.registry.persistence.mapper.collections.params;
 
+import org.gbif.api.vocabulary.collections.InstitutionFacetParameter;
+
 import java.util.List;
+
 import javax.annotation.Nullable;
+
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
-import org.gbif.api.vocabulary.collections.InstitutionFacetParameter;
 
 @Getter
 @Setter

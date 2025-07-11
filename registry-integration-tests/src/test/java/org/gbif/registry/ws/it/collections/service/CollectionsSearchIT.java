@@ -13,18 +13,6 @@
  */
 package org.gbif.registry.ws.it.collections.service;
 
-import static org.gbif.registry.domain.collections.TypeParam.COLLECTION;
-import static org.gbif.registry.domain.collections.TypeParam.INSTITUTION;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import lombok.SneakyThrows;
 import org.gbif.api.model.collections.Address;
 import org.gbif.api.model.collections.AlternativeCode;
 import org.gbif.api.model.collections.Collection;
@@ -50,17 +38,32 @@ import org.gbif.api.vocabulary.collections.CollectionFacetParameter;
 import org.gbif.api.vocabulary.collections.CollectionsSortField;
 import org.gbif.api.vocabulary.collections.InstitutionFacetParameter;
 import org.gbif.registry.database.TestCaseDatabaseInitializer;
+import org.gbif.registry.persistence.mapper.GrScicollVocabConceptMapper;
 import org.gbif.registry.service.collections.CollectionsSearchService;
 import org.gbif.registry.test.mocks.NameUsageMatchingServiceMock;
-import org.gbif.registry.persistence.mapper.GrScicollVocabConceptMapper;
 import org.gbif.registry.ws.it.collections.ConceptTestSetup;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
+
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.util.StreamUtils;
+
+import lombok.SneakyThrows;
+
+import static org.gbif.registry.domain.collections.TypeParam.COLLECTION;
+import static org.gbif.registry.domain.collections.TypeParam.INSTITUTION;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /** Tests the {@link CollectionsSearchService} * */
 public class CollectionsSearchIT extends BaseServiceIT {

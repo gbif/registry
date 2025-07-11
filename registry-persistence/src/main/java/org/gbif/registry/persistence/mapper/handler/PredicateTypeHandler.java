@@ -13,8 +13,6 @@
  */
 package org.gbif.registry.persistence.mapper.handler;
 
-import com.fasterxml.jackson.databind.module.SimpleModule;
-
 import org.gbif.api.model.occurrence.search.OccurrenceSearchParameter;
 import org.gbif.api.model.predicate.Predicate;
 
@@ -29,6 +27,7 @@ import org.apache.ibatis.type.TypeHandler;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.google.common.base.Strings;
 
 /** Serializes/deserializes {@link Predicate} objects into/from a JSON string. */

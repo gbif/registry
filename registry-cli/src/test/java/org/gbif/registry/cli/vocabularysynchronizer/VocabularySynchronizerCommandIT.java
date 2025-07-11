@@ -13,12 +13,11 @@
  */
 package org.gbif.registry.cli.vocabularysynchronizer;
 
-import java.util.Set;
-
 import org.gbif.registry.database.BaseDBTest;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.util.Set;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;

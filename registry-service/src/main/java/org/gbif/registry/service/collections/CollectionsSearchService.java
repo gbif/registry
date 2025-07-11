@@ -13,23 +13,6 @@
  */
 package org.gbif.registry.service.collections;
 
-import static org.gbif.registry.service.collections.utils.ParamUtils.parseDateRangeParameters;
-import static org.gbif.registry.service.collections.utils.ParamUtils.parseGbifRegion;
-import static org.gbif.registry.service.collections.utils.ParamUtils.parseIntegerRangeParameters;
-
-import com.google.common.base.CharMatcher;
-import com.google.common.base.Strings;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 import org.gbif.api.model.collections.request.CollectionDescriptorsSearchRequest;
 import org.gbif.api.model.collections.request.FacetedSearchRequest;
 import org.gbif.api.model.collections.request.InstitutionFacetedSearchRequest;
@@ -62,10 +45,28 @@ import org.gbif.registry.persistence.mapper.collections.params.ListParams;
 import org.gbif.registry.service.collections.utils.SearchUtils;
 import org.gbif.registry.service.collections.utils.Vocabularies;
 import org.gbif.vocabulary.client.ConceptClient;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.function.Function;
+import com.google.common.base.CharMatcher;
+import com.google.common.base.Strings;
+
+import static org.gbif.registry.service.collections.utils.ParamUtils.parseDateRangeParameters;
+import static org.gbif.registry.service.collections.utils.ParamUtils.parseGbifRegion;
+import static org.gbif.registry.service.collections.utils.ParamUtils.parseIntegerRangeParameters;
+
 
 /** Service to lookup GRSciColl institutions and collections. */
 @Service
