@@ -29,6 +29,7 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,6 +45,7 @@ public class VocabularyConceptService implements VocabularyPostProcessor {
   private final GrScicollVocabConceptMapper grScicollVocabConceptMapper;
   private final ConceptClient conceptClient;
   private static final int DEFAULT_PAGE_SIZE = 100; // Default size for paging
+  private static final Pattern SANITIZE_PATTERN = Pattern.compile("[^a-zA-Z0-9_\\s-]|\\s+");
 
   @Autowired
   public VocabularyConceptService(GrScicollVocabConceptMapper grScicollVocabConceptMapper, ConceptClient conceptClient) {
@@ -155,7 +157,9 @@ public class VocabularyConceptService implements VocabularyPostProcessor {
     if (name == null || name.trim().isEmpty()) {
       return "_unknown_";
     }
-    return name.trim().replaceAll("[^a-zA-Z0-9_\\s-]", "").replaceAll("\\s+", "_").toLowerCase();
+    String sanitized = SANITIZE_PATTERN.matcher(name.trim())
+      .replaceAll(matchResult -> matchResult.group().trim().isEmpty() ? "_" : "");
+    return sanitized.toLowerCase();
   }
 
   private String buildLtreePath(ConceptView currentConceptView, Map<Long, ConceptView> conceptViewMap, String vocabularyName) {
