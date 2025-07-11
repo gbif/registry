@@ -311,4 +311,12 @@ public class MockDatasetMapper implements DatasetMapper {
 
   @Override
   public void updateDwcaDataset(UUID datasetKey, Dataset.DwcA dwcaDataset) {}
+
+  @Override
+  public List<UUID> findDatasetsWithDeprecatedCategories(Set<String> deprecatedCategories) {
+    return List.of();
+  }
+
+  @Override
+  public void removeDeprecatedCategory(UUID datasetKey, String deprecatedCategory) {}
 }

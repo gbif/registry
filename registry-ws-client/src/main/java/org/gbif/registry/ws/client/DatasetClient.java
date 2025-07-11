@@ -31,6 +31,8 @@ import java.io.InputStream;
 import java.util.List;
 import java.util.UUID;
 
+import javax.validation.constraints.NotNull;
+
 import org.apache.commons.io.IOUtils;
 import org.springframework.cloud.openfeign.SpringQueryMap;
 import org.springframework.http.MediaType;
@@ -42,8 +44,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
-
-import javax.validation.constraints.NotNull;
 
 @RequestMapping("dataset")
 public interface DatasetClient extends NetworkEntityClient<Dataset>, DatasetService {

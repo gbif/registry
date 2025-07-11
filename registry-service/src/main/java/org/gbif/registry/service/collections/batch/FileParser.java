@@ -13,6 +13,32 @@
  */
 package org.gbif.registry.service.collections.batch;
 
+import org.gbif.api.model.collections.*;
+import org.gbif.api.model.collections.Collection;
+import org.gbif.api.model.common.export.ExportFormat;
+import org.gbif.api.vocabulary.License;
+import org.gbif.registry.service.collections.batch.model.ContactsParserResult;
+import org.gbif.registry.service.collections.batch.model.EntitiesParserResult;
+import org.gbif.registry.service.collections.batch.model.ParsedData;
+import org.gbif.registry.service.collections.batch.model.ParserResult;
+
+import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
+import java.io.InputStreamReader;
+import java.util.*;
+import java.util.function.BiFunction;
+import java.util.function.Consumer;
+
+import com.google.common.base.Strings;
+import com.opencsv.CSVParser;
+import com.opencsv.CSVParserBuilder;
+import com.opencsv.CSVReader;
+import com.opencsv.CSVReaderBuilder;
+
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+import lombok.SneakyThrows;
+
 import static org.gbif.registry.service.collections.batch.FileFields.CommonFields.*;
 import static org.gbif.registry.service.collections.batch.FileFields.CommonFields.ADDRESS;
 import static org.gbif.registry.service.collections.batch.FileFields.CommonFields.CITY;
@@ -26,29 +52,6 @@ import static org.gbif.registry.service.collections.batch.FileFields.Institution
 import static org.gbif.registry.service.collections.batch.FileFields.isContactField;
 import static org.gbif.registry.service.collections.batch.FileFields.isEntityField;
 import static org.gbif.registry.service.collections.batch.FileParsingUtils.*;
-
-import com.google.common.base.Strings;
-import com.opencsv.CSVParser;
-import com.opencsv.CSVParserBuilder;
-import com.opencsv.CSVReader;
-import com.opencsv.CSVReaderBuilder;
-import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
-import java.io.InputStreamReader;
-import java.util.*;
-import java.util.function.BiFunction;
-import java.util.function.Consumer;
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
-import lombok.SneakyThrows;
-import org.gbif.api.model.collections.*;
-import org.gbif.api.model.collections.Collection;
-import org.gbif.api.model.common.export.ExportFormat;
-import org.gbif.api.vocabulary.License;
-import org.gbif.registry.service.collections.batch.model.ContactsParserResult;
-import org.gbif.registry.service.collections.batch.model.EntitiesParserResult;
-import org.gbif.registry.service.collections.batch.model.ParsedData;
-import org.gbif.registry.service.collections.batch.model.ParserResult;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class FileParser {

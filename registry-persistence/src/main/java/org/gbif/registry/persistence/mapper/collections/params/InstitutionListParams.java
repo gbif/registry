@@ -13,13 +13,18 @@
  */
 package org.gbif.registry.persistence.mapper.collections.params;
 
-import java.util.List;
-import javax.annotation.Nullable;
-import lombok.Getter;
-import lombok.experimental.SuperBuilder;
 import org.gbif.api.vocabulary.collections.InstitutionFacetParameter;
 
+import java.util.List;
+
+import javax.annotation.Nullable;
+
+import lombok.Getter;
+import lombok.Setter;
+import lombok.experimental.SuperBuilder;
+
 @Getter
+@Setter
 @SuperBuilder
 public class InstitutionListParams extends ListParams {
 
@@ -33,6 +38,8 @@ public class InstitutionListParams extends ListParams {
   @Nullable InstitutionFacetParameter facet;
 
   public boolean isArrayFieldFacet() {
-    return facet == InstitutionFacetParameter.TYPE || facet == InstitutionFacetParameter.DISCIPLINE;
+    return facet == InstitutionFacetParameter.TYPE
+      || facet == InstitutionFacetParameter.DISCIPLINE
+      || facet == InstitutionFacetParameter.INSTITUTIONAL_GOVERNANCE;
   }
 }

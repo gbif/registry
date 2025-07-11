@@ -450,33 +450,92 @@
   </sql>
 
   <select id="institutionFacet" resultMap="FACET_DTO_MAP" resultType="FacetDto" parameterType="Pageable">
-    SELECT <include refid="INSTITUTION_FACET_FIELDS"/> AS facet, count(DISTINCT i.key)
-    FROM institution i
-    <if test="params.facet.name.equals('COUNTRY') or params.facet.name.equals('CITY')">
-      LEFT JOIN address a ON a.key = i.address_key
-      LEFT JOIN address ma ON ma.key = i.mailing_address_key
-    </if>
-    <include refid="org.gbif.registry.persistence.mapper.collections.InstitutionMapper.LIST_FILTER"/>
-    <if test="!params.isArrayFieldFacet">
-      AND <include refid="COLLECTION_FACET_FIELDS"/> IS NOT NULL
-    </if>
-    GROUP BY facet
-    <if test="params.facetMinCount != null">
-      HAVING COUNT(DISTINCT i.key) >= #{params.facetMinCount}
-    </if>
-    ORDER BY count(DISTINCT i.key) DESC, facet ASC
-    <if test="params.facetPage != null">
-      LIMIT #{params.facetPage.limit} OFFSET #{params.facetPage.offset}
-    </if>
+    <choose>
+      <when test="params.facet.name.equals('DISCIPLINE') or params.facet.name.equals('TYPE') or params.facet.name.equals('INSTITUTIONAL_GOVERNANCE')">
+        WITH vocabulary_name AS (
+          SELECT
+            CASE
+              WHEN #{params.facet.name} = 'DISCIPLINE' THEN 'Discipline'
+              WHEN #{params.facet.name} = 'TYPE' THEN 'InstitutionType'
+              WHEN #{params.facet.name} = 'INSTITUTIONAL_GOVERNANCE' THEN 'InstitutionalGovernance'
+            END AS vocab_name
+        ),
+        facet_counts AS (
+          SELECT
+            vc.name AS facet,
+            COUNT(DISTINCT i.key) as count
+          FROM institution i
+          JOIN institution_concept_links icl ON i.key = icl.institution_key
+          JOIN grscicoll_vocab_concept vc ON icl.concept_key = vc.concept_key
+          JOIN vocabulary_name vn ON vc.vocabulary_name = vn.vocab_name
+          <include refid="org.gbif.registry.persistence.mapper.collections.InstitutionMapper.LIST_FILTER"/>
+          AND vc.name IS NOT NULL
+          GROUP BY vc.concept_key, vc.name
+          <if test="params.facetMinCount != null">
+            HAVING COUNT(DISTINCT i.key) >= #{params.facetMinCount}
+          </if>
+        )
+        SELECT facet, count
+        FROM facet_counts
+        WHERE count > 0  -- Only return facets that have actual data
+        ORDER BY count DESC, facet ASC
+        <if test="params.facetPage != null">
+          LIMIT #{params.facetPage.limit} OFFSET #{params.facetPage.offset}
+        </if>
+      </when>
+
+      <otherwise>
+        SELECT <include refid="INSTITUTION_FACET_FIELDS"/> AS facet, count(DISTINCT i.key)
+        FROM institution i
+        <if test="params.facet.name.equals('COUNTRY') or params.facet.name.equals('CITY')">
+          LEFT JOIN address a ON a.key = i.address_key
+          LEFT JOIN address ma ON ma.key = i.mailing_address_key
+        </if>
+        <include refid="org.gbif.registry.persistence.mapper.collections.InstitutionMapper.LIST_FILTER"/>
+        <if test="!params.isArrayFieldFacet and params.facet != null and params.facet.name != null">
+          AND <include refid="INSTITUTION_FACET_FIELDS"/> IS NOT NULL
+        </if>
+        GROUP BY facet
+        <if test="params.facetMinCount != null">
+          HAVING COUNT(DISTINCT i.key) >= #{params.facetMinCount}
+        </if>
+        ORDER BY count(DISTINCT i.key) DESC, facet ASC
+        <if test="params.facetPage != null">
+          LIMIT #{params.facetPage.limit} OFFSET #{params.facetPage.offset}
+        </if>
+      </otherwise>
+    </choose>
   </select>
 
   <select id="institutionFacetCardinality" resultType="Long">
-    SELECT <include refid="INSTITUTION_FACET_CARDINALITY_FIELDS"/>
-    <if test="params.facet.name.equals('COUNTRY') or params.facet.name.equals('CITY')">
-      LEFT JOIN address a ON a.key = i.address_key
-      LEFT JOIN address ma ON ma.key = i.mailing_address_key
-    </if>
-    <include refid="org.gbif.registry.persistence.mapper.collections.InstitutionMapper.LIST_FILTER"/>
+    <choose>
+      <when test="params.facet.name.equals('DISCIPLINE') or params.facet.name.equals('TYPE') or params.facet.name.equals('INSTITUTIONAL_GOVERNANCE')">
+        WITH vocabulary_name AS (
+          SELECT
+            CASE
+              WHEN #{params.facet.name} = 'DISCIPLINE' THEN 'Discipline'
+              WHEN #{params.facet.name} = 'TYPE' THEN 'InstitutionType'
+              WHEN #{params.facet.name} = 'INSTITUTIONAL_GOVERNANCE' THEN 'InstitutionalGovernance'
+            END AS vocab_name
+        )
+        SELECT COUNT(DISTINCT vc.concept_key)
+        FROM institution i
+        JOIN institution_concept_links icl ON i.key = icl.institution_key
+        JOIN grscicoll_vocab_concept vc ON icl.concept_key = vc.concept_key
+        JOIN vocabulary_name vn ON vc.vocabulary_name = vn.vocab_name
+        <include refid="org.gbif.registry.persistence.mapper.collections.InstitutionMapper.LIST_FILTER"/>
+        AND vc.name IS NOT NULL
+      </when>
+
+      <otherwise>
+        SELECT <include refid="INSTITUTION_FACET_CARDINALITY_FIELDS"/>
+        <if test="params.facet.name.equals('COUNTRY') or params.facet.name.equals('CITY')">
+          LEFT JOIN address a ON a.key = i.address_key
+          LEFT JOIN address ma ON ma.key = i.mailing_address_key
+        </if>
+        <include refid="org.gbif.registry.persistence.mapper.collections.InstitutionMapper.LIST_FILTER"/>
+      </otherwise>
+    </choose>
   </select>
 
   <sql id="INSTITUTION_FACET_FIELDS">
@@ -486,12 +545,6 @@
       </when>
       <when test="params.facet.name.equals('CITY')">
         CASE WHEN a.city is not null THEN a.city ELSE ma.city END
-      </when>
-      <when test="params.facet.name.equals('TYPE')">
-        unnest(i.type)
-      </when>
-      <when test="params.facet.name.equals('DISCIPLINE')">
-        unnest(i.discipline)
       </when>
     </choose>
   </sql>
@@ -510,53 +563,123 @@
         COUNT(DISTINCT facet)
         FROM institution i
         INNER JOIN unnest(
-        <choose>
-          <when test="params.facet.name.equals('TYPE')">
-            i.type
-          </when>
-          <when test="params.facet.name.equals('DISCIPLINE')">
-            i.discipline
-          </when>
-        </choose>
         ) facet ON true
       </otherwise>
     </choose>
   </sql>
 
   <select id="collectionFacet" resultMap="FACET_DTO_MAP" resultType="FacetDto" parameterType="Pageable">
-    SELECT <include refid="COLLECTION_FACET_FIELDS"/> AS facet, count(DISTINCT c.key)
-    FROM collection c
-    <if test="params.facet.name.equals('COUNTRY') or params.facet.name.equals('CITY')">
-      LEFT JOIN address a ON a.key = c.address_key
-      LEFT JOIN address ma ON ma.key = c.mailing_address_key
-    </if>
-    <if test="params.descriptorSearch or params.descriptorFacet">
-      INNER JOIN collection_descriptor_group cdg ON cdg.collection_key = c.key AND cdg.deleted IS NULL
-      INNER JOIN collection_descriptor cd ON cd.collection_descriptor_group_key = cdg.key
-    </if>
-    <include refid="org.gbif.registry.persistence.mapper.collections.CollectionMapper.LIST_FILTER"/>
-    <include refid="DESCRIPTORS_FILTER"/>
-    <if test="!params.isArrayFieldFacet">
-      AND <include refid="COLLECTION_FACET_FIELDS"/> IS NOT NULL
-    </if>
-    GROUP BY facet
-    <if test="params.facetMinCount != null">
-      HAVING COUNT(DISTINCT c.key) >= #{params.facetMinCount}
-    </if>
-    ORDER BY count(DISTINCT c.key) DESC, facet ASC
-    <if test="params.facetPage != null">
-      LIMIT #{params.facetPage.limit} OFFSET #{params.facetPage.offset}
-    </if>
+    <choose>
+      <when test="params.facet.name.equals('CONTENT_TYPE') or params.facet.name.equals('PRESERVATION_TYPE') or params.facet.name.equals('ACCESSION_STATUS')">
+        WITH vocabulary_name AS (
+          SELECT
+            CASE
+              WHEN #{params.facet.name} = 'CONTENT_TYPE' THEN 'CollectionContentType'
+              WHEN #{params.facet.name} = 'PRESERVATION_TYPE' THEN 'PreservationType'
+              WHEN #{params.facet.name} = 'ACCESSION_STATUS' THEN 'AccessionStatus'
+            END AS vocab_name
+        ),
+        facet_counts AS (
+          SELECT
+            vc.name AS facet,
+            COUNT(DISTINCT c.key) as count
+          FROM collection c
+          JOIN collection_concept_links ccl ON c.key = ccl.collection_key
+          JOIN grscicoll_vocab_concept vc ON ccl.concept_key = vc.concept_key
+          JOIN vocabulary_name vn ON vc.vocabulary_name = vn.vocab_name
+          <if test="params.descriptorSearch or params.descriptorFacet">
+            INNER JOIN collection_descriptor_group cdg ON cdg.collection_key = c.key AND cdg.deleted IS NULL
+            INNER JOIN collection_descriptor cd ON cd.collection_descriptor_group_key = cdg.key
+          </if>
+          <include refid="org.gbif.registry.persistence.mapper.collections.CollectionMapper.LIST_FILTER"/>
+          <include refid="DESCRIPTORS_FILTER"/>
+          AND vc.name IS NOT NULL
+          GROUP BY vc.concept_key, vc.name
+          <if test="params.facetMinCount != null">
+            HAVING COUNT(DISTINCT c.key) >= #{params.facetMinCount}
+          </if>
+        )
+        SELECT facet, count
+        FROM facet_counts
+        WHERE count > 0  -- Only return facets that have actual data
+        ORDER BY count DESC, facet ASC
+        <if test="params.facetPage != null">
+          LIMIT #{params.facetPage.limit} OFFSET #{params.facetPage.offset}
+        </if>
+      </when>
+
+      <otherwise>
+        SELECT <include refid="COLLECTION_FACET_FIELDS"/> AS facet, count(DISTINCT c.key)
+        FROM collection c
+        <if test="params.facet.name.equals('COUNTRY') or params.facet.name.equals('CITY')">
+          LEFT JOIN address a ON a.key = c.address_key
+          LEFT JOIN address ma ON ma.key = c.mailing_address_key
+        </if>
+        <if test="params.descriptorSearch or params.descriptorFacet">
+          INNER JOIN collection_descriptor_group cdg ON cdg.collection_key = c.key AND cdg.deleted IS NULL
+          INNER JOIN collection_descriptor cd ON cd.collection_descriptor_group_key = cdg.key
+        </if>
+        <include refid="org.gbif.registry.persistence.mapper.collections.CollectionMapper.LIST_FILTER"/>
+        <include refid="DESCRIPTORS_FILTER"/>
+        <if test="!params.isArrayFieldFacet and params.facet != null and params.facet.name != null">
+          AND <include refid="COLLECTION_FACET_FIELDS"/> IS NOT NULL
+        </if>
+        GROUP BY facet
+        <if test="params.facetMinCount != null">
+          HAVING COUNT(DISTINCT c.key) >= #{params.facetMinCount}
+        </if>
+        ORDER BY count(DISTINCT c.key) DESC, facet ASC
+        <if test="params.facetPage != null">
+          LIMIT #{params.facetPage.limit} OFFSET #{params.facetPage.offset}
+        </if>
+      </otherwise>
+    </choose>
   </select>
 
   <select id="collectionFacetCardinality" resultType="Long">
-    SELECT <include refid="COLLECTION_FACET_CARDINALITY_FIELDS"/>
-    <if test="params.facet.name.equals('COUNTRY') or params.facet.name.equals('CITY')">
-      LEFT JOIN address a ON a.key = c.address_key
-      LEFT JOIN address ma ON ma.key = c.mailing_address_key
-    </if>
-    <include refid="org.gbif.registry.persistence.mapper.collections.CollectionMapper.LIST_FILTER"/>
-    <include refid="DESCRIPTORS_FILTER"/>
+    <choose>
+      <when test="params.facet.name.equals('CONTENT_TYPE')">
+        SELECT COUNT(DISTINCT ancestor_concept.concept_key)
+        FROM
+          collection c
+          JOIN collection_concept_links cfl ON c.key = cfl.collection_key
+          JOIN grscicoll_vocab_concept specific_concept ON cfl.concept_key = specific_concept.concept_key AND specific_concept.vocabulary_name = 'CollectionContentType'
+          JOIN grscicoll_vocab_concept ancestor_concept ON specific_concept.path &lt;@ ancestor_concept.path AND ancestor_concept.vocabulary_name = 'CollectionContentType'
+        <if test="params.descriptorSearch or params.descriptorFacet">
+          INNER JOIN collection_descriptor_group cdg ON cdg.collection_key = c.key AND cdg.deleted IS NULL
+          INNER JOIN collection_descriptor cd ON cd.collection_descriptor_group_key = cdg.key
+        </if>
+        <include refid="org.gbif.registry.persistence.mapper.collections.CollectionMapper.LIST_FILTER"/>
+        <include refid="DESCRIPTORS_FILTER"/>
+        AND ancestor_concept.name IS NOT NULL
+        AND ancestor_concept.vocabulary_name = 'CollectionContentType'
+      </when>
+      <when test="params.facet.name.equals('PRESERVATION_TYPE')">
+        SELECT COUNT(DISTINCT ancestor_concept.concept_key)
+        FROM
+          collection c
+          JOIN collection_concept_links cfl ON c.key = cfl.collection_key
+          JOIN grscicoll_vocab_concept specific_concept ON cfl.concept_key = specific_concept.concept_key AND specific_concept.vocabulary_name = 'PreservationType'
+          JOIN grscicoll_vocab_concept ancestor_concept ON specific_concept.path &lt;@ ancestor_concept.path AND ancestor_concept.vocabulary_name = 'PreservationType'
+        <if test="params.descriptorSearch or params.descriptorFacet">
+          INNER JOIN collection_descriptor_group cdg ON cdg.collection_key = c.key AND cdg.deleted IS NULL
+          INNER JOIN collection_descriptor cd ON cd.collection_descriptor_group_key = cdg.key
+        </if>
+        <include refid="org.gbif.registry.persistence.mapper.collections.CollectionMapper.LIST_FILTER"/>
+        <include refid="DESCRIPTORS_FILTER"/>
+        AND ancestor_concept.name IS NOT NULL
+        AND ancestor_concept.vocabulary_name = 'PreservationType'
+      </when>
+      <otherwise>
+        SELECT <include refid="COLLECTION_FACET_CARDINALITY_FIELDS"/>
+        <if test="params.facet.name.equals('COUNTRY') or params.facet.name.equals('CITY')">
+          LEFT JOIN address a ON a.key = c.address_key
+          LEFT JOIN address ma ON ma.key = c.mailing_address_key
+        </if>
+        <include refid="org.gbif.registry.persistence.mapper.collections.CollectionMapper.LIST_FILTER"/>
+        <include refid="DESCRIPTORS_FILTER"/>
+      </otherwise>
+    </choose>
   </select>
 
   <sql id="COLLECTION_FACET_FIELDS">

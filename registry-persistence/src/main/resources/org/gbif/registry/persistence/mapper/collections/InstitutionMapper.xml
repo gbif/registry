@@ -257,6 +257,26 @@
       INNER JOIN institution_identifier ii on ii.institution_key = i.key
       INNER JOIN identifier id on id.key = ii.identifier_key
     </if>
+    <!-- Hierarchical concept-based filtering for types -->
+    <if test="params.types != null and params.types.size > 0">
+      INNER JOIN institution_concept_links icl_type ON icl_type.institution_key = i.key
+              INNER JOIN grscicoll_vocab_concept c_type ON icl_type.concept_key = c_type.concept_key
+        AND c_type.vocabulary_name = 'InstitutionType'
+        AND lower(c_type.name) IN
+        <foreach item="item" collection="params.types" open="(" separator="," close=")">
+          lower(#{item,jdbcType=VARCHAR})
+        </foreach>
+    </if>
+    <!-- Hierarchical concept-based filtering for disciplines -->
+    <if test="params.disciplines != null and params.disciplines.size > 0">
+      INNER JOIN institution_concept_links icl_discipline ON icl_discipline.institution_key = i.key
+              INNER JOIN grscicoll_vocab_concept c_discipline ON icl_discipline.concept_key = c_discipline.concept_key
+        AND c_discipline.vocabulary_name = 'Discipline'
+        AND lower(c_discipline.name) IN
+        <foreach item="item" collection="params.disciplines" open="(" separator="," close=")">
+          lower(#{item,jdbcType=VARCHAR})
+        </foreach>
+    </if>
     LEFT JOIN address addr ON addr.key = i.address_key
     LEFT JOIN address mail_addr ON mail_addr.key = i.mailing_address_key
     <if test="params.source != null || params.sourceId != null">

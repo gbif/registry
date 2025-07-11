@@ -13,9 +13,11 @@
  */
 package org.gbif.registry.ws.provider;
 
-import java.util.function.Function;
 import org.gbif.api.model.collections.request.InstitutionFacetedSearchRequest;
 import org.gbif.api.vocabulary.collections.InstitutionFacetParameter;
+
+import java.util.function.Function;
+
 import org.springframework.core.MethodParameter;
 import org.springframework.web.bind.support.WebDataBinderFactory;
 import org.springframework.web.context.request.NativeWebRequest;
