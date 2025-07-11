@@ -1,19 +1,18 @@
+/*
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.gbif.registry.service.collections.utils;
 
-import com.google.common.base.Strings;
-import io.github.resilience4j.core.IntervalFunction;
-import io.github.resilience4j.retry.Retry;
-import io.github.resilience4j.retry.RetryConfig;
-import java.time.Duration;
-import java.util.*;
-import java.util.function.BiConsumer;
-import java.util.function.BiFunction;
-import java.util.function.Function;
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
-import org.cache2k.Cache;
-import org.cache2k.Cache2kBuilder;
 import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.CollectionEntity;
 import org.gbif.api.model.collections.Institution;
@@ -21,10 +20,29 @@ import org.gbif.api.model.collections.request.CollectionSearchRequest;
 import org.gbif.api.model.collections.request.InstitutionSearchRequest;
 import org.gbif.api.model.collections.request.SearchRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
+import org.gbif.api.model.registry.Dataset;
 import org.gbif.vocabulary.api.ConceptListParams;
 import org.gbif.vocabulary.api.ConceptView;
 import org.gbif.vocabulary.client.ConceptClient;
 import org.gbif.vocabulary.model.search.LookupResult;
+
+import java.time.Duration;
+import java.util.*;
+import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
+import java.util.function.Function;
+
+import org.cache2k.Cache;
+import org.cache2k.Cache2kBuilder;
+
+import com.google.common.base.Strings;
+
+import io.github.resilience4j.core.IntervalFunction;
+import io.github.resilience4j.retry.Retry;
+import io.github.resilience4j.retry.RetryConfig;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class Vocabularies {
@@ -61,6 +79,12 @@ public class Vocabularies {
 
   public static final String COLLECTION_DESCRIPTOR_GROUP_TYPE = "CollectionDescriptorGroupTypes";
 
+  // Dataset vocabulary fields
+  public static final String DATASET_CATEGORY = "DatasetCategory";
+
+  // Map of vocabulary names to field getters for datasets
+  private static final Map<String, Function<Dataset, java.util.Collection<String>>> DATASET_VOCAB_FIELDS = new HashMap<>();
+
   private static final Cache<String, Set<String>> childrenConceptsCache =
       new Cache2kBuilder<String, Set<String>>() {}.eternal(true).build();
 
@@ -74,6 +98,8 @@ public class Vocabularies {
     COLLECTION_VOCAB_FIELDS.put(
         ACCESSION_STATUS, c -> Collections.singletonList(c.getAccessionStatus()));
     COLLECTION_VOCAB_FIELDS.put(PRESERVATION_TYPE, Collection::getPreservationTypes);
+
+    DATASET_VOCAB_FIELDS.put(DATASET_CATEGORY, d -> d.getCategory() != null ? new ArrayList<>(d.getCategory()) : Collections.emptyList());
 
     INSTITUTION_SEARCH_REQ_VOCAB_FIELDS.add(
         SearchRequestField.of(
@@ -134,6 +160,21 @@ public class Vocabularies {
     }
   }
 
+  public static void checkDatasetVocabsValues(ConceptClient conceptClient, Dataset dataset) {
+    StringJoiner errors = new StringJoiner(";\n");
+    DATASET_VOCAB_FIELDS.forEach(
+        (vocabName, getter) ->
+            getter.apply(dataset).stream()
+                .filter(s -> !Strings.isNullOrEmpty(s))
+                .forEach(
+                    conceptValue ->
+                        checkConcept(conceptClient, vocabName, conceptValue, errors)));
+
+    if (errors.length() > 0) {
+      throw new IllegalArgumentException(errors.toString());
+    }
+  }
+
   public static void checkDescriptorGroupTags(ConceptClient conceptClient, Set<String> tags) {
     if (tags != null && !tags.isEmpty()) {
       StringJoiner errors = new StringJoiner(";\n");
@@ -158,6 +199,8 @@ public class Vocabularies {
 
     if (conceptFound == null) {
       errors.add(conceptValue + " is not a concept of the " + vocabName + " vocabulary");
+    } else if (conceptFound.getConcept() != null && conceptFound.getConcept().getDeprecated() != null) {
+      errors.add(conceptValue + " is a deprecated concept in the " + vocabName + " vocabulary");
     }
   }
 

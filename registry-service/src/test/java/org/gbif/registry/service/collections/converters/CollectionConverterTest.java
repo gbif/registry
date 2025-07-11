@@ -21,27 +21,27 @@ import org.gbif.api.model.registry.Organization;
 import org.gbif.api.model.registry.eml.TaxonomicCoverage;
 import org.gbif.api.model.registry.eml.TaxonomicCoverages;
 import org.gbif.api.model.registry.eml.geospatial.GeospatialCoverage;
-import org.gbif.api.model.registry.eml.temporal.SingleDate;
 import org.gbif.api.model.registry.eml.temporal.DateRange;
+import org.gbif.api.model.registry.eml.temporal.SingleDate;
 import org.gbif.api.model.registry.eml.temporal.VerbatimTimePeriod;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.PreservationMethodType;
 import org.gbif.vocabulary.client.ConceptClient;
 
 import java.net.URI;
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
-import java.text.SimpleDateFormat;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 
 /** Tests the {@link CollectionConverter}. */
 public class CollectionConverterTest {

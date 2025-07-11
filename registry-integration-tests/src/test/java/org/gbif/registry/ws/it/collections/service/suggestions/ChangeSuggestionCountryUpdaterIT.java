@@ -13,8 +13,6 @@
  */
 package org.gbif.registry.ws.it.collections.service.suggestions;
 
-import java.io.IOException;
-
 import org.gbif.api.model.collections.Address;
 import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.CollectionEntityType;
@@ -36,6 +34,7 @@ import org.gbif.registry.ws.it.BaseItTest;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 import org.gbif.ws.security.KeyStore;
 
+import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;

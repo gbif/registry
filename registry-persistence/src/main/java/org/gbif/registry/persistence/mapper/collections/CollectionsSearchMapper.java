@@ -13,9 +13,6 @@
  */
 package org.gbif.registry.persistence.mapper.collections;
 
-import java.util.List;
-import javax.annotation.Nullable;
-import org.apache.ibatis.annotations.Param;
 import org.gbif.registry.persistence.mapper.collections.dto.CollectionSearchDto;
 import org.gbif.registry.persistence.mapper.collections.dto.FacetDto;
 import org.gbif.registry.persistence.mapper.collections.dto.InstitutionSearchDto;
@@ -23,6 +20,12 @@ import org.gbif.registry.persistence.mapper.collections.dto.SearchDto;
 import org.gbif.registry.persistence.mapper.collections.params.DescriptorsListParams;
 import org.gbif.registry.persistence.mapper.collections.params.FullTextSearchParams;
 import org.gbif.registry.persistence.mapper.collections.params.InstitutionListParams;
+
+import java.util.List;
+
+import javax.annotation.Nullable;
+
+import org.apache.ibatis.annotations.Param;
 
 public interface CollectionsSearchMapper {
 

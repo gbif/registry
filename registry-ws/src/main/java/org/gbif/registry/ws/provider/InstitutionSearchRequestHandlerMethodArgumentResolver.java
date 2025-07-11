@@ -13,8 +13,10 @@
  */
 package org.gbif.registry.ws.provider;
 
-import java.util.Map;
 import org.gbif.api.model.collections.request.InstitutionSearchRequest;
+
+import java.util.Map;
+
 import org.springframework.core.MethodParameter;
 import org.springframework.web.bind.support.WebDataBinderFactory;
 import org.springframework.web.context.request.NativeWebRequest;

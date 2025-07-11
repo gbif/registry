@@ -13,22 +13,6 @@
  */
 package org.gbif.registry.service.collections;
 
-import static org.gbif.registry.service.collections.utils.ParamUtils.parseDateRangeParameters;
-import static org.gbif.registry.service.collections.utils.ParamUtils.parseGbifRegion;
-import static org.gbif.registry.service.collections.utils.ParamUtils.parseIntegerRangeParameters;
-
-import com.google.common.base.CharMatcher;
-import com.google.common.base.Strings;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 import org.gbif.api.model.collections.request.CollectionDescriptorsSearchRequest;
 import org.gbif.api.model.collections.request.FacetedSearchRequest;
 import org.gbif.api.model.collections.request.InstitutionFacetedSearchRequest;
@@ -61,8 +45,28 @@ import org.gbif.registry.persistence.mapper.collections.params.ListParams;
 import org.gbif.registry.service.collections.utils.SearchUtils;
 import org.gbif.registry.service.collections.utils.Vocabularies;
 import org.gbif.vocabulary.client.ConceptClient;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import com.google.common.base.CharMatcher;
+import com.google.common.base.Strings;
+
+import static org.gbif.registry.service.collections.utils.ParamUtils.parseDateRangeParameters;
+import static org.gbif.registry.service.collections.utils.ParamUtils.parseGbifRegion;
+import static org.gbif.registry.service.collections.utils.ParamUtils.parseIntegerRangeParameters;
+
 
 /** Service to lookup GRSciColl institutions and collections. */
 @Service
@@ -190,26 +194,12 @@ public class CollectionsSearchService {
       searchRequest
           .getFacets()
           .forEach(
-              f -> {
-                InstitutionListParams.InstitutionListParamsBuilder facetParamsBuilder =
-                    searchRequest.isMultiSelectFacets()
-                        ? InstitutionListParams.builder()
-                        : listParamsBuilder;
-
-                InstitutionListParams facetParams =
-                    (InstitutionListParams)
-                        facetParamsBuilder
-                            .facet(f)
-                            .facetMinCount(searchRequest.getFacetMinCount())
-                            .facetPage(extractFacetPage(searchRequest, f))
-                            .build();
-
-                facets.add(
-                    createFacet(
-                        f,
-                        searchMapper.institutionFacet(facetParams),
-                        searchMapper.institutionFacetCardinality(facetParams)));
-              });
+              f -> addInstitutionFacet(
+                  f,
+                  facets,
+                  dtos,
+                  listParamsBuilder,
+                  searchRequest));
     }
 
     return new FacetedSearchResponse<>(
@@ -306,24 +296,12 @@ public class CollectionsSearchService {
           .getFacets()
           .forEach(
               f -> {
-                DescriptorsListParams.DescriptorsListParamsBuilder facetParamsBuilder =
-                    searchRequest.isMultiSelectFacets()
-                        ? DescriptorsListParams.builder()
-                        : listParamsBuilder;
-
-                DescriptorsListParams facetParams =
-                    (DescriptorsListParams)
-                        facetParamsBuilder
-                            .facet(f)
-                            .facetMinCount(searchRequest.getFacetMinCount())
-                            .facetPage(extractFacetPage(searchRequest, f))
-                            .build();
-
-                facets.add(
-                    createFacet(
-                        f,
-                        searchMapper.collectionFacet(facetParams),
-                        searchMapper.collectionFacetCardinality(facetParams)));
+                addCollectionFacet(
+                    f,
+                    facets,
+                    results,
+                    listParamsBuilder,
+                    searchRequest);
               });
     }
 
@@ -332,52 +310,21 @@ public class CollectionsSearchService {
   }
 
   private <F extends CollectionsFacetParameter> CollectionFacet<F> createFacet(
-      F f, List<FacetDto> facetDtos, long cardinality) {
-    List<CollectionFacet.Count> facetCounts;
+    F f, List<FacetDto> facetDtos, long cardinality) {
+    List<CollectionFacet.Count> facetCounts =
+      facetDtos.stream()
+        .filter(dto -> !Strings.isNullOrEmpty(dto.getFacet()))
+        .map(dto -> new CollectionFacet.Count(dto.getFacet(), dto.getCount()))
+        .collect(Collectors.toList());
 
-    // Check if this facet parameter is a vocabulary field
-    String vocabularyName = getVocabularyName(f);
-    if (vocabularyName != null) {
-      Map<String, Long> hierarchicalCounts = new HashMap<>();
-
-      // Calculate total counts including children
-      for (FacetDto dto : facetDtos) {
-        if (!Strings.isNullOrEmpty(dto.getFacet())) {
-          String concept = dto.getFacet();
-          long count = dto.getCount();
-
-          // Get children and add their counts
-          Set<String> children = Vocabularies.getChildrenConcepts(
-              vocabularyName,
-              concept,
-              conceptClient
-          );
-          if (!children.isEmpty()) {
-            for (String child : children) {
-              for (FacetDto childDto : facetDtos) {
-                if (child.equals(childDto.getFacet())) {
-                  count += childDto.getCount();
-                  break;
-                }
-              }
-            }
-          }
-
-          hierarchicalCounts.put(concept, count);
+    // Sort by count (descending) and then by name
+    facetCounts.sort((c1, c2) -> {
+        int countCompare = Long.compare(c2.getCount(), c1.getCount());
+        if (countCompare != 0) {
+            return countCompare;
         }
-      }
-
-      // Convert to facet counts
-      facetCounts = hierarchicalCounts.entrySet().stream()
-          .map(e -> new CollectionFacet.Count(e.getKey(), e.getValue()))
-          .collect(Collectors.toList());
-    } else {
-      // For non-vocabulary facets, use the original logic
-      facetCounts = facetDtos.stream()
-          .filter(dto -> !Strings.isNullOrEmpty(dto.getFacet()))
-          .map(dto -> new CollectionFacet.Count(dto.getFacet(), dto.getCount()))
-          .collect(Collectors.toList());
-    }
+        return c1.getName().compareTo(c2.getName());
+    });
 
     CollectionFacet<F> collectionFacet = new CollectionFacet<>();
     collectionFacet.setField(f);
@@ -563,5 +510,59 @@ public class CollectionsSearchService {
     }
 
     return Optional.empty();
+  }
+
+  private void addInstitutionFacet(
+      InstitutionFacetParameter f,
+      List<CollectionFacet<InstitutionFacetParameter>> facets,
+      List<InstitutionSearchDto> dtos,
+      InstitutionListParams.InstitutionListParamsBuilder listParamsBuilder,
+      InstitutionFacetedSearchRequest searchRequest) {
+
+    InstitutionListParams.InstitutionListParamsBuilder facetParamsBuilder =
+        searchRequest.isMultiSelectFacets()
+            ? InstitutionListParams.builder()
+            : listParamsBuilder;
+
+    InstitutionListParams facetParams =
+        (InstitutionListParams)
+            facetParamsBuilder
+                .facet(f)
+                .facetMinCount(searchRequest.getFacetMinCount())
+                .facetPage(extractFacetPage(searchRequest, f))
+                .build();
+
+    facets.add(
+        createFacet(
+            f,
+            searchMapper.institutionFacet(facetParams),
+            searchMapper.institutionFacetCardinality(facetParams)));
+  }
+
+  private void addCollectionFacet(
+      CollectionFacetParameter f,
+      List<CollectionFacet<CollectionFacetParameter>> facets,
+      List<CollectionSearchResponse> results,
+      DescriptorsListParams.DescriptorsListParamsBuilder listParamsBuilder,
+      CollectionDescriptorsSearchRequest searchRequest) {
+
+    DescriptorsListParams.DescriptorsListParamsBuilder facetParamsBuilder =
+        searchRequest.isMultiSelectFacets()
+            ? DescriptorsListParams.builder()
+            : listParamsBuilder;
+
+    DescriptorsListParams facetParams =
+        (DescriptorsListParams)
+            facetParamsBuilder
+                .facet(f)
+                .facetMinCount(searchRequest.getFacetMinCount())
+                .facetPage(extractFacetPage(searchRequest, f))
+                .build();
+
+    facets.add(
+        createFacet(
+            f,
+            searchMapper.collectionFacet(facetParams),
+            searchMapper.collectionFacetCardinality(facetParams)));
   }
 }

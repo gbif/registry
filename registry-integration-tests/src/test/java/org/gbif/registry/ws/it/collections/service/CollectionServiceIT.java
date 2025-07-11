@@ -13,13 +13,6 @@
  */
 package org.gbif.registry.ws.it.collections.service;
 
-import static org.junit.jupiter.api.Assertions.*;
-
-import java.net.URI;
-import java.util.*;
-import java.util.stream.Collectors;
-import javax.validation.ConstraintViolationException;
-import javax.validation.ValidationException;
 import org.gbif.api.model.collections.*;
 import org.gbif.api.model.collections.Address;
 import org.gbif.api.model.collections.Collection;
@@ -42,13 +35,26 @@ import org.gbif.api.vocabulary.collections.CollectionsSortField;
 import org.gbif.api.vocabulary.collections.IdType;
 import org.gbif.api.vocabulary.collections.MasterSourceType;
 import org.gbif.api.vocabulary.collections.Source;
+import org.gbif.registry.persistence.mapper.GrScicollVocabConceptMapper;
 import org.gbif.registry.persistence.mapper.collections.params.DuplicatesSearchParams;
 import org.gbif.registry.service.collections.duplicates.CollectionDuplicatesService;
 import org.gbif.registry.service.collections.utils.LatimerCoreConverter;
 import org.gbif.registry.test.mocks.ConceptClientMock;
+import org.gbif.registry.ws.it.collections.ConceptTestSetup;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
+
+import java.net.URI;
+import java.util.*;
+import java.util.stream.Collectors;
+
+import javax.validation.ConstraintViolationException;
+import javax.validation.ValidationException;
+
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 /** Tests the {@link CollectionService}. */
 public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collection> {
@@ -56,6 +62,7 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
   private final CollectionService collectionService;
   private final CollectionDuplicatesService duplicatesService;
   private final InstitutionService institutionService;
+  private final GrScicollVocabConceptMapper grScicollVocabConceptMapper;
 
   @Autowired
   public CollectionServiceIT(
@@ -66,7 +73,8 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
       OrganizationService organizationService,
       InstallationService installationService,
       SimplePrincipalProvider principalProvider,
-      CollectionDuplicatesService duplicatesService) {
+      CollectionDuplicatesService duplicatesService,
+      GrScicollVocabConceptMapper grScicollVocabConceptMapper) {
     super(
         collectionService,
         datasetService,
@@ -79,7 +87,14 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
     this.collectionService = collectionService;
     this.duplicatesService = duplicatesService;
     this.institutionService = institutionService;
+    this.grScicollVocabConceptMapper = grScicollVocabConceptMapper;
   }
+
+  @BeforeEach
+  public void setupFacets() {
+    ConceptTestSetup.setupCommonConcepts(grScicollVocabConceptMapper);
+  }
+
 
   @Test
   public void listTest() {
@@ -1425,5 +1440,94 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
                     .build())
             .getResults()
             .size());
+  }
+
+  @Test
+  public void testCollectionFacetLinksCreatedOnCreate() {
+    Collection collection = testData.newEntity();
+    collection.setContentTypes(Arrays.asList("Biological", "Archaeological"));
+    collection.setPreservationTypes(Arrays.asList("SampleDried", "StorageIndoors"));
+
+    UUID key = collectionService.create(collection);
+    assertNotNull(key);
+
+    // Verify that facet links were created automatically
+    // This would require access to FacetMapper to verify, but we can test indirectly
+    // by checking that facet-based search finds the collection
+
+    PagingResponse<CollectionView> response = collectionService.list(
+        CollectionSearchRequest.builder()
+            .contentTypes(Collections.singletonList("Biological"))
+            .limit(DEFAULT_PAGE.getLimit())
+            .offset(DEFAULT_PAGE.getOffset())
+            .build());
+
+    assertTrue(response.getResults().stream().anyMatch(cv -> cv.getCollection().getKey().equals(key)));
+
+    // Clean up
+    collectionService.delete(key);
+  }
+
+  @Test
+  public void testCollectionFacetLinksUpdatedOnUpdate() {
+    Collection collection = testData.newEntity();
+    collection.setContentTypes(Arrays.asList("Biological"));
+    collection.setPreservationTypes(Arrays.asList("SampleDried"));
+    UUID key = collectionService.create(collection);
+    assertNotNull(key);
+
+    // Update with different content types
+    collection = collectionService.get(key);
+    collection.setContentTypes(Arrays.asList("Archaeological", "Paleontological"));
+    collection.setPreservationTypes(Arrays.asList("StorageIndoors", "StorageOther"));
+
+    collectionService.update(collection);
+
+    // Verify that old facet links are removed and new ones are created
+    PagingResponse<CollectionView> biologicalResponse = collectionService.list(
+        CollectionSearchRequest.builder()
+            .contentTypes(Collections.singletonList("Biological"))
+            .limit(DEFAULT_PAGE.getLimit())
+            .offset(DEFAULT_PAGE.getOffset())
+            .build());
+
+    // Should not find the collection with old content type
+    assertFalse(biologicalResponse.getResults().stream().anyMatch(cv -> cv.getCollection().getKey().equals(key)));
+
+    PagingResponse<CollectionView> archaeologicalResponse = collectionService.list(
+        CollectionSearchRequest.builder()
+            .contentTypes(Collections.singletonList("Archaeological"))
+            .limit(DEFAULT_PAGE.getLimit())
+            .offset(DEFAULT_PAGE.getOffset())
+            .build());
+
+    // Should find the collection with new content type
+    assertTrue(archaeologicalResponse.getResults().stream().anyMatch(cv -> cv.getCollection().getKey().equals(key)));
+
+    // Clean up
+    collectionService.delete(key);
+  }
+
+  @Test
+  public void testAccessionStatusNotInFacetLinks() {
+    Collection collection = testData.newEntity();
+    collection.setAccessionStatus("Institutional");
+    collection.setContentTypes(Arrays.asList("Biological"));
+
+    UUID key = collectionService.create(collection);
+    assertNotNull(key);
+
+    // Verify that accession status filtering still works (array-based)
+    PagingResponse<CollectionView> response = collectionService.list(
+        CollectionSearchRequest.builder()
+            .accessionStatus(Collections.singletonList("Institutional"))
+            .limit(DEFAULT_PAGE.getLimit())
+            .offset(DEFAULT_PAGE.getOffset())
+            .build());
+
+    assertTrue(response.getResults().stream().anyMatch(cv -> cv.getCollection().getKey().equals(key)));
+
+    // Clean up
+    collectionService.delete(key);
   }
 }

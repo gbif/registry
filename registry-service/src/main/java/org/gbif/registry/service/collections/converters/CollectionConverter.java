@@ -29,11 +29,12 @@ import org.gbif.registry.service.collections.utils.Vocabularies;
 import org.gbif.vocabulary.api.ConceptListParams;
 import org.gbif.vocabulary.client.ConceptClient;
 
+import java.text.SimpleDateFormat;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.text.SimpleDateFormat;
+
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 

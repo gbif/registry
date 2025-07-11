@@ -19,7 +19,6 @@ import org.gbif.api.model.pipelines.PipelineStep;
 import org.gbif.api.model.pipelines.StepType;
 
 import java.time.LocalDateTime;
-import java.util.Collections;
 import java.util.Set;
 
 import org.junit.jupiter.api.Test;

@@ -13,21 +13,6 @@
  */
 package org.gbif.registry.ws.resources.pipelines;
 
-import static org.gbif.registry.security.UserRoles.ADMIN_ROLE;
-import static org.gbif.registry.security.UserRoles.EDITOR_ROLE;
-
-import com.google.common.base.Preconditions;
-import io.swagger.v3.oas.annotations.Hidden;
-import java.time.LocalDateTime;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
-import java.util.stream.Collectors;
-import javax.annotation.Nullable;
-import javax.validation.ConstraintViolationException;
-import javax.validation.constraints.NotNull;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.pipelines.PipelineExecution;
@@ -42,6 +27,19 @@ import org.gbif.api.model.pipelines.ws.SearchResult;
 import org.gbif.api.service.pipelines.PipelinesHistoryService;
 import org.gbif.registry.pipelines.RegistryPipelinesHistoryTrackingService;
 import org.gbif.registry.ws.util.DateUtils;
+
+import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
+import javax.annotation.Nullable;
+import javax.validation.ConstraintViolationException;
+import javax.validation.constraints.NotNull;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -59,6 +57,13 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import com.google.common.base.Preconditions;
+
+import io.swagger.v3.oas.annotations.Hidden;
+
+import static org.gbif.registry.security.UserRoles.ADMIN_ROLE;
+import static org.gbif.registry.security.UserRoles.EDITOR_ROLE;
 
 /** Pipelines History service. */
 @Hidden // TODO: Document?

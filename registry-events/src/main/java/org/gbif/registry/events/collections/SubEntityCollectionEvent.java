@@ -13,9 +13,11 @@
  */
 package org.gbif.registry.events.collections;
 
-import com.google.common.base.Preconditions;
-import java.util.UUID;
 import org.gbif.api.model.collections.CollectionEntity;
+
+import java.util.UUID;
+
+import com.google.common.base.Preconditions;
 
 /**
  * This event is fired after collection entity components such as contacts, identifiers or tags have
