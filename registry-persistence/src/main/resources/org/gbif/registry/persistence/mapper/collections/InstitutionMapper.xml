@@ -262,9 +262,9 @@
       INNER JOIN institution_concept_links icl_type ON icl_type.institution_key = i.key
               INNER JOIN grscicoll_vocab_concept c_type ON icl_type.concept_key = c_type.concept_key
         AND c_type.vocabulary_name = 'InstitutionType'
-        AND c_type.name IN
+        AND lower(c_type.name) IN
         <foreach item="item" collection="params.types" open="(" separator="," close=")">
-          #{item,jdbcType=VARCHAR}
+          lower(#{item,jdbcType=VARCHAR})
         </foreach>
     </if>
     <!-- Hierarchical concept-based filtering for disciplines -->
@@ -272,9 +272,9 @@
       INNER JOIN institution_concept_links icl_discipline ON icl_discipline.institution_key = i.key
               INNER JOIN grscicoll_vocab_concept c_discipline ON icl_discipline.concept_key = c_discipline.concept_key
         AND c_discipline.vocabulary_name = 'Discipline'
-        AND c_discipline.name IN
+        AND lower(c_discipline.name) IN
         <foreach item="item" collection="params.disciplines" open="(" separator="," close=")">
-          #{item,jdbcType=VARCHAR}
+          lower(#{item,jdbcType=VARCHAR})
         </foreach>
     </if>
     LEFT JOIN address addr ON addr.key = i.address_key

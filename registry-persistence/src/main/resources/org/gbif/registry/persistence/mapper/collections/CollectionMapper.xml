@@ -241,9 +241,9 @@
       INNER JOIN collection_concept_links cfl_content ON cfl_content.collection_key = c.key
       INNER JOIN grscicoll_vocab_concept f_content ON cfl_content.concept_key = f_content.concept_key
         AND f_content.vocabulary_name = 'CollectionContentType'
-        AND f_content.name IN
+        AND lower(f_content.name) IN
         <foreach item="item" collection="params.contentTypes" open="(" separator="," close=")">
-          #{item,jdbcType=VARCHAR}
+          lower(#{item,jdbcType=VARCHAR})
         </foreach>
     </if>
     <!-- Hierarchical concept-based filtering for preservation types -->
@@ -251,9 +251,9 @@
       INNER JOIN collection_concept_links cfl_preservation ON cfl_preservation.collection_key = c.key
       INNER JOIN grscicoll_vocab_concept f_preservation ON cfl_preservation.concept_key = f_preservation.concept_key
         AND f_preservation.vocabulary_name = 'PreservationType'
-        AND f_preservation.name IN
+        AND lower(f_preservation.name) IN
         <foreach item="item" collection="params.preservationTypes" open="(" separator="," close=")">
-          #{item,jdbcType=VARCHAR}
+          lower(#{item,jdbcType=VARCHAR})
         </foreach>
     </if>
     LEFT JOIN address addr ON addr.key = c.address_key
