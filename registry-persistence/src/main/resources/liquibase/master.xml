@@ -168,7 +168,7 @@
   <include file="liquibase/160-fix-catalog-url-array-constraints.xml" />
   <include file="liquibase/161-dwca-dataset.xml" />
   <include file="liquibase/162-index-contact.xml" />
-  <include file="liquibase/160-vocab-managed-fields-grscicoll.xml" />
-  <include file="liquibase/161-migrate-grscicoll-facets.xml" />
-  <include file="liquibase/162-dataset-category.xml" />
+  <include file="liquibase/163-vocab-managed-fields-grscicoll.xml" />
+  <include file="liquibase/164-migrate-grscicoll-facets.xml" />
+  <include file="liquibase/165-dataset-category.xml" />
 </databaseChangeLog>
