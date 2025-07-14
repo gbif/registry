@@ -16,6 +16,9 @@ package org.gbif.registry.cli.vocabularysynchronizer;
 import org.gbif.common.messaging.DefaultMessageRegistry;
 import org.gbif.common.messaging.MessageListener;
 import org.gbif.registry.cli.common.spring.SpringContextBuilder;
+import org.gbif.registry.cli.common.stubs.DatasetServiceStub;
+import org.gbif.registry.cli.common.stubs.RegistryDatasetServiceStub;
+import org.gbif.registry.cli.common.stubs.RegistryDerivedDatasetServiceStub;
 import org.gbif.registry.service.VocabularyPostProcessor;
 import org.gbif.registry.service.VocabularyConceptService;
 import org.gbif.registry.service.DatasetCategoryService;
@@ -67,6 +70,9 @@ public class VocabularySynchronizerService extends AbstractIdleService {
         .withComponents(
             VocabularyConceptService.class,
             DatasetCategoryService.class,
+            RegistryDatasetServiceStub.class,
+            RegistryDerivedDatasetServiceStub.class,
+            DatasetServiceStub.class,
             WithMyBatis.class)
         .build();
 
