@@ -416,5 +416,8 @@ public class RegistryDatasetServiceImpl implements RegistryDatasetService {
     datasetMapper.updateDwcaDataset(datasetKey, dwcA);
   }
 
-
+  @Override
+  public List<Dataset> findDatasetsWithDeprecatedCategories(Set<String> deprecatedCategories){
+    return datasetMapper.findDatasetsWithDeprecatedCategories(deprecatedCategories);
+  }
 }

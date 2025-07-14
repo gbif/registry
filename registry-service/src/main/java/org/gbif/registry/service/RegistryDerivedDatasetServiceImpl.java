@@ -13,6 +13,8 @@
  */
 package org.gbif.registry.service;
 
+import java.util.Set;
+
 import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingRequest;
@@ -208,5 +210,10 @@ public class RegistryDerivedDatasetServiceImpl implements RegistryDerivedDataset
           URI.create(MessageFormat.format(derivedDatasetTemplateUrl, derivedDataset.getDoi())),
           derivedDataset.getRegistrationDate());
     }
+  }
+
+  @Override
+  public List<DerivedDataset> findDatasetsWithDeprecatedCategories(Set<String> deprecatedCategories) {
+    return derivedDatasetMapper.findDerivedDatasetsWithDeprecatedCategories(deprecatedCategories);
   }
 }
