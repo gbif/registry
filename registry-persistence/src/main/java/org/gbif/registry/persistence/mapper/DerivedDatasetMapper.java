@@ -61,14 +61,8 @@ public interface DerivedDatasetMapper {
   /**
    * Find derived datasets that have deprecated categories.
    * @param deprecatedCategories set of deprecated category names
-   * @return list of derived dataset DOIs that have deprecated categories
+   * @return list of derived datasets that have deprecated categories
    */
-  List<DOI> findDerivedDatasetsWithDeprecatedCategories(@Param("deprecatedCategories") Set<String> deprecatedCategories);
+  List<DerivedDataset> findDerivedDatasetsWithDeprecatedCategories(@Param("deprecatedCategories") Set<String> deprecatedCategories);
 
-  /**
-   * Remove a single deprecated category from a derived dataset.
-   * @param doi the derived dataset DOI
-   * @param deprecatedCategory the deprecated category name to remove
-   */
-  void removeDeprecatedCategory(@Param("doi") DOI doi, @Param("deprecatedCategory") String deprecatedCategory);
 }

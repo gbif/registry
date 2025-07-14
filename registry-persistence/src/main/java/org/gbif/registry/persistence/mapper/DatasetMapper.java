@@ -81,17 +81,9 @@ public interface DatasetMapper extends BaseNetworkEntityMapper<Dataset> {
   /**
    * Find datasets that have deprecated categories.
    * @param deprecatedCategories set of deprecated category names
-   * @return list of dataset keys that have deprecated categories
+   * @return list of datasets that have deprecated categories
    */
-  List<UUID> findDatasetsWithDeprecatedCategories(@Param("deprecatedCategories") Set<String> deprecatedCategories);
-
-  /**
-   * Remove a single deprecated category from a dataset.
-   * @param datasetKey the dataset key
-   * @param deprecatedCategory the deprecated category name to remove
-   */
-  void removeDeprecatedCategory(@Param("datasetKey") UUID datasetKey, @Param("deprecatedCategory") String deprecatedCategory);
-
+  List<Dataset> findDatasetsWithDeprecatedCategories(@Param("deprecatedCategories") Set<String> deprecatedCategories);
 
   void createDwcaDataset(@Param("datasetKey") UUID datasetKey, @Param("dwca") Dataset.DwcA dwcaDataset);
 
