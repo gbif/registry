@@ -17,6 +17,8 @@ import org.gbif.common.messaging.DefaultMessageRegistry;
 import org.gbif.common.messaging.MessageListener;
 import org.gbif.registry.cli.common.spring.SpringContextBuilder;
 import org.gbif.registry.service.VocabularyPostProcessor;
+import org.gbif.registry.service.VocabularyConceptService;
+import org.gbif.registry.service.DatasetCategoryService;
 import org.gbif.registry.service.WithMyBatis;
 
 import java.util.List;
@@ -63,7 +65,8 @@ public class VocabularySynchronizerService extends AbstractIdleService {
         .withDbConfiguration(config.getDbConfig())
         .withVocabularySynchronizerConfiguration(config)
         .withComponents(
-            VocabularyPostProcessor.class,
+            VocabularyConceptService.class,
+            DatasetCategoryService.class,
             WithMyBatis.class)
         .build();
 
