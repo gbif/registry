@@ -15,17 +15,18 @@ package org.gbif.registry.service;
 
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
-import org.gbif.registry.persistence.mapper.DatasetMapper;
-import org.gbif.registry.persistence.mapper.DerivedDatasetMapper;
 import org.gbif.vocabulary.api.ConceptListParams;
 import org.gbif.vocabulary.api.ConceptView;
+import org.gbif.api.model.registry.Dataset;
+import org.gbif.api.service.registry.DatasetService;
+import org.gbif.registry.domain.ws.DerivedDataset;
+import org.gbif.registry.service.RegistryDerivedDatasetService;
 import org.gbif.vocabulary.client.ConceptClient;
 
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -37,16 +38,21 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 public class DatasetCategoryService implements VocabularyPostProcessor {
 
-  private final DatasetMapper datasetMapper;
   private final ConceptClient conceptClient;
-  private final DerivedDatasetMapper derivedDatasetMapper;
+  private final DatasetService datasetService;
+  private final RegistryDatasetService registryDatasetService;
+  private final RegistryDerivedDatasetService derivedDatasetService;
   private static final String DATASET_CATEGORY_VOCABULARY = "DatasetCategory";
 
   @Autowired
-  public DatasetCategoryService(DatasetMapper datasetMapper, ConceptClient conceptClient, DerivedDatasetMapper derivedDatasetMapper) {
-    this.datasetMapper = datasetMapper;
+  public DatasetCategoryService(ConceptClient conceptClient,
+                              DatasetService datasetService,
+                              RegistryDatasetService registryDatasetService,
+                              RegistryDerivedDatasetService derivedDatasetService) {
     this.conceptClient = conceptClient;
-    this.derivedDatasetMapper = derivedDatasetMapper;
+    this.datasetService = datasetService;
+    this.registryDatasetService = registryDatasetService;
+    this.derivedDatasetService = derivedDatasetService;
   }
 
   @Override
@@ -81,35 +87,62 @@ public class DatasetCategoryService implements VocabularyPostProcessor {
     }
 
     // Find datasets with deprecated categories
-    List<UUID> datasetsToUpdate = datasetMapper.findDatasetsWithDeprecatedCategories(deprecatedCategories);
+    List<Dataset> datasetsToUpdate = registryDatasetService.findDatasetsWithDeprecatedCategories(deprecatedCategories);
     log.info("Found {} datasets with deprecated categories from vocabulary: {}", datasetsToUpdate.size(), vocabularyName);
 
     // Remove deprecated categories from each dataset
     int updatedCount = 0;
-    for (UUID datasetKey : datasetsToUpdate) {
+    for (Dataset dataset : datasetsToUpdate) {
       try {
+        boolean updated = false;
+
         // Remove each deprecated category individually
         for (String deprecatedCategory : deprecatedCategories) {
-          datasetMapper.removeDeprecatedCategory(datasetKey, deprecatedCategory);
+          if (dataset.getCategory() != null && dataset.getCategory().contains(deprecatedCategory)) {
+            dataset.getCategory().remove(deprecatedCategory);
+            updated = true;
+          }
         }
+
+        // Update dataset through service to trigger Elasticsearch update
+        if (updated) {
+          datasetService.update(dataset);
+          log.debug("Updated dataset and triggered Elasticsearch update for dataset: {}", dataset.getKey());
+        }
+
         updatedCount++;
-        log.debug("Removed deprecated categories from dataset: {}", datasetKey);
       } catch (Exception e) {
-        log.error("Failed to remove deprecated categories from dataset: {}", datasetKey, e);
+        log.error("Failed to remove deprecated categories from dataset: {}", dataset.getKey(), e);
       }
     }
 
     // Clean deprecated categories from derived datasets
     log.info("Cleaning deprecated categories from derived datasets");
 
-    List<org.gbif.api.model.common.DOI> derivedDatasetsWithDeprecatedCategories =
-        derivedDatasetMapper.findDerivedDatasetsWithDeprecatedCategories(deprecatedCategories);
+    List<DerivedDataset> derivedDatasetsWithDeprecatedCategories =
+        derivedDatasetService.findDatasetsWithDeprecatedCategories(deprecatedCategories);
 
     log.info("Found {} derived datasets with deprecated categories", derivedDatasetsWithDeprecatedCategories.size());
 
-    for (org.gbif.api.model.common.DOI doi : derivedDatasetsWithDeprecatedCategories) {
-      for (String deprecatedCategory : deprecatedCategories) {
-        derivedDatasetMapper.removeDeprecatedCategory(doi, deprecatedCategory);
+    for (DerivedDataset derivedDataset : derivedDatasetsWithDeprecatedCategories) {
+      try {
+        boolean updated = false;
+
+        // Remove each deprecated category individually
+        for (String deprecatedCategory : deprecatedCategories) {
+          if (derivedDataset.getCategory() != null && derivedDataset.getCategory().contains(deprecatedCategory)) {
+            derivedDataset.getCategory().remove(deprecatedCategory);
+            updated = true;
+          }
+        }
+
+        // Update derived dataset through service to trigger Elasticsearch update
+        if (updated) {
+          derivedDatasetService.update(derivedDataset);
+          log.debug("Updated derived dataset and triggered Elasticsearch update for DOI: {}", derivedDataset.getDoi());
+        }
+      } catch (Exception e) {
+        log.error("Failed to remove deprecated categories from derived dataset: {}", derivedDataset.getDoi(), e);
       }
     }
 

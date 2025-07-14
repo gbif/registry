@@ -141,16 +141,10 @@
     WHERE ddd.derived_dataset_doi = #{derivedDatasetDoi,jdbcType=OTHER}
   </select>
 
-  <select id="findDerivedDatasetsWithDeprecatedCategories" resultType="org.gbif.api.model.common.DOI">
-    SELECT DISTINCT doi
+  <select id="findDerivedDatasetsWithDeprecatedCategories" resultMap="DERIVED_DATASET_MAP">
+    SELECT <include refid="DERIVED_DATASET_FIELDS"/>
     FROM derived_dataset
     WHERE category &amp;&amp; #{deprecatedCategories,jdbcType=ARRAY,typeHandler=org.gbif.registry.persistence.mapper.handler.SetArrayTypeHandler}
   </select>
-
-  <update id="removeDeprecatedCategory">
-    UPDATE derived_dataset
-    SET category = array_remove(category, #{deprecatedCategory,jdbcType=VARCHAR})
-    WHERE doi = #{doi,jdbcType=OTHER}
-  </update>
 
 </mapper>

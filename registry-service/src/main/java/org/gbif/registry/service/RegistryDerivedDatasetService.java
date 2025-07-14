@@ -13,6 +13,8 @@
  */
 package org.gbif.registry.service;
 
+import java.util.Set;
+
 import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
@@ -39,4 +41,14 @@ public interface RegistryDerivedDatasetService {
   List<DerivedDatasetUsage> listRelatedDatasets(DOI derivedDatasetDoi);
 
   PagingResponse<DerivedDataset> listByUser(String user, Pageable page);
+
+  /**
+   * Finds all derived datasets that contain any of the specified deprecated categories.
+   * This method is used during vocabulary synchronization to identify datasets that need
+   * to be updated when categories are deprecated.
+   *
+   * @param deprecatedCategories the set of deprecated category names to search for
+   * @return list of derived datasets that contain at least one of the deprecated categories
+   */
+  List<DerivedDataset> findDatasetsWithDeprecatedCategories(Set<String> deprecatedCategories);
 }

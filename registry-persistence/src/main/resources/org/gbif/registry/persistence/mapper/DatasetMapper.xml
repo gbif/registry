@@ -580,20 +580,13 @@
   </select>
 
   <!-- Dataset Category Management -->
-  <select id="findDatasetsWithDeprecatedCategories" resultType="java.util.UUID">
-    SELECT DISTINCT d.key
+  <select id="findDatasetsWithDeprecatedCategories" resultMap="DATASET_MAP">
+    SELECT <include refid="DATASET_FIELDS"/>
     FROM dataset d
+    LEFT JOIN organization o ON o.key = d.publishing_organization_key
     WHERE d.deleted IS NULL
       AND d.category IS NOT NULL
       AND d.category &amp;&amp; #{deprecatedCategories,jdbcType=ARRAY,typeHandler=org.gbif.registry.persistence.mapper.handler.SetArrayTypeHandler}
   </select>
-
-  <update id="removeDeprecatedCategory">
-    UPDATE dataset
-    SET category = array_remove(category, #{deprecatedCategory,jdbcType=VARCHAR})
-    WHERE key = #{datasetKey,jdbcType=OTHER}
-      AND category IS NOT NULL
-      AND #{deprecatedCategory,jdbcType=VARCHAR} = ANY(category)
-  </update>
 
 </mapper>

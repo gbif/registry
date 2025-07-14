@@ -13,6 +13,8 @@
  */
 package org.gbif.registry.service;
 
+import java.util.Set;
+
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Metadata;
@@ -61,4 +63,13 @@ public interface RegistryDatasetService {
    * @return key of Contact added
    */
   void updateDwcaData(@NotNull UUID datasetKey, @NotNull @Valid Dataset.DwcA dwcA);
+
+  /**
+   * Finds datasets containing any of the given deprecated categories.
+   * Used during vocabulary synchronization to identify datasets requiring updates.
+   *
+   * @param deprecatedCategories set of deprecated category names
+   * @return list of datasets with deprecated categories
+   */
+  List<Dataset> findDatasetsWithDeprecatedCategories(Set<String> deprecatedCategories);
 }
