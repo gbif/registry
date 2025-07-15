@@ -18,9 +18,10 @@ import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.vocabulary.api.ConceptListParams;
 import org.gbif.vocabulary.api.ConceptView;
 import org.gbif.api.model.registry.Dataset;
-import org.gbif.api.service.registry.DatasetService;
 import org.gbif.registry.domain.ws.DerivedDataset;
-import org.gbif.registry.service.RegistryDerivedDatasetService;
+import org.gbif.registry.persistence.mapper.DatasetMapper;
+import org.gbif.registry.persistence.mapper.DerivedDatasetMapper;
+import org.gbif.registry.search.dataset.indexing.EsDatasetRealtimeIndexer;
 import org.gbif.vocabulary.client.ConceptClient;
 
 import java.util.ArrayList;
@@ -39,20 +40,20 @@ import lombok.extern.slf4j.Slf4j;
 public class DatasetCategoryService implements VocabularyPostProcessor {
 
   private final ConceptClient conceptClient;
-  private final DatasetService datasetService;
-  private final RegistryDatasetService registryDatasetService;
-  private final RegistryDerivedDatasetService derivedDatasetService;
+  private final DatasetMapper datasetMapper;
+  private final DerivedDatasetMapper derivedDatasetMapper;
+  private final EsDatasetRealtimeIndexer esDatasetRealtimeIndexer;
   private static final String DATASET_CATEGORY_VOCABULARY = "DatasetCategory";
 
   @Autowired
   public DatasetCategoryService(ConceptClient conceptClient,
-                              DatasetService datasetService,
-                              RegistryDatasetService registryDatasetService,
-                              RegistryDerivedDatasetService derivedDatasetService) {
+                              DatasetMapper datasetMapper,
+                              DerivedDatasetMapper derivedDatasetMapper,
+                              EsDatasetRealtimeIndexer esDatasetRealtimeIndexer) {
     this.conceptClient = conceptClient;
-    this.datasetService = datasetService;
-    this.registryDatasetService = registryDatasetService;
-    this.derivedDatasetService = derivedDatasetService;
+    this.datasetMapper = datasetMapper;
+    this.derivedDatasetMapper = derivedDatasetMapper;
+    this.esDatasetRealtimeIndexer = esDatasetRealtimeIndexer;
   }
 
   @Override
@@ -86,8 +87,8 @@ public class DatasetCategoryService implements VocabularyPostProcessor {
       return 0;
     }
 
-    // Find datasets with deprecated categories
-    List<Dataset> datasetsToUpdate = registryDatasetService.findDatasetsWithDeprecatedCategories(deprecatedCategories);
+    // Find datasets with deprecated categories using direct mapper
+    List<Dataset> datasetsToUpdate = datasetMapper.findDatasetsWithDeprecatedCategories(deprecatedCategories);
     log.info("Found {} datasets with deprecated categories from vocabulary: {}", datasetsToUpdate.size(), vocabularyName);
 
     // Remove deprecated categories from each dataset
@@ -104,10 +105,11 @@ public class DatasetCategoryService implements VocabularyPostProcessor {
           }
         }
 
-        // Update dataset through service to trigger Elasticsearch update
+        // Update dataset directly in database and elasticsearch
         if (updated) {
-          datasetService.update(dataset);
-          log.debug("Updated dataset and triggered Elasticsearch update for dataset: {}", dataset.getKey());
+          datasetMapper.update(dataset);
+          esDatasetRealtimeIndexer.index(dataset);
+          log.debug("Updated dataset in database and elasticsearch for dataset: {}", dataset.getKey());
         }
 
         updatedCount++;
@@ -120,7 +122,7 @@ public class DatasetCategoryService implements VocabularyPostProcessor {
     log.info("Cleaning deprecated categories from derived datasets");
 
     List<DerivedDataset> derivedDatasetsWithDeprecatedCategories =
-        derivedDatasetService.findDatasetsWithDeprecatedCategories(deprecatedCategories);
+        derivedDatasetMapper.findDerivedDatasetsWithDeprecatedCategories(deprecatedCategories);
 
     log.info("Found {} derived datasets with deprecated categories", derivedDatasetsWithDeprecatedCategories.size());
 
@@ -136,10 +138,10 @@ public class DatasetCategoryService implements VocabularyPostProcessor {
           }
         }
 
-        // Update derived dataset through service to trigger Elasticsearch update
+        // Update derived dataset directly in database
         if (updated) {
-          derivedDatasetService.update(derivedDataset);
-          log.debug("Updated derived dataset and triggered Elasticsearch update for DOI: {}", derivedDataset.getDoi());
+          derivedDatasetMapper.update(derivedDataset);
+          log.debug("Updated derived dataset in database for DOI: {}", derivedDataset.getDoi());
         }
       } catch (Exception e) {
         log.error("Failed to remove deprecated categories from derived dataset: {}", derivedDataset.getDoi(), e);
