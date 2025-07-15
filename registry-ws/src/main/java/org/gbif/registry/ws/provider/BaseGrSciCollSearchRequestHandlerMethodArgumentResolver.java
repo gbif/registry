@@ -13,27 +13,6 @@
  */
 package org.gbif.registry.ws.provider;
 
-import static org.gbif.registry.service.collections.utils.SearchUtils.DEFAULT_FACET_LIMIT;
-import static org.gbif.ws.util.CommonWsUtils.*;
-import static org.gbif.ws.util.WebserviceParameter.PARAM_FACET;
-import static org.gbif.ws.util.WebserviceParameter.PARAM_FACET_LIMIT;
-import static org.gbif.ws.util.WebserviceParameter.PARAM_FACET_MINCOUNT;
-import static org.gbif.ws.util.WebserviceParameter.PARAM_FACET_MULTISELECT;
-import static org.gbif.ws.util.WebserviceParameter.PARAM_FACET_OFFSET;
-
-import com.google.common.base.Strings;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-import org.apache.commons.lang3.ArrayUtils;
 import org.gbif.api.model.collections.request.FacetedSearchRequest;
 import org.gbif.api.model.collections.request.SearchRequest;
 import org.gbif.api.model.common.paging.Pageable;
@@ -46,8 +25,32 @@ import org.gbif.api.vocabulary.collections.MasterSourceType;
 import org.gbif.api.vocabulary.collections.Source;
 import org.gbif.registry.service.collections.utils.SearchUtils;
 import org.gbif.ws.server.provider.PageableProvider;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
+import org.apache.commons.lang3.ArrayUtils;
 import org.springframework.web.context.request.NativeWebRequest;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
+
+import com.google.common.base.Strings;
+
+import static org.gbif.registry.service.collections.utils.SearchUtils.DEFAULT_FACET_LIMIT;
+import static org.gbif.ws.util.CommonWsUtils.*;
+import static org.gbif.ws.util.WebserviceParameter.PARAM_FACET;
+import static org.gbif.ws.util.WebserviceParameter.PARAM_FACET_LIMIT;
+import static org.gbif.ws.util.WebserviceParameter.PARAM_FACET_MINCOUNT;
+import static org.gbif.ws.util.WebserviceParameter.PARAM_FACET_MULTISELECT;
+import static org.gbif.ws.util.WebserviceParameter.PARAM_FACET_OFFSET;
 
 public abstract class BaseGrSciCollSearchRequestHandlerMethodArgumentResolver
     implements HandlerMethodArgumentResolver {
@@ -103,6 +106,17 @@ public abstract class BaseGrSciCollSearchRequestHandlerMethodArgumentResolver
     extractMultivalueParam(params, "source", Source::valueOf).ifPresent(request::setSource);
     extractMultivalueParam(params, "sourceId").ifPresent(request::setSourceId);
     extractMultivalueCountryParam(params, "country").ifPresent(request::setCountry);
+    
+    // Contact parameters
+    String contactUserId = webRequest.getParameter("contactUserId");
+    if (contactUserId != null && !contactUserId.trim().isEmpty()) {
+      request.setContactUserId(contactUserId.trim());
+    }
+    
+    String contactEmail = webRequest.getParameter("contactEmail");
+    if (contactEmail != null && !contactEmail.trim().isEmpty()) {
+      request.setContactEmail(contactEmail.trim());
+    }
 
     String[] gbifRegionParams = params.get("gbifRegion".toLowerCase());
     if (gbifRegionParams != null && gbifRegionParams.length > 0) {

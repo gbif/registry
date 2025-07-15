@@ -34,12 +34,16 @@ public class DatasetUpdaterConfiguration {
   @Parameter(names = "--dataset-key-path")
   public String keyFilePath;
 
+  @Parameter(names = "--api-root-url", description = "API root URL for vocabulary services")
+  public String apiRootUrl;
+
   @Override
   public String toString() {
     return new StringJoiner(", ", DatasetUpdaterConfiguration.class.getSimpleName() + "[", "]")
         .add("db=" + db)
         .add("key='" + key + "'")
         .add("keyFilePath='" + keyFilePath + "'")
+        .add("apiRootUrl='" + apiRootUrl + "'")
         .toString();
   }
 }

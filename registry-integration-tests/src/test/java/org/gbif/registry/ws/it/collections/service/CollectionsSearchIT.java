@@ -13,18 +13,6 @@
  */
 package org.gbif.registry.ws.it.collections.service;
 
-import static org.gbif.registry.domain.collections.TypeParam.COLLECTION;
-import static org.gbif.registry.domain.collections.TypeParam.INSTITUTION;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import lombok.SneakyThrows;
 import org.gbif.api.model.collections.Address;
 import org.gbif.api.model.collections.AlternativeCode;
 import org.gbif.api.model.collections.Collection;
@@ -50,15 +38,32 @@ import org.gbif.api.vocabulary.collections.CollectionFacetParameter;
 import org.gbif.api.vocabulary.collections.CollectionsSortField;
 import org.gbif.api.vocabulary.collections.InstitutionFacetParameter;
 import org.gbif.registry.database.TestCaseDatabaseInitializer;
+import org.gbif.registry.persistence.mapper.GrScicollVocabConceptMapper;
 import org.gbif.registry.service.collections.CollectionsSearchService;
 import org.gbif.registry.test.mocks.NameUsageMatchingServiceMock;
+import org.gbif.registry.ws.it.collections.ConceptTestSetup;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
+
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.util.StreamUtils;
+
+import lombok.SneakyThrows;
+
+import static org.gbif.registry.domain.collections.TypeParam.COLLECTION;
+import static org.gbif.registry.domain.collections.TypeParam.INSTITUTION;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /** Tests the {@link CollectionsSearchService} * */
 public class CollectionsSearchIT extends BaseServiceIT {
@@ -70,6 +75,7 @@ public class CollectionsSearchIT extends BaseServiceIT {
   private final InstitutionService institutionService;
   private final CollectionService collectionService;
   private final DescriptorsService descriptorsService;
+  private final GrScicollVocabConceptMapper grScicollVocabConceptMapper;
 
   private final Institution i1 = new Institution();
   private final Institution i11 = new Institution();
@@ -84,17 +90,22 @@ public class CollectionsSearchIT extends BaseServiceIT {
       CollectionsSearchService collectionsSearchService,
       InstitutionService institutionService,
       CollectionService collectionService,
-      DescriptorsService descriptorsService) {
+      DescriptorsService descriptorsService,
+      GrScicollVocabConceptMapper grScicollVocabConceptMapper) {
     super(simplePrincipalProvider);
     this.searchService = collectionsSearchService;
     this.institutionService = institutionService;
     this.collectionService = collectionService;
     this.descriptorsService = descriptorsService;
+    this.grScicollVocabConceptMapper = grScicollVocabConceptMapper;
   }
 
   @SneakyThrows
   @BeforeEach
   public void loadData() {
+    // Setup facets first
+    ConceptTestSetup.setupCommonConcepts(grScicollVocabConceptMapper);
+
     i1.setCode("I1");
     i1.setName("Institution 1");
     i1.setTypes(Arrays.asList("t1", "t2"));
@@ -131,7 +142,7 @@ public class CollectionsSearchIT extends BaseServiceIT {
     addressC1.setProvince("Asturias");
     addressC1.setAddress("fake street");
     c1.setAddress(addressC1);
-    c1.setPreservationTypes(Collections.singletonList("pType1"));
+    c1.setPreservationTypes(Collections.singletonList("SampleDried"));
     c1.setNumberSpecimens(4000);
     c1.setDisplayOnNHCPortal(false);
     collectionService.create(c1);
@@ -160,7 +171,7 @@ public class CollectionsSearchIT extends BaseServiceIT {
     c2.setInstitutionKey(i2.getKey());
     c2.setAlternativeCodes(Collections.singletonList(new AlternativeCode("CC2", "test")));
     c2.getIdentifiers().add(new Identifier(IdentifierType.LSID, "lsid-coll"));
-    c2.setPreservationTypes(Collections.singletonList("pType2"));
+    c2.setPreservationTypes(Collections.singletonList("StorageIndoors"));
     collectionService.create(c2);
 
     descriptorsService.createDescriptorGroup(
@@ -175,7 +186,7 @@ public class CollectionsSearchIT extends BaseServiceIT {
     c3.setCode("C3");
     c3.setName("Third");
     c3.setInstitutionKey(i2.getKey());
-    c3.setPreservationTypes(Collections.singletonList("pType1"));
+    c3.setPreservationTypes(Collections.singletonList("SampleDried"));
 
     Address addressC3 = new Address();
     addressC3.setCountry(Country.PORTUGAL);

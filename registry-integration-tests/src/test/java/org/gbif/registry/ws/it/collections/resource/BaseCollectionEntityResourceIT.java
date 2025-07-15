@@ -13,9 +13,6 @@
  */
 package org.gbif.registry.ws.it.collections.resource;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import org.gbif.api.model.collections.Address;
 import org.gbif.api.model.collections.Batch;
 import org.gbif.api.model.collections.CollectionEntity;
@@ -65,7 +62,9 @@ import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import org.hamcrest.core.StringContains;

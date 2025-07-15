@@ -13,7 +13,8 @@
  */
 package org.gbif.registry.persistence.mapper.handler;
 
-import com.google.common.base.Strings;
+import org.gbif.api.vocabulary.collections.PreservationType;
+
 import java.sql.Array;
 import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
@@ -23,9 +24,11 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
+
 import org.apache.ibatis.type.BaseTypeHandler;
 import org.apache.ibatis.type.JdbcType;
-import org.gbif.api.vocabulary.collections.PreservationType;
+
+import com.google.common.base.Strings;
 
 /** {@link org.apache.ibatis.type.TypeHandler} for arrays of {@link PreservationType}. */
 public class IntegerArrayTypeHandler extends BaseTypeHandler<Set<Integer>> {

@@ -16,7 +16,6 @@ package org.gbif.registry.ws.util;
 import org.gbif.api.model.registry.Contact;
 import org.gbif.api.model.registry.Contactable;
 import org.gbif.api.model.registry.Dataset;
-import org.gbif.api.model.registry.Installation;
 import org.gbif.api.service.registry.DatasetService;
 import org.gbif.api.service.registry.InstallationService;
 import org.gbif.api.service.registry.OrganizationService;

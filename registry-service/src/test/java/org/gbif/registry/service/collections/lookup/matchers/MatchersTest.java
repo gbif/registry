@@ -13,9 +13,9 @@
  */
 package org.gbif.registry.service.collections.lookup.matchers;
 
-import java.util.UUID;
-
 import org.gbif.dwc.terms.DwcTerm;
+
+import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
 

@@ -13,9 +13,11 @@
  */
 package org.gbif.registry.ws.provider;
 
+import org.gbif.api.model.collections.request.CollectionSearchRequest;
+
 import java.util.Map;
 import java.util.UUID;
-import org.gbif.api.model.collections.request.CollectionSearchRequest;
+
 import org.springframework.core.MethodParameter;
 import org.springframework.web.bind.support.WebDataBinderFactory;
 import org.springframework.web.context.request.NativeWebRequest;

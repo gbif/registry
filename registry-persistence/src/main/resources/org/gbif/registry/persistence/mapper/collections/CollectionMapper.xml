@@ -232,6 +232,30 @@
       INNER JOIN collection_identifier ci on ci.collection_key = c.key
       INNER JOIN identifier id on id.key = ci.identifier_key
     </if>
+    <if test="params.contactUserId != null || params.contactEmail != null" >
+      INNER JOIN collection_collection_contact ccc on ccc.collection_key = c.key
+      INNER JOIN collection_contact cc on cc.key = ccc.collection_contact_key
+    </if>
+    <!-- Hierarchical concept-based filtering for content types -->
+    <if test="params.contentTypes != null and params.contentTypes.size > 0">
+      INNER JOIN collection_concept_links cfl_content ON cfl_content.collection_key = c.key
+      INNER JOIN grscicoll_vocab_concept f_content ON cfl_content.concept_key = f_content.concept_key
+        AND f_content.vocabulary_name = 'CollectionContentType'
+        AND lower(f_content.name) IN
+        <foreach item="item" collection="params.contentTypes" open="(" separator="," close=")">
+          lower(#{item,jdbcType=VARCHAR})
+        </foreach>
+    </if>
+    <!-- Hierarchical concept-based filtering for preservation types -->
+    <if test="params.preservationTypes != null and params.preservationTypes.size > 0">
+      INNER JOIN collection_concept_links cfl_preservation ON cfl_preservation.collection_key = c.key
+      INNER JOIN grscicoll_vocab_concept f_preservation ON cfl_preservation.concept_key = f_preservation.concept_key
+        AND f_preservation.vocabulary_name = 'PreservationType'
+        AND lower(f_preservation.name) IN
+        <foreach item="item" collection="params.preservationTypes" open="(" separator="," close=")">
+          lower(#{item,jdbcType=VARCHAR})
+        </foreach>
+    </if>
     LEFT JOIN address addr ON addr.key = c.address_key
     LEFT JOIN address mail_addr ON mail_addr.key = c.mailing_address_key
     <if test="params.source != null || params.sourceId != null">
@@ -241,15 +265,15 @@
       <include refid="org.gbif.registry.persistence.mapper.collections.Common.COMMON_LIST_FILTER">
         <property name="alias" value="c."/>
       </include>
-      <include refid="org.gbif.registry.persistence.mapper.collections.Common.MULTIVALUE_ARRAY_FIELD_FILTER">
+      <include refid="org.gbif.registry.persistence.mapper.collections.Common.MULTIVALUE_ARRAY_FIELD_FILTER_CASE_INSENSITIVE">
         <property name="values" value="params.contentTypes"/>
         <property name="field" value="c.content_type"/>
       </include>
-      <include refid="org.gbif.registry.persistence.mapper.collections.Common.MULTIVALUE_ARRAY_FIELD_FILTER">
+      <include refid="org.gbif.registry.persistence.mapper.collections.Common.MULTIVALUE_ARRAY_FIELD_FILTER_CASE_INSENSITIVE">
         <property name="values" value="params.preservationTypes"/>
         <property name="field" value="c.preservation_type"/>
       </include>
-      <include refid="org.gbif.registry.persistence.mapper.collections.Common.MULTIVALUE_FILTER">
+      <include refid="org.gbif.registry.persistence.mapper.collections.Common.MULTIVALUE_FILTER_CASE_INSENSITIVE">
         <property name="values" value="params.accessionStatus"/>
         <property name="field" value="c.accession_status"/>
       </include>

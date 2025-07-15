@@ -1,0 +1,20 @@
+
+<databaseChangeLog
+  xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+  <changeSet id="162" author="auzun" runInTransaction="false">
+    <sql splitStatements="false" stripComments="true">
+      <![CDATA[
+        CREATE INDEX contact_user_id_idx ON contact USING gin(user_id);
+        CREATE INDEX contact_email_idx ON contact USING gin(email);
+        CREATE INDEX collection_contact_user_id_idx on collection_contact USING gin(user_ids);
+        CREATE INDEX collection_contact_email_idx on collection_contact USING gin(email);
+      ]]>
+    </sql>
+  </changeSet>
+
+</databaseChangeLog>
+
+

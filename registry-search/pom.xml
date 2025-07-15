@@ -3,7 +3,7 @@
   <parent>
     <artifactId>registry-parent</artifactId>
     <groupId>org.gbif.registry</groupId>
-    <version>4.1.0-SNAPSHOT</version>
+    <version>4.1.2-SNAPSHOT</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
 
@@ -40,6 +40,10 @@
     <dependency>
       <groupId>org.gbif</groupId>
       <artifactId>gbif-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.gbif.vocabulary</groupId>
+      <artifactId>vocabulary-rest-ws-client</artifactId>
     </dependency>
 
     <!-- Third party dependencies -->

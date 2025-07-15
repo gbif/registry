@@ -13,13 +13,6 @@
  */
 package org.gbif.registry.cli.datasetindex;
 
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.deser.std.DateDeserializers;
-import com.fasterxml.jackson.databind.module.SimpleModule;
-import com.google.common.collect.ImmutableMap;
-import com.zaxxer.hikari.HikariDataSource;
 import org.gbif.api.service.registry.DatasetService;
 import org.gbif.api.service.registry.InstallationService;
 import org.gbif.api.service.registry.NetworkService;
@@ -42,7 +35,11 @@ import org.gbif.registry.ws.client.NetworkClient;
 import org.gbif.registry.ws.client.OrganizationClient;
 import org.gbif.ws.client.ClientBuilder;
 import org.gbif.ws.json.JacksonJsonObjectMapperProvider;
-import org.springframework.beans.factory.support.DefaultListableBeanFactory;
+import org.gbif.vocabulary.client.ConceptClient;
+
+import java.io.IOException;
+import java.util.Date;
+
 import org.springframework.boot.actuate.autoconfigure.elasticsearch.ElasticSearchRestHealthContributorAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.freemarker.FreeMarkerAutoConfiguration;
@@ -58,8 +55,14 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
 import org.springframework.core.env.MapPropertySource;
 
-import java.io.IOException;
-import java.util.Date;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.databind.DeserializationContext;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.deser.std.DateDeserializers;
+import com.fasterxml.jackson.databind.module.SimpleModule;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.google.common.collect.ImmutableMap;
+import com.zaxxer.hikari.HikariDataSource;
 
 public class SpringContextBuilder {
 
@@ -112,6 +115,14 @@ public class SpringContextBuilder {
         "esOccurrenceClientConfig",
         EsClient.EsClientConfiguration.class,
         () -> toEsClientConfiguration(configuration.getOccurrenceEs()));
+
+    // Register ConceptClient bean
+    ctx.registerBean("conceptClient", ConceptClient.class, () ->
+        new ClientBuilder()
+            .withObjectMapper(JacksonJsonObjectMapperProvider.getObjectMapperWithBuilderSupport()
+                .registerModule(new JavaTimeModule()))
+            .withUrl(configuration.getApiRootUrl())
+            .build(ConceptClient.class));
 
     ctx.register(ApplicationConfig.class);
 

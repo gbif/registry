@@ -13,9 +13,6 @@
  */
 package org.gbif.registry.ws.client.pipelines;
 
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.pipelines.PipelineExecution;
@@ -27,6 +24,11 @@ import org.gbif.api.model.pipelines.StepType;
 import org.gbif.api.model.pipelines.ws.PipelineProcessParameters;
 import org.gbif.api.model.pipelines.ws.RunAllParams;
 import org.gbif.api.service.pipelines.PipelinesHistoryService;
+
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
+
 import org.springframework.cloud.openfeign.SpringQueryMap;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;

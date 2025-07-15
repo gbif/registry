@@ -21,23 +21,24 @@ import org.gbif.api.model.registry.Organization;
 import org.gbif.api.model.registry.eml.TaxonomicCoverage;
 import org.gbif.api.model.registry.eml.TaxonomicCoverages;
 import org.gbif.api.model.registry.eml.geospatial.GeospatialCoverage;
-import org.gbif.api.model.registry.eml.temporal.SingleDate;
 import org.gbif.api.model.registry.eml.temporal.DateRange;
+import org.gbif.api.model.registry.eml.temporal.SingleDate;
 import org.gbif.api.model.registry.eml.temporal.VerbatimTimePeriod;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.PreservationMethodType;
 import org.gbif.vocabulary.client.ConceptClient;
 
 import java.net.URI;
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
-import java.text.SimpleDateFormat;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -138,6 +139,41 @@ public class CollectionConverterTest {
 
     // Verify VerbatimTimePeriod
     assertEquals(period, parts[2].trim());
+  }
+
+  @Test
+  public void convertFromDatasetWithExistingTaxonomicCoveragesTest() {
+    Dataset dataset = createDataset(); // Uses existing taxonomic coverages
+    Organization organization = createOrganization();
+    String collectionCode = "CODE";
+
+    TaxonomicCoverages taxonomicCoverages1 = new TaxonomicCoverages();
+    taxonomicCoverages1.setDescription("Test desc");
+    dataset.getTaxonomicCoverages().add(taxonomicCoverages1);
+
+    TaxonomicCoverage taxonomicCoverage1 = new TaxonomicCoverage();
+    taxonomicCoverage1.setScientificName("MAMMALIA");
+    taxonomicCoverages1.addCoverages(taxonomicCoverage1);
+
+    TaxonomicCoverage taxonomicCoverage2 = new TaxonomicCoverage();
+    taxonomicCoverage2.setScientificName("ACTINOPTERYGII");
+    taxonomicCoverages1.addCoverages(taxonomicCoverage2);
+    dataset.setTaxonomicCoverages(Collections.singletonList(taxonomicCoverages1));
+
+    Collection convertedCollection = CollectionConverter.convertFromDataset(
+        dataset, organization, collectionCode, conceptClient);
+    assertEquals(collectionCode, convertedCollection.getCode());
+    assertConvertedCollection(dataset, organization, convertedCollection);
+
+    String taxonomicCoverage = convertedCollection.getTaxonomicCoverage();
+    assertNotNull(taxonomicCoverage);
+
+    System.out.println("taxonomicCoverage: " + taxonomicCoverage);
+
+    // Check that delimiter is properly added between scientific names
+    assertTrue(taxonomicCoverage.contains(";"));
+    assertFalse(taxonomicCoverage.contains("MAMMALIAACTINOPTERYGII")); // Should not be concatenated
+    assertTrue(taxonomicCoverage.contains("MAMMALIA; ACTINOPTERYGII")); // Should be separated by delimiter
   }
 
   private void assertConvertedCollection(
