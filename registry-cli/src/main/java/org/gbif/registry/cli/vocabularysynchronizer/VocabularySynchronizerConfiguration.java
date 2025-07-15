@@ -15,6 +15,7 @@ package org.gbif.registry.cli.vocabularysynchronizer;
 
 import org.gbif.common.messaging.config.MessagingConfiguration;
 import org.gbif.registry.cli.common.DbConfiguration;
+import org.gbif.registry.cli.datasetindex.ElasticsearchConfig;
 
 import java.util.Set;
 
@@ -55,6 +56,9 @@ public class VocabularySynchronizerConfiguration {
   @NotNull
   public String apiRootUrl;
 
+  @ParametersDelegate @Valid @NotNull
+  private ElasticsearchConfig elasticsearch = new ElasticsearchConfig();
+
   @JsonProperty("vocabulariesToProcess")
   @NotNull
   public Set<String> vocabulariesToProcess;
@@ -67,6 +71,7 @@ public class VocabularySynchronizerConfiguration {
         ", poolSize=" + poolSize +
         ", dbConfig=" + dbConfig +
         ", apiRootUrl='" + apiRootUrl + '\'' +
+        ", elasticsearch=" + elasticsearch +
         ", vocabulariesToProcess=" + vocabulariesToProcess +
         '}';
   }

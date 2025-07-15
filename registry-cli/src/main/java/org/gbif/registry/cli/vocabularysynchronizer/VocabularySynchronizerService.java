@@ -15,14 +15,9 @@ package org.gbif.registry.cli.vocabularysynchronizer;
 
 import org.gbif.common.messaging.DefaultMessageRegistry;
 import org.gbif.common.messaging.MessageListener;
-import org.gbif.registry.cli.common.spring.SpringContextBuilder;
-import org.gbif.registry.cli.common.stubs.DatasetServiceStub;
-import org.gbif.registry.cli.common.stubs.RegistryDatasetServiceStub;
-import org.gbif.registry.cli.common.stubs.RegistryDerivedDatasetServiceStub;
+import org.gbif.registry.cli.vocabularysynchronizer.SpringContextBuilder;
+
 import org.gbif.registry.service.VocabularyPostProcessor;
-import org.gbif.registry.service.VocabularyConceptService;
-import org.gbif.registry.service.DatasetCategoryService;
-import org.gbif.registry.service.WithMyBatis;
 
 import java.util.List;
 import java.util.Set;
@@ -63,18 +58,10 @@ public class VocabularySynchronizerService extends AbstractIdleService {
       throw new IllegalArgumentException("queueName cannot be null or empty");
     }
 
-    // Build the Spring context with database and concept client configuration
-    ctx = SpringContextBuilder.create()
-        .withDbConfiguration(config.getDbConfig())
-        .withVocabularySynchronizerConfiguration(config)
-        .withComponents(
-            VocabularyConceptService.class,
-            DatasetCategoryService.class,
-            RegistryDatasetServiceStub.class,
-            RegistryDerivedDatasetServiceStub.class,
-            DatasetServiceStub.class,
-            WithMyBatis.class)
-        .build();
+        // Build the Spring context using the dedicated SpringContextBuilder
+    ctx = SpringContextBuilder.applicationContext(config);
+
+
 
     // Get vocabularies to process
     Set<String> vocabulariesToProcess = config.vocabulariesToProcess;
