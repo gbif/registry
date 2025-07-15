@@ -13,10 +13,9 @@
  */
 package org.gbif.registry.ws.it;
 
-import java.math.BigDecimal;
-
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
+import org.gbif.api.model.registry.Contact;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Identifier;
 import org.gbif.api.model.registry.Installation;
@@ -39,6 +38,7 @@ import org.gbif.registry.ws.resources.OrganizationResource;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 import org.gbif.ws.security.KeyStore;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.UUID;
@@ -55,9 +55,6 @@ import org.junit.jupiter.params.provider.EnumSource;
 import org.locationtech.jts.util.Assert;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.server.LocalServerPort;
-import org.springframework.web.context.request.RequestContextHolder;
-import org.springframework.web.context.request.ServletRequestAttributes;
-import org.springframework.mock.web.MockHttpServletRequest;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -214,6 +211,13 @@ public class OrganizationIT extends NetworkEntityIT<Organization> {
     o1.setCountry(Country.SPAIN);
     UUID key1 = getService(serviceType).create(o1);
 
+    Contact contact = new Contact();
+    contact.setFirstName("Test");
+    contact.setLastName("User");
+    contact.setUserId(java.util.Collections.singletonList("test-user-456"));
+    contact.setEmail(java.util.Collections.singletonList("test-contact@gbif.org"));
+    service.addContact(key1, contact);
+
     Identifier id1 = newTestIdentifier(o1, IdentifierType.DOI, "doi:1");
     service.addIdentifier(key1, id1);
     MachineTag mt1 = new MachineTag("ns", "mt1", "mtV1");
@@ -228,6 +232,14 @@ public class OrganizationIT extends NetworkEntityIT<Organization> {
     assertResultsOfSize(service.list(new OrganizationRequestSearchParams()), 2);
 
     OrganizationRequestSearchParams searchParams = new OrganizationRequestSearchParams();
+    searchParams.setContactEmail("test-contact@gbif.org");
+    assertResultsOfSize(service.list(searchParams), 1);
+
+    searchParams = new OrganizationRequestSearchParams();
+    searchParams.setContactUserId("test-user-456");
+    assertResultsOfSize(service.list(searchParams), 1);
+
+    searchParams = new OrganizationRequestSearchParams();
     searchParams.setCountry(Country.SPAIN);
     assertResultsOfSize(service.list(searchParams), 1);
 

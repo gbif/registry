@@ -50,10 +50,12 @@ import static org.gbif.registry.ws.it.fixtures.UserTestFixture.ALTERNATE_USERNAM
 import static org.gbif.registry.ws.it.fixtures.UserTestFixture.ALTERNATIVE_EMAIL;
 import static org.gbif.registry.ws.it.fixtures.UserTestFixture.PASSWORD;
 import static org.gbif.registry.ws.it.fixtures.UserTestFixture.USERNAME;
+import static org.hamcrest.Matchers.hasSize;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
@@ -620,5 +622,88 @@ public class UserManagementIT extends BaseItTest {
         .deleteSignedRequest(
             TEST_ADMIN, "/admin/user/" + USERNAME + "/countryRight/" + randomCountry)
         .andExpect(status().isNotFound());
+  }
+
+    @Test
+  public void testUserDeletionCleansUpRights() throws Exception {
+    // Create a first admin user; this can't be done through the API
+    userTestFixture.prepareAdminUser();
+    userTestFixture.prepareUser();
+    
+    UUID testKey = UUID.randomUUID();
+    String testNamespace = "test.namespace";
+    String testCountry = Country.SPAIN.getIso2LetterCode();
+
+    // Admin add rights to the user
+    requestTestFixture
+        .postSignedRequestPlainText(TEST_ADMIN, testKey, "/admin/user/" + USERNAME + "/editorRight")
+        .andExpect(status().isCreated());
+
+    requestTestFixture
+        .postSignedRequestPlainText(TEST_ADMIN, testNamespace, "/admin/user/" + USERNAME + "/namespaceRight")
+        .andExpect(status().isCreated());
+
+    requestTestFixture
+        .postSignedRequestPlainText(TEST_ADMIN, testCountry, "/admin/user/" + USERNAME + "/countryRight")
+        .andExpect(status().isCreated());
+
+    // Verify rights exist
+    requestTestFixture
+        .getSignedRequest(TEST_ADMIN, "/admin/user/" + USERNAME + "/editorRight")
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$", hasSize(1)))
+        .andExpect(jsonPath("$[0]").value(testKey.toString()));
+
+    requestTestFixture
+        .getSignedRequest(TEST_ADMIN, "/admin/user/" + USERNAME + "/namespaceRight")
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$", hasSize(1)))
+        .andExpect(jsonPath("$[0]").value(testNamespace));
+
+    requestTestFixture
+        .getSignedRequest(TEST_ADMIN, "/admin/user/" + USERNAME + "/countryRight")
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$", hasSize(1)))
+        .andExpect(jsonPath("$[0]").value(testCountry));
+
+    // Delete the user
+    requestTestFixture
+        .deleteSignedRequest(TEST_ADMIN, "/admin/user/" + USERNAME)
+        .andExpect(status().isNoContent());
+
+    // Create a new user with the same username but different email
+    UserCreation newUser = new UserCreation();
+    newUser.setUserName(USERNAME);
+    newUser.setEmail("different.email@example.com");
+    newUser.setPassword(PASSWORD);
+    newUser.setFirstName("New");
+    newUser.setLastName("User");
+
+    requestTestFixture
+        .postSignedRequest(IT_APP_KEY, newUser, "/admin/user")
+        .andExpect(status().isCreated());
+
+    // Confirm the new user
+    ConfirmationKeyParameter params = new ConfirmationKeyParameter();
+    params.setConfirmationKey(userTestFixture.getUserChallengeCode(USERNAME));
+    requestTestFixture
+        .postSignedRequest(USERNAME, params, "/admin/user/confirm")
+        .andExpect(status().isCreated());
+
+    // Verify that the new user has NO rights (rights were cleaned up)
+    requestTestFixture
+        .getSignedRequest(TEST_ADMIN, "/admin/user/" + USERNAME + "/editorRight")
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$", hasSize(0)));
+
+    requestTestFixture
+        .getSignedRequest(TEST_ADMIN, "/admin/user/" + USERNAME + "/namespaceRight")
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$", hasSize(0)));
+
+    requestTestFixture
+        .getSignedRequest(TEST_ADMIN, "/admin/user/" + USERNAME + "/countryRight")
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$", hasSize(0)));
   }
 }

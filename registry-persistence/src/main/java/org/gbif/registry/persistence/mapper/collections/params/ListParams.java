@@ -13,11 +13,6 @@
  */
 package org.gbif.registry.persistence.mapper.collections.params;
 
-import java.util.List;
-import java.util.UUID;
-import javax.annotation.Nullable;
-import lombok.Getter;
-import lombok.experimental.SuperBuilder;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.IdentifierType;
@@ -26,7 +21,17 @@ import org.gbif.api.vocabulary.collections.CollectionsSortField;
 import org.gbif.api.vocabulary.collections.MasterSourceType;
 import org.gbif.api.vocabulary.collections.Source;
 
+import java.util.List;
+import java.util.UUID;
+
+import javax.annotation.Nullable;
+
+import lombok.Getter;
+import lombok.Setter;
+import lombok.experimental.SuperBuilder;
+
 @Getter
+@Setter
 @SuperBuilder
 public abstract class ListParams {
 
@@ -57,6 +62,8 @@ public abstract class ListParams {
   @Nullable SortOrder sortOrder;
   @Nullable Boolean deleted;
   @Nullable List<UUID> replacedBy;
+  @Nullable String contactUserId;
+  @Nullable String contactEmail;
   @Nullable Pageable page;
   @Nullable Pageable facetPage;
   @Nullable Integer facetMinCount;

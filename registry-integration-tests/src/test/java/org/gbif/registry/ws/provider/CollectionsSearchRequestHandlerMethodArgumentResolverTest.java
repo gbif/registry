@@ -1,13 +1,18 @@
+/*
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.gbif.registry.ws.provider;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
-
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
 import org.gbif.api.model.collections.request.CollectionDescriptorsSearchRequest;
 import org.gbif.api.model.collections.request.CollectionSearchRequest;
 import org.gbif.api.model.collections.request.FacetedSearchRequest;
@@ -25,6 +30,13 @@ import org.gbif.api.vocabulary.collections.CollectionsSortField;
 import org.gbif.api.vocabulary.collections.InstitutionFacetParameter;
 import org.gbif.api.vocabulary.collections.MasterSourceType;
 import org.gbif.api.vocabulary.collections.Source;
+
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -33,6 +45,9 @@ import org.springframework.core.MethodParameter;
 import org.springframework.web.bind.support.WebDataBinderFactory;
 import org.springframework.web.context.request.NativeWebRequest;
 import org.springframework.web.method.support.ModelAndViewContainer;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 public class CollectionsSearchRequestHandlerMethodArgumentResolverTest {
@@ -199,6 +214,8 @@ public class CollectionsSearchRequestHandlerMethodArgumentResolverTest {
     parameterMap.put("CODE", new String[] {"c1"});
     parameterMap.put("name", new String[] {"n1"});
     parameterMap.put("contact", new String[] {"b600ae47-97a9-4b63-85f3-21d4f52523a1"});
+    parameterMap.put("contactUserId", new String[] {"user123"});
+    parameterMap.put("contactEmail", new String[] {"test@example.com"});
     parameterMap.put("identifier", new String[] {"ide1", "ide2"});
     parameterMap.put(
         "identifierType",
@@ -227,6 +244,8 @@ public class CollectionsSearchRequestHandlerMethodArgumentResolverTest {
     when(webRequest.getParameterMap()).thenReturn(parameterMap);
     when(webRequest.getParameter("hl")).thenReturn("true");
     when(webRequest.getParameter("q")).thenReturn("query");
+    when(webRequest.getParameter("contactUserId")).thenReturn("user123");
+    when(webRequest.getParameter("contactEmail")).thenReturn("test@example.com");
     when(webRequest.getParameter("sortBy"))
         .thenReturn(CollectionsSortField.NUMBER_SPECIMENS.name());
     when(webRequest.getParameter("sortOrder")).thenReturn(SortOrder.ASC.name());
@@ -245,6 +264,8 @@ public class CollectionsSearchRequestHandlerMethodArgumentResolverTest {
     assertEquals(
         Collections.singletonList(UUID.fromString("b600ae47-97a9-4b63-85f3-21d4f52523a1")),
         searchRequest.getContact());
+    assertEquals("user123", searchRequest.getContactUserId());
+    assertEquals("test@example.com", searchRequest.getContactEmail());
     assertEquals(Arrays.asList("ide1", "ide2"), searchRequest.getIdentifier());
     assertEquals(
         Arrays.asList(IdentifierType.CITES, IdentifierType.GRSCICOLL_URI),

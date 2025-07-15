@@ -21,6 +21,7 @@ import org.gbif.api.vocabulary.Country;
 import org.gbif.registry.persistence.mapper.params.DatasetListParams;
 
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
@@ -77,6 +78,12 @@ public interface DatasetMapper extends BaseNetworkEntityMapper<Dataset> {
 
   Dataset getLightweight(@Param("key") UUID key);
 
+  /**
+   * Find datasets that have deprecated categories.
+   * @param deprecatedCategories set of deprecated category names
+   * @return list of datasets that have deprecated categories
+   */
+  List<Dataset> findDatasetsWithDeprecatedCategories(@Param("deprecatedCategories") Set<String> deprecatedCategories);
 
   void createDwcaDataset(@Param("datasetKey") UUID datasetKey, @Param("dwca") Dataset.DwcA dwcaDataset);
 

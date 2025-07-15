@@ -13,20 +13,6 @@
  */
 package org.gbif.registry.ws.export;
 
-import com.fasterxml.jackson.databind.util.StdDateFormat;
-import java.io.Writer;
-import java.net.URI;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-import java.util.UUID;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
-import lombok.Builder;
-import lombok.Data;
-import lombok.SneakyThrows;
 import org.gbif.api.model.collections.*;
 import org.gbif.api.model.collections.Address;
 import org.gbif.api.model.collections.Contact;
@@ -43,6 +29,18 @@ import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.api.vocabulary.License;
 import org.gbif.api.vocabulary.Rank;
 import org.gbif.api.vocabulary.collections.MasterSourceType;
+
+import java.io.Writer;
+import java.net.URI;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.UUID;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+
 import org.supercsv.cellprocessor.*;
 import org.supercsv.cellprocessor.ift.CellProcessor;
 import org.supercsv.io.CsvBeanWriter;
@@ -52,6 +50,12 @@ import org.supercsv.io.ICsvMapWriter;
 import org.supercsv.io.dozer.CsvDozerBeanWriter;
 import org.supercsv.prefs.CsvPreference;
 import org.supercsv.util.CsvContext;
+
+import com.fasterxml.jackson.databind.util.StdDateFormat;
+
+import lombok.Builder;
+import lombok.Data;
+import lombok.SneakyThrows;
 
 @Data
 @Builder

@@ -182,6 +182,13 @@
             "coreType": { "type": "keyword" },
             "extensions": { "type": "keyword" }
         }
+    },
+    "category": {
+      "type": "object",
+      "properties": {
+        "concept": {"type": "keyword"},
+        "lineage": {"type": "keyword", "copy_to": "all"}
+      }
     }
   }
 }

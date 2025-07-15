@@ -13,20 +13,21 @@
  */
 package org.gbif.registry.ws.provider;
 
-import static org.gbif.api.util.SearchTypeValidator.isDateRange;
+import org.gbif.api.model.collections.request.CollectionDescriptorsSearchRequest;
+import org.gbif.api.util.IsoDateParsingUtils;
+import org.gbif.api.vocabulary.collections.CollectionFacetParameter;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
-import org.gbif.api.model.collections.request.CollectionDescriptorsSearchRequest;
-import org.gbif.api.util.IsoDateParsingUtils;
-import org.gbif.api.vocabulary.Rank;
-import org.gbif.api.vocabulary.collections.CollectionFacetParameter;
+
 import org.springframework.core.MethodParameter;
 import org.springframework.web.bind.support.WebDataBinderFactory;
 import org.springframework.web.context.request.NativeWebRequest;
 import org.springframework.web.method.support.ModelAndViewContainer;
+
+import static org.gbif.api.util.SearchTypeValidator.isDateRange;
 
 @SuppressWarnings("NullableProblems")
 public class CollectionDescriptorsSearchRequestHandlerMethodArgumentResolver

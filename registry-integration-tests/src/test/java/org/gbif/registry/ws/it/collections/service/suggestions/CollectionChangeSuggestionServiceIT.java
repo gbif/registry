@@ -13,13 +13,7 @@
  */
 package org.gbif.registry.ws.it.collections.service.suggestions;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
 import org.gbif.api.model.collections.Address;
-import static org.gbif.registry.service.collections.utils.MasterSourceUtils.IH_SYNC_USER;
-
 import org.gbif.api.model.collections.AlternativeCode;
 import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.Contact;
@@ -45,6 +39,11 @@ import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+
+import static org.gbif.registry.service.collections.utils.MasterSourceUtils.IH_SYNC_USER;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /** Tests the {@link CollectionChangeSuggestionService}. */
 public class CollectionChangeSuggestionServiceIT

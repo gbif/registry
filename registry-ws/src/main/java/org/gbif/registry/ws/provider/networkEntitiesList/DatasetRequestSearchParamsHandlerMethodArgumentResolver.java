@@ -60,6 +60,17 @@ public class DatasetRequestSearchParamsHandlerMethodArgumentResolver
       params.setCountry(country);
     }
 
+    // contact parameters
+    String contactUserIdParam = webRequest.getParameter("contactUserId");
+    if (!Strings.isNullOrEmpty(contactUserIdParam)) {
+      params.setContactUserId(contactUserIdParam);
+    }
+
+    String contactEmailParam = webRequest.getParameter("contactEmail");
+    if (!Strings.isNullOrEmpty(contactEmailParam)) {
+      params.setContactEmail(contactEmailParam);
+    }
+
     return params;
   }
 }

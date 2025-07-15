@@ -13,8 +13,6 @@
  */
 package org.gbif.registry.ws.client.collections;
 
-import java.util.Map;
-
 import org.gbif.api.model.collections.CollectionEntity;
 import org.gbif.api.model.collections.Contact;
 import org.gbif.api.model.collections.MasterSourceMetadata;
@@ -40,6 +38,7 @@ import org.gbif.api.vocabulary.TagName;
 import org.gbif.api.vocabulary.TagNamespace;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import org.springframework.cloud.openfeign.SpringQueryMap;

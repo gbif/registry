@@ -20,6 +20,7 @@ import org.gbif.registry.domain.ws.DerivedDatasetUsage;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
@@ -56,4 +57,12 @@ public interface DerivedDatasetMapper {
       @Param("creator") String creator, @Nullable @Param("page") Pageable page);
 
   long countByUser(@Param("creator") String creator);
+
+  /**
+   * Find derived datasets that have deprecated categories.
+   * @param deprecatedCategories set of deprecated category names
+   * @return list of derived datasets that have deprecated categories
+   */
+  List<DerivedDataset> findDerivedDatasetsWithDeprecatedCategories(@Param("deprecatedCategories") Set<String> deprecatedCategories);
+
 }

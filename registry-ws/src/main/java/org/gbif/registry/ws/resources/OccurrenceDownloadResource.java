@@ -15,7 +15,6 @@ package org.gbif.registry.ws.resources;
 
 import org.gbif.api.model.occurrence.DownloadType;
 import org.gbif.api.service.common.IdentityAccessService;
-import org.gbif.registry.doi.DoiIssuingService;
 import org.gbif.registry.doi.DownloadDoiDataCiteHandlingService;
 import org.gbif.registry.persistence.mapper.DatasetOccurrenceDownloadMapper;
 import org.gbif.registry.persistence.mapper.OccurrenceDownloadMapper;

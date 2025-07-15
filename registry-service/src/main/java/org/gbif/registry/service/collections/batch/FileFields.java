@@ -13,13 +13,14 @@
  */
 package org.gbif.registry.service.collections.batch;
 
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
 import org.gbif.api.model.collections.CollectionEntityType;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 
 import static org.gbif.registry.service.collections.batch.FileFields.CommonFields.KEY;
 
