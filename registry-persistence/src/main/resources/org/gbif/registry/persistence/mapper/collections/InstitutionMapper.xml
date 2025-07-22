@@ -277,6 +277,16 @@
           lower(#{item,jdbcType=VARCHAR})
         </foreach>
     </if>
+    <!-- Hierarchical concept-based filtering for institutional governance -->
+    <if test="params.institutionalGovernances != null and params.institutionalGovernances.size > 0">
+      INNER JOIN institution_concept_links icl_gov ON icl_gov.institution_key = i.key
+              INNER JOIN grscicoll_vocab_concept c_gov ON icl_gov.concept_key = c_gov.concept_key
+        AND c_gov.vocabulary_name = 'InstitutionalGovernance'
+        AND lower(c_gov.name) IN
+        <foreach item="item" collection="params.institutionalGovernances" open="(" separator="," close=")">
+          lower(#{item,jdbcType=VARCHAR})
+        </foreach>
+    </if>
     LEFT JOIN address addr ON addr.key = i.address_key
     LEFT JOIN address mail_addr ON mail_addr.key = i.mailing_address_key
     <if test="params.source != null || params.sourceId != null">
@@ -289,18 +299,6 @@
     <where>
       <include refid="org.gbif.registry.persistence.mapper.collections.Common.COMMON_LIST_FILTER">
         <property name="alias" value="i."/>
-      </include>
-      <include refid="org.gbif.registry.persistence.mapper.collections.Common.MULTIVALUE_ARRAY_FIELD_FILTER_CASE_INSENSITIVE">
-        <property name="values" value="params.types"/>
-        <property name="field" value="i.type"/>
-      </include>
-      <include refid="org.gbif.registry.persistence.mapper.collections.Common.MULTIVALUE_ARRAY_FIELD_FILTER_CASE_INSENSITIVE">
-        <property name="values" value="params.institutionalGovernances"/>
-        <property name="field" value="i.institutional_governance"/>
-      </include>
-      <include refid="org.gbif.registry.persistence.mapper.collections.Common.MULTIVALUE_ARRAY_FIELD_FILTER_CASE_INSENSITIVE">
-        <property name="values" value="params.disciplines"/>
-        <property name="field" value="i.discipline"/>
       </include>
       <include refid="org.gbif.registry.persistence.mapper.collections.Common.MULTIVALUE_FILTER">
         <property name="values" value="params.institutionKeys"/>
