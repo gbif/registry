@@ -3,221 +3,125 @@
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
 
-  <changeSet id="161" author="auzun" runInTransaction="false" ignore="true">
+  <changeSet id="164" author="auzun" runInTransaction="false" ignore="true">
     <sql splitStatements="false" stripComments="true">
       <![CDATA[
-        -- Migration script to populate concept link tables from existing array columns
-        -- This migrates from old array-based storage to new hierarchical concept system
+-- This migration script correctly populates concept link tables for both institutions and collections
+-- from their old array-based columns. It ensures full hierarchical data is migrated by finding
+-- all parent concepts for each vocabulary term using the LTREE path.
 
-        -- Log migration start
-        DO $$
-        BEGIN
-          RAISE NOTICE 'Starting vocabulary concept migration...';
-        END $$;
+DO $$
+BEGIN
+  RAISE NOTICE 'Starting hierarchical vocabulary concept migration for institutions and collections...';
 
-        -- Migrate Institution Disciplines
-        INSERT INTO institution_concept_links (institution_key, concept_key)
-        SELECT DISTINCT
-            i.key as institution_key,
-            vc.concept_key
-        FROM institution i
-        CROSS JOIN unnest(i.discipline) AS discipline_name
-        JOIN grscicoll_vocab_concept vc ON LOWER(TRIM(vc.name)) = LOWER(TRIM(discipline_name))
-        WHERE vc.vocabulary_name = 'Discipline'
-          AND i.discipline IS NOT NULL
-          AND array_length(i.discipline, 1) > 0
-          AND discipline_name IS NOT NULL
-          AND TRIM(discipline_name) != ''
-        ON CONFLICT (institution_key, concept_key) DO NOTHING;
+  -- 1. Migrate Institution Disciplines
+  RAISE NOTICE 'Migrating institution disciplines...';
+  WITH target_concepts AS (
+    SELECT DISTINCT
+      i.key AS institution_key,
+      vc.path
+    FROM institution i
+    CROSS JOIN unnest(i.discipline) AS discipline_name
+    JOIN grscicoll_vocab_concept vc
+      ON vc.name = discipline_name AND vc.vocabulary_name = 'Discipline'
+    WHERE i.discipline IS NOT NULL AND array_length(i.discipline, 1) > 0
+  )
+  INSERT INTO institution_concept_links (institution_key, concept_key)
+  SELECT DISTINCT
+    tc.institution_key,
+    p.concept_key
+  FROM target_concepts tc
+  JOIN grscicoll_vocab_concept p ON p.path @> tc.path
+  WHERE p.vocabulary_name = 'Discipline'
+  ON CONFLICT (institution_key, concept_key) DO NOTHING;
 
-        -- Migrate Institution Types
-        INSERT INTO institution_concept_links (institution_key, concept_key)
-        SELECT DISTINCT
-            i.key as institution_key,
-            vc.concept_key
-        FROM institution i
-        CROSS JOIN unnest(i.type) AS type_name
-        JOIN grscicoll_vocab_concept vc ON LOWER(TRIM(vc.name)) = LOWER(TRIM(type_name))
-        WHERE vc.vocabulary_name = 'InstitutionType'
-          AND i.type IS NOT NULL
-          AND array_length(i.type, 1) > 0
-          AND type_name IS NOT NULL
-          AND TRIM(type_name) != ''
-        ON CONFLICT (institution_key, concept_key) DO NOTHING;
+  -- 2. Migrate Institution Types
+  RAISE NOTICE 'Migrating institution types...';
+  WITH target_concepts AS (
+    SELECT DISTINCT
+      i.key AS institution_key,
+      vc.path
+    FROM institution i
+    CROSS JOIN unnest(i.type) AS type_name
+    JOIN grscicoll_vocab_concept vc
+      ON vc.name = type_name AND vc.vocabulary_name = 'InstitutionType'
+    WHERE i.type IS NOT NULL AND array_length(i.type, 1) > 0
+  )
+  INSERT INTO institution_concept_links (institution_key, concept_key)
+  SELECT DISTINCT
+    tc.institution_key,
+    p.concept_key
+  FROM target_concepts tc
+  JOIN grscicoll_vocab_concept p ON p.path @> tc.path
+  WHERE p.vocabulary_name = 'InstitutionType'
+  ON CONFLICT (institution_key, concept_key) DO NOTHING;
 
-        -- Migrate Institution Governances
-        INSERT INTO institution_concept_links (institution_key, concept_key)
-        SELECT DISTINCT
-            i.key as institution_key,
-            vc.concept_key
-        FROM institution i
-        CROSS JOIN unnest(i.institutional_governance) AS gov_name
-        JOIN grscicoll_vocab_concept vc ON LOWER(TRIM(vc.name)) = LOWER(TRIM(gov_name))
-        WHERE vc.vocabulary_name = 'InstitutionalGovernance'
-          AND i.institutional_governance IS NOT NULL
-          AND array_length(i.institutional_governance, 1) > 0
-          AND gov_name IS NOT NULL
-          AND TRIM(gov_name) != ''
-        ON CONFLICT (institution_key, concept_key) DO NOTHING;
+  -- 3. Migrate Institutional Governances
+  RAISE NOTICE 'Migrating institutional governances...';
+  WITH target_concepts AS (
+    SELECT DISTINCT
+      i.key AS institution_key,
+      vc.path
+    FROM institution i
+    CROSS JOIN unnest(i.institutional_governance) AS governance_name
+    JOIN grscicoll_vocab_concept vc
+      ON vc.name = governance_name AND vc.vocabulary_name = 'InstitutionalGovernance'
+    WHERE i.institutional_governance IS NOT NULL AND array_length(i.institutional_governance, 1) > 0
+  )
+  INSERT INTO institution_concept_links (institution_key, concept_key)
+  SELECT DISTINCT
+    tc.institution_key,
+    p.concept_key
+  FROM target_concepts tc
+  JOIN grscicoll_vocab_concept p ON p.path @> tc.path
+  WHERE p.vocabulary_name = 'InstitutionalGovernance'
+  ON CONFLICT (institution_key, concept_key) DO NOTHING;
 
-        -- Migrate Collection Content Types
-        INSERT INTO collection_concept_links (collection_key, concept_key)
-        SELECT DISTINCT
-            c.key as collection_key,
-            vc.concept_key
-        FROM collection c
-        CROSS JOIN unnest(c.content_type) AS content_type_name
-        JOIN grscicoll_vocab_concept vc ON LOWER(TRIM(vc.name)) = LOWER(TRIM(content_type_name))
-        WHERE vc.vocabulary_name = 'CollectionContentType'
-          AND c.content_type IS NOT NULL
-          AND array_length(c.content_type, 1) > 0
-          AND content_type_name IS NOT NULL
-          AND TRIM(content_type_name) != ''
-        ON CONFLICT (collection_key, concept_key) DO NOTHING;
+  -- 4. Migrate Collection Content Types
+  RAISE NOTICE 'Migrating collection content types...';
+  WITH target_concepts AS (
+    SELECT DISTINCT
+      c.key AS collection_key,
+      vc.path
+    FROM collection c
+    CROSS JOIN unnest(c.content_type) AS content_type_name
+    JOIN grscicoll_vocab_concept vc
+      ON vc.name = content_type_name AND vc.vocabulary_name = 'CollectionContentType'
+    WHERE c.content_type IS NOT NULL AND array_length(c.content_type, 1) > 0
+  )
+  INSERT INTO collection_concept_links (collection_key, concept_key)
+  SELECT DISTINCT
+    tc.collection_key,
+    p.concept_key
+  FROM target_concepts tc
+  JOIN grscicoll_vocab_concept p ON p.path @> tc.path
+  WHERE p.vocabulary_name = 'CollectionContentType'
+  ON CONFLICT (collection_key, concept_key) DO NOTHING;
 
-        -- Migrate Collection Preservation Types
-        INSERT INTO collection_concept_links (collection_key, concept_key)
-        SELECT DISTINCT
-            c.key as collection_key,
-            vc.concept_key
-        FROM collection c
-        CROSS JOIN unnest(c.preservation_type) AS preservation_type_name
-        JOIN grscicoll_vocab_concept vc ON LOWER(TRIM(vc.name)) = LOWER(TRIM(preservation_type_name))
-        WHERE vc.vocabulary_name = 'PreservationType'
-          AND c.preservation_type IS NOT NULL
-          AND array_length(c.preservation_type, 1) > 0
-          AND preservation_type_name IS NOT NULL
-          AND TRIM(preservation_type_name) != ''
-        ON CONFLICT (collection_key, concept_key) DO NOTHING;
+  -- 5. Migrate Collection Preservation Types
+  RAISE NOTICE 'Migrating collection preservation types...';
+  WITH target_concepts AS (
+    SELECT DISTINCT
+      c.key AS collection_key,
+      vc.path
+    FROM collection c
+    CROSS JOIN unnest(c.preservation_type) AS preservation_type_name
+    JOIN grscicoll_vocab_concept vc
+      ON vc.name = preservation_type_name AND vc.vocabulary_name = 'PreservationType'
+    WHERE c.preservation_type IS NOT NULL AND array_length(c.preservation_type, 1) > 0
+  )
+  INSERT INTO collection_concept_links (collection_key, concept_key)
+  SELECT DISTINCT
+    tc.collection_key,
+    p.concept_key
+  FROM target_concepts tc
+  JOIN grscicoll_vocab_concept p ON p.path @> tc.path
+  WHERE p.vocabulary_name = 'PreservationType'
+  ON CONFLICT (collection_key, concept_key) DO NOTHING;
 
-        -- Migrate Collection Accession Status (single value)
-        INSERT INTO collection_concept_links (collection_key, concept_key)
-        SELECT DISTINCT
-            c.key as collection_key,
-            vc.concept_key
-        FROM collection c
-        JOIN grscicoll_vocab_concept vc ON LOWER(TRIM(vc.name)) = LOWER(TRIM(c.accession_status))
-        WHERE vc.vocabulary_name = 'AccessionStatus'
-          AND c.accession_status IS NOT NULL
-          AND TRIM(c.accession_status) != ''
-        ON CONFLICT (collection_key, concept_key) DO NOTHING;
-
-        -- Migration verification and reporting
-        DO $$
-        DECLARE
-          institution_discipline_count INTEGER;
-          institution_type_count INTEGER;
-          institution_gov_count INTEGER;
-          collection_content_count INTEGER;
-          collection_preservation_count INTEGER;
-          collection_accession_count INTEGER;
-        BEGIN
-          -- Count migrated records
-          SELECT count(*) INTO institution_discipline_count
-          FROM institution_concept_links icl
-          JOIN grscicoll_vocab_concept vc ON icl.concept_key = vc.concept_key
-          WHERE vc.vocabulary_name = 'Discipline';
-
-          SELECT count(*) INTO institution_type_count
-          FROM institution_concept_links icl
-          JOIN grscicoll_vocab_concept vc ON icl.concept_key = vc.concept_key
-          WHERE vc.vocabulary_name = 'InstitutionType';
-
-          SELECT count(*) INTO institution_gov_count
-          FROM institution_concept_links icl
-          JOIN grscicoll_vocab_concept vc ON icl.concept_key = vc.concept_key
-          WHERE vc.vocabulary_name = 'InstitutionalGovernance';
-
-          SELECT count(*) INTO collection_content_count
-          FROM collection_concept_links ccl
-          JOIN grscicoll_vocab_concept vc ON ccl.concept_key = vc.concept_key
-          WHERE vc.vocabulary_name = 'CollectionContentType';
-
-          SELECT count(*) INTO collection_preservation_count
-          FROM collection_concept_links ccl
-          JOIN grscicoll_vocab_concept vc ON ccl.concept_key = vc.concept_key
-          WHERE vc.vocabulary_name = 'PreservationType';
-
-          SELECT count(*) INTO collection_accession_count
-          FROM collection_concept_links ccl
-          JOIN grscicoll_vocab_concept vc ON ccl.concept_key = vc.concept_key
-          WHERE vc.vocabulary_name = 'AccessionStatus';
-
-          -- Report results
-          RAISE NOTICE 'Migration completed successfully:';
-          RAISE NOTICE '  - Institution Disciplines: % links created', institution_discipline_count;
-          RAISE NOTICE '  - Institution Types: % links created', institution_type_count;
-          RAISE NOTICE '  - Institution Governances: % links created', institution_gov_count;
-          RAISE NOTICE '  - Collection Content Types: % links created', collection_content_count;
-          RAISE NOTICE '  - Collection Preservation Types: % links created', collection_preservation_count;
-          RAISE NOTICE '  - Collection Accession Status: % links created', collection_accession_count;
-        END $$;
-
-        -- Create summary table for verification
-        CREATE TEMP TABLE migration_summary AS
-        SELECT
-          'Discipline' as vocabulary_name,
-          (SELECT sum(array_length(discipline, 1)) FROM institution WHERE discipline IS NOT NULL) as original_count,
-          (SELECT count(*) FROM institution_concept_links icl
-           JOIN grscicoll_vocab_concept vc ON icl.concept_key = vc.concept_key
-           WHERE vc.vocabulary_name = 'Discipline') as migrated_count
-        UNION ALL
-        SELECT
-          'InstitutionType',
-          (SELECT sum(array_length(institution.type, 1)) FROM institution WHERE institution.type IS NOT NULL),
-          (SELECT count(*) FROM institution_concept_links icl
-           JOIN grscicoll_vocab_concept vc ON icl.concept_key = vc.concept_key
-           WHERE vc.vocabulary_name = 'InstitutionType')
-        UNION ALL
-        SELECT
-          'CollectionContentType',
-          (SELECT sum(array_length(content_type, 1)) FROM collection WHERE content_type IS NOT NULL),
-          (SELECT count(*) FROM collection_concept_links ccl
-           JOIN grscicoll_vocab_concept vc ON ccl.concept_key = vc.concept_key
-           WHERE vc.vocabulary_name = 'CollectionContentType');
-
-        -- Report unmapped values for investigation
-        DO $$
-        DECLARE
-          unmapped_discipline TEXT[];
-          unmapped_type TEXT[];
-          unmapped_content_type TEXT[];
-        BEGIN
-          -- Find unmapped discipline values
-          SELECT array_agg(DISTINCT discipline_name) INTO unmapped_discipline
-          FROM (
-            SELECT unnest(discipline) as discipline_name
-            FROM institution
-            WHERE discipline IS NOT NULL
-          ) discipline
-          WHERE NOT EXISTS (
-            SELECT 1 FROM grscicoll_vocab_concept vc
-            WHERE LOWER(TRIM(vc.name)) = LOWER(TRIM(discipline_name))
-            AND vc.vocabulary_name = 'Discipline'
-          );
-
-          IF array_length(unmapped_discipline, 1) > 0 THEN
-            RAISE NOTICE 'Unmapped discipline values: %', unmapped_discipline;
-          END IF;
-
-          -- Find unmapped institution type
-          SELECT array_agg(DISTINCT type_name) INTO unmapped_type
-          FROM (
-            SELECT unnest(type) as type_name
-            FROM institution
-            WHERE type IS NOT NULL
-          ) type
-          WHERE NOT EXISTS (
-            SELECT 1 FROM grscicoll_vocab_concept vc
-            WHERE LOWER(TRIM(vc.name)) = LOWER(TRIM(type_name))
-            AND vc.vocabulary_name = 'InstitutionType'
-          );
-
-          IF array_length(unmapped_type, 1) > 0 THEN
-            RAISE NOTICE 'Unmapped institution type values: %', unmapped_type;
-          END IF;
-        END $$;
-              ]]>
+  RAISE NOTICE 'Hierarchical vocabulary concept migration completed.';
+END $$;
+      ]]>
     </sql>
   </changeSet>
 </databaseChangeLog>

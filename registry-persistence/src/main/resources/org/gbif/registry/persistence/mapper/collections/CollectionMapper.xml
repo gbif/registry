@@ -256,6 +256,16 @@
           lower(#{item,jdbcType=VARCHAR})
         </foreach>
     </if>
+    <!-- Hierarchical concept-based filtering for accession status -->
+    <if test="params.accessionStatus != null and params.accessionStatus.size > 0">
+      INNER JOIN collection_concept_links cfl_accession ON cfl_accession.collection_key = c.key
+      INNER JOIN grscicoll_vocab_concept f_accession ON cfl_accession.concept_key = f_accession.concept_key
+        AND f_accession.vocabulary_name = 'AccessionStatus'
+        AND lower(f_accession.name) IN
+        <foreach item="item" collection="params.accessionStatus" open="(" separator="," close=")">
+          lower(#{item,jdbcType=VARCHAR})
+        </foreach>
+    </if>
     LEFT JOIN address addr ON addr.key = c.address_key
     LEFT JOIN address mail_addr ON mail_addr.key = c.mailing_address_key
     <if test="params.source != null || params.sourceId != null">
@@ -264,18 +274,6 @@
     <where>
       <include refid="org.gbif.registry.persistence.mapper.collections.Common.COMMON_LIST_FILTER">
         <property name="alias" value="c."/>
-      </include>
-      <include refid="org.gbif.registry.persistence.mapper.collections.Common.MULTIVALUE_ARRAY_FIELD_FILTER_CASE_INSENSITIVE">
-        <property name="values" value="params.contentTypes"/>
-        <property name="field" value="c.content_type"/>
-      </include>
-      <include refid="org.gbif.registry.persistence.mapper.collections.Common.MULTIVALUE_ARRAY_FIELD_FILTER_CASE_INSENSITIVE">
-        <property name="values" value="params.preservationTypes"/>
-        <property name="field" value="c.preservation_type"/>
-      </include>
-      <include refid="org.gbif.registry.persistence.mapper.collections.Common.MULTIVALUE_FILTER_CASE_INSENSITIVE">
-        <property name="values" value="params.accessionStatus"/>
-        <property name="field" value="c.accession_status"/>
       </include>
       <include refid="org.gbif.registry.persistence.mapper.collections.Common.MULTIVALUE_BOOLEAN_FILTER">
         <property name="values" value="params.personalCollection"/>
