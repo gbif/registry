@@ -58,37 +58,6 @@
     </if>
   </sql>
 
-    <sql id="MULTIVALUE_ARRAY_FIELD_FILTER">
-    <if test="${values} != null and ${values}.size > 0" >
-      AND ${field} &amp;&amp; ARRAY
-      <foreach item="item" collection="${values}" open="[" separator="," close="]">
-        #{item,jdbcType=VARCHAR}::text
-      </foreach>
-    </if>
-  </sql>
-
-  <sql id="MULTIVALUE_ARRAY_FIELD_FILTER_CASE_INSENSITIVE">
-    <if test="${values} != null and ${values}.size > 0" >
-      AND (
-      <foreach item="item" collection="${values}" separator="OR">
-        EXISTS (
-          SELECT 1 FROM unnest(${field}) AS field_element
-          WHERE lower(field_element) = lower(#{item,jdbcType=VARCHAR})
-        )
-      </foreach>
-      )
-    </if>
-  </sql>
-
-  <sql id="MULTIVALUE_FILTER_CASE_INSENSITIVE">
-    <if test="${values} != null and ${values}.size > 0" >
-      AND lower(${field}) IN
-      <foreach item="item" collection="${values}" open="(" separator="," close=")">
-        lower(#{item,jdbcType=VARCHAR})
-      </foreach>
-    </if>
-  </sql>
-
   <sql id="MULTIVALUE_RANGE_FIELD_FILTER">
     <if test="${values} != null and ${values}.size > 0" >
       AND (

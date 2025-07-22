@@ -30,8 +30,10 @@ public class ConceptTestSetup {
    * Creates facets for:
    * - CollectionContentType: Biological, Archaeological, Paleontological, test1, test1.1, test1.1.1, test1.2
    * - PreservationType: SampleDried, StorageIndoors, StorageControlledAtmosphere, SampleCryopreserved, StorageOther
+   * - AccessionStatus: Institutional, Project
    * - InstitutionType: t1, t2, ty1, ty2, Museum, Herbarium
    * - Discipline: d1, d2, di1, di2, Botany, Archaeology, Anthropology
+   * - InstitutionalGovernance: Academic, NonProfit, Local, i1, i2
    *
    * @param grScicollVocabConceptMapper The FacetMapper to use for creating facets
    */
@@ -54,6 +56,10 @@ public class ConceptTestSetup {
     createConceptIfNotExists(grScicollVocabConceptMapper, "PreservationType", "SampleCryopreserved", "SampleCryopreserved");
     createConceptIfNotExists(grScicollVocabConceptMapper, "PreservationType", "StorageOther", "StorageOther");
 
+    // AccessionStatus concepts (for tests that need them)
+    createConceptIfNotExists(grScicollVocabConceptMapper, "AccessionStatus", "Institutional", "Institutional");
+    createConceptIfNotExists(grScicollVocabConceptMapper, "AccessionStatus", "Project", "Project");
+
     // Institution type concepts (for tests that need them)
     createConceptIfNotExists(grScicollVocabConceptMapper, "InstitutionType", "t1", "t1");
     createConceptIfNotExists(grScicollVocabConceptMapper, "InstitutionType", "t2", "t2");
@@ -61,6 +67,13 @@ public class ConceptTestSetup {
     createConceptIfNotExists(grScicollVocabConceptMapper, "InstitutionType", "ty2", "ty2");
     createConceptIfNotExists(grScicollVocabConceptMapper, "InstitutionType", "Museum", "Museum");
     createConceptIfNotExists(grScicollVocabConceptMapper, "InstitutionType", "Herbarium", "Herbarium");
+
+    // InstitutionalGovernance concepts (for tests that need them)
+    createConceptIfNotExists(grScicollVocabConceptMapper, "InstitutionalGovernance", "Academic", "Academic");
+    createConceptIfNotExists(grScicollVocabConceptMapper, "InstitutionalGovernance", "NonProfit", "NonProfit");
+    createConceptIfNotExists(grScicollVocabConceptMapper, "InstitutionalGovernance", "Local", "Local");
+    createConceptIfNotExists(grScicollVocabConceptMapper, "InstitutionalGovernance", "i1", "i1");
+    createConceptIfNotExists(grScicollVocabConceptMapper, "InstitutionalGovernance", "i2", "i2");
 
     // Discipline concepts (for tests that need them)
     createConceptIfNotExists(grScicollVocabConceptMapper, "Discipline", "d1", "d1");

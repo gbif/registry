@@ -1511,7 +1511,6 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
   @Test
   public void testAccessionStatusNotInFacetLinks() {
     Collection collection = testData.newEntity();
-    collection.setAccessionStatus("Institutional");
     collection.setContentTypes(Arrays.asList("Biological"));
 
     UUID key = collectionService.create(collection);
