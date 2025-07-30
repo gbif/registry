@@ -167,7 +167,7 @@ public class OccurrenceDownloadIT extends BaseItTest {
             DownloadType.OCCURRENCE,
             "testDescription",
             machineDescription,
-            Collections.singleton(Extension.AUDUBON)));
+            Collections.singleton(Extension.AUDUBON),null));
     return download;
   }
 
@@ -188,7 +188,7 @@ public class OccurrenceDownloadIT extends BaseItTest {
             DownloadType.OCCURRENCE,
           "testDescription",
           machineDescription,
-          Collections.singleton(Extension.AUDUBON)));
+          Collections.singleton(Extension.AUDUBON), null));
     return download;
   }
 
