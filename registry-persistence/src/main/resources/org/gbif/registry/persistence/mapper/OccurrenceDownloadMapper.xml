@@ -167,7 +167,8 @@
     </choose>
     #{source,jdbcType=VARCHAR},
     #{request.description, jdbcType=VARCHAR},
-    #{request.machineDescription,jdbcType=OTHER,typeHandler=org.gbif.registry.persistence.mapper.handler.MachineDescriptorTypeHandler}::jsonb
+    #{request.machineDescription,jdbcType=OTHER,typeHandler=org.gbif.registry.persistence.mapper.handler.MachineDescriptorTypeHandler},
+    #{request.checklistKey, jdbcType=VARCHAR}::jsonb
   </sql>
 
   <select id="get" resultType="org.gbif.api.model.occurrence.Download" resultMap="OCCURRENCE_DOWNLOAD_MAP">
