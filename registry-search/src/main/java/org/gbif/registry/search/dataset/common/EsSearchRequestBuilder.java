@@ -31,19 +31,12 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.Function;
 import java.util.function.IntUnaryOperator;
 import java.util.stream.Collectors;
 
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.common.Strings;
 import org.elasticsearch.common.geo.ShapeRelation;
-import org.elasticsearch.common.geo.builders.CoordinatesBuilder;
-import org.elasticsearch.common.geo.builders.LineStringBuilder;
-import org.elasticsearch.common.geo.builders.MultiPolygonBuilder;
-import org.elasticsearch.common.geo.builders.PointBuilder;
-import org.elasticsearch.common.geo.builders.PolygonBuilder;
-import org.elasticsearch.common.geo.builders.ShapeBuilder;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.GeoShapeQueryBuilder;
 import org.elasticsearch.index.query.Operator;
@@ -62,6 +55,9 @@ import org.elasticsearch.search.suggest.SuggestBuilder;
 import org.elasticsearch.search.suggest.SuggestBuilders;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.Geometry;
+import org.locationtech.jts.geom.LineString;
+import org.locationtech.jts.geom.MultiPolygon;
+import org.locationtech.jts.geom.Point;
 import org.locationtech.jts.geom.Polygon;
 import org.locationtech.jts.io.ParseException;
 import org.locationtech.jts.io.WKTReader;
@@ -88,7 +84,6 @@ public class EsSearchRequestBuilder<P extends SearchParameter> {
   // this instance is created only once and reused for all searches
   private final HighlightBuilder highlightBuilder =
       new HighlightBuilder()
-          .forceSource(true)
           .preTags(PRE_HL_TAG)
           .postTags(POST_HL_TAG)
           .encoder("html")
@@ -495,57 +490,68 @@ public class EsSearchRequestBuilder<P extends SearchParameter> {
     return builder;
   }
 
+  private static List<double[]> toEsCoordinates(org.locationtech.jts.geom.Coordinate[] jtsCoordinates) {
+    return Arrays.stream(jtsCoordinates)
+      .map(c -> new double[]{c.x, c.y})
+      .toList();
+  }
+
+  // Helper method: Converts JTS Polygon to Elasticsearch Polygon format
+  private static Map<String, Object> toEsPolygon(Polygon jtsPolygon) {
+    Map<String, Object> polygon = new HashMap<>();
+    polygon.put("type", "Polygon");
+
+    List<List<double[]>> coordinates = new ArrayList<>();
+
+    // Exterior Ring
+    coordinates.add(toEsCoordinates(jtsPolygon.getExteriorRing().getCoordinates()));
+
+    // Interior Rings (Holes)
+    for (int i = 0; i < jtsPolygon.getNumInteriorRing(); i++) {
+      coordinates.add(toEsCoordinates(jtsPolygon.getInteriorRingN(i).getCoordinates()));
+    }
+
+    polygon.put("coordinates", coordinates);
+    return polygon;
+  }
+
   public static GeoShapeQueryBuilder buildGeoShapeQuery(String wkt) {
-    Geometry geometry;
+    Geometry geometry; // JTS Geometry
     try {
       geometry = new WKTReader().read(wkt);
     } catch (ParseException e) {
       throw new IllegalArgumentException(e.getMessage(), e);
     }
 
-    Function<Polygon, PolygonBuilder> polygonToBuilder =
-        polygon -> {
-          PolygonBuilder polygonBuilder =
-              new PolygonBuilder(
-                  new CoordinatesBuilder()
-                      .coordinates(
-                          normalizePolygonCoordinates(polygon.getExteriorRing().getCoordinates())));
-          for (int i = 0; i < polygon.getNumInteriorRing(); i++) {
-            polygonBuilder.hole(
-                new LineStringBuilder(
-                    new CoordinatesBuilder()
-                        .coordinates(
-                            normalizePolygonCoordinates(
-                                polygon.getInteriorRingN(i).getCoordinates()))));
-          }
-          return polygonBuilder;
-        };
+    Map<String, Object> shape;
 
-    String type =
-        "LinearRing".equals(geometry.getGeometryType())
-            ? "LINESTRING"
-            : geometry.getGeometryType().toUpperCase();
+    if (geometry instanceof Point point) {
+      shape = new HashMap<>();
+      shape.put("type", "Point");
+      shape.put("coordinates", new double[]{point.getX(), point.getY()});
+    } else if (geometry instanceof LineString lineString) {
+      shape = new HashMap<>();
+      shape.put("type", "LineString");
+      shape.put("coordinates", toEsCoordinates(lineString.getCoordinates()));
+    } else if (geometry instanceof Polygon polygon) {
+      shape = toEsPolygon(polygon);
+    } else if (geometry instanceof MultiPolygon multiPolygon) {
+      shape = new HashMap<>();
+      shape.put("type", "MultiPolygon");
 
-    ShapeBuilder shapeBuilder = null;
-    if (("POINT").equals(type)) {
-      shapeBuilder = new PointBuilder(geometry.getCoordinate().x, geometry.getCoordinate().y);
-    } else if ("LINESTRING".equals(type)) {
-      shapeBuilder = new LineStringBuilder(Arrays.asList(geometry.getCoordinates()));
-    } else if ("POLYGON".equals(type)) {
-      shapeBuilder = polygonToBuilder.apply((Polygon) geometry);
-    } else if ("MULTIPOLYGON".equals(type)) {
-      // multipolygon
-      MultiPolygonBuilder multiPolygonBuilder = new MultiPolygonBuilder();
-      for (int i = 0; i < geometry.getNumGeometries(); i++) {
-        multiPolygonBuilder.polygon(polygonToBuilder.apply((Polygon) geometry.getGeometryN(i)));
+      List<List<List<double[]>>> coordinates = new ArrayList<>();
+      for (int i = 0; i < multiPolygon.getNumGeometries(); i++) {
+        Polygon polygon = (Polygon) multiPolygon.getGeometryN(i);
+        Map<String, Object> polygonShape = toEsPolygon(polygon);
+        coordinates.add((List<List<double[]>>) polygonShape.get("coordinates"));
       }
-      shapeBuilder = multiPolygonBuilder;
+      shape.put("coordinates", coordinates);
     } else {
-      throw new IllegalArgumentException(type + " shape is not supported");
+      throw new IllegalArgumentException(geometry.getGeometryType() + " shape is not supported");
     }
 
     try {
-      return QueryBuilders.geoShapeQuery("coordinate", shapeBuilder).relation(ShapeRelation.WITHIN);
+      return QueryBuilders.geoShapeQuery("coordinate", (org.elasticsearch.geometry.Geometry) shape).relation(ShapeRelation.WITHIN);
     } catch (IOException e) {
       throw new IllegalStateException(e.getMessage(), e);
     }
