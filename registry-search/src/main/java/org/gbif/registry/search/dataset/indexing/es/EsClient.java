@@ -26,21 +26,27 @@ import java.util.Objects;
 import java.util.Set;
 
 import org.apache.http.HttpHost;
-import org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequest;
-import org.elasticsearch.action.admin.indices.alias.get.GetAliasesRequest;
-import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
-import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
-import org.elasticsearch.action.admin.indices.flush.FlushRequest;
-import org.elasticsearch.action.admin.indices.settings.put.UpdateSettingsRequest;
-import org.elasticsearch.action.bulk.BulkRequest;
-import org.elasticsearch.action.bulk.BulkResponse;
-import org.elasticsearch.client.GetAliasesResponse;
-import org.elasticsearch.client.NodeSelector;
-import org.elasticsearch.client.RequestOptions;
+import co.elastic.clients.elasticsearch.ElasticsearchClient;
+import co.elastic.clients.elasticsearch._types.ElasticsearchException;
+import co.elastic.clients.elasticsearch._types.Refresh;
+import co.elastic.clients.elasticsearch.core.BulkRequest;
+import co.elastic.clients.elasticsearch.core.BulkResponse;
+import co.elastic.clients.elasticsearch.core.DeleteRequest;
+import co.elastic.clients.elasticsearch.core.DeleteResponse;
+import co.elastic.clients.elasticsearch.core.IndexRequest;
+import co.elastic.clients.elasticsearch.core.IndexResponse;
+import co.elastic.clients.elasticsearch.indices.CreateIndexRequest;
+import co.elastic.clients.elasticsearch.indices.DeleteIndexRequest;
+import co.elastic.clients.elasticsearch.indices.ExistsRequest;
+import co.elastic.clients.elasticsearch.indices.GetAliasRequest;
+import co.elastic.clients.elasticsearch.indices.GetAliasResponse;
+import co.elastic.clients.elasticsearch.indices.UpdateAliasesRequest;
+import co.elastic.clients.elasticsearch.indices.UpdateSettingsRequest;
+import co.elastic.clients.json.JsonData;
+import co.elastic.clients.transport.ElasticsearchTransport;
+import co.elastic.clients.transport.rest_client.RestClientTransport;
+import org.apache.http.HttpHost;
 import org.elasticsearch.client.RestClient;
-import org.elasticsearch.client.RestHighLevelClient;
-import org.elasticsearch.common.settings.Settings;
-import org.elasticsearch.common.xcontent.XContentType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -60,11 +66,11 @@ public class EsClient implements Closeable {
     private int connectionRequestTimeOut;
   }
 
-  private final RestHighLevelClient restHighLevelClient;
+  private final ElasticsearchClient elasticsearchClient;
 
   @Autowired
-  public EsClient(RestHighLevelClient restHighLevelClient) {
-    this.restHighLevelClient = restHighLevelClient;
+  public EsClient(ElasticsearchClient elasticsearchClient) {
+    this.elasticsearchClient = elasticsearchClient;
   }
 
   /**
@@ -72,25 +78,30 @@ public class EsClient implements Closeable {
    */
   public void swapAlias(String alias, String indexName) {
     try {
-      GetAliasesRequest getAliasesRequest = new GetAliasesRequest();
-      getAliasesRequest.aliases(alias);
-      GetAliasesResponse getAliasesResponse =
-          restHighLevelClient.indices().getAlias(getAliasesRequest, RequestOptions.DEFAULT);
-      Set<String> idxsToDelete = getAliasesResponse.getAliases().keySet();
-      IndicesAliasesRequest indicesAliasesRequest = new IndicesAliasesRequest();
-      indicesAliasesRequest.addAliasAction(
-          IndicesAliasesRequest.AliasActions.add().alias(alias).index(indexName));
-      restHighLevelClient.indices().updateAliases(indicesAliasesRequest, RequestOptions.DEFAULT);
+      GetAliasRequest getAliasesRequest = new GetAliasRequest.Builder()
+          .name(alias)
+          .build();
+      GetAliasResponse getAliasesResponse = elasticsearchClient.indices().getAlias(getAliasesRequest);
+      Set<String> idxsToDelete = getAliasesResponse.result().keySet();
+      
+      UpdateAliasesRequest.Builder updateAliasesRequestBuilder = new UpdateAliasesRequest.Builder();
+      updateAliasesRequestBuilder.actions(a -> a.addAlias(alias, indexName));
+      
       if (!idxsToDelete.isEmpty()) {
-        idxsToDelete.forEach(
-            idx ->
-                indicesAliasesRequest.addAliasAction(
-                    IndicesAliasesRequest.AliasActions.remove().index(idx).alias(alias)));
-        restHighLevelClient
-            .indices()
-            .delete(
-                new DeleteIndexRequest().indices(idxsToDelete.toArray(new String[0])),
-                RequestOptions.DEFAULT);
+        for (String idx : idxsToDelete) {
+          updateAliasesRequestBuilder.actions(a -> a.removeAlias(idx, alias));
+        }
+        elasticsearchClient.indices().updateAliases(updateAliasesRequestBuilder.build());
+        
+        // Delete old indices
+        for (String idx : idxsToDelete) {
+          DeleteIndexRequest deleteRequest = new DeleteIndexRequest.Builder()
+              .index(idx)
+              .build();
+          elasticsearchClient.indices().delete(deleteRequest);
+        }
+      } else {
+        elasticsearchClient.indices().updateAliases(updateAliasesRequestBuilder.build());
       }
     } catch (IOException ex) {
       throw new RuntimeException(ex);
@@ -103,9 +114,7 @@ public class EsClient implements Closeable {
    */
   public void flushIndex(String indexName) {
     try {
-      restHighLevelClient
-          .indices()
-          .flush(new FlushRequest().indices(indexName), RequestOptions.DEFAULT);
+      elasticsearchClient.indices().refresh(r -> r.index(indexName));
     } catch (IOException ex) {
       throw new RuntimeException(ex);
     }
@@ -126,23 +135,27 @@ public class EsClient implements Closeable {
             new InputStreamReader(
                 new BufferedInputStream(
                     getClass().getClassLoader().getResourceAsStream(settingsFile)))) {
-      Settings.Builder settingsBuilder = Settings.builder();
-      settings.forEach(
-          (k, v) -> {
-            if (List.class.isAssignableFrom(v.getClass())) {
-              settingsBuilder.putList(k, (List<String>) v);
-            } else {
-              settingsBuilder.put(k, v.toString());
-            }
-          });
-      settingsBuilder.loadFromSource(CharStreams.toString(settingsFileReader), XContentType.JSON);
-
-      CreateIndexRequest createIndexRequest = new CreateIndexRequest();
-      createIndexRequest
+      
+      String settingsJson = CharStreams.toString(settingsFileReader);
+      String mappingJson = CharStreams.toString(mappingFileReader);
+      
+      // Merge settings
+      Map<String, JsonData> settingsMap = new java.util.HashMap<>();
+      settings.forEach((k, v) -> {
+        if (List.class.isAssignableFrom(v.getClass())) {
+          settingsMap.put(k, JsonData.of((List<String>) v));
+        } else {
+          settingsMap.put(k, JsonData.of(v.toString()));
+        }
+      });
+      
+      CreateIndexRequest createIndexRequest = new CreateIndexRequest.Builder()
           .index(indexName)
-          .settings(settingsBuilder.build())
-          .mapping(recordType, CharStreams.toString(mappingFileReader), XContentType.JSON);
-      restHighLevelClient.indices().create(createIndexRequest, RequestOptions.DEFAULT);
+          .settings(s -> s.withJson(settingsJson))
+          .mappings(m -> m.withJson(mappingJson))
+          .build();
+      
+      elasticsearchClient.indices().create(createIndexRequest);
     } catch (IOException ex) {
       throw new IllegalStateException(ex);
     }
@@ -151,9 +164,15 @@ public class EsClient implements Closeable {
   /** Updates the settings of an existing index. */
   public void updateSettings(String indexName, Map<String, ?> settings) {
     try {
-      UpdateSettingsRequest updateSettingsRequest =
-          new UpdateSettingsRequest().indices(indexName).settings(settings);
-      restHighLevelClient.indices().putSettings(updateSettingsRequest, RequestOptions.DEFAULT);
+      Map<String, JsonData> settingsMap = new java.util.HashMap<>();
+      settings.forEach((k, v) -> settingsMap.put(k, JsonData.of(v)));
+      
+      UpdateSettingsRequest updateSettingsRequest = new UpdateSettingsRequest.Builder()
+          .index(indexName)
+          .settings(s -> s.withJson(settingsMap))
+          .build();
+      
+      elasticsearchClient.indices().putSettings(updateSettingsRequest);
     } catch (IOException ex) {
       throw new RuntimeException(ex);
     }
@@ -161,11 +180,11 @@ public class EsClient implements Closeable {
 
   /** Performs a ElasticSearch {@link BulkRequest}. */
   public BulkResponse bulk(BulkRequest bulkRequest) throws IOException {
-    return restHighLevelClient.bulk(bulkRequest, RequestOptions.DEFAULT);
+    return elasticsearchClient.bulk(bulkRequest);
   }
 
   /** Creates ElasticSearch client using default connection settings. */
-  public static RestHighLevelClient provideEsClient(EsClientConfiguration esClientConfiguration) {
+  public static ElasticsearchClient provideElasticsearchClient(EsClientConfiguration esClientConfiguration) {
     String[] hostsUrl = esClientConfiguration.hosts.split(",");
     HttpHost[] hosts = new HttpHost[hostsUrl.length];
     int i = 0;
@@ -179,24 +198,26 @@ public class EsClient implements Closeable {
       }
     }
 
-    return new RestHighLevelClient(
-        RestClient.builder(hosts)
-            .setRequestConfigCallback(
-                requestConfigBuilder ->
-                    requestConfigBuilder
-                        .setConnectTimeout(esClientConfiguration.getConnectionTimeOut())
-                        .setSocketTimeout(esClientConfiguration.getSocketTimeOut())
-                        .setConnectionRequestTimeout(
-                            esClientConfiguration.getConnectionRequestTimeOut()))
-            .setNodeSelector(NodeSelector.SKIP_DEDICATED_MASTERS));
+    RestClient restClient = RestClient.builder(hosts)
+        .setRequestConfigCallback(
+            requestConfigBuilder ->
+                requestConfigBuilder
+                    .setConnectTimeout(esClientConfiguration.getConnectionTimeOut())
+                    .setSocketTimeout(esClientConfiguration.getSocketTimeOut())
+                    .setConnectionRequestTimeout(
+                        esClientConfiguration.getConnectionRequestTimeOut()))
+        .build();
+
+    ElasticsearchTransport transport = new RestClientTransport(restClient, new co.elastic.clients.json.jackson.JacksonJsonpMapper());
+    return new ElasticsearchClient(transport);
   }
 
   @Override
   public void close() {
     // shuts down the ES client
-    if (Objects.nonNull(restHighLevelClient)) {
+    if (Objects.nonNull(elasticsearchClient)) {
       try {
-        restHighLevelClient.close();
+        elasticsearchClient.shutdown();
       } catch (IOException ex) {
         throw new RuntimeException(ex);
       }

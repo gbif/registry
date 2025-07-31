@@ -33,14 +33,12 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
-import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.csrf.CsrfFilter;
 import org.springframework.security.web.firewall.HttpFirewall;
 import org.springframework.security.web.firewall.StrictHttpFirewall;
@@ -50,7 +48,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 @Configuration
 @EnableWebSecurity
-public class WebSecurityConfigurer extends WebSecurityConfigurerAdapter {
+public class WebSecurityConfigurer {
 
   private final ApplicationContext context;
 
@@ -63,12 +61,8 @@ public class WebSecurityConfigurer extends WebSecurityConfigurerAdapter {
     this.context = context;
   }
 
-  @Override
-  protected void configure(AuthenticationManagerBuilder auth) {
-    auth.authenticationProvider(dbAuthenticationProvider());
-  }
-
-  private DaoAuthenticationProvider dbAuthenticationProvider() {
+  @Bean
+  public DaoAuthenticationProvider dbAuthenticationProvider() {
     final DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
     authProvider.setUserDetailsService(userDetailsService);
     authProvider.setPasswordEncoder(passwordEncoder());
@@ -82,44 +76,37 @@ public class WebSecurityConfigurer extends WebSecurityConfigurerAdapter {
     return firewall;
   }
 
-  @Override
-  public void configure(WebSecurity web) throws Exception {
-    super.configure(web);
-    web.httpFirewall(allowUrlEncodedSlashHttpFirewall());
-  }
-
-  @Override
-  protected void configure(HttpSecurity http) throws Exception {
-    http.httpBasic()
-        .disable()
-        .addFilterAfter(context.getBean(HttpServletRequestWrapperFilter.class), CsrfFilter.class)
+  @Bean
+  public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    http
+        .httpBasic(basic -> basic.disable())
+        .csrf(csrf -> csrf.disable())
+        .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+        .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+        .authorizeHttpRequests(authz -> authz
+            .anyRequest().authenticated()
+        )
+        .addFilterAfter(context.getBean("httpServletRequestWrapperFilter", HttpServletRequestWrapperFilter.class), CsrfFilter.class)
         .addFilterAfter(
-            context.getBean(RequestHeaderParamUpdateFilter.class),
+            context.getBean("requestHeaderParamUpdateFilter", RequestHeaderParamUpdateFilter.class),
             HttpServletRequestWrapperFilter.class)
-        .addFilterAfter(context.getBean(IdentityFilter.class), RequestHeaderParamUpdateFilter.class)
-        .addFilterAfter(context.getBean(LegacyAuthorizationFilter.class), IdentityFilter.class)
-        .addFilterAfter(context.getBean(AppIdentityFilter.class), LegacyAuthorizationFilter.class)
-        .addFilterAfter(context.getBean(JwtRequestFilter.class), AppIdentityFilter.class)
+        .addFilterAfter(context.getBean("identityFilter", IdentityFilter.class), RequestHeaderParamUpdateFilter.class)
+        .addFilterAfter(context.getBean("legacyAuthorizationFilter", LegacyAuthorizationFilter.class), IdentityFilter.class)
+        .addFilterAfter(context.getBean("appIdentityFilter", AppIdentityFilter.class), LegacyAuthorizationFilter.class)
+        .addFilterAfter(context.getBean("jwtRequestFilter", JwtRequestFilter.class), AppIdentityFilter.class)
         .addFilterAfter(
-            context.getBean(AuthPreCheckCreationRequestFilter.class), JwtRequestFilter.class)
+            context.getBean("authPreCheckCreationRequestFilter", AuthPreCheckCreationRequestFilter.class), JwtRequestFilter.class)
         .addFilterAfter(
-            context.getBean(EditorAuthorizationFilter.class),
+            context.getBean("editorAuthorizationFilter", EditorAuthorizationFilter.class),
             AuthPreCheckCreationRequestFilter.class)
         .addFilterAfter(
-            context.getBean(GrSciCollEditorAuthorizationFilter.class),
+            context.getBean("grSciCollEditorAuthorizationFilter", GrSciCollEditorAuthorizationFilter.class),
             EditorAuthorizationFilter.class)
         .addFilterAfter(
-            context.getBean(ResourceNotFoundRequestFilter.class),
-            GrSciCollEditorAuthorizationFilter.class)
-        .csrf()
-        .disable()
-        .cors()
-        .and()
-        .authorizeRequests()
-        .anyRequest()
-        .authenticated();
+            context.getBean("resourceNotFoundRequestFilter", ResourceNotFoundRequestFilter.class),
+            GrSciCollEditorAuthorizationFilter.class);
 
-    http.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
+    return http.build();
   }
 
   @Bean

@@ -27,9 +27,8 @@ import org.gbif.registry.search.dataset.common.EsSearchRequestBuilder;
 import java.io.IOException;
 import java.util.List;
 
-import org.elasticsearch.action.search.SearchRequest;
-import org.elasticsearch.client.RequestOptions;
-import org.elasticsearch.client.RestHighLevelClient;
+import co.elastic.clients.elasticsearch.ElasticsearchClient;
+import co.elastic.clients.elasticsearch.core.SearchRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -46,7 +45,7 @@ public class DatasetSearchServiceEs implements DatasetSearchService {
   private static final int MAX_SUGGEST_LIMIT = 100;
 
   private final DatasetEsResponseParser esResponseParser = DatasetEsResponseParser.create();
-  private final RestHighLevelClient restHighLevelClient;
+  private final ElasticsearchClient elasticsearchClient;
   private final String index;
 
   private final EsSearchRequestBuilder<DatasetSearchParameter> esSearchRequestBuilder =
@@ -55,9 +54,9 @@ public class DatasetSearchServiceEs implements DatasetSearchService {
   @Autowired
   public DatasetSearchServiceEs(
       @Value("${elasticsearch.registry.index}") String index,
-      RestHighLevelClient restHighLevelClient) {
+      ElasticsearchClient elasticsearchClient) {
     this.index = index;
-    this.restHighLevelClient = restHighLevelClient;
+    this.elasticsearchClient = elasticsearchClient;
   }
 
   @Override
@@ -66,39 +65,30 @@ public class DatasetSearchServiceEs implements DatasetSearchService {
     try {
       SearchRequest searchRequest =
           esSearchRequestBuilder.buildSearchRequest(datasetSearchRequest, true, index);
-      return esResponseParser.buildSearchResponse(
-          restHighLevelClient.search(searchRequest, RequestOptions.DEFAULT), datasetSearchRequest);
+      SearchResponse<org.gbif.registry.search.dataset.DatasetDocument> response =
+          elasticsearchClient.search(searchRequest, org.gbif.registry.search.dataset.DatasetDocument.class);
+      return esResponseParser.buildSearchResponse(response, datasetSearchRequest);
     } catch (IOException ex) {
       throw new RuntimeException(ex);
     }
   }
 
   @Override
-  public List<DatasetSuggestResult> suggest(DatasetSuggestRequest request) {
+  public List<DatasetSuggestResult> suggest(DatasetSuggestRequest datasetSuggestRequest) {
     try {
-      log.debug("ES request: {}", request);
-      // add defaults
-      if (request.getLimit() < 1 || request.getLimit() > MAX_SUGGEST_LIMIT) {
-        log.info(
-            "Suggest request with limit {} found. Reset to default {}",
-            request.getLimit(),
-            DEFAULT_SUGGEST_LIMIT);
-        request.setLimit(DEFAULT_SUGGEST_LIMIT);
-      }
-      if (request.getOffset() > 0) {
-        log.debug("Suggest request with offset {} found", request.getOffset());
+      int limit = datasetSuggestRequest.getLimit();
+      if (limit <= 0) {
+        limit = DEFAULT_SUGGEST_LIMIT;
+      } else if (limit > MAX_SUGGEST_LIMIT) {
+        limit = MAX_SUGGEST_LIMIT;
       }
 
-      // execute
       SearchRequest searchRequest =
-          esSearchRequestBuilder.buildAutocompleteQuery(
-              request, DatasetSearchParameter.DATASET_TITLE, index);
-      return esResponseParser
-          .buildSearchAutocompleteResponse(
-              restHighLevelClient.search(searchRequest, RequestOptions.DEFAULT), request)
-          .getResults();
+          esSearchRequestBuilder.buildSearchRequest(datasetSuggestRequest, limit, index);
+      SearchResponse<org.gbif.registry.search.dataset.DatasetDocument> response =
+          elasticsearchClient.search(searchRequest, org.gbif.registry.search.dataset.DatasetDocument.class);
+      return esResponseParser.buildSuggestResponse(response, datasetSuggestRequest);
     } catch (IOException ex) {
-      log.error("Error executing the search operation", ex);
       throw new RuntimeException(ex);
     }
   }

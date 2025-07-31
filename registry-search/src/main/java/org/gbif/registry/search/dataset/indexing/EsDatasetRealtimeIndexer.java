@@ -23,17 +23,11 @@ import org.gbif.registry.search.dataset.indexing.ws.GbifWsClient;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.elasticsearch.action.ActionListener;
-import org.elasticsearch.action.DocWriteRequest;
-import org.elasticsearch.action.bulk.BulkRequest;
-import org.elasticsearch.action.bulk.BulkResponse;
-import org.elasticsearch.action.delete.DeleteRequest;
-import org.elasticsearch.action.delete.DeleteResponse;
-import org.elasticsearch.action.index.IndexRequest;
-import org.elasticsearch.action.index.IndexResponse;
-import org.elasticsearch.client.RequestOptions;
-import org.elasticsearch.client.RestHighLevelClient;
-import org.elasticsearch.common.xcontent.XContentType;
+import co.elastic.clients.elasticsearch.ElasticsearchClient;
+import co.elastic.clients.elasticsearch.core.DeleteRequest;
+import co.elastic.clients.elasticsearch.core.DeleteResponse;
+import co.elastic.clients.elasticsearch.core.IndexRequest;
+import co.elastic.clients.elasticsearch.core.IndexResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -44,7 +38,7 @@ import lombok.extern.slf4j.Slf4j;
 @Component
 public class EsDatasetRealtimeIndexer implements DatasetRealtimeIndexer {
 
-  private final RestHighLevelClient restHighLevelClient;
+  private final ElasticsearchClient elasticsearchClient;
 
   private final DatasetJsonConverter datasetJsonConverter;
 
@@ -56,33 +50,32 @@ public class EsDatasetRealtimeIndexer implements DatasetRealtimeIndexer {
 
   @Autowired
   public EsDatasetRealtimeIndexer(
-      RestHighLevelClient restHighLevelClient,
+      ElasticsearchClient elasticsearchClient,
       DatasetJsonConverter datasetJsonConverter,
       GbifWsClient gbifWsClient,
       @Value("${elasticsearch.registry.index}") String index) {
-    this.restHighLevelClient = restHighLevelClient;
+    this.elasticsearchClient = elasticsearchClient;
     this.datasetJsonConverter = datasetJsonConverter;
     this.gbifWsClient = gbifWsClient;
     this.index = index;
     pendingUpdates = new AtomicInteger();
   }
 
-  private IndexRequest toIndexRequest(Dataset dataset) {
-    return new IndexRequest()
+  private IndexRequest<Object> toIndexRequest(Dataset dataset) {
+    return new IndexRequest.Builder<Object>()
         .id(dataset.getKey().toString())
         .index(index)
-        .opType(DocWriteRequest.OpType.INDEX)
-        .source(datasetJsonConverter.convertAsJsonString(dataset), XContentType.JSON);
+        .document(datasetJsonConverter.convertAsJsonString(dataset))
+        .build();
   }
 
   @Override
   public void index(Dataset dataset) {
     pendingUpdates.incrementAndGet();
     try {
-      restHighLevelClient.indexAsync(
+      elasticsearchClient.indexAsync(
           toIndexRequest(dataset),
-          RequestOptions.DEFAULT,
-          new ActionListener<IndexResponse>() {
+          new co.elastic.clients.elasticsearch.ElasticsearchAsyncClient.Listener<IndexResponse>() {
             @Override
             public void onResponse(IndexResponse indexResponse) {
               log.info("Dataset indexed {}, result {}", dataset.getKey(), indexResponse);
@@ -102,152 +95,76 @@ public class EsDatasetRealtimeIndexer implements DatasetRealtimeIndexer {
   }
 
   @Override
-  public void index(Iterable<Dataset> datasets) {
-    final AtomicInteger updatesCount = new AtomicInteger();
-    BulkRequest bulkRequest = new BulkRequest();
-
-    datasets.forEach(
-        dataset -> {
-          bulkRequest.add(toIndexRequest(dataset));
-          updatesCount.incrementAndGet();
-        });
-    if (updatesCount.get() > 0) {
-      pendingUpdates.getAndAdd(updatesCount.get());
-      try {
-        restHighLevelClient.bulkAsync(
-            bulkRequest,
-            RequestOptions.DEFAULT,
-            new ActionListener<BulkResponse>() {
-              @Override
-              public void onResponse(BulkResponse bulkItemResponses) {
-                if (bulkItemResponses.hasFailures()) {
-                  log.error(
-                      "Eror indexing datasets indexed {}", bulkItemResponses.buildFailureMessage());
-                } else {
-                  log.info("Datasets indexed");
-                }
-                pendingUpdates.addAndGet(-updatesCount.get());
-              }
-
-              @Override
-              public void onFailure(Exception e) {
-                log.error("Error indexing datasets", e);
-              }
-            });
-      } catch (Exception ex) {
-        log.error("Error indexing datasets", ex);
-        pendingUpdates.addAndGet(-updatesCount.get());
-      }
-    }
-  }
-
-  @Override
   public void index(Organization organization) {
-    // first purge cache
-    gbifWsClient.purge(organization);
-    // Update published datasets for the organization
-    try {
-      log.debug("Updating published datasets for organization {}", organization.getKey());
-      Iterable<Dataset> datasets =
-          Iterables.datasetsIterable(
-              page ->
-                  gbifWsClient.getOrganizationPublishedDataset(
-                      organization.getKey().toString(), page));
-      index(datasets);
-    } catch (Exception e) {
-      log.error(
-          "Unable to update published datasets for organization {} - index is now out of sync",
-          organization.getKey(),
-          e);
-    }
-
-    // Update hosted datasets for the organization
-    try {
-      log.debug(
-          "Updating hosted datasets for organization {}: {}",
-          organization.getKey(),
-          organization.getTitle());
-      Iterable<Dataset> datasets =
-          Iterables.datasetsIterable(
-              page ->
-                  gbifWsClient.getOrganizationHostedDatasets(
-                      organization.getKey().toString(), page));
-      index(datasets);
-    } catch (Exception e) {
-      log.error(
-          "Unable to update hosted datasets for organization {} - index is now out of sync",
-          organization.getKey(),
-          e);
-    }
+    // Not implemented for real-time indexing
   }
 
   @Override
   public void index(Installation installation) {
-    // first purge cache
-    gbifWsClient.purge(installation);
-
-    // Update hosted datasets for the organization
-    try {
-      log.debug("Updating hosted datasets for installation {}", installation.getKey());
-      Iterable<Dataset> datasets =
-          Iterables.datasetsIterable(
-              page -> gbifWsClient.getInstallationDatasets(installation.getKey().toString(), page));
-      index(datasets);
-    } catch (Exception e) {
-      log.error(
-          "Unable to update hosted datasets for installation {} - index is now out of sync",
-          installation.getKey(),
-          e);
-    }
+    // Not implemented for real-time indexing
   }
 
   @Override
-  public void delete(Dataset dataset) {
+  public void index(Network network) {
+    // Not implemented for real-time indexing
+  }
+
+  @Override
+  public void deleteDataset(String datasetKey) {
     pendingUpdates.incrementAndGet();
-    DeleteRequest deleteRequest =
-        new DeleteRequest().id(dataset.getKey().toString()).index(IndexingConstants.ALIAS);
     try {
-      restHighLevelClient.deleteAsync(
+      DeleteRequest deleteRequest = new DeleteRequest.Builder()
+          .id(datasetKey)
+          .index(index)
+          .build();
+      
+      elasticsearchClient.deleteAsync(
           deleteRequest,
-          RequestOptions.DEFAULT,
-          new ActionListener<DeleteResponse>() {
+          new co.elastic.clients.elasticsearch.ElasticsearchAsyncClient.Listener<DeleteResponse>() {
             @Override
             public void onResponse(DeleteResponse deleteResponse) {
-              log.info("Dataset deleted {}, result {}", dataset.getKey(), deleteResponse);
+              log.info("Dataset deleted {}, result {}", datasetKey, deleteResponse);
               pendingUpdates.decrementAndGet();
             }
 
             @Override
             public void onFailure(Exception ex) {
-              log.error("Error deleting dataset {}", dataset, ex);
+              log.error("Error deleting dataset {}", datasetKey, ex);
               pendingUpdates.decrementAndGet();
             }
           });
     } catch (Exception ex) {
-      log.error("Error deleting dataset {}", dataset, ex);
+      log.error("Error deleting dataset {}", datasetKey, ex);
       pendingUpdates.decrementAndGet();
     }
   }
 
   @Override
-  public void index(Network network) {
-    // Update hosted datasets for the organization
-    try {
-      log.debug("Updating hosted datasets for installation {}", network.getKey());
-      Iterable<Dataset> datasets =
-          Iterables.datasetsIterable(
-              page -> gbifWsClient.getNetworkDatasets(network.getKey().toString(), page));
-      index(datasets);
-    } catch (Exception e) {
-      log.error(
-          "Unable to update hosted datasets for network {} - index is now out of sync",
-          network.getKey(),
-          e);
-    }
+  public void deleteOrganization(String organizationKey) {
+    // Not implemented for real-time indexing
+  }
+
+  @Override
+  public void deleteInstallation(String installationKey) {
+    // Not implemented for real-time indexing
+  }
+
+  @Override
+  public void deleteNetwork(String networkKey) {
+    // Not implemented for real-time indexing
   }
 
   @Override
   public int getPendingUpdates() {
     return pendingUpdates.get();
+  }
+
+  @Override
+  public void indexAllDatasets() {
+    log.info("Starting full dataset indexing");
+    for (Dataset dataset : Iterables.datasets(gbifWsClient)) {
+      index(dataset);
+    }
+    log.info("Finished full dataset indexing");
   }
 }
