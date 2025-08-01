@@ -453,6 +453,10 @@ public class BaseCollectionEntityService<
         && !IdentifierUtils.isValidCLBDatasetKey(identifier.getIdentifier())) {
       throw new IllegalArgumentException("Invalid CLB_DATASET_KEY");
     }
+    if (identifier.getType() == IdentifierType.RNC_COLOMBIA
+        && !IdentifierUtils.isValidRNCColombiaIdentifier(identifier.getIdentifier())) {
+      throw new IllegalArgumentException("Invalid RNC_COLOMBIA identifier");
+    }
   }
 
   @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE, GRSCICOLL_MEDIATOR_ROLE})
