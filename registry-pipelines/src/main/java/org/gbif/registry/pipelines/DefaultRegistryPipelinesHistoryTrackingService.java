@@ -473,6 +473,7 @@ public class DefaultRegistryPipelinesHistoryTrackingService
       case EVENTS_VERBATIM_TO_INTERPRETED:
         return deserializeMessage(jsonMessage, PipelinesEventsMessage.class);
       case EVENTS_INTERPRETED_TO_INDEX:
+      case EVENTS_HDFS_VIEW:
         return deserializeMessage(jsonMessage, PipelinesEventsInterpretedMessage.class);
       default:
         return Optional.empty();
