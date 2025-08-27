@@ -11,7 +11,7 @@
 
   <groupId>org.gbif.registry</groupId>
   <artifactId>registry-parent</artifactId>
-  <version>4.1.5-SNAPSHOT</version>
+  <version>4.1.6-SNAPSHOT</version>
   <name>GBIF Registry Parent</name>
   <description>GBIF Registry project</description>
 
@@ -89,7 +89,7 @@
     <micrometer.version>1.12.2</micrometer.version>
 
     <!-- GBIF -->
-    <gbif-api.version>2.1.13</gbif-api.version>
+    <gbif-api.version>2.1.14</gbif-api.version>
     <gbif-common.version>0.59</gbif-common.version>
     <gbif-common-mybatis.version>2.0.0</gbif-common-mybatis.version>
     <gbif-common-ws.version>2.0.10-java11</gbif-common-ws.version>
