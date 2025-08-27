@@ -171,4 +171,5 @@
   <include file="liquibase/163-vocab-managed-fields-grscicoll.xml" />
   <include file="liquibase/164-migrate-grscicoll-facets.xml" />
   <include file="liquibase/165-dataset-category.xml" />
+  <include file="liquibase/166-add-rnc-colombia-identifier-type.xml" />
 </databaseChangeLog>
