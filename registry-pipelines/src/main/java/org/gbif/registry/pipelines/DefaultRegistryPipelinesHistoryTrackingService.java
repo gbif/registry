@@ -461,6 +461,7 @@ public class DefaultRegistryPipelinesHistoryTrackingService
       case FRAGMENTER:
         return createInterpretedMessage(prefix, jsonMessage, stepName);
       case HDFS_VIEW:
+      case EVENTS_HDFS_VIEW:
         return createInterpretedMessage(prefix, jsonMessage, stepName, interpretTypes);
       case VERBATIM_TO_INTERPRETED:
         return createVerbatimMessage(prefix, jsonMessage, interpretTypes);
@@ -473,8 +474,6 @@ public class DefaultRegistryPipelinesHistoryTrackingService
       case EVENTS_VERBATIM_TO_INTERPRETED:
         return deserializeMessage(jsonMessage, PipelinesEventsMessage.class);
       case EVENTS_INTERPRETED_TO_INDEX:
-      case EVENTS_HDFS_VIEW:
-        return deserializeMessage(jsonMessage, PipelinesEventsInterpretedMessage.class);
       default:
         return Optional.empty();
     }
