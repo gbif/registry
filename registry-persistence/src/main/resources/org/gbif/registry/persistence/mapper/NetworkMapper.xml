@@ -412,6 +412,14 @@
     SELECT n.key,n.title AS name
     FROM network n
     WHERE n.deleted IS NULL
-    ORDER BY lower(n.title)
+      AND NOT EXISTS (
+      SELECT 1
+      FROM network_machine_tag nmt
+             JOIN machine_tag m ON nmt.machine_tag_key = m.key
+      WHERE nmt.network_key = n.key
+        AND m.name = 'visibleInIPT'
+        AND m.value = 'false'
+    )
+    ORDER BY LOWER(n.title)
   </select>
 </mapper>
