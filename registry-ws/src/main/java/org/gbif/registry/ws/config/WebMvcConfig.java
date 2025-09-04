@@ -190,9 +190,9 @@ public class WebMvcConfig implements WebMvcConfigurer {
   }
 
   @Bean
-  public NameUsageMatchingService nameUsageMatchingService(@Value("${api.root.url}") String apiRootUrl) {
+  public NameUsageMatchingService nameUsageMatchingService(@Value("${api.nameUsageMatchingService.ws.url}") String nameUsageMatchingServiceUrl) {
     return RestClientFactory.createNameMatchService(ClientConfiguration.builder()
-        .withBaseApiUrl(apiRootUrl)
+        .withBaseApiUrl(nameUsageMatchingServiceUrl)
         .build());
   }
 
