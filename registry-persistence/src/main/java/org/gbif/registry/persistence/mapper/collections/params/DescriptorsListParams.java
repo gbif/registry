@@ -43,6 +43,7 @@ public class DescriptorsListParams extends CollectionListParams {
   @Nullable List<String> recordedBy;
   @Nullable List<String> discipline;
   @Nullable List<String> objectClassification;
+  @Nullable List<String> biome;
   @Nullable List<String> issues;
 
   // facets
@@ -60,6 +61,7 @@ public class DescriptorsListParams extends CollectionListParams {
         || facet == CollectionFacetParameter.TYPE_STATUS
         || facet == CollectionFacetParameter.RECORDED_BY
         || facet == CollectionFacetParameter.OBJECT_CLASSIFICATION
+        || facet == CollectionFacetParameter.BIOME
         || facet == CollectionFacetParameter.TAXON_KEY;
   }
 
@@ -77,6 +79,7 @@ public class DescriptorsListParams extends CollectionListParams {
         || recordedBy != null
         || discipline != null
         || objectClassification != null
+        || biome != null
         || issues != null;
   }
 
@@ -93,6 +96,7 @@ public class DescriptorsListParams extends CollectionListParams {
         || recordedBy != null
         || discipline != null
         || objectClassification != null
+        || biome != null
         || issues != null;
   }
 

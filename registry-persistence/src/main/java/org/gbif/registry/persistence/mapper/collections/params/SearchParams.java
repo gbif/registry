@@ -58,5 +58,6 @@ public class SearchParams {
   @Nullable List<String> recordedBy;
   @Nullable List<String> discipline;
   @Nullable List<String> objectClassification;
+  @Nullable List<String> biome;
   @Nullable List<String> issues;
 }

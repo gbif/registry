@@ -333,19 +333,6 @@ public class CollectionsSearchService {
     return collectionFacet;
   }
 
-  private String getVocabularyName(CollectionsFacetParameter facetParameter) {
-    if (facetParameter == InstitutionFacetParameter.DISCIPLINE) {
-      return Vocabularies.DISCIPLINE;
-    } else if (facetParameter == CollectionFacetParameter.TYPE_STATUS) {
-      return Vocabularies.TYPE_STATUS;
-    } else if (facetParameter == CollectionFacetParameter.ACCESSION_STATUS) {
-      return Vocabularies.ACCESSION_STATUS;
-    } else if (facetParameter == CollectionFacetParameter.PRESERVATION_TYPE) {
-      return Vocabularies.PRESERVATION_TYPE;
-    }
-    return null;
-  }
-
   private static <F extends CollectionsFacetParameter> Pageable extractFacetPage(
       FacetedSearchRequest<F> searchRequest, F facetParameter) {
     if (searchRequest.getFacetPages() != null
@@ -384,6 +371,7 @@ public class CollectionsSearchService {
     descriptorMatch.setRecordedBy(dto.getDescriptorRecordedBy());
     descriptorMatch.setDiscipline(dto.getDescriptorDiscipline());
     descriptorMatch.setObjectClassification(dto.getDescriptorObjectClassification());
+    descriptorMatch.setBiome(dto.getDescriptorBiome());
     descriptorMatch.setIssues(dto.getDescriptorIssues());
     return descriptorMatch;
   }
@@ -471,7 +459,9 @@ public class CollectionsSearchService {
     createHighlightMatch(dto.getDescriptorDisciplineHighlight(), "descriptor.discipline")
         .ifPresent(highlights::add);
     createHighlightMatch(
-            dto.getDescriptorObjectClassificationHighlight(), "descriptor.objectClassification")
+            dto.getDescriptorObjectClassificationHighlight(), "descriptor.objectClassification");
+    createHighlightMatch(
+      dto.getDescriptorBiomeHighlight(), "descriptor.biome")
         .ifPresent(highlights::add);
     createHighlightMatch(dto.getDescriptorIssuesHighlight(), "descriptor.issues")
         .ifPresent(highlights::add);

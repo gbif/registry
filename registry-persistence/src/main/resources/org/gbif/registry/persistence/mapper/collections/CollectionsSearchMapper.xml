@@ -270,7 +270,7 @@
       cd.individual_count AS descriptorIndividualCount, cd.identified_by AS descriptorIdentifiedBy,
       cd.date_identified as descriptorDateIdentified, cd.type_status AS descriptorTypeStatus,
       cd.recorded_by AS descriptorRecordedBy, cd.discipline AS descriptorDiscipline,
-      cd.object_classification_name AS descriptorObjectClassification, cd.issues AS descriptorIssues
+      cd.object_classification_name AS descriptorObjectClassification, cd.biome AS descriptorBiome, cd.issues AS descriptorIssues
     </if>
     <if test="params.query != null &amp;&amp; params.highlight">
       ,ts_headline(c.code, c.query) code_highlight, ts_headline(c.name, c.query) name_highlight
@@ -289,6 +289,7 @@
         ts_headline(array_to_string(cd.recorded_by, ' '), c.query) descriptor_recorded_by_highlight,
         ts_headline(cd.discipline, c.query) descriptor_discipline_highlight,
         ts_headline(cd.object_classification_name, c.query) descriptor_object_classification_highlight,
+        ts_headline(cd.biome, c.query) descriptor_biome_highlight,
         ts_headline(array_to_string(cd.issues, ' '), c.query) descriptor_issues_highlight,
         ts_headline(cdg.title, c.query) descriptor_group_title_highlight,
         ts_headline(cdg.description, c.query) descriptor_group_description_highlight

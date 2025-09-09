@@ -33,6 +33,7 @@ import org.gbif.registry.search.dataset.indexing.ws.JacksonObjectMapper;
 import org.gbif.registry.service.DatasetCategoryService;
 import org.gbif.registry.service.VocabularyConceptService;
 import org.gbif.registry.service.WithMyBatis;
+import org.gbif.registry.service.collections.descriptors.DescriptorVocabularySynchronizer;
 import org.gbif.registry.ws.client.DatasetClient;
 import org.gbif.registry.ws.client.InstallationClient;
 import org.gbif.registry.ws.client.NetworkClient;
@@ -100,6 +101,7 @@ public class SpringContextBuilder {
     ctx.register(GbifWsWrapperClient.class);
     ctx.register(VocabularyConceptService.class);
     ctx.register(DatasetCategoryService.class);
+    ctx.register(DescriptorVocabularySynchronizer.class);
     ctx.register(WithMyBatis.class);
 
     // Register database configuration

@@ -33,6 +33,18 @@ vocabulariesToProcess:
   - "PreservationType"
   - "AccessionStatus"
   - "DatasetCategory"
+  - "ObjectClassificationName"
+  - "Biome"
 
 
 apiRootUrl: "http://api.gbif-dev.org/v1"
+
+# Elasticsearch configuration
+elasticsearch:
+  hosts: "http://registry-search.gbif-dev.org:9200/"
+  index: "dataset"
+  connectionTimeOut: 60000
+  socketTimeOut: 60000
+  connectionRequestTimeOut: 120000
+
+
