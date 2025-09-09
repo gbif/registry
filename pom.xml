@@ -105,7 +105,7 @@
     <gbif-vocabulary.version>2.0.2</gbif-vocabulary.version>
     <gbif-kvs.version>3.0</gbif-kvs.version>
     <checklistbank.version>3.0.0</checklistbank.version>
-    <dwc-api.version>2.1.6</dwc-api.version>
+    <dwc-api.version>2.1.7-SNAPSHOT</dwc-api.version>
     <dwca-io.version>3.0.0</dwca-io.version>
 
     <!-- Third party -->
