@@ -33,6 +33,8 @@ vocabulariesToProcess:
   - "PreservationType"
   - "AccessionStatus"
   - "DatasetCategory"
+  - "BiomeType"
+  - "ObjectClassificationName"
 
 
 apiRootUrl: "http://api.gbif-dev.org/v1"
