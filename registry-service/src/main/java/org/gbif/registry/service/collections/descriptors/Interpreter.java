@@ -13,7 +13,9 @@
  */
 package org.gbif.registry.service.collections.descriptors;
 
+import org.gbif.api.model.collections.descriptors.DescriptorValidationResult;
 import org.gbif.api.v2.RankedName;
+import org.gbif.registry.persistence.mapper.collections.dto.DescriptorDto;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.common.parsers.CountryParser;
@@ -128,6 +130,69 @@ public class Interpreter {
 
     return InterpretedResult.<List<String>>builder()
         .result(results)
+        .issues(new ArrayList<>(issues))
+        .build();
+  }
+
+  /**
+   * Interprets biome type field with graceful vocabulary validation.
+   * Invalid values are left blank rather than causing the entire operation to fail.
+   */
+  public static InterpretedResult<String> interpretBiomeType(
+      ConceptClient conceptClient, Map<String, String> valuesMap) {
+
+    String verbatimValue = extractValue(valuesMap, "ltc:biomeType");
+    if (verbatimValue == null || verbatimValue.trim().isEmpty()) {
+      return InterpretedResult.<String>builder().build();
+    }
+
+    // Use graceful validation - invalid values are simply ignored
+    DescriptorDto tempDescriptor = new DescriptorDto();
+    tempDescriptor.setBiomeType(verbatimValue);
+    DescriptorValidationResult validationResult =
+        Vocabularies.validateDescriptorVocabsValues(conceptClient, tempDescriptor);
+
+    Set<String> issues = new HashSet<>();
+    if (validationResult.hasIssues()) {
+      validationResult.getIssues().forEach(issue ->
+        issues.add("BIOME_TYPE_VALIDATION_ISSUE: " + issue));
+    }
+
+    return InterpretedResult.<String>builder()
+        .result(validationResult.getValidBiomeType())
+        .issues(new ArrayList<>(issues))
+        .build();
+  }
+
+  /**
+   * Interprets object classification field with graceful vocabulary validation.
+   * Invalid values are left blank rather than causing the entire operation to fail.
+   */
+  public static InterpretedResult<String> interpretObjectClassification(
+      Map<String, String> valuesMap, ConceptClient conceptClient) {
+    if (valuesMap.isEmpty()) {
+      return InterpretedResult.empty();
+    }
+
+    String verbatimValue = extractValue(valuesMap, "ltc:objectClassificationName");
+    if (Strings.isNullOrEmpty(verbatimValue)) {
+      return InterpretedResult.empty();
+    }
+
+    // Use graceful validation - invalid values are simply ignored
+    DescriptorDto tempDescriptor = new DescriptorDto();
+    tempDescriptor.setObjectClassificationName(verbatimValue);
+    DescriptorValidationResult validationResult =
+        Vocabularies.validateDescriptorVocabsValues(conceptClient, tempDescriptor);
+
+    Set<String> issues = new HashSet<>();
+    if (validationResult.hasIssues()) {
+      validationResult.getIssues().forEach(issue ->
+          issues.add("OBJECT_CLASSIFICATION_VALIDATION_ISSUE: " + issue));
+    }
+
+    return InterpretedResult.<String>builder()
+        .result(validationResult.getValidObjectClassification()) // Will be null if invalid
         .issues(new ArrayList<>(issues))
         .build();
   }
@@ -377,7 +442,7 @@ public class Interpreter {
         .orElse(Collections.emptyList());
   }
 
-  private static boolean isEmptyResponse(NameUsageMatchResponse response) {
+   private static boolean isEmptyResponse(NameUsageMatchResponse response) {
     return response == null || response.getUsage() == null || response.getDiagnostics() == null;
   }
 
