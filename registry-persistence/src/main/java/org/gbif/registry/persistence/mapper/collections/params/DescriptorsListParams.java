@@ -99,6 +99,7 @@ public class DescriptorsListParams extends CollectionListParams {
         || discipline != null
         || objectClassification != null
         || biome != null
+        || biomeType != null
         || issues != null;
   }
 
