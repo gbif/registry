@@ -51,8 +51,6 @@ public interface DescriptorsMapper {
 
   long countDescriptors(@Param("params") DescriptorParams searchParams);
 
-  List<DescriptorDto> listDescriptorsWithVocabularyField(@Param("vocabularyName") String vocabularyName);
-
   void deleteDescriptors(@Param("descriptorGroupKey") long descriptorGroupKey);
 
   void createVerbatim(
@@ -63,6 +61,4 @@ public interface DescriptorsMapper {
   // TODO: list deleted
 
   List<VerbatimDto> getVerbatimNames(long descriptorGroupKey);
-
-  List<VerbatimDto> getVerbatimValues(@Param("descriptorKey") long descriptorKey);
 }
