@@ -135,35 +135,31 @@ public class Interpreter {
   }
 
   /**
-   * Interprets biome field with graceful vocabulary validation.
+   * Interprets biome type field with graceful vocabulary validation.
    * Invalid values are left blank rather than causing the entire operation to fail.
    */
-  public static InterpretedResult<String> interpretBiome(
-      Map<String, String> valuesMap, ConceptClient conceptClient) {
-    if (valuesMap.isEmpty()) {
-      return InterpretedResult.empty();
-    }
+  public static InterpretedResult<String> interpretBiomeType(
+      ConceptClient conceptClient, Map<String, String> valuesMap) {
 
-    String verbatimValue = extractValue(valuesMap, "ltc:biome");
-    if (Strings.isNullOrEmpty(verbatimValue)) {
-      return InterpretedResult.empty();
+    String verbatimValue = extractValue(valuesMap, "ltc:biomeType");
+    if (verbatimValue == null || verbatimValue.trim().isEmpty()) {
+      return InterpretedResult.<String>builder().build();
     }
 
     // Use graceful validation - invalid values are simply ignored
     DescriptorDto tempDescriptor = new DescriptorDto();
-    tempDescriptor.setBiome(verbatimValue);
+    tempDescriptor.setBiomeType(verbatimValue);
     DescriptorValidationResult validationResult =
         Vocabularies.validateDescriptorVocabsValues(conceptClient, tempDescriptor);
 
     Set<String> issues = new HashSet<>();
-    if (validationResult.hasWarnings()) {
-      // Add warnings as issues for logging/tracking purposes
-      validationResult.getWarnings().forEach(warning ->
-          issues.add("BIOME_VALIDATION_WARNING: " + warning));
+    if (validationResult.hasIssues()) {
+      validationResult.getIssues().forEach(issue ->
+        issues.add("BIOME_TYPE_VALIDATION_ISSUE: " + issue));
     }
 
     return InterpretedResult.<String>builder()
-        .result(validationResult.getValidBiome()) // Will be null if invalid
+        .result(validationResult.getValidBiomeType())
         .issues(new ArrayList<>(issues))
         .build();
   }
@@ -190,10 +186,9 @@ public class Interpreter {
         Vocabularies.validateDescriptorVocabsValues(conceptClient, tempDescriptor);
 
     Set<String> issues = new HashSet<>();
-    if (validationResult.hasWarnings()) {
-      // Add warnings as issues for logging/tracking purposes
-      validationResult.getWarnings().forEach(warning ->
-          issues.add("OBJECT_CLASSIFICATION_VALIDATION_WARNING: " + warning));
+    if (validationResult.hasIssues()) {
+      validationResult.getIssues().forEach(issue ->
+          issues.add("OBJECT_CLASSIFICATION_VALIDATION_ISSUE: " + issue));
     }
 
     return InterpretedResult.<String>builder()

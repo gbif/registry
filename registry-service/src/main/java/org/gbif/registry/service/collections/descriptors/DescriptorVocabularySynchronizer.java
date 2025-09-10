@@ -61,7 +61,7 @@ public class DescriptorVocabularySynchronizer implements VocabularyPostProcessor
 
   @Override
   public boolean canHandle(String vocabularyName) {
-    return Vocabularies.BIOME.equals(vocabularyName) ||
+    return Vocabularies.BIOME_TYPE.equals(vocabularyName) ||
            Vocabularies.OBJECT_CLASSIFICATION.equals(vocabularyName);
   }
 
@@ -137,15 +137,15 @@ public class DescriptorVocabularySynchronizer implements VocabularyPostProcessor
 
     log.debug("Processing descriptor {} for vocabulary '{}'", descriptor.getKey(), vocabularyName);
 
-    if (Vocabularies.BIOME.equals(vocabularyName)) {
-      String verbatimBiome = verbatimValues.get("ltc:biome");
-      if (verbatimBiome != null && !verbatimBiome.trim().isEmpty()) {
-        wasUpdated = updateVocabularyField(descriptor, verbatimBiome,
-          descriptor::setBiome, descriptor::getBiome,
-            DescriptorValidationResult::getValidBiome, "BIOME_VALIDATION_WARNING:",
-            "Biome", vocabularyName) || wasUpdated;
+    if (Vocabularies.BIOME_TYPE.equals(vocabularyName)) {
+      String verbatimBiomeType = verbatimValues.get("ltc:biomeType");
+      if (verbatimBiomeType != null && !verbatimBiomeType.trim().isEmpty()) {
+        wasUpdated = updateVocabularyField(descriptor, verbatimBiomeType,
+          descriptor::setBiomeType, descriptor::getBiomeType,
+            DescriptorValidationResult::getValidBiomeType, "BIOME_TYPE_VALIDATION_WARNING:",
+            "Biome type", vocabularyName) || wasUpdated;
       } else {
-        log.debug("Descriptor {} - No valid verbatim biome found", descriptor.getKey());
+        log.debug("Descriptor {} - No valid verbatim biome type found", descriptor.getKey());
       }
     }
 
@@ -154,7 +154,7 @@ public class DescriptorVocabularySynchronizer implements VocabularyPostProcessor
       if (verbatimObjectClassification != null && !verbatimObjectClassification.trim().isEmpty()) {
         wasUpdated = updateVocabularyField(descriptor, verbatimObjectClassification,
           descriptor::setObjectClassificationName, descriptor::getObjectClassificationName,
-            DescriptorValidationResult::getValidObjectClassification, "OBJECT_CLASSIFICATION_VALIDATION_WARNING:",
+            DescriptorValidationResult::getValidObjectClassification, "OBJECT_CLASSIFICATION_VALIDATION_ISSUE:",
             "Object classification", vocabularyName) || wasUpdated;
       } else {
         log.debug("Descriptor {} - No valid verbatim object classification found", descriptor.getKey());
@@ -211,8 +211,8 @@ public class DescriptorVocabularySynchronizer implements VocabularyPostProcessor
 
     // Create a temporary descriptor for validation
     DescriptorDto tempDescriptor = new DescriptorDto();
-    if (Vocabularies.BIOME.equals(vocabularyName)) {
-      tempDescriptor.setBiome(verbatimValue);
+    if (Vocabularies.BIOME_TYPE.equals(vocabularyName)) {
+      tempDescriptor.setBiomeType(verbatimValue);
     } else if (Vocabularies.OBJECT_CLASSIFICATION.equals(vocabularyName)) {
       tempDescriptor.setObjectClassificationName(verbatimValue);
     }
@@ -228,14 +228,14 @@ public class DescriptorVocabularySynchronizer implements VocabularyPostProcessor
              descriptor.getKey(), fieldDisplayName, currentValue, verbatimValue, newValue);
 
     // Update if the value is different or if there are warnings to update
-    if (!Objects.equals(currentValue, newValue) || validationResult.hasWarnings()) {
+    if (!Objects.equals(currentValue, newValue) || validationResult.hasIssues()) {
       setter.accept(newValue);
 
       // Update issues array to reflect new validation result
       List<String> currentIssues = descriptor.getIssues() != null ? new ArrayList<>(descriptor.getIssues()) : new ArrayList<>();
       currentIssues.removeIf(issue -> issue.startsWith(warningPrefix));
-      if (validationResult.hasWarnings()) {
-        currentIssues.addAll(validationResult.getWarnings());
+      if (validationResult.hasIssues()) {
+        currentIssues.addAll(validationResult.getIssues());
       }
 
       descriptor.setIssues(currentIssues);
@@ -243,9 +243,9 @@ public class DescriptorVocabularySynchronizer implements VocabularyPostProcessor
       log.info("{} value updated for descriptor {}: '{}' -> '{}' (verbatim: '{}')",
               fieldDisplayName, descriptor.getKey(), currentValue, newValue, verbatimValue);
 
-      if (validationResult.hasWarnings()) {
+      if (validationResult.hasIssues()) {
         log.info("{} validation warnings for descriptor {}: {}",
-                fieldDisplayName, descriptor.getKey(), validationResult.getWarnings());
+                fieldDisplayName, descriptor.getKey(), validationResult.getIssues());
       }
 
       return true;

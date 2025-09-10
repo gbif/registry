@@ -6,7 +6,7 @@ dbConfig:
   serverName: "pg1.gbif-dev.org"
   databaseName: "dev_registry"
   user: "registry"
-  password: "password"
+  password: "***REMOVED***"
   maximumPoolSize: 8
 
 # Messaging configuration to connect to your RabbitMQ (or other messaging system)
@@ -33,8 +33,8 @@ vocabulariesToProcess:
   - "PreservationType"
   - "AccessionStatus"
   - "DatasetCategory"
+  - "BiomeType"
   - "ObjectClassificationName"
-  - "Biome"
 
 
 apiRootUrl: "http://api.gbif-dev.org/v1"

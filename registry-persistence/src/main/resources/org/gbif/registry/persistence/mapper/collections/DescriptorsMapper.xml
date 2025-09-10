@@ -146,14 +146,14 @@
   <sql id="DESCRIPTOR_WRITE_FIELDS">
     collection_descriptor_group_key, usage_key, usage_name, usage_rank, taxon_classification, taxon_keys, country,
     individual_count, identified_by, date_identified, type_status, recorded_by, discipline, object_classification_name,
-    biome, issues, kingdom_key, kingdom_name, phylum_key, phylum_name, class_key, class_name, order_key, order_name, family_key,
+    biome, biome_type, issues, kingdom_key, kingdom_name, phylum_key, phylum_name, class_key, class_name, order_key, order_name, family_key,
     family_name, genus_key, genus_name, species_key, species_name
   </sql>
 
   <sql id="DESCRIPTOR_READ_FIELDS">
     d.key, d.collection_descriptor_group_key, d.usage_key, d.usage_name, d.usage_rank, d.taxon_classification, d.country,
     d.individual_count, d.identified_by, d.date_identified, d.type_status, d.recorded_by, d.discipline,
-    d.object_classification_name, d.biome, d.issues, d.kingdom_key, d.kingdom_name, d.phylum_key, d.phylum_name,
+    d.object_classification_name, d.biome, d.biome_type, d.issues, d.kingdom_key, d.kingdom_name, d.phylum_key, d.phylum_name,
     d.class_key, d.class_name, d.order_key, d.order_name, d.family_key, d.family_name, d.genus_key, d.genus_name,
     d.species_key, d.species_name
   </sql>
@@ -174,6 +174,7 @@
     #{discipline,jdbcType=VARCHAR},
     #{objectClassificationName,jdbcType=VARCHAR},
     #{biome,jdbcType=VARCHAR},
+    #{biomeType,jdbcType=VARCHAR},
     #{issues,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler},
     #{kingdomKey,jdbcType=VARCHAR},
     #{kingdomName,jdbcType=VARCHAR},
@@ -269,11 +270,11 @@
     INNER JOIN collection_descriptor_group ds ON ds.key = d.collection_descriptor_group_key AND ds.deleted IS NULL
     <where>
       <choose>
-        <when test="vocabularyName == 'Biome'">
+        <when test="vocabularyName == 'BiomeType'">
           AND EXISTS (
             SELECT 1 FROM collection_descriptor_verbatim v
             WHERE v.collection_descriptor_key = d.key
-            AND v.field_name = 'ltc:biome'
+            AND v.field_name = 'ltc:biomeType'
             AND v.field_value IS NOT NULL
             AND v.field_value != ''
           )
@@ -370,6 +371,12 @@
     <if test="params.biome != null and params.biome.size > 0">
       AND d.biome IN
       <foreach item="item" collection="params.biome" open="(" separator="," close=")">
+        #{item,jdbcType=VARCHAR}
+      </foreach>
+    </if>
+    <if test="params.biomeType != null and params.biomeType.size > 0">
+      AND d.biome_type IN
+      <foreach item="item" collection="params.biomeType" open="(" separator="," close=")">
         #{item,jdbcType=VARCHAR}
       </foreach>
     </if>

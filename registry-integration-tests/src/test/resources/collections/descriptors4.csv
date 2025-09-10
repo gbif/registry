@@ -1,4 +1,4 @@
-dwc:scientificName	ltc:biome	ltc:objectClassificationName
-Test Species	Tropical	Specimen
-Another Species	foo	foo
-Third Species	foo	ValidSpecimen
+dwc:scientificName	ltc:biome	ltc:objectClassificationName	ltc:biomeType
+Test Species	Tropical	Specimen	Terrestrial
+Another Species	Desert	foo	foo
+Third Species		ValidSpecimen	foo

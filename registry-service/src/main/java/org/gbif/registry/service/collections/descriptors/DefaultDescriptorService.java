@@ -565,8 +565,13 @@ public class DefaultDescriptorService implements DescriptorsService {
 
     // biome
     InterpretedResult<String> biomeResult =
-        Interpreter.interpretBiome(valuesMap, conceptClient);
+        Interpreter.interpretString(valuesMap, "ltc:biome");
     setResult(descriptorDto, biomeResult, DescriptorDto::setBiome);
+
+    // biomeType
+    InterpretedResult<String> biomeTypeResult =
+        Interpreter.interpretBiomeType(conceptClient, valuesMap);
+    setResult(descriptorDto, biomeTypeResult, DescriptorDto::setBiomeType);
 
     return descriptorDto;
   }
@@ -584,6 +589,7 @@ public class DefaultDescriptorService implements DescriptorsService {
     descriptorRecord.setIndividualCount(dto.getIndividualCount());
     descriptorRecord.setObjectClassification(dto.getObjectClassificationName());
     descriptorRecord.setBiome(dto.getBiome());
+    descriptorRecord.setBiomeType(dto.getBiomeType());
     descriptorRecord.setTypeStatus(dto.getTypeStatus());
     descriptorRecord.setUsageKey(dto.getUsageKey());
     descriptorRecord.setUsageName(dto.getUsageName());

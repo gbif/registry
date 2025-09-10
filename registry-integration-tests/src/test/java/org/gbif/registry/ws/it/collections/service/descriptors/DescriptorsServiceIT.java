@@ -397,15 +397,22 @@ public class DescriptorsServiceIT extends BaseServiceIT {
     assertNotNull(validDescriptor.getObjectClassification());
     assertEquals("Specimen", validDescriptor.getObjectClassification());
 
-    // Check that invalid vocabulary values are handled gracefully
-    Descriptor invalidDescriptor = descriptors.getResults().stream()
+    // Valid biome type should be preserved
+    assertNotNull(validDescriptor.getBiomeType());
+    assertEquals("Terrestrial", validDescriptor.getBiomeType());
+
+    // Check test descriptor with mixed values
+    Descriptor testDesc = descriptors.getResults().stream()
         .filter(d -> "Another Species".equals(d.getVerbatim().get("dwc:scientificName")))
         .findFirst()
         .orElseThrow();
 
-    // Invalid values should be null (graceful validation)
-    assertNull(invalidDescriptor.getBiome());
-    assertNull(invalidDescriptor.getObjectClassification());
+    assertNotNull(testDesc.getBiome());
+    assertEquals("Desert", testDesc.getBiome());
+
+    assertNull(testDesc.getObjectClassification());
+    assertNull(testDesc.getBiomeType());
+
 
     // Check that empty values are handled correctly
     Descriptor emptyDescriptor = descriptors.getResults().stream()
@@ -462,15 +469,22 @@ public class DescriptorsServiceIT extends BaseServiceIT {
     assertEquals("Tropical", validDescriptor.getBiome());
     assertNotNull(validDescriptor.getObjectClassification());
     assertEquals("Specimen", validDescriptor.getObjectClassification());
+    assertNotNull(validDescriptor.getBiomeType());
+    assertEquals("Terrestrial", validDescriptor.getBiomeType());
 
-    // Check that invalid vocabulary values are still handled gracefully after reinterpretation
-    Descriptor invalidDescriptor = descriptors.getResults().stream()
+    // Check test descriptor after reinterpretation
+    Descriptor testDesc = descriptors.getResults().stream()
         .filter(d -> "Another Species".equals(d.getVerbatim().get("dwc:scientificName")))
         .findFirst()
         .orElseThrow();
 
-    assertNull(invalidDescriptor.getBiome());
-    assertNull(invalidDescriptor.getObjectClassification());
+    // Biome: not vocabulary-managed, "Desert" preserved
+    assertNotNull(testDesc.getBiome());
+    assertEquals("Desert", testDesc.getBiome());
+
+    // Object classification: vocabulary-managed, "foo" becomes null
+    assertNull(testDesc.getObjectClassification());
+    assertNull(testDesc.getBiomeType());
 
     // Check that empty values are handled correctly after reinterpretation
     Descriptor emptyDescriptor = descriptors.getResults().stream()
@@ -484,6 +498,8 @@ public class DescriptorsServiceIT extends BaseServiceIT {
     // Valid object classification should be preserved
     assertNotNull(emptyDescriptor.getObjectClassification());
     assertEquals("ValidSpecimen", emptyDescriptor.getObjectClassification());
+
+    assertNull(emptyDescriptor.getBiomeType());
 
     // Clean up
     descriptorsService.deleteDescriptorGroup(descriptorGroupKey);

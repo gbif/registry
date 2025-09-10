@@ -84,7 +84,7 @@ public class Vocabularies {
   public static final String COLLECTION_DESCRIPTOR_GROUP_TYPE = "CollectionDescriptorGroupTypes";
 
   // Collection descriptor vocabulary fields
-  public static final String BIOME = "Biome";
+  public static final String BIOME_TYPE = "BiomeType";
   public static final String OBJECT_CLASSIFICATION = "ObjectClassificationName";
 
   // Dataset vocabulary fields
@@ -107,7 +107,7 @@ public class Vocabularies {
         ACCESSION_STATUS, c -> Collections.singletonList(c.getAccessionStatus()));
     COLLECTION_VOCAB_FIELDS.put(PRESERVATION_TYPE, Collection::getPreservationTypes);
 
-    DESCRIPTOR_VOCAB_FIELDS.put(BIOME, DescriptorDto::getBiome);
+    DESCRIPTOR_VOCAB_FIELDS.put(BIOME_TYPE, DescriptorDto::getBiomeType);
     DESCRIPTOR_VOCAB_FIELDS.put(OBJECT_CLASSIFICATION, DescriptorDto::getObjectClassificationName);
 
     DATASET_VOCAB_FIELDS.put(DATASET_CATEGORY, d -> d.getCategory() != null ? new ArrayList<>(d.getCategory()) : Collections.emptyList());
@@ -222,8 +222,8 @@ public class Vocabularies {
         String validValue = findValidConceptName(conceptClient, vocabName, fieldValue, result, fieldName);
 
         // Set the valid value in the result based on the vocabulary type
-        if (BIOME.equals(vocabName)) {
-          result.setValidBiome(validValue);
+        if (BIOME_TYPE.equals(vocabName)) {
+          result.setValidBiomeType(validValue);
         } else if (OBJECT_CLASSIFICATION.equals(vocabName)) {
           result.setValidObjectClassification(validValue);
         }
@@ -238,8 +238,8 @@ public class Vocabularies {
    * Gets the field name for a vocabulary (used in warning messages).
    */
   private static String getFieldNameForVocabulary(String vocabularyName) {
-    if (BIOME.equals(vocabularyName)) {
-      return "ltc:biome";
+    if (BIOME_TYPE.equals(vocabularyName)) {
+      return "ltc:biomeType";
     } else if (OBJECT_CLASSIFICATION.equals(vocabularyName)) {
       return "ltc:objectClassificationName";
     }
@@ -264,7 +264,7 @@ public class Vocabularies {
     if (directConcept != null && directConcept.getConcept().getDeprecated() == null) {
       return directConcept.getConcept().getName();
     } else if (directConcept != null && directConcept.getConcept().getDeprecated() != null) {
-      result.addWarning(fieldName + " value '" + inputValue + "' is deprecated, using '" +
+      result.addIssue(fieldName + " value '" + inputValue + "' is deprecated, using '" +
                        directConcept.getConcept().getName() + "'");
       return directConcept.getConcept().getName();
     }
@@ -280,11 +280,11 @@ public class Vocabularies {
         // Check if the matched concept is deprecated
         ConceptView matchedConcept = getConceptLatestRelease(vocabularyName, match.getConceptName(), conceptClient);
         if (matchedConcept != null && matchedConcept.getConcept().getDeprecated() == null) {
-          result.addWarning(fieldName + " value '" + inputValue + "' matched label/hidden label, using concept name '" +
+          result.addIssue(fieldName + " value '" + inputValue + "' matched label/hidden label, using concept name '" +
                            match.getConceptName() + "'");
           return match.getConceptName();
         } else if (matchedConcept != null && matchedConcept.getConcept().getDeprecated() != null) {
-          result.addWarning(fieldName + " value '" + inputValue + "' matched deprecated label/hidden label, using '" +
+          result.addIssue(fieldName + " value '" + inputValue + "' matched deprecated label/hidden label, using '" +
                            match.getConceptName() + "'");
           return match.getConceptName();
         }
@@ -292,7 +292,7 @@ public class Vocabularies {
     }
 
     // No valid match found
-    result.addWarning(fieldName + " value '" + inputValue + "' not found in vocabulary, field will be left blank");
+    result.addIssue(fieldName + " value '" + inputValue + "' not found in vocabulary, field will be left blank");
     return null;
   }
 

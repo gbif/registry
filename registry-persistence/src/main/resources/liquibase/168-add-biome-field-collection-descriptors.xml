@@ -6,8 +6,9 @@
   <changeSet id="168" author="auzun" runInTransaction="false">
     <sql splitStatements="false" stripComments="true">
       <![CDATA[
-        -- Add biome column to collection_descriptor table
+        -- Add biome and biome_type columns to collection_descriptor table
         ALTER TABLE collection_descriptor ADD COLUMN biome text;
+        ALTER TABLE collection_descriptor ADD COLUMN biome_type text;
 
         -- Update the fulltext search trigger to include biome field
         CREATE OR REPLACE FUNCTION collection_descriptor_change_trigger()
@@ -23,14 +24,16 @@
                   TO_TSVECTOR('pg_catalog.english', unaccent(COALESCE(array_to_string(NEW.recorded_by, ' '),''))) ||
                   TO_TSVECTOR('pg_catalog.english', unaccent(COALESCE(NEW.discipline,''))) ||
                   TO_TSVECTOR('pg_catalog.english', unaccent(COALESCE(NEW.object_classification_name,''))) ||
-                  TO_TSVECTOR('pg_catalog.english', unaccent(COALESCE(NEW.biome,'')));
+                  TO_TSVECTOR('pg_catalog.english', unaccent(COALESCE(NEW.biome,''))) ||
+                  TO_TSVECTOR('pg_catalog.english', unaccent(COALESCE(NEW.biome_type,'')));
                 RETURN NEW;
               END;
           $recordchange$
           LANGUAGE plpgsql;
 
-        -- Add index for biome field for better search performance
+        -- Add indexes for biome fields for better search performance
         CREATE INDEX collection_descriptor_biome_idx ON collection_descriptor(biome);
+        CREATE INDEX collection_descriptor_biome_type_idx ON collection_descriptor(biome_type);
       ]]>
     </sql>
   </changeSet>

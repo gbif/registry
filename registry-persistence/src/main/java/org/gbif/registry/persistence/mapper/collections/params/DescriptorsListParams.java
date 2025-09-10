@@ -44,6 +44,7 @@ public class DescriptorsListParams extends CollectionListParams {
   @Nullable List<String> discipline;
   @Nullable List<String> objectClassification;
   @Nullable List<String> biome;
+  @Nullable List<String> biomeType;
   @Nullable List<String> issues;
 
   // facets
@@ -80,6 +81,7 @@ public class DescriptorsListParams extends CollectionListParams {
         || discipline != null
         || objectClassification != null
         || biome != null
+        || biomeType != null
         || issues != null;
   }
 

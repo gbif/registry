@@ -35,6 +35,7 @@ public class DescriptorDto {
   private String discipline;
   private String objectClassificationName;
   private String biome;
+  private String biomeType;
   private List<String> issues;
   private List<VerbatimDto> verbatim;
   private String usageKey;
