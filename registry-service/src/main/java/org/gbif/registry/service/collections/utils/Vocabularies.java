@@ -22,6 +22,7 @@ import org.gbif.api.model.collections.request.SearchRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.collections.descriptors.DescriptorValidationResult;
 import org.gbif.api.model.registry.Dataset;
+import org.gbif.api.vocabulary.DescriptorIssue;
 import org.gbif.registry.persistence.mapper.collections.dto.DescriptorDto;
 import org.gbif.vocabulary.api.ConceptListParams;
 import org.gbif.vocabulary.api.ConceptView;
@@ -218,8 +219,7 @@ public class Vocabularies {
     DESCRIPTOR_VOCAB_FIELDS.forEach((vocabName, getter) -> {
       String fieldValue = getter.apply(descriptor);
       if (!Strings.isNullOrEmpty(fieldValue)) {
-        String fieldName = getFieldNameForVocabulary(vocabName);
-        String validValue = findValidConceptName(conceptClient, vocabName, fieldValue, result, fieldName);
+        String validValue = findValidConceptName(conceptClient, vocabName, fieldValue, result);
 
         // Set the valid value in the result based on the vocabulary type
         if (BIOME_TYPE.equals(vocabName)) {
@@ -237,7 +237,7 @@ public class Vocabularies {
   /**
    * Gets the field name for a vocabulary (used in warning messages).
    */
-  private static String getFieldNameForVocabulary(String vocabularyName) {
+  public static String getFieldNameForVocabulary(String vocabularyName) {
     if (BIOME_TYPE.equals(vocabularyName)) {
       return "ltc:biomeType";
     } else if (OBJECT_CLASSIFICATION.equals(vocabularyName)) {
@@ -253,19 +253,17 @@ public class Vocabularies {
    * @param vocabularyName The vocabulary name
    * @param inputValue The input value to validate
    * @param result The validation result to add warnings to
-   * @param fieldName The field name for warning messages
    * @return The valid concept name, or null if not found
    */
   private static String findValidConceptName(ConceptClient conceptClient, String vocabularyName,
-                                           String inputValue, DescriptorValidationResult result, String fieldName) {
+                                           String inputValue, DescriptorValidationResult result) {
 
     // First try direct concept name lookup
     ConceptView directConcept = getConceptLatestRelease(vocabularyName, inputValue, conceptClient);
     if (directConcept != null && directConcept.getConcept().getDeprecated() == null) {
       return directConcept.getConcept().getName();
     } else if (directConcept != null && directConcept.getConcept().getDeprecated() != null) {
-      result.addIssue(fieldName + " value '" + inputValue + "' is deprecated, using '" +
-                       directConcept.getConcept().getName() + "'");
+      result.addIssue(DescriptorIssue.VOCAB_VALUE_DEPRECATED.getId());
       return directConcept.getConcept().getName();
     }
 
@@ -273,26 +271,24 @@ public class Vocabularies {
     List<LookupResult> lookupResults = lookupLatestRelease(vocabularyName, inputValue, conceptClient);
 
     if (lookupResults != null && !lookupResults.isEmpty()) {
-      // Use the first match (most relevant)
+      // Use the first match
       LookupResult match = lookupResults.get(0);
 
       if (match.getConceptName() != null) {
         // Check if the matched concept is deprecated
         ConceptView matchedConcept = getConceptLatestRelease(vocabularyName, match.getConceptName(), conceptClient);
         if (matchedConcept != null && matchedConcept.getConcept().getDeprecated() == null) {
-          result.addIssue(fieldName + " value '" + inputValue + "' matched label/hidden label, using concept name '" +
-                           match.getConceptName() + "'");
+          result.addIssue(DescriptorIssue.VOCAB_VALUE_MATCHED_LABEL.getId());
           return match.getConceptName();
         } else if (matchedConcept != null && matchedConcept.getConcept().getDeprecated() != null) {
-          result.addIssue(fieldName + " value '" + inputValue + "' matched deprecated label/hidden label, using '" +
-                           match.getConceptName() + "'");
+          result.addIssue(DescriptorIssue.VOCAB_VALUE_MATCHED_DEPRECATED_LABEL.getId());
           return match.getConceptName();
         }
       }
     }
 
     // No valid match found
-    result.addIssue(fieldName + " value '" + inputValue + "' not found in vocabulary, field will be left blank");
+    result.addIssue(DescriptorIssue.VOCAB_VALUE_NOT_FOUND.getId());
     return null;
   }
 

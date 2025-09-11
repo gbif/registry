@@ -51,7 +51,7 @@ public interface DescriptorsMapper {
 
   long countDescriptors(@Param("params") DescriptorParams searchParams);
 
-  List<DescriptorDto> listDescriptorsWithVocabularyField(@Param("vocabularyName") String vocabularyName);
+  List<DescriptorDto> listDescriptorsWithVocabularyField(@Param("fieldName") String fieldName);
 
   void deleteDescriptors(@Param("descriptorGroupKey") long descriptorGroupKey);
 

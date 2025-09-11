@@ -17,6 +17,7 @@ import org.gbif.api.model.collections.descriptors.DescriptorValidationResult;
 import org.gbif.api.v2.RankedName;
 import org.gbif.registry.persistence.mapper.collections.dto.DescriptorDto;
 import org.gbif.api.vocabulary.Country;
+import org.gbif.api.vocabulary.DescriptorIssue;
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.common.parsers.CountryParser;
 import org.gbif.common.parsers.NumberParser;
@@ -155,7 +156,7 @@ public class Interpreter {
     Set<String> issues = new HashSet<>();
     if (validationResult.hasIssues()) {
       validationResult.getIssues().forEach(issue ->
-        issues.add("BIOME_TYPE_VALIDATION_ISSUE: " + issue));
+        issues.add(DescriptorIssue.BIOME_TYPE_VALIDATION_ISSUE.getId() + ": " + issue));
     }
 
     return InterpretedResult.<String>builder()
@@ -188,7 +189,7 @@ public class Interpreter {
     Set<String> issues = new HashSet<>();
     if (validationResult.hasIssues()) {
       validationResult.getIssues().forEach(issue ->
-          issues.add("OBJECT_CLASSIFICATION_VALIDATION_ISSUE: " + issue));
+          issues.add(DescriptorIssue.OBJECT_CLASSIFICATION_VALIDATION_ISSUE.getId()+": " + issue));
     }
 
     return InterpretedResult.<String>builder()

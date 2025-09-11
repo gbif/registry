@@ -32,6 +32,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -90,7 +93,8 @@ public class DescriptorVocabularySynchronizer implements VocabularyPostProcessor
     result.setVocabularyName(vocabularyName);
 
     // Get all descriptors that might be affected by this vocabulary
-    List<DescriptorDto> descriptors = descriptorsMapper.listDescriptorsWithVocabularyField(vocabularyName);
+    String fieldName = Vocabularies.getFieldNameForVocabulary(vocabularyName);
+    List<DescriptorDto> descriptors = descriptorsMapper.listDescriptorsWithVocabularyField(fieldName);
     log.info("Found {} descriptors to re-interpret for vocabulary: {}", descriptors.size(), vocabularyName);
 
     AtomicInteger updatedCount = new AtomicInteger(0);
@@ -202,9 +206,9 @@ public class DescriptorVocabularySynchronizer implements VocabularyPostProcessor
   private boolean updateVocabularyField(
       DescriptorDto descriptor,
       String verbatimValue,
-      java.util.function.Consumer<String> setter,
-      java.util.function.Supplier<String> getter,
-      java.util.function.Function<DescriptorValidationResult, String> validationResultGetter,
+      Consumer<String> setter,
+      Supplier<String> getter,
+      Function<DescriptorValidationResult, String> validationResultGetter,
       String warningPrefix,
       String fieldDisplayName,
       String vocabularyName) {

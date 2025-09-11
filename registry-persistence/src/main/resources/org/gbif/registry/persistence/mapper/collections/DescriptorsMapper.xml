@@ -268,30 +268,11 @@
     SELECT <include refid="DESCRIPTOR_READ_FIELDS"/>
     FROM collection_descriptor d
     INNER JOIN collection_descriptor_group ds ON ds.key = d.collection_descriptor_group_key AND ds.deleted IS NULL
+    INNER JOIN collection_descriptor_verbatim v ON v.collection_descriptor_key = d.key
     <where>
-      <choose>
-        <when test="vocabularyName == 'BiomeType'">
-          AND EXISTS (
-            SELECT 1 FROM collection_descriptor_verbatim v
-            WHERE v.collection_descriptor_key = d.key
-            AND v.field_name = 'ltc:biomeType'
-            AND v.field_value IS NOT NULL
-            AND v.field_value != ''
-          )
-        </when>
-        <when test="vocabularyName == 'ObjectClassificationName'">
-          AND EXISTS (
-            SELECT 1 FROM collection_descriptor_verbatim v
-            WHERE v.collection_descriptor_key = d.key
-            AND v.field_name = 'ltc:objectClassificationName'
-            AND v.field_value IS NOT NULL
-            AND v.field_value != ''
-          )
-        </when>
-        <otherwise>
-          AND 1=0
-        </otherwise>
-      </choose>
+      AND v.field_name = #{fieldName}
+      AND v.field_value IS NOT NULL
+      AND v.field_value != ''
     </where>
     ORDER BY d.key
   </select>
