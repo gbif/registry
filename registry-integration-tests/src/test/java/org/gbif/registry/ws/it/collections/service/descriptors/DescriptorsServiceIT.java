@@ -357,4 +357,151 @@ public class DescriptorsServiceIT extends BaseServiceIT {
     assertEquals(1, response.getCount());
     assertEquals("updated-tag", response.getResults().get(0).getTags().iterator().next());
   }
+
+  @Test
+  @SneakyThrows
+  public void vocabularyValidationTest() {
+    Collection collection = new Collection();
+    collection.setCode("c1");
+    collection.setName("n1");
+    collectionService.create(collection);
+
+    // Create a descriptor group with vocabulary fields
+    Resource descriptorsFile = new ClassPathResource("collections/descriptors4.csv");
+    long descriptorGroupKey =
+        descriptorsService.createDescriptorGroup(
+            StreamUtils.copyToByteArray(descriptorsFile.getInputStream()),
+            ExportFormat.TSV,
+            "Vocabulary Test Set",
+            "Testing vocabulary validation",
+            Set.of("vocab-test"),
+            collection.getKey());
+    assertTrue(descriptorGroupKey > 0);
+
+    // Get descriptors and check vocabulary validation
+    PagingResponse<Descriptor> descriptors =
+        descriptorsService.listDescriptors(DescriptorSearchRequest.builder().build());
+    assertEquals(3, descriptors.getResults().size());
+
+    // Check that valid vocabulary values are preserved
+    Descriptor validDescriptor = descriptors.getResults().stream()
+        .filter(d -> "Test Species".equals(d.getVerbatim().get("dwc:scientificName")))
+        .findFirst()
+        .orElseThrow();
+
+    // Valid biome should be preserved
+    assertNotNull(validDescriptor.getBiome());
+    assertEquals("Tropical", validDescriptor.getBiome());
+
+    // Valid object classification should be preserved
+    assertNotNull(validDescriptor.getObjectClassification());
+    assertEquals("Specimen", validDescriptor.getObjectClassification());
+
+    // Valid biome type should be preserved
+    assertNotNull(validDescriptor.getBiomeType());
+    assertEquals("Terrestrial", validDescriptor.getBiomeType());
+
+    // Check test descriptor with mixed values
+    Descriptor testDesc = descriptors.getResults().stream()
+        .filter(d -> "Another Species".equals(d.getVerbatim().get("dwc:scientificName")))
+        .findFirst()
+        .orElseThrow();
+
+    assertNotNull(testDesc.getBiome());
+    assertEquals("Desert", testDesc.getBiome());
+
+    assertNull(testDesc.getObjectClassification());
+    assertNull(testDesc.getBiomeType());
+
+
+    // Check that empty values are handled correctly
+    Descriptor emptyDescriptor = descriptors.getResults().stream()
+        .filter(d -> "Third Species".equals(d.getVerbatim().get("dwc:scientificName")))
+        .findFirst()
+        .orElseThrow();
+
+    // Empty biome should remain null
+    assertNull(emptyDescriptor.getBiome());
+
+    // Valid object classification should be preserved
+    assertNotNull(emptyDescriptor.getObjectClassification());
+    assertEquals("ValidSpecimen", emptyDescriptor.getObjectClassification());
+
+    // Clean up
+    descriptorsService.deleteDescriptorGroup(descriptorGroupKey);
+  }
+
+  @Test
+  @SneakyThrows
+  public void vocabularyValidationWithReinterpretationTest() {
+    Collection collection = new Collection();
+    collection.setCode("c1");
+    collection.setName("n1");
+    collectionService.create(collection);
+
+    // Create a descriptor group with vocabulary fields
+    Resource descriptorsFile = new ClassPathResource("collections/descriptors4.csv");
+    long descriptorGroupKey =
+        descriptorsService.createDescriptorGroup(
+            StreamUtils.copyToByteArray(descriptorsFile.getInputStream()),
+            ExportFormat.TSV,
+            "Vocabulary Reinterpretation Test",
+            "Testing vocabulary validation with reinterpretation",
+            Set.of("vocab-reinterpret-test"),
+            collection.getKey());
+    assertTrue(descriptorGroupKey > 0);
+
+    // Reinterpret the descriptor group to trigger vocabulary validation
+    assertDoesNotThrow(() -> descriptorsService.reinterpretDescriptorGroup(descriptorGroupKey));
+
+    // Get descriptors and verify vocabulary validation still works after reinterpretation
+    PagingResponse<Descriptor> descriptors =
+        descriptorsService.listDescriptors(DescriptorSearchRequest.builder().build());
+    assertEquals(3, descriptors.getResults().size());
+
+    // Check that valid vocabulary values are still preserved after reinterpretation
+    Descriptor validDescriptor = descriptors.getResults().stream()
+        .filter(d -> "Test Species".equals(d.getVerbatim().get("dwc:scientificName")))
+        .findFirst()
+        .orElseThrow();
+
+    assertNotNull(validDescriptor.getBiome());
+    assertEquals("Tropical", validDescriptor.getBiome());
+    assertNotNull(validDescriptor.getObjectClassification());
+    assertEquals("Specimen", validDescriptor.getObjectClassification());
+    assertNotNull(validDescriptor.getBiomeType());
+    assertEquals("Terrestrial", validDescriptor.getBiomeType());
+
+    // Check test descriptor after reinterpretation
+    Descriptor testDesc = descriptors.getResults().stream()
+        .filter(d -> "Another Species".equals(d.getVerbatim().get("dwc:scientificName")))
+        .findFirst()
+        .orElseThrow();
+
+    // Biome: not vocabulary-managed, "Desert" preserved
+    assertNotNull(testDesc.getBiome());
+    assertEquals("Desert", testDesc.getBiome());
+
+    // Object classification: vocabulary-managed, "foo" becomes null
+    assertNull(testDesc.getObjectClassification());
+    assertNull(testDesc.getBiomeType());
+
+    // Check that empty values are handled correctly after reinterpretation
+    Descriptor emptyDescriptor = descriptors.getResults().stream()
+        .filter(d -> "Third Species".equals(d.getVerbatim().get("dwc:scientificName")))
+        .findFirst()
+        .orElseThrow();
+
+    // Empty biome should remain null
+    assertNull(emptyDescriptor.getBiome());
+
+    // Valid object classification should be preserved
+    assertNotNull(emptyDescriptor.getObjectClassification());
+    assertEquals("ValidSpecimen", emptyDescriptor.getObjectClassification());
+
+    assertNull(emptyDescriptor.getBiomeType());
+
+    // Clean up
+    descriptorsService.deleteDescriptorGroup(descriptorGroupKey);
+  }
 }
