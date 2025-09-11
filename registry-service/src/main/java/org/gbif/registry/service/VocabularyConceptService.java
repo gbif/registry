@@ -13,7 +13,7 @@
  */
 package org.gbif.registry.service;
 
-// import java.net.URI; // No longer needed if ConceptClient handles endpoint resolution
+import java.util.Arrays;
 
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
@@ -28,6 +28,8 @@ import org.gbif.vocabulary.model.Concept;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.Map;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -53,10 +55,15 @@ public class VocabularyConceptService implements VocabularyPostProcessor {
     this.conceptClient = conceptClient;
   }
 
+  private static final Set<String> EXCLUDED_VOCABULARIES = new HashSet<>(Arrays.asList(
+      "DatasetCategory",
+      "ObjectClassificationName",
+      "BiomeType"
+  ));
+
   @Override
   public boolean canHandle(String vocabularyName) {
-    // Handle all vocabularies except DatasetCategory (which is handled by DatasetCategoryService)
-    return !"DatasetCategory".equals(vocabularyName);
+    return !EXCLUDED_VOCABULARIES.contains(vocabularyName);
   }
 
   @Override
