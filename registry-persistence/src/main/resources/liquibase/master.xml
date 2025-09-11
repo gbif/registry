@@ -173,4 +173,5 @@
   <include file="liquibase/165-dataset-category.xml" />
   <include file="liquibase/166-add-rnc-colombia-identifier-type.xml" />
   <include file="liquibase/167-occurrence-download-checklistkey.xml" />
+  <include file="liquibase/169-add-biome-field-collection-descriptors.xml" />
 </databaseChangeLog>
