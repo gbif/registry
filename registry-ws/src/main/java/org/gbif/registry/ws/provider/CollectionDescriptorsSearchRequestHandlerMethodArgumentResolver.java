@@ -60,6 +60,8 @@ public class CollectionDescriptorsSearchRequestHandlerMethodArgumentResolver
     extractMultivalueParam(params, "discipline").ifPresent(searchRequest::setDiscipline);
     extractMultivalueParam(params, "objectClassification")
         .ifPresent(searchRequest::setObjectClassification);
+    extractMultivalueParam(params, "biome").ifPresent(searchRequest::setBiome);
+    extractMultivalueParam(params, "biomeType").ifPresent(searchRequest::setBiomeType);
     extractMultivalueParam(params, "issue").ifPresent(searchRequest::setIssue);
     extractMultivalueRangeParam(params, "individualCount")
         .ifPresent(searchRequest::setIndividualCount);

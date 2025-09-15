@@ -424,6 +424,18 @@
         #{item,jdbcType=VARCHAR}
       </foreach>
     </if>
+    <if test="params.biomeType != null  and params.biomeType.size > 0">
+      AND cd.biome_type IN
+      <foreach item="item" collection="params.biomeType" open="(" separator="," close=")">
+        #{item,jdbcType=VARCHAR}
+      </foreach>
+    </if>
+    <if test="params.biome != null  and params.biome.size > 0">
+      AND cd.biome IN
+      <foreach item="item" collection="params.biome" open="(" separator="," close=")">
+        #{item,jdbcType=VARCHAR}
+      </foreach>
+    </if>
     <if test="params.descriptorCountry != null  and params.descriptorCountry.size > 0">
       AND cd.country IN
       <foreach item="item" collection="params.descriptorCountry" open="(" separator="," close=")">

@@ -240,6 +240,8 @@ public class CollectionsSearchService {
             .recordedBy(searchRequest.getRecordedBy())
             .discipline(searchRequest.getDiscipline())
             .objectClassification(searchRequest.getObjectClassification())
+            .biome(searchRequest.getBiome())
+            .biomeType(searchRequest.getBiomeType())
             .issues(searchRequest.getIssue());
     buildCommonParams(listParamsBuilder, searchRequest);
     DescriptorsListParams listParams = listParamsBuilder.build();
