@@ -20,6 +20,8 @@ import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.registry.cli.common.DbConfiguration;
 import org.gbif.registry.cli.datasetindex.ElasticsearchConfig;
 import org.gbif.registry.persistence.config.MyBatisConfiguration;
+import org.gbif.registry.service.collections.descriptors.DescriptorVocabularySynchronizer;
+
 import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
 import org.springframework.boot.jdbc.DataSourceInitializationMode;
 import com.zaxxer.hikari.HikariDataSource;
@@ -99,6 +101,7 @@ public class SpringContextBuilder {
     ctx.register(GbifApiServiceConfig.class);
     ctx.register(GbifWsWrapperClient.class);
     ctx.register(VocabularyConceptService.class);
+    ctx.register(DescriptorVocabularySynchronizer.class);
     ctx.register(DatasetCategoryService.class);
     ctx.register(WithMyBatis.class);
 
