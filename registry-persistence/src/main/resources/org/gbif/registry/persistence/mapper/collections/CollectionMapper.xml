@@ -395,13 +395,13 @@
           0 AS key_match, 0 AS identifier_match, 0 AS name_match_with_identifier, 1 AS code_match, 0 AS alternative_code_match,
           0 AS name_match_with_code, 0 AS explicit_mapping
           FROM collection c
-          WHERE c.code = #{code,jdbcType=VARCHAR} AND c.deleted is null
+          WHERE lower(c.code) = lower(#{code,jdbcType=VARCHAR}) AND c.deleted is null
         UNION ALL
           SELECT DISTINCT ON (c.key) <include refid="LOOKUP_MATCH_FIELDS"/>,
           0 AS key_match, 0 AS identifier_match, 0 AS name_match_with_identifier, 0 AS code_match, 1 AS alternative_code_match,
           0 AS name_match_with_code, 0 AS explicit_mapping
           FROM collection c
-          WHERE c.alternative_codes ?? #{code,jdbcType=VARCHAR} AND c.deleted is null
+          WHERE lower(c.alternative_codes) ?? lower(#{code,jdbcType=VARCHAR}) AND c.deleted is null
         UNION ALL
           SELECT DISTINCT ON (c.key) <include refid="LOOKUP_MATCH_FIELDS"/>,
           0 AS key_match, 0 AS identifier_match, 0 AS name_match_with_identifier, 0 AS code_match, 0 AS alternative_code_match,
@@ -418,9 +418,9 @@
           INNER JOIN collection_occurrence_mapping com ON com.collection_key = c.key
           INNER JOIN occurrence_mapping om ON om.key = com.occurrence_mapping_key
           WHERE c.deleted is null AND om.dataset_key = #{datasetKey,jdbcType=OTHER}
-          <if test="code != null"> AND (om.code IS NULL OR om.code = #{code,jdbcType=VARCHAR})</if>
-          <if test="parentCode != null"> AND (om.parent_code IS NULL OR om.parent_code = #{parentCode,jdbcType=VARCHAR})</if>
-          <if test="identifier != null"> AND (om.identifier IS NULL OR om.identifier = #{identifier,jdbcType=VARCHAR})</if>
+          <if test="code != null"> AND (om.code IS NULL OR lower(om.code) = lower(#{code,jdbcType=VARCHAR}))</if>
+          <if test="parentCode != null"> AND (om.parent_code IS NULL OR lower(om.parent_code) = lower(#{parentCode,jdbcType=VARCHAR}))</if>
+          <if test="identifier != null"> AND (om.identifier IS NULL OR normalize_identifier(om.identifier) = normalize_identifier(#{identifier,jdbcType=VARCHAR}))</if>
       </if>
     </trim>) AS matches
     LEFT JOIN institution i ON i.key = matches.institution_key
