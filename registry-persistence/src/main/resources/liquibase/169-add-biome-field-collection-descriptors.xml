@@ -3,7 +3,7 @@
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
 
-  <changeSet id="168" author="auzun" runInTransaction="false">
+  <changeSet id="169" author="auzun" runInTransaction="false">
     <sql splitStatements="false" stripComments="true">
       <![CDATA[
         -- Add biome and biome_type columns to collection_descriptor table
