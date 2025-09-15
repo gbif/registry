@@ -207,6 +207,7 @@
     discipline = #{discipline,jdbcType=VARCHAR},
     object_classification_name = #{objectClassificationName,jdbcType=VARCHAR},
     biome = #{biome,jdbcType=VARCHAR},
+    biome_type = #{biomeType,jdbcType=VARCHAR},
     issues = #{issues,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler},
     kingdom_key = #{kingdomKey,jdbcType=VARCHAR},
     kingdom_name = #{kingdomName,jdbcType=VARCHAR},

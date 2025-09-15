@@ -384,6 +384,8 @@ public class DefaultDescriptorService implements DescriptorsService {
         .usageRank(searchRequest.getUsageRank())
         .taxonKey(searchRequest.getTaxonKey())
         .objectClassification(searchRequest.getObjectClassification())
+        .biome(searchRequest.getBiome())
+        .biomeType(searchRequest.getBiomeType())
         .recordedBy(searchRequest.getRecordedBy())
         .identifiedBy(searchRequest.getIdentifiedBy())
         .issues(searchRequest.getIssues())
