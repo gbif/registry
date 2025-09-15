@@ -76,6 +76,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import java.util.Objects;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -472,12 +473,23 @@ public class CollectionResource
       return;
     }
 
-    // Create collection search request with the institution keys for the file header
+    // Create collection search request with the search parameters for the file header
     CollectionSearchRequest collectionRequest = CollectionSearchRequest.builder()
-        .institution(collections.stream()
-            .map(CollectionView::getCollection)
-            .map(Collection::getInstitutionKey)
-            .collect(Collectors.toList()))
+        .country(searchRequest.getCountry())
+        .gbifRegion(searchRequest.getGbifRegion())
+        .city(searchRequest.getCity())
+        .name(searchRequest.getName())
+        .code(searchRequest.getCode())
+        .alternativeCode(searchRequest.getAlternativeCode())
+        .identifierType(searchRequest.getIdentifierType())
+        .identifier(searchRequest.getIdentifier())
+        .machineTagNamespace(searchRequest.getMachineTagNamespace())
+        .machineTagName(searchRequest.getMachineTagName())
+        .machineTagValue(searchRequest.getMachineTagValue())
+        .fuzzyName(searchRequest.getFuzzyName())
+        .q(searchRequest.getInstitutionalGovernance() != null
+            ? searchRequest.getInstitutionalGovernance().stream().filter(Objects::nonNull).collect(Collectors.joining(","))
+            : null)
         .build();
 
     response.setHeader(HttpHeaders.CONTENT_DISPOSITION, getExportFileHeader(collectionRequest, format));
