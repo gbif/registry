@@ -19,7 +19,7 @@ messaging:
   virtualHost: "/"
 
 # The name of the queue that the VocabularyFacetUpdaterService will listen to
-queueName: "vocabulary-released"
+queueName: "vocabulary-released-registry"
 
 # Number of concurrent consumers for the message listener.
 poolSize: 1
