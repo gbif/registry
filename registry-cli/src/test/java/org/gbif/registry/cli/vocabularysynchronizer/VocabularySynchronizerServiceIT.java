@@ -35,7 +35,7 @@ public class VocabularySynchronizerServiceIT extends BaseDBTest {
     config.vocabulariesToProcess = Set.of("DatasetCategory", "CollectionType");
     config.apiRootUrl = "http://localhost:8080";
     config.poolSize = 1;
-    config.queueName = "vocabulary-released";
+    config.queueName = "vocabulary-released-registry";
 
     // When
     VocabularySynchronizerService service = new VocabularySynchronizerService(config);
@@ -51,7 +51,7 @@ public class VocabularySynchronizerServiceIT extends BaseDBTest {
     config.vocabulariesToProcess = Set.of("DatasetCategory");
     config.apiRootUrl = "http://localhost:8080";
     config.poolSize = 1;
-    config.queueName = "vocabulary-released";
+    config.queueName = "vocabulary-released-registry";
 
     // When
     VocabularySynchronizerService service = new VocabularySynchronizerService(config);

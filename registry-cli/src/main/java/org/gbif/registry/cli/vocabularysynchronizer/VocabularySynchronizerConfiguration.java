@@ -40,7 +40,7 @@ public class VocabularySynchronizerConfiguration {
       names = "--queue-name",
       description = "The name of the queue to listen to for vocabulary released messages")
   @NotNull
-  public String queueName = "vocabulary-released";
+  public String queueName = "vocabulary-released-registry";
 
   @Parameter(names = "--pool-size", description = "The size of the thread pool to listen to messages")
   public int poolSize = 1;
