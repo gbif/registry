@@ -245,6 +245,10 @@ public class MyBatisConfiguration {
       configuration
         .getTypeAliasRegistry()
         .registerAlias("DwcA", Dataset.DwcA.class);
+
+      configuration
+        .getTypeAliasRegistry()
+        .registerAlias("DataPackage", Dataset.DataPackage.class);
     };
   }
 }
