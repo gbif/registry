@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="org.gbif.registry.persistence.mapper.DatasetDataPackageMapper">
+
+  <resultMap id="DP_MAP" type="DataPackage" autoMapping="false">
+    <result property="metadata" column="metadata"/>
+    <result property="modified" column="modified"/>
+  </resultMap>
+
+  <!-- Create a DataPackage metadata record -->
+  <insert id="createDataPackageDataset" parameterType="map">
+    INSERT INTO dp_dataset(dataset_key,metadata,modified)
+    VALUES(
+    #{datasetKey,jdbcType=OTHER},
+    #{dp.metadata,jdbcType=OTHER},
+    now()
+    )
+  </insert>
+
+  <!-- Update a DataPackage metadata record -->
+  <update id="updateDataPackageDataset" parameterType="map">
+    UPDATE dp_dataset
+    SET metadata=#{dp.metadata,jdbcType=OTHER},
+    modified= now()
+    WHERE dataset_key=#{datasetKey,jdbcType=OTHER}
+  </update>
+
+  <!-- Get a DataPackage metadata record by dataset key -->
+  <select id="getDataPackageDataset" resultMap="DP_MAP">
+    SELECT dp.metadata, dp.modified
+    FROM dp_dataset dp
+    WHERE dp.dataset_key = #{datasetKey}
+  </select>
+
+</mapper>
