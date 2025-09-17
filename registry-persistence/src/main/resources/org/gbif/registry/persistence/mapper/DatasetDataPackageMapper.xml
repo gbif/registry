@@ -12,7 +12,7 @@
     INSERT INTO dp_dataset(dataset_key,metadata,modified)
     VALUES(
     #{datasetKey,jdbcType=OTHER},
-    #{dp.metadata,jdbcType=OTHER},
+    CAST(#{metadata,jdbcType=OTHER} AS jsonb),
     now()
     )
   </insert>
@@ -20,7 +20,7 @@
   <!-- Update a DataPackage metadata record -->
   <update id="updateDataPackageDataset" parameterType="map">
     UPDATE dp_dataset
-    SET metadata=#{dp.metadata,jdbcType=OTHER},
+    SET metadata=CAST(#{metadata,jdbcType=OTHER} AS jsonb),
     modified= now()
     WHERE dataset_key=#{datasetKey,jdbcType=OTHER}
   </update>
