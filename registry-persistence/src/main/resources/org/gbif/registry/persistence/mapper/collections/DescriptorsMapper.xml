@@ -67,6 +67,15 @@
     WHERE key = #{key,jdbcType=OTHER}
   </update>
 
+  <update id="moveDescriptorGroupForCollectionMerge" parameterType="DescriptorGroup">
+    UPDATE collection_descriptor_group
+    SET
+    modified = now(),
+    collection_key = #{collectionKey,jdbcType=OTHER},
+    deleted = null
+    WHERE key = #{key,jdbcType=OTHER}
+  </update>
+
   <update id="deleteDescriptorGroup">
     UPDATE collection_descriptor_group
     SET deleted = now()
