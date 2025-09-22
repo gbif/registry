@@ -15,10 +15,12 @@ package org.gbif.registry.persistence.mapper;
 
 import org.apache.ibatis.annotations.Param;
 
+import org.gbif.api.model.common.paging.PageableBase;
 import org.gbif.api.model.registry.Dataset;
 
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -33,7 +35,7 @@ public interface DatasetDataPackageMapper {
    * @param datasetKey the UUID of the dataset
    * @param dataPackage the data package to insert
    */
-  void createDataPackageDataset(@Param("datasetKey") UUID datasetKey, @Param("dp") Dataset.DataPackage dataPackage);
+  void create(@Param("datasetKey") UUID datasetKey, @Param("dp") Dataset.DataPackage dataPackage);
 
   /**
    * Updates an existing dataset data package record.
@@ -41,7 +43,7 @@ public interface DatasetDataPackageMapper {
    * @param datasetKey the UUID of the dataset
    * @param dataPackage the data package to update
    */
-  void updateDataPackageDataset(@Param("datasetKey") UUID datasetKey, @Param("dp") Dataset.DataPackage dataPackage);
+  void update(@Param("datasetKey") UUID datasetKey, @Param("dp") Dataset.DataPackage dataPackage);
 
   /**
    * Retrieves the data package associated with a dataset.
@@ -49,6 +51,33 @@ public interface DatasetDataPackageMapper {
    * @param datasetKey the UUID of the dataset
    * @return the data package of the dataset, or null if not found
    */
-  Dataset.DataPackage getDataPackageDataset(@Param("datasetKey") UUID datasetKey);
+  Dataset.DataPackage get(@Param("datasetKey") UUID datasetKey);
+
+  /**
+   *  Retrieves the data package resources associated with a dataset.
+   * @param datasetKey the UUID of the dataset
+   * @return a String containing a JSON array with the resources(schemas) of data package
+   */
+  String getResources(@Param("datasetKey") UUID datasetKey);
+
+  /**
+   *  Retrieves the data package resources by their name.
+   * @param datasetKey the UUID of the dataset
+   * @param resourceName data package resource unique name
+   * @return a String containing a JSON object with the resources(schema) of the data package
+   */
+  String getResource(@Param("datasetKey") UUID datasetKey, @Param("resourceName") String resourceName);
+
+  /**
+   *  Retrieves the data package resource field values.
+   * @param datasetKey the UUID of the dataset
+   * @param resourceNameFieldName resourceNameFieldName to retrieve
+   * @return a String containing a JSON object with the resources(schema) of the data package
+   */
+  String getResourceField(@Param("datasetKey") UUID datasetKey, @Param("resourceNameFieldName") String resourceNameFieldName);
+
+  List<Dataset.DataPackage> list(@Param("params") PageableBase params);
+
+  Long count();
 
 }

@@ -7,8 +7,14 @@
     <result property="modified" column="modified"/>
   </resultMap>
 
+  <resultMap id="DP_MAP_LIST" type="DataPackage" autoMapping="false">
+    <result property="datasetKey" column="dataset_key"/>
+    <result property="metadata" column="metadata"/>
+    <result property="modified" column="modified"/>
+  </resultMap>
+
   <!-- Create a DataPackage metadata record -->
-  <insert id="createDataPackageDataset" parameterType="map">
+  <insert id="create" parameterType="map">
     INSERT INTO dp_dataset(dataset_key,metadata,modified)
     VALUES(
     #{datasetKey,jdbcType=OTHER},
@@ -18,7 +24,7 @@
   </insert>
 
   <!-- Update a DataPackage metadata record -->
-  <update id="updateDataPackageDataset" parameterType="map">
+  <update id="update" parameterType="map">
     UPDATE dp_dataset
     SET metadata=CAST(#{dp.metadata,jdbcType=OTHER} AS jsonb),
     modified= now()
@@ -26,10 +32,54 @@
   </update>
 
   <!-- Get a DataPackage metadata record by dataset key -->
-  <select id="getDataPackageDataset" resultMap="DP_MAP">
-    SELECT dp.metadata, dp.modified
-    FROM dp_dataset dp
-    WHERE dp.dataset_key = #{datasetKey}
+  <select id="get" resultMap="DP_MAP">
+    SELECT metadata, modified
+    FROM dp_dataset
+    WHERE dataset_key = #{datasetKey}
+  </select>
+
+  <!-- Get a DataPackage metadata resources by dataset key -->
+  <select id="getResources" resultType="String">
+    SELECT metadata -> 'resources'
+    FROM dp_dataset
+    WHERE dataset_key = #{datasetKey}
+  </select>
+
+  <!-- Get a DataPackage metadata resource by dataset key and resource name -->
+  <select id="getResource" resultType="String">
+    SELECT res AS resource
+    FROM dp_dataset,
+    LATERAL jsonb_array_elements(metadata->'resources') res
+    WHERE res->>'name' = #{resourceName} AND dataset_key = #{datasetKey}
+    LIMIT 1
+  </select>
+
+  <!-- Get a DataPackage metadata resource field by dataset key and field name -->
+  <select id="getResourceField" resultType="String">
+    SELECT jsonb_agg(res->>'${resourceNameFieldName}')
+    FROM dp_dataset,
+    LATERAL jsonb_array_elements(metadata->'resources') res
+    WHERE dataset_key = #{datasetKey}
+  </select>
+
+
+  <!-- Get a list of DataPackages -->
+  <select id="list" resultMap="DP_MAP_LIST" parameterType="org.gbif.api.model.common.paging.Pageable">
+    SELECT dataset_key, modified, jsonb_build_object('name', metadata->>'name',
+                                                     'title', metadata->>'title',
+                                                     'resources', (SELECT jsonb_agg(res->>'name')
+                                                                   FROM jsonb_array_elements(metadata->'resources') res)
+                                                                   ) AS metadata
+    FROM dp_dataset
+    <if test="params != null" >
+    LIMIT #{params.limit} OFFSET #{params.offset}
+    </if>
+  </select>
+
+  <!-- Get a count of DataPackages -->
+  <select id="count" resultType="Long">
+    SELECT count(*)
+    FROM dp_dataset
   </select>
 
 </mapper>
