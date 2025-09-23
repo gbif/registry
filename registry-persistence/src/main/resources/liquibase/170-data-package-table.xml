@@ -11,11 +11,12 @@
         --
         CREATE TABLE dp_dataset
         (
-          dataset_key uuid NOT NULL PRIMARY KEY REFERENCES dataset(key),
+          dataset_key uuid NOT NULL PRIMARY KEY REFERENCES dataset(key) ON DELETE CASCADE,
+          endpoint_key integer NOT NULL REFERENCES endpoint(key) ON DELETE CASCADE,
           metadata JSONB NOT NULL,
           modified timestamp with time zone NOT NULL DEFAULT now()
         );
-        CREATE INDEX do_metadata_idx ON dp_dataset USING GIN (metadata);
+        CREATE INDEX dp_metadata_idx ON dp_dataset USING GIN (metadata);
       ]]>
     </sql>
   </changeSet>
