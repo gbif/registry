@@ -96,7 +96,6 @@ public class CollectionMergeService extends BaseMergeService<Collection> {
     List<DescriptorGroup> descriptorGroups = descriptorsMapper.listDescriptorGroups(
         DescriptorGroupParams.builder()
             .collectionKey(sourceCollectionKey)
-            .deleted(false) // Only get non-deleted groups
             .build()
     );
 
