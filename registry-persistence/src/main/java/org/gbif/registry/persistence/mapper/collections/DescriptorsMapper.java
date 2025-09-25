@@ -65,4 +65,6 @@ public interface DescriptorsMapper {
   List<VerbatimDto> getVerbatimNames(long descriptorGroupKey);
 
   List<VerbatimDto> getVerbatimValues(@Param("descriptorKey") long descriptorKey);
+
+  void moveDescriptorGroupForCollectionMerge(DescriptorGroup entity);
 }

@@ -13,17 +13,27 @@
  */
 package org.gbif.registry.ws.it.collections.service.merge;
 
+import java.io.IOException;
+
 import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.Institution;
+import org.gbif.api.model.collections.descriptors.DescriptorGroup;
+import org.gbif.api.model.collections.request.DescriptorGroupSearchRequest;
+import org.gbif.api.model.common.export.ExportFormat;
+import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.service.collections.CollectionService;
+import org.gbif.api.service.collections.DescriptorsService;
 import org.gbif.api.service.collections.InstitutionService;
 import org.gbif.registry.service.collections.merge.CollectionMergeService;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.util.StreamUtils;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /** Tests the {@link CollectionMergeService}. */
@@ -32,13 +42,15 @@ public class CollectionMergeServiceIT extends BaseMergeServiceIT<Collection> {
   private final CollectionMergeService collectionMergeService;
   private final CollectionService collectionService;
   private final InstitutionService institutionService;
+  private final DescriptorsService descriptorsService;
 
   @Autowired
   public CollectionMergeServiceIT(
       SimplePrincipalProvider simplePrincipalProvider,
       CollectionMergeService collectionMergeService,
       CollectionService collectionService,
-      InstitutionService institutionService) {
+      InstitutionService institutionService,
+      DescriptorsService descriptorsService) {
     super(
         simplePrincipalProvider,
         collectionMergeService,
@@ -51,6 +63,7 @@ public class CollectionMergeServiceIT extends BaseMergeServiceIT<Collection> {
     this.collectionMergeService = collectionMergeService;
     this.collectionService = collectionService;
     this.institutionService = institutionService;
+    this.descriptorsService = descriptorsService;
   }
 
   @Test
@@ -106,5 +119,26 @@ public class CollectionMergeServiceIT extends BaseMergeServiceIT<Collection> {
     assertEquals(2, replacementUpdated.getEmail().size());
     assertEquals(replacement.getGeographicCoverage(), replacementUpdated.getGeographicCoverage());
     assertEquals(replaced.getDescription(), replacementUpdated.getDescription());
+    // check that the descriptor group was moved to the replacement collection
+    PagingResponse<DescriptorGroup> descriptorGroupsResponse = descriptorsService.listDescriptorGroups(
+        replacement.getKey(), DescriptorGroupSearchRequest.builder().build());
+    assertFalse(descriptorGroupsResponse.getResults().isEmpty(),
+      "Descriptor groups should be moved to replacement collection");
+    DescriptorGroup descriptorGroup = descriptorGroupsResponse.getResults().get(0);
+    assertEquals(replacement.getKey(), descriptorGroup.getCollectionKey());
+  }
+
+  @Override
+  protected void postCreateToReplace(Collection toReplace) throws IOException {
+    // Create descriptor group for this collection after it has a key
+    ClassPathResource descriptorsFile = new ClassPathResource("collections/descriptors.csv");
+    descriptorsService.createDescriptorGroup(
+        StreamUtils.copyToByteArray(descriptorsFile.getInputStream()),
+        ExportFormat.CSV,
+        "Test Descriptor Group",
+        "Test description",
+        null,
+        toReplace.getKey()
+    );
   }
 }

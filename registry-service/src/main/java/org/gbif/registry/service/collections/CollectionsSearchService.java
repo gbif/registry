@@ -386,6 +386,8 @@ public class CollectionsSearchService {
     descriptorMatch.setRecordedBy(dto.getDescriptorRecordedBy());
     descriptorMatch.setDiscipline(dto.getDescriptorDiscipline());
     descriptorMatch.setObjectClassification(dto.getDescriptorObjectClassification());
+    descriptorMatch.setBiome(dto.getDescriptorBiome());
+    descriptorMatch.setBiomeType(dto.getDescriptorBiomeType());
     descriptorMatch.setIssues(dto.getDescriptorIssues());
     return descriptorMatch;
   }
@@ -474,7 +476,13 @@ public class CollectionsSearchService {
         .ifPresent(highlights::add);
     createHighlightMatch(
             dto.getDescriptorObjectClassificationHighlight(), "descriptor.objectClassification")
+      .ifPresent(highlights::add);
+    createHighlightMatch(
+      dto.getDescriptorBiomeHighlight(), "descriptor.biome")
         .ifPresent(highlights::add);
+    createHighlightMatch(
+      dto.getDescriptorBiomeTypeHighlight(), "descriptor.biomeType")
+      .ifPresent(highlights::add);
     createHighlightMatch(dto.getDescriptorIssuesHighlight(), "descriptor.issues")
         .ifPresent(highlights::add);
     createHighlightMatch(dto.getDescriptorGroupTitleHighlight(), "descriptorGroup.title")

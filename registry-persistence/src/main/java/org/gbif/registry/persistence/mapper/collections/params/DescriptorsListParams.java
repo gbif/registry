@@ -62,6 +62,7 @@ public class DescriptorsListParams extends CollectionListParams {
         || facet == CollectionFacetParameter.TYPE_STATUS
         || facet == CollectionFacetParameter.RECORDED_BY
         || facet == CollectionFacetParameter.OBJECT_CLASSIFICATION
+        || facet == CollectionFacetParameter.BIOME_TYPE
         || facet == CollectionFacetParameter.BIOME
         || facet == CollectionFacetParameter.TAXON_KEY;
   }
