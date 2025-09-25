@@ -34,7 +34,7 @@ public interface GithubApiClient {
       @RequestParam("page") int page,
       @RequestParam("per_page") int perPage);
 
-  @PatchMapping("/issues/{id}")
+  @PutMapping("/issues/{id}/labels")
   void updateIssueLabels(@PathVariable("id") long id, @RequestBody IssueLabels issueLabels);
 
   @PostMapping("/issues/{id}/comments")
