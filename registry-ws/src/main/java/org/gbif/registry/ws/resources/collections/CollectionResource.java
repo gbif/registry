@@ -436,7 +436,8 @@ public class CollectionResource
     response.setHeader(HttpHeaders.CONTENT_DISPOSITION, getExportFileHeader(searchRequest, format));
 
     try (Writer writer = new BufferedWriter(new OutputStreamWriter(response.getOutputStream()))) {
-      // Use collectionService.list() directly to support all descriptor parameters
+      // Use collectionService.searchCollections() directly to support all descriptor parameters
+      // This is not ideal since we make duplicate db calls
       List<CollectionView> collections = getAllCollectionsForExport(searchRequest);
       CsvWriter.collections(collections, format).export(writer);
     }
@@ -454,7 +455,7 @@ public class CollectionResource
 
       searchResponse = collectionsSearchService.searchCollections(searchRequest);
 
-        // Convert CollectionSearchResponse to CollectionView
+        // Convert CollectionSearchResponse to CollectionView - Might be improved in case of performance issues
         List<UUID> keys = searchResponse.getResults().stream()
             .map(CollectionSearchResponse::getKey)
             .collect(Collectors.toList());

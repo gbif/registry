@@ -134,20 +134,6 @@ public class DefaultCollectionService extends BaseCollectionEntityService<Collec
     return convertToCollectionView(collectionDto);
   }
 
-  /**
-   * Gets multiple collection views by their keys in a single database query.
-   */
-  public List<CollectionView> getCollectionViews(List<UUID> keys) {
-    if (keys == null || keys.isEmpty()) {
-      return Collections.emptyList();
-    }
-
-    List<CollectionDto> collectionDtos = collectionMapper.getCollectionDtos(keys);
-    return collectionDtos.stream()
-        .map(this::convertToCollectionView)
-        .collect(Collectors.toList());
-  }
-
   @Override
   public PagingResponse<CollectionView> list(CollectionSearchRequest searchRequest) {
     return listInternal(searchRequest, false);
@@ -401,6 +387,17 @@ public class DefaultCollectionService extends BaseCollectionEntityService<Collec
     eventManager.post(CreateCollectionEntityEvent.newInstance(collection));
 
     return collectionKey;
+  }
+
+  public List<CollectionView> getCollectionViews(List<UUID> keys) {
+    if (keys == null || keys.isEmpty()) {
+      return Collections.emptyList();
+    }
+
+    List<CollectionDto> collectionDtos = collectionMapper.getCollectionDtos(keys);
+    return collectionDtos.stream()
+      .map(this::convertToCollectionView)
+      .collect(Collectors.toList());
   }
 
   private CollectionView convertToCollectionView(CollectionDto dto) {
