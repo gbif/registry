@@ -58,6 +58,11 @@ public interface CollectionMapper
   CollectionDto getCollectionDto(@Param("collectionKey") UUID collectionKey);
 
   /**
+   * Gets multiple collection DTOs by their keys.
+   */
+  List<CollectionDto> getCollectionDtos(@Param("keys") List<UUID> keys);
+
+  /**
    * Finds collections whose master source is a dataset whose publishing organization is the one
    * received as parameter.
    */

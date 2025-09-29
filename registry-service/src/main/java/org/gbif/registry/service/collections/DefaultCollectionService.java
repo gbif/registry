@@ -389,6 +389,17 @@ public class DefaultCollectionService extends BaseCollectionEntityService<Collec
     return collectionKey;
   }
 
+  public List<CollectionView> getCollectionViews(List<UUID> keys) {
+    if (keys == null || keys.isEmpty()) {
+      return Collections.emptyList();
+    }
+
+    List<CollectionDto> collectionDtos = collectionMapper.getCollectionDtos(keys);
+    return collectionDtos.stream()
+      .map(this::convertToCollectionView)
+      .collect(Collectors.toList());
+  }
+
   private CollectionView convertToCollectionView(CollectionDto dto) {
     CollectionView collectionView = new CollectionView(dto.getCollection());
     collectionView.setInstitutionCode(dto.getInstitutionCode());
