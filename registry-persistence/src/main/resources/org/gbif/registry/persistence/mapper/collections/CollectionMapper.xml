@@ -174,6 +174,16 @@
     WHERE c.key = #{collectionKey,jdbcType=OTHER}
   </select>
 
+  <select id="getCollectionDtos" resultMap="COLLECTION_DTO_MAP">
+    SELECT <include refid="COLLECTION_READ_FIELDS"/>, inst.name institutionName, inst.code institutionCode
+    FROM collection c
+    LEFT JOIN institution inst ON inst.key = c.institution_key
+    WHERE c.key IN
+    <foreach collection="keys" item="key" separator="," open="(" close=")">
+      #{key,jdbcType=OTHER}
+    </foreach>
+  </select>
+
   <select id="getInstitutionKey" resultType="java.util.UUID" >
     SELECT institution_key
     FROM collection
