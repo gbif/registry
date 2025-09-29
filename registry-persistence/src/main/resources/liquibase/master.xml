@@ -176,4 +176,5 @@
   <include file="liquibase/168-dwc-dp-endpoint-type.xml" />
   <include file="liquibase/169-add-biome-field-collection-descriptors.xml" />
   <include file="liquibase/170-data-package-table.xml" />
+  <include file="liquibase/171-event-downloads-table.xml" />
 </databaseChangeLog>
