@@ -13,6 +13,8 @@
  */
 package org.gbif.registry.service;
 
+import java.util.Set;
+
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Metadata;
@@ -24,6 +26,8 @@ import java.util.Map;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 
 public interface RegistryDatasetService {
 
@@ -39,4 +43,31 @@ public interface RegistryDatasetService {
   byte[] getMetadataDocument(int metadataKey);
 
   List<DerivedDatasetUsage> ensureDerivedDatasetDatasetUsagesValid(Map<String, Long> data);
+
+  /**
+   * Adds DwcA metadata to a target dataset.
+   *
+   * @param datasetKey   key of target dataset
+   * @param dwcA         dqwcA metadata to add
+   *
+   */
+  void createDwcaData(@NotNull UUID datasetKey, @NotNull @Valid Dataset.DwcA dwcA);
+
+  /**
+   * Updates DwcA metadata to a target dataset.
+   *
+   * @param datasetKey   key of target dataset
+   * @param dwcA         dqwcA metadata
+   *
+   */
+  void updateDwcaData(@NotNull UUID datasetKey, @NotNull @Valid Dataset.DwcA dwcA);
+
+  /**
+   * Finds datasets containing any of the given deprecated categories.
+   * Used during vocabulary synchronization to identify datasets requiring updates.
+   *
+   * @param deprecatedCategories set of deprecated category names
+   * @return list of datasets with deprecated categories
+   */
+  List<Dataset> findDatasetsWithDeprecatedCategories(Set<String> deprecatedCategories);
 }

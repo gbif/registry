@@ -13,6 +13,29 @@
  */
 package org.gbif.registry.ws.resources.collections;
 
+import org.gbif.api.documentation.CommonParameters;
+import org.gbif.api.model.collections.request.CollectionDescriptorsSearchRequest;
+import org.gbif.api.model.collections.request.InstitutionFacetedSearchRequest;
+import org.gbif.api.model.collections.search.CollectionSearchResponse;
+import org.gbif.api.model.collections.search.CollectionsFullSearchResponse;
+import org.gbif.api.model.collections.search.FacetedSearchResponse;
+import org.gbif.api.model.collections.search.InstitutionSearchResponse;
+import org.gbif.api.model.common.paging.Pageable;
+import org.gbif.api.model.common.paging.PagingResponse;
+import org.gbif.api.vocabulary.Country;
+import org.gbif.api.vocabulary.collections.CollectionFacetParameter;
+import org.gbif.registry.domain.collections.TypeParam;
+import org.gbif.registry.service.collections.CollectionsSearchService;
+
+import java.util.Arrays;
+import java.util.List;
+
+import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.Parameters;
@@ -22,23 +45,6 @@ import io.swagger.v3.oas.annotations.extensions.Extension;
 import io.swagger.v3.oas.annotations.extensions.ExtensionProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import java.util.List;
-import org.gbif.api.documentation.CommonParameters;
-import org.gbif.api.model.collections.request.CollectionDescriptorsSearchRequest;
-import org.gbif.api.model.collections.request.InstitutionSearchRequest;
-import org.gbif.api.model.collections.search.CollectionSearchResponse;
-import org.gbif.api.model.collections.search.CollectionsFullSearchResponse;
-import org.gbif.api.model.collections.search.InstitutionSearchResponse;
-import org.gbif.api.model.common.paging.Pageable;
-import org.gbif.api.model.common.paging.PagingResponse;
-import org.gbif.api.vocabulary.Country;
-import org.gbif.registry.domain.collections.TypeParam;
-import org.gbif.registry.service.collections.CollectionsSearchService;
-import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
 
 @io.swagger.v3.oas.annotations.tags.Tag(
     name = "Search institutions and collections",
@@ -91,11 +97,17 @@ public class CollectionsSearchResource {
       @RequestParam(value = "q", required = false) String query,
       @RequestParam(value = "hl", defaultValue = "false") boolean highlight,
       @RequestParam(value = "entityType", required = false) TypeParam type,
-      @RequestParam(value = "displayOnNHCPortal", required = false) Boolean displayOnNHCPortal,
-      Country country,
+      @RequestParam(value = "displayOnNHCPortal", required = false)
+          List<Boolean> displayOnNHCPortal,
+      Country[] country,
       @RequestParam(value = "limit", defaultValue = "20") int limit) {
     return collectionsSearchService.search(
-        query, highlight, type, displayOnNHCPortal, country, limit);
+        query,
+        highlight,
+        type,
+        displayOnNHCPortal,
+        country != null ? Arrays.asList(country) : null,
+        limit);
   }
 
   @Operation(
@@ -112,7 +124,7 @@ public class CollectionsSearchResource {
   @ApiResponse(responseCode = "400", description = "Invalid search query provided")
   @GetMapping("institution/search")
   public PagingResponse<InstitutionSearchResponse> searchInstitutions(
-      InstitutionSearchRequest searchRequest) {
+      InstitutionFacetedSearchRequest searchRequest) {
     return collectionsSearchService.searchInstitutions(searchRequest);
   }
 
@@ -129,8 +141,8 @@ public class CollectionsSearchResource {
   @ApiResponse(responseCode = "200", description = "Search successful")
   @ApiResponse(responseCode = "400", description = "Invalid search query provided")
   @GetMapping("collection/search")
-  public PagingResponse<CollectionSearchResponse> searchCollections(
-      CollectionDescriptorsSearchRequest searchRequest) {
+  public FacetedSearchResponse<CollectionSearchResponse, CollectionFacetParameter>
+      searchCollections(CollectionDescriptorsSearchRequest searchRequest) {
     return collectionsSearchService.searchCollections(searchRequest);
   }
 }

@@ -13,26 +13,13 @@
  */
 package org.gbif.registry.service.collections;
 
-import static com.google.common.base.Preconditions.checkArgument;
-import static org.gbif.registry.security.UserRoles.*;
-import static org.gbif.registry.service.collections.utils.ParamUtils.parseGbifRegion;
-import static org.gbif.registry.service.collections.utils.ParamUtils.parseIntegerRangeParameter;
-
-import com.google.common.base.CharMatcher;
-import com.google.common.base.Strings;
-import java.util.*;
-import java.util.stream.Collectors;
-import javax.validation.ConstraintViolation;
-import javax.validation.ConstraintViolationException;
-import javax.validation.Valid;
-import javax.validation.Validator;
-import javax.validation.constraints.NotNull;
-import javax.validation.groups.Default;
 import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.Contact;
+import org.gbif.api.model.collections.Institution;
 import org.gbif.api.model.collections.MasterSourceMetadata;
 import org.gbif.api.model.collections.latimercore.ObjectGroup;
 import org.gbif.api.model.collections.request.CollectionSearchRequest;
+import org.gbif.api.model.collections.request.InstitutionSearchRequest;
 import org.gbif.api.model.collections.view.CollectionView;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingRequest;
@@ -42,10 +29,12 @@ import org.gbif.api.model.registry.Organization;
 import org.gbif.api.model.registry.PrePersist;
 import org.gbif.api.model.registry.search.collections.KeyCodeNameResult;
 import org.gbif.api.service.collections.CollectionService;
+import org.gbif.api.service.collections.InstitutionService;
 import org.gbif.api.vocabulary.collections.Source;
 import org.gbif.registry.events.EventManager;
 import org.gbif.registry.events.collections.CreateCollectionEntityEvent;
 import org.gbif.registry.persistence.mapper.*;
+import org.gbif.registry.persistence.mapper.GrScicollVocabConceptMapper;
 import org.gbif.registry.persistence.mapper.collections.*;
 import org.gbif.registry.persistence.mapper.collections.dto.CollectionDto;
 import org.gbif.registry.persistence.mapper.collections.params.CollectionListParams;
@@ -54,12 +43,31 @@ import org.gbif.registry.service.collections.converters.CollectionConverter;
 import org.gbif.registry.service.collections.utils.LatimerCoreConverter;
 import org.gbif.registry.service.collections.utils.Vocabularies;
 import org.gbif.vocabulary.client.ConceptClient;
+
+import java.util.*;
+import java.util.stream.Collectors;
+
+import javax.validation.ConstraintViolation;
+import javax.validation.ConstraintViolationException;
+import javax.validation.Valid;
+import javax.validation.Validator;
+import javax.validation.constraints.NotNull;
+import javax.validation.groups.Default;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.RequestParam;
+
+import com.google.common.base.CharMatcher;
+import com.google.common.base.Strings;
+
+import static com.google.common.base.Preconditions.checkArgument;
+import static org.gbif.registry.security.UserRoles.*;
+import static org.gbif.registry.service.collections.utils.ParamUtils.parseGbifRegion;
+import static org.gbif.registry.service.collections.utils.ParamUtils.parseIntegerRangeParameters;
 
 @Validated
 @Service
@@ -70,6 +78,7 @@ public class DefaultCollectionService extends BaseCollectionEntityService<Collec
   private final DatasetMapper datasetMapper;
   private final OrganizationMapper organizationMapper;
   private Validator validator;
+  private InstitutionService institutionService;
 
   @Autowired
   protected DefaultCollectionService(
@@ -87,7 +96,9 @@ public class DefaultCollectionService extends BaseCollectionEntityService<Collec
       EventManager eventManager,
       WithMyBatis withMyBatis,
       Validator validator,
-      ConceptClient conceptClient) {
+      ConceptClient conceptClient,
+      GrScicollVocabConceptMapper grScicollVocabConceptMapper,
+      InstitutionService institutionService) {
     super(
         collectionMapper,
         addressMapper,
@@ -103,11 +114,13 @@ public class DefaultCollectionService extends BaseCollectionEntityService<Collec
         Collection.class,
         eventManager,
         withMyBatis,
-        conceptClient);
+        conceptClient,
+        grScicollVocabConceptMapper);
     this.collectionMapper = collectionMapper;
     this.datasetMapper = datasetMapper;
     this.organizationMapper = organizationMapper;
     this.validator = validator;
+    this.institutionService = institutionService;
   }
 
   @Override
@@ -155,7 +168,7 @@ public class DefaultCollectionService extends BaseCollectionEntityService<Collec
 
     Set<UUID> institutionKeys = new HashSet<>();
     if (searchRequest.getInstitution() != null) {
-      institutionKeys.add(searchRequest.getInstitution());
+      institutionKeys.addAll(searchRequest.getInstitution());
     }
     if (searchRequest.getInstitutionKeys() != null) {
       institutionKeys.addAll(searchRequest.getInstitutionKeys());
@@ -184,17 +197,19 @@ public class DefaultCollectionService extends BaseCollectionEntityService<Collec
             .accessionStatus(searchRequest.getAccessionStatus())
             .personalCollection(searchRequest.getPersonalCollection())
             .masterSourceType(searchRequest.getMasterSourceType())
-            .numberSpecimens(parseIntegerRangeParameter(searchRequest.getNumberSpecimens()))
+            .numberSpecimens(parseIntegerRangeParameters(searchRequest.getNumberSpecimens()))
             .displayOnNHCPortal(searchRequest.getDisplayOnNHCPortal())
             .replacedBy(searchRequest.getReplacedBy())
-            .occurrenceCount(parseIntegerRangeParameter(searchRequest.getOccurrenceCount()))
-            .typeSpecimenCount(parseIntegerRangeParameter(searchRequest.getTypeSpecimenCount()))
+            .occurrenceCount(parseIntegerRangeParameters(searchRequest.getOccurrenceCount()))
+            .typeSpecimenCount(parseIntegerRangeParameters(searchRequest.getTypeSpecimenCount()))
             .deleted(deleted)
             .sourceId(searchRequest.getSourceId())
             .source(searchRequest.getSource())
             .institutionKeys(new ArrayList<>(institutionKeys))
             .sortBy(searchRequest.getSortBy())
             .sortOrder(searchRequest.getSortOrder())
+            .contactUserId(searchRequest.getContactUserId())
+            .contactEmail(searchRequest.getContactEmail())
             .page(page)
             .build();
 
@@ -213,10 +228,59 @@ public class DefaultCollectionService extends BaseCollectionEntityService<Collec
   }
 
   @Override
+  public List<CollectionView> getCollectionsForInstitutionsBySearch(
+    InstitutionSearchRequest searchRequest) {
+    List<UUID> institutionKeys = new ArrayList<>();
+    long offset = 0;
+    PagingResponse<Institution> institutions;
+
+    // Keep getting institutions until we've got them all
+    do {
+      searchRequest.setOffset(offset);
+      searchRequest.setLimit(20); // Use a reasonable page size
+      institutions = institutionService.list(searchRequest);
+
+      institutionKeys.addAll(
+          institutions.getResults().stream()
+              .map(Institution::getKey)
+              .collect(Collectors.toList())
+      );
+
+      offset += institutions.getLimit();
+    } while (institutions.getCount() != null && offset < institutions.getCount());
+
+    if (institutionKeys.isEmpty()) {
+      return Collections.emptyList();
+    }
+
+    // Create collection search request with the institution keys
+    CollectionSearchRequest collectionRequest = CollectionSearchRequest.builder()
+        .institution(institutionKeys)
+        .build();
+
+    // Get all collections for these institutions using pagination
+    List<CollectionView> collectionViews = new ArrayList<>();
+    long collectionOffset = 0;
+    PagingResponse<CollectionView> collectionResponse;
+
+    do {
+      collectionRequest.setOffset(collectionOffset);
+      collectionRequest.setLimit(20); // Use a reasonable page size
+      collectionResponse = list(collectionRequest);
+
+      collectionViews.addAll(collectionResponse.getResults());
+      collectionOffset += collectionResponse.getLimit();
+    } while (collectionResponse.getCount() != null && collectionOffset < collectionResponse.getCount());
+
+    return collectionViews;
+  }
+
+  @Override
   public ObjectGroup getAsLatimerCore(@NotNull UUID key) {
     return LatimerCoreConverter.toObjectGroup(getCollectionView(key), conceptClient);
   }
 
+  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE, GRSCICOLL_MEDIATOR_ROLE})
   @Override
   public UUID createFromLatimerCore(@NotNull @Valid ObjectGroup objectGroup) {
     Collection convertedCollection = LatimerCoreConverter.fromObjectGroup(objectGroup);
@@ -228,6 +292,7 @@ public class DefaultCollectionService extends BaseCollectionEntityService<Collec
     return key;
   }
 
+  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE, GRSCICOLL_MEDIATOR_ROLE})
   @Override
   public void updateFromLatimerCore(@NotNull @Valid ObjectGroup objectGroup) {
     UUID key =

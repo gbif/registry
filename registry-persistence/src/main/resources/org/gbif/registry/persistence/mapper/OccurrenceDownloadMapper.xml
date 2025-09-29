@@ -23,6 +23,9 @@
       <result property="creator" column="created_by" />
       <result property="format" column="format"/>
       <result property="type" column="type"/>
+      <result property="machineDescription" column="machine_description" typeHandler="org.gbif.registry.persistence.mapper.handler.MachineDescriptorTypeHandler"/>
+      <result property="description" column="description" />
+      <result property="checklistKey" column="checklist_key"/>
       <discriminator javaType="string" column="format">
         <case value="DWCA" resultType="org.gbif.api.model.occurrence.PredicateDownloadRequest">
           <result property="predicate" column="filter" typeHandler="org.gbif.registry.persistence.mapper.handler.PredicateTypeHandler" />
@@ -89,7 +92,8 @@
 
   <sql id="OCCURRENCE_DOWNLOAD_FIELDS">
     key,doi,license,filter,status,download_link,size,total_records,notification_addresses,created_by,send_notification,
-    format,created,modified,erase_after,erasure_notification,type,verbatim_extensions,source
+    format,created,modified,erase_after,erasure_notification,type,verbatim_extensions,source, description, machine_description,
+    checklist_key
   </sql>
 
 
@@ -132,6 +136,7 @@
     license = #{license,jdbcType=OTHER},
     erase_after = #{eraseAfter,jdbcType=TIMESTAMP},
     erasure_notification = #{erasureNotification,jdbcType=TIMESTAMP},
+    download_link = #{downloadLink,jdbcType=VARCHAR},
     modified = now()
   </sql>
 
@@ -160,7 +165,10 @@
       <when test="request.format.name().equals('SQL_TSV_ZIP')">NULL,</when>
       <otherwise>#{request.verbatimExtensions,jdbcType=ARRAY,typeHandler=ExtensionArrayTypeHandler},</otherwise>
     </choose>
-    #{source,jdbcType=VARCHAR}
+    #{source,jdbcType=VARCHAR},
+    #{request.description, jdbcType=VARCHAR},
+    #{request.machineDescription,jdbcType=OTHER,typeHandler=org.gbif.registry.persistence.mapper.handler.MachineDescriptorTypeHandler}::jsonb,
+    #{request.checklistKey, jdbcType=VARCHAR}
   </sql>
 
   <select id="get" resultType="org.gbif.api.model.occurrence.Download" resultMap="OCCURRENCE_DOWNLOAD_MAP">

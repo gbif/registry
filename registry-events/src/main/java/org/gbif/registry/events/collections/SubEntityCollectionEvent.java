@@ -69,6 +69,22 @@ public class SubEntityCollectionEvent<T extends CollectionEntity, R>
   public static <T extends CollectionEntity, R> SubEntityCollectionEvent<T, R> newInstance(
       UUID collectionEntityKey,
       Class<T> collectionEntityClass,
+      Class<R> subEntity,
+      long subEntityKey,
+      EventType eventType) {
+    return new SubEntityCollectionEvent<>(
+        collectionEntityKey,
+        collectionEntityClass,
+        subEntity,
+        null,
+        null,
+        String.valueOf(subEntityKey),
+        eventType);
+  }
+
+  public static <T extends CollectionEntity, R> SubEntityCollectionEvent<T, R> newInstance(
+      UUID collectionEntityKey,
+      Class<T> collectionEntityClass,
       R subEntity,
       R oldSubEntity,
       int subEntityKey,

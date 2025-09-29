@@ -181,6 +181,7 @@ public abstract class BaseChangeSuggestionServiceIT<
     // suggested changes
     int numberChanges = updateEntity(entity);
     address.setCity("city");
+    numberChanges++;
 
     R suggestion = createEmptyChangeSuggestion();
     suggestion.setSuggestedEntity(entity);
@@ -436,6 +437,9 @@ public abstract class BaseChangeSuggestionServiceIT<
   public void listTest() {
     // State
     T entity = createEntity();
+    Address address = new Address();
+    address.setCountry(Country.DENMARK);
+    entity.setAddress(address);
     R suggestion = createEmptyChangeSuggestion();
     suggestion.setSuggestedEntity(entity);
     suggestion.setType(Type.CREATE);
@@ -457,26 +461,32 @@ public abstract class BaseChangeSuggestionServiceIT<
 
     // When
     PagingResponse<R> results =
-        changeSuggestionService.list(Status.APPLIED, null, null, null, DEFAULT_PAGE);
+        changeSuggestionService.list(Status.APPLIED, null, null, null, null, null, DEFAULT_PAGE);
     // Then
     assertEquals(0, results.getResults().size());
     assertEquals(0, results.getCount());
 
     // When
-    results = changeSuggestionService.list(null, Type.CREATE, null, null, DEFAULT_PAGE);
+    results = changeSuggestionService.list(null, Type.CREATE, null, null, null, null, DEFAULT_PAGE);
     // Then
     assertEquals(1, results.getResults().size());
     assertEquals(1, results.getCount());
 
     // When
-    results = changeSuggestionService.list(null, null, null, entity2Key, DEFAULT_PAGE);
+    results = changeSuggestionService.list(null, null, null, entity2Key, null, null, DEFAULT_PAGE);
+    // Then
+    assertEquals(1, results.getResults().size());
+    assertEquals(1, results.getCount());
+
+    // When
+    results = changeSuggestionService.list(null, null, null, null, null, "DK", DEFAULT_PAGE);
     // Then
     assertEquals(1, results.getResults().size());
     assertEquals(1, results.getCount());
 
     // When - user with no rights can't see the proposer email
     resetSecurityContext("user", UserRole.USER);
-    results = changeSuggestionService.list(null, null, null, entity2Key, DEFAULT_PAGE);
+    results = changeSuggestionService.list(null, null, null, entity2Key, null, null, DEFAULT_PAGE);
     // Then
     assertTrue(results.getResults().stream().allMatch(v -> v.getProposerEmail() == null));
   }
@@ -598,7 +608,7 @@ public abstract class BaseChangeSuggestionServiceIT<
       .filter(c -> c.getKey().equals(contact1.getKey()))
       .findFirst()
       .get()
-      .setModifiedBy("11");
+      .setModifiedBy("111");
 
     R suggestion3 = createEmptyChangeSuggestion();
     suggestion3.setSuggestedEntity(entity);
@@ -613,6 +623,23 @@ public abstract class BaseChangeSuggestionServiceIT<
     // Then
     suggestion3 = changeSuggestionService.getChangeSuggestion(sugg3Key);
     assertEquals(0, suggestion3.getChanges().size());
+
+    // suggestion to change contact1 with an invalid name
+    entity.getContactPersons().stream()
+      .filter(c -> c.getKey().equals(contact1.getKey()))
+      .findFirst()
+      .get()
+      .setFirstName("");
+
+    R suggestion4 = createEmptyChangeSuggestion();
+    suggestion4.setSuggestedEntity(entity);
+    suggestion4.setType(Type.UPDATE);
+    suggestion4.setEntityKey(entityKey);
+    suggestion4.setProposerEmail(PROPOSER);
+    suggestion4.setComments(Collections.singletonList("contact1"));
+
+    assertThrows(ValidationException.class,
+      () -> changeSuggestionService.createChangeSuggestion(suggestion4));
   }
 
   protected void assertCreatedSuggestion(R created) {

@@ -33,6 +33,7 @@ import org.gbif.api.vocabulary.MaintenanceUpdateFrequency;
 import org.gbif.registry.search.dataset.indexing.checklistbank.ChecklistbankPersistenceService;
 import org.gbif.registry.search.dataset.indexing.ws.GbifWsClient;
 import org.gbif.registry.search.dataset.indexing.ws.JacksonObjectMapper;
+import org.gbif.vocabulary.client.ConceptClient;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -41,7 +42,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.EnumSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -49,8 +49,6 @@ import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
-import javax.xml.parsers.SAXParserFactory;
 
 import org.apache.commons.lang3.StringUtils;
 import org.elasticsearch.action.search.SearchRequest;
@@ -92,7 +90,6 @@ public class DatasetJsonConverter {
   private static final String GRIDDED_DATASET_NAMESPACE = "griddedDataSet.jwaller.gbif.org";
   private static final String GRIDDED_DATASET_NAME = "griddedDataset";
 
-  private final SAXParserFactory saxFactory = SAXParserFactory.newInstance();
   private final TimeSeriesExtractor timeSeriesExtractor =
       new TimeSeriesExtractor(1000, 2400, 1800, 2050);
 
@@ -101,6 +98,8 @@ public class DatasetJsonConverter {
   private ChecklistbankPersistenceService checklistbankPersistenceService;
 
   private final GbifWsClient gbifWsClient;
+
+  private final ConceptClient conceptClient;
 
   private final ObjectMapper mapper;
 
@@ -129,11 +128,13 @@ public class DatasetJsonConverter {
   @Autowired
   private DatasetJsonConverter(
       GbifWsClient gbifWsClient,
+      ConceptClient conceptClient,
       @Autowired(required = false) ChecklistbankPersistenceService checklistbankPersistenceService,
       @Qualifier("apiMapper") ObjectMapper mapper,
       @Qualifier("occurrenceEsClient") RestHighLevelClient occurrenceEsClient,
       @Value("${elasticsearch.occurrence.index}") String occurrenceIndex) {
     this.gbifWsClient = gbifWsClient;
+    this.conceptClient = conceptClient;
     this.checklistbankPersistenceService = checklistbankPersistenceService;
     this.mapper = mapper;
     this.occurrenceEsClient = occurrenceEsClient;
@@ -146,11 +147,13 @@ public class DatasetJsonConverter {
 
   public static DatasetJsonConverter create(
       GbifWsClient gbifWsClient,
+      ConceptClient conceptClient,
       ChecklistbankPersistenceService checklistbankPersistenceService,
       RestHighLevelClient occurrenceEsClient,
       String occurrenceIndex) {
     return new DatasetJsonConverter(
         gbifWsClient,
+        conceptClient,
         checklistbankPersistenceService,
         JacksonObjectMapper.get(),
         occurrenceEsClient,
@@ -164,11 +167,11 @@ public class DatasetJsonConverter {
     addKeyword(dataset, datasetAsJson);
     addCountryCoverage(dataset, datasetAsJson);
     addNetworks(dataset, datasetAsJson);
+    addCategoriesWithParents(dataset, datasetAsJson);
     if (checklistbankPersistenceService != null) {
       addTaxonKeys(dataset, datasetAsJson);
     }
     addMachineTags(dataset, datasetAsJson);
-    // addOccurrenceCoverage(dataset, datasetAsJson);
     return datasetAsJson;
   }
 
@@ -251,17 +254,20 @@ public class DatasetJsonConverter {
             BigDecimal.valueOf(occurrencePercentage)
                 .setScale(scale, RoundingMode.HALF_UP)
                 .doubleValue()));
-    DatasetMetrics datasetMetrics = gbifWsClient.getDatasetSpeciesMetrics(datasetKey);
 
-    if (Objects.nonNull(datasetMetrics)) {
-      nameUsagesPercentage = datasetMetrics.getUsagesCount() / getNameUsagesCount().doubleValue();
-      nameUsagesPercentage =
+    if (DatasetType.CHECKLIST.name().equals(dataset.get("type").asText())) {
+      DatasetMetrics datasetMetrics = gbifWsClient.getDatasetSpeciesMetrics(datasetKey);
+
+      if (Objects.nonNull(datasetMetrics)) {
+        nameUsagesPercentage = datasetMetrics.getUsagesCount() / getNameUsagesCount().doubleValue();
+        nameUsagesPercentage =
           Double.isInfinite(nameUsagesPercentage) || Double.isNaN(nameUsagesPercentage)
-              ? 0D
-              : nameUsagesPercentage;
-      dataset.put("nameUsagesCount", datasetMetrics.getUsagesCount());
-    } else {
-      dataset.put("nameUsagesCount", 0);
+            ? 0D
+            : nameUsagesPercentage;
+        dataset.put("nameUsagesCount", datasetMetrics.getUsagesCount());
+      } else {
+        dataset.put("nameUsagesCount", 0);
+      }
     }
 
     // Contribution of NameUsages
@@ -352,13 +358,13 @@ public class DatasetJsonConverter {
   private void addFacetsData(ObjectNode datasetJsonNode) {
     String datasetKey = datasetJsonNode.get("key").textValue();
     Set<OccurrenceSearchParameter> facets =
-        EnumSet.of(
+        Set.of(
             OccurrenceSearchParameter.COUNTRY, OccurrenceSearchParameter.CONTINENT,
             OccurrenceSearchParameter.TAXON_KEY, OccurrenceSearchParameter.YEAR);
     OccurrenceSearchRequest occurrenceSearchRequest = new OccurrenceSearchRequest();
     occurrenceSearchRequest.setLimit(0);
     occurrenceSearchRequest.setOffset(0);
-    occurrenceSearchRequest.setMultiSelectFacets(false);
+    occurrenceSearchRequest.setFacetMultiSelect(false);
     occurrenceSearchRequest.setFacetLimit(MAX_FACET_LIMIT);
     occurrenceSearchRequest.setFacetMinCount(1);
     occurrenceSearchRequest.setFacets(facets);
@@ -395,6 +401,31 @@ public class DatasetJsonConverter {
       for (Integer taxonKey :
           checklistbankPersistenceService.getTaxonKeys(dataset.getKey().toString())) {
         taxonKeyNode.add(new IntNode(taxonKey));
+      }
+    }
+  }
+
+  private void addCategoriesWithParents(Dataset dataset, ObjectNode datasetJsonNode) {
+    if (dataset.getCategory() != null && !dataset.getCategory().isEmpty()) {
+      ArrayNode categoryArray = datasetJsonNode.putArray("category");
+
+      for (String categoryName : dataset.getCategory()) {
+        ObjectNode categoryObject = mapper.createObjectNode();
+        categoryObject.put("concept", categoryName);
+
+        try {
+          Optional<VocabularyConcept> vocabularyConcept = VocabularyConceptFactory.createConceptFromName(
+              categoryName, conceptClient, "DatasetCategory");
+
+          ArrayNode lineageArray = categoryObject.putArray("lineage");
+          vocabularyConcept.ifPresent(value -> value.getLineage().forEach(lineageArray::add));
+        } catch (Exception e) {
+          log.warn("Could not fetch lineage for category: {}", categoryName, e);
+          ArrayNode lineageArray = categoryObject.putArray("lineage");
+          lineageArray.add(categoryName);
+        }
+
+        categoryArray.add(categoryObject);
       }
     }
   }

@@ -6,7 +6,8 @@
   <resultMap id="DATASET_MAP" type="org.gbif.api.model.registry.Dataset" autoMapping="true">
     <id property="key" column="key"/>
     <association property="citation" resultMap="CITATION_MAP"/>
-    <association property="numConstituents" column="key" select="countConstituents" />
+    <association property="numConstituents" column="key" select="countConstituents"/>
+    <association property="dwca" column="key" select="selectDwcaDataset" fetchType="eager"/>
     <collection property="contacts" column="key" select="listContacts"/>
     <collection property="endpoints" column="key" select="listEndpoints"/>
     <collection property="machineTags" column="key" select="listMachineTags"/>
@@ -22,15 +23,21 @@
 
   <!-- maps a citation object  -->
   <resultMap id="CITATION_MAP" type="org.gbif.api.model.registry.Citation" autoMapping="false">
-    <result property="text" column="citation" />
-    <result property="identifier" column="citation_identifier" />
+    <result property="text" column="citation"/>
+    <result property="identifier" column="citation_identifier"/>
+  </resultMap>
+
+  <resultMap id="DWCA_MAP" type="DwcA" autoMapping="false">
+    <result property="coreType" column="core_type" />
+    <result property="extensions" column="extensions" typeHandler="org.gbif.mybatis.type.StringArrayTypeHandler"/>
+    <result property="modified" column="modified"/>
   </resultMap>
 
   <sql id="WRITABLE_DATASET_FIELDS">
     key,parent_dataset_key,duplicate_of_dataset_key,installation_key,publishing_organization_key,
     external,type,sub_type,title,alias,abbreviation,description,language,
     homepage,logo_url,citation,citation_identifier,rights,locked_for_auto_update,created,created_by,
-    modified,modified_by,doi,license,maintenance_update_frequency,version
+    modified,modified_by,doi,license,maintenance_update_frequency,version,category
   </sql>
 
   <sql id="DATASET_FIELDS">
@@ -39,7 +46,7 @@
     d.homepage,d.logo_url,
     COALESCE(d.citation, o.title || ': ' || d.title) as citation,
     d.citation_identifier,d.rights,d.locked_for_auto_update,d.created,d.created_by,
-    d.modified,d.modified_by,d.deleted,d.doi,d.license,d.maintenance_update_frequency,d.version
+    d.modified,d.modified_by,d.deleted,d.doi,d.license,d.maintenance_update_frequency,d.version,d.category
   </sql>
 
   <!--
@@ -84,7 +91,8 @@
     doi = #{doi,jdbcType=VARCHAR},
     license = #{license,jdbcType=OTHER},
     maintenance_update_frequency = #{maintenanceUpdateFrequency,jdbcType=OTHER},
-    version = #{version}
+    version = #{version},
+    category = #{category,jdbcType=ARRAY,typeHandler=org.gbif.registry.persistence.mapper.handler.SetArrayTypeHandler}
   </sql>
 
   <sql id="WRITABLE_DATASET_FIELD_TYPES">
@@ -114,7 +122,8 @@
     #{doi,jdbcType=VARCHAR},
     #{license,jdbcType=OTHER},
     #{maintenanceUpdateFrequency,jdbcType=OTHER},
-    #{version}
+    #{version},
+    #{category,jdbcType=ARRAY,typeHandler=org.gbif.registry.persistence.mapper.handler.SetArrayTypeHandler}
   </sql>
 
   <select id="countConstituents" resultType="int">
@@ -416,6 +425,10 @@
     <if test="params.networkKey != null">
       INNER JOIN dataset_network dn ON dn.dataset_key = d.key
     </if>
+    <if test="params.contactUserId != null or params.contactEmail != null">
+      INNER JOIN dataset_contact dc ON dc.dataset_key = d.key
+      INNER JOIN contact c ON c.key = dc.contact_key
+    </if>
     <where>
       <choose>
         <when test="params.deleted != null and params.deleted">
@@ -462,6 +475,12 @@
       </if>
       <if test="params.isSubdataset != null and params.isSubdataset">
         AND d.parent_dataset_key IS NOT NULL
+      </if>
+      <if test="params.contactUserId != null">
+        AND c.user_id @> ARRAY[#{params.contactUserId}::text]
+      </if>
+      <if test="params.contactEmail != null">
+        AND c.email @> ARRAY[#{params.contactEmail}::text]
       </if>
     </where>
   </sql>
@@ -532,6 +551,44 @@
       dg.max_percent
     FROM dataset_gridded dg
     WHERE dg.dataset_key = #{datasetKey,jdbcType=OTHER}
+  </select>
+
+  <!-- DwC-A -->
+  <!-- Create a DwCA metadata record -->
+  <insert id="createDwcaDataset" parameterType="map">
+    INSERT INTO dwca_dataset(dataset_key,core_type,extensions,modified)
+    VALUES(
+    #{datasetKey,jdbcType=OTHER},
+    #{dwca.coreType,jdbcType=VARCHAR},
+    #{dwca.extensions,jdbcType=ARRAY,typeHandler=org.gbif.mybatis.type.StringArrayTypeHandler},
+    now()
+    )
+  </insert>
+
+  <!-- Update a DwCA metadata record -->
+  <update id="updateDwcaDataset" parameterType="map">
+    UPDATE dwca_dataset
+    SET core_type=#{dwca.coreType,jdbcType=VARCHAR},
+    extensions=#{dwca.extensions,jdbcType=ARRAY,typeHandler=org.gbif.mybatis.type.StringArrayTypeHandler},
+    modified= now()
+    WHERE dataset_key=#{datasetKey,jdbcType=OTHER}
+  </update>
+
+  <!-- Get a DwcA metadata record by dataset key -->
+  <select id="selectDwcaDataset" resultMap="DWCA_MAP">
+    SELECT dwca.core_type, dwca.extensions, dwca.modified
+    FROM dwca_dataset dwca
+    WHERE dwca.dataset_key = #{key}
+  </select>
+
+  <!-- Dataset Category Management -->
+  <select id="findDatasetsWithDeprecatedCategories" resultMap="DATASET_MAP">
+    SELECT <include refid="DATASET_FIELDS"/>
+    FROM dataset d
+    LEFT JOIN organization o ON o.key = d.publishing_organization_key
+    WHERE d.deleted IS NULL
+      AND d.category IS NOT NULL
+      AND d.category &amp;&amp; #{deprecatedCategories,jdbcType=ARRAY,typeHandler=org.gbif.registry.persistence.mapper.handler.SetArrayTypeHandler}
   </select>
 
 </mapper>

@@ -1,4 +1,4 @@
-[![Build status](https://builds.gbif.org/job/registry-dev/badge/icon)](https://builds.gbif.org/job/registry-dev/lastBuild/console)
+[![DEV - Build Status](https://builds.gbif.org/job/registry/job/dev/badge/icon?subject=dev%20-%20branch%20status&style=flat-square)](https://builds.gbif.org/job/pipelines-multibranch/job/dev)
 [![Crowdin](https://badges.crowdin.net/gbif-registry/localized.svg)](https://crowdin.com/project/gbif-registry)
 
 # GBIF Registry

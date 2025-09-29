@@ -18,11 +18,12 @@ import org.gbif.api.model.common.search.SearchResponse;
 import org.gbif.api.model.occurrence.Occurrence;
 import org.gbif.api.model.occurrence.search.OccurrenceSearchParameter;
 import org.gbif.api.model.occurrence.search.OccurrenceSearchRequest;
-import org.gbif.api.vocabulary.TypeStatus;
 import org.gbif.occurrence.ws.client.OccurrenceWsSearchClient;
 import org.gbif.registry.persistence.mapper.collections.CollectionMapper;
 import org.gbif.registry.persistence.mapper.collections.InstitutionMapper;
 import org.gbif.registry.persistence.mapper.params.Count;
+import org.gbif.registry.service.collections.utils.Vocabularies;
+import org.gbif.vocabulary.client.ConceptClient;
 import org.gbif.ws.client.ClientBuilder;
 import org.gbif.ws.json.JacksonJsonObjectMapperProvider;
 
@@ -47,15 +48,18 @@ public class GRSciCollCountsUpdaterService {
 
   private final InstitutionMapper institutionMapper;
   private final CollectionMapper collectionMapper;
+  private final ConceptClient conceptClient;
   private final OccurrenceWsSearchClient occurrenceWsSearchClient;
 
   @Autowired
   public GRSciCollCountsUpdaterService(
       InstitutionMapper institutionMapper,
       CollectionMapper collectionMapper,
+      ConceptClient conceptClient,
       @Value("${api.root.url}") String apiRootUrl) {
     this.institutionMapper = institutionMapper;
     this.collectionMapper = collectionMapper;
+    this.conceptClient = conceptClient;
     this.occurrenceWsSearchClient =
         new ClientBuilder()
             .withObjectMapper(JacksonJsonObjectMapperProvider.getObjectMapperWithBuilderSupport())
@@ -138,8 +142,11 @@ public class GRSciCollCountsUpdaterService {
     }
 
     // add type specimens to the request and make the call
-    Arrays.stream(TypeStatus.values())
-        .filter(t -> t != TypeStatus.NOTATYPE)
+    List<String> typeStatusValues =
+        Vocabularies.getVocabularyConcepts(Vocabularies.TYPE_STATUS, conceptClient);
+
+    typeStatusValues.stream()
+        .filter(t -> !t.equalsIgnoreCase("NotAType"))
         .forEach(request::addTypeStatusFilter);
     SearchResponse<Occurrence, OccurrenceSearchParameter> typeSpecimenCountsResponse =
         occurrenceWsSearchClient.search(request);

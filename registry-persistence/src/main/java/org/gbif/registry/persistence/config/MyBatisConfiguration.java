@@ -13,13 +13,12 @@
  */
 package org.gbif.registry.persistence.config;
 
-import java.net.URI;
-import java.util.UUID;
 import org.gbif.api.model.collections.Address;
 import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.Institution;
 import org.gbif.api.model.collections.descriptors.Descriptor;
-import org.gbif.api.model.collections.descriptors.DescriptorSet;
+import org.gbif.api.model.collections.descriptors.DescriptorChangeSuggestion;
+import org.gbif.api.model.collections.descriptors.DescriptorGroup;
 import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.common.DoiData;
 import org.gbif.api.model.common.paging.Pageable;
@@ -42,13 +41,18 @@ import org.gbif.mybatis.type.*;
 import org.gbif.registry.domain.doi.DoiType;
 import org.gbif.registry.domain.ws.DerivedDataset;
 import org.gbif.registry.domain.ws.DerivedDatasetUsage;
+import org.gbif.registry.persistence.facet.LtreeTypeHandler;
 import org.gbif.registry.persistence.mapper.auxhandler.AlternativeCodesTypeHandler;
-import org.gbif.registry.persistence.mapper.auxhandler.CollectionSummaryTypeHandler;
 import org.gbif.registry.persistence.mapper.collections.dto.*;
 import org.gbif.registry.persistence.mapper.collections.external.IDigBioCollectionDto;
 import org.gbif.registry.persistence.mapper.collections.external.IdentifierDto;
 import org.gbif.registry.persistence.mapper.collections.external.MachineTagDto;
+import org.gbif.registry.persistence.mapper.dto.OrganizationGeoJsonDto;
 import org.gbif.registry.persistence.mapper.handler.*;
+
+import java.net.URI;
+import java.util.UUID;
+
 import org.mybatis.spring.boot.autoconfigure.ConfigurationCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -73,6 +77,7 @@ public class MyBatisConfiguration {
       configuration.getTypeHandlerRegistry().register(MetricInfoTypeHandler.class);
       configuration.getTypeHandlerRegistry().register(LocaleTypeHandler.class);
       configuration.getTypeHandlerRegistry().register(ExtensionArrayTypeHandler.class);
+      configuration.getTypeHandlerRegistry().register(SetArrayTypeHandler.class);
 
       configuration.getTypeAliasRegistry().registerAlias("Node", Node.class);
       configuration.getTypeAliasRegistry().registerAlias("Organization", Organization.class);
@@ -116,7 +121,8 @@ public class MyBatisConfiguration {
       configuration.getTypeAliasRegistry().registerAlias("Address", Address.class);
       configuration.getTypeAliasRegistry().registerAlias("CollectionDto", CollectionDto.class);
       configuration.getTypeAliasRegistry().registerAlias("DuplicateDto", DuplicateDto.class);
-      configuration.getTypeAliasRegistry().registerAlias("DescriptorSet", DescriptorSet.class);
+      configuration.getTypeAliasRegistry().registerAlias("DescriptorGroup", DescriptorGroup.class);
+      configuration.getTypeAliasRegistry().registerAlias("DescriptorChangeSuggestion", DescriptorChangeSuggestion.class);
       configuration.getTypeAliasRegistry().registerAlias("Descriptor", Descriptor.class);
       configuration.getTypeAliasRegistry().registerAlias("DescriptorDto", DescriptorDto.class);
       configuration.getTypeAliasRegistry().registerAlias("VerbatimDto", VerbatimDto.class);
@@ -130,6 +136,7 @@ public class MyBatisConfiguration {
       configuration
           .getTypeAliasRegistry()
           .registerAlias("CollectionSearchDto", CollectionSearchDto.class);
+      configuration.getTypeAliasRegistry().registerAlias("FacetDto", FacetDto.class);
       configuration
           .getTypeAliasRegistry()
           .registerAlias("InstitutionMatchedDto", InstitutionMatchedDto.class);
@@ -179,8 +186,7 @@ public class MyBatisConfiguration {
           .registerAlias("DisciplineArrayTypeHandler", DisciplineArrayTypeHandler.class);
       configuration
           .getTypeAliasRegistry()
-          .registerAlias(
-              "CollectionContentTypeArrayTypeHandler", CollectionContentTypeArrayTypeHandler.class);
+          .registerAlias("CollectionContentTypeArrayTypeHandler", CollectionContentTypeArrayTypeHandler.class);
       configuration
           .getTypeAliasRegistry()
           .registerAlias("StepTypeArrayTypeHandler", StepTypeArrayTypeHandler.class);
@@ -192,14 +198,16 @@ public class MyBatisConfiguration {
           .registerAlias("ExtensionArrayTypeHandler", ExtensionArrayTypeHandler.class);
       configuration
           .getTypeAliasRegistry()
-          .registerAlias(
-              "InstitutionGovernanceArrayTypeHandler", InstitutionGovernanceArrayTypeHandler.class);
+          .registerAlias("InstitutionGovernanceArrayTypeHandler", InstitutionGovernanceArrayTypeHandler.class);
       configuration
           .getTypeAliasRegistry()
           .registerAlias("RankedNameListTypeHandler", RankedNameListTypeHandler.class);
       configuration
           .getTypeAliasRegistry()
           .registerAlias("IntegerArrayTypeHandler", IntegerArrayTypeHandler.class);
+      configuration
+        .getTypeAliasRegistry()
+        .registerAlias("ExportFormatHandler", ExportFormatHandler.class);
 
       configuration.getTypeAliasRegistry().registerAlias("PipelineProcess", PipelineProcess.class);
       configuration.getTypeAliasRegistry().registerAlias("Step", PipelineStep.class);
@@ -211,9 +219,6 @@ public class MyBatisConfiguration {
           .registerAlias("MetricInfoTypeHandler", MetricInfoTypeHandler.class);
       configuration
           .getTypeAliasRegistry()
-          .registerAlias("CollectionSummaryTypeHandler", CollectionSummaryTypeHandler.class);
-      configuration
-          .getTypeAliasRegistry()
           .registerAlias("AlternativeCodesTypeHandler", AlternativeCodesTypeHandler.class);
       configuration
           .getTypeAliasRegistry()
@@ -221,6 +226,14 @@ public class MyBatisConfiguration {
       configuration
           .getTypeAliasRegistry()
           .registerAlias("UserIdsTypeHandler", UserIdsTypeHandler.class);
+      configuration
+          .getTypeAliasRegistry()
+          .registerAlias("OrganizationGeoJsonDto", OrganizationGeoJsonDto.class);
+      configuration
+        .getTypeAliasRegistry()
+        .registerAlias("MachineDescriptorTypeHandler", MachineDescriptorTypeHandler.class);
+
+      configuration.getTypeAliasRegistry().registerAlias("LtreeTypeHandler", LtreeTypeHandler.class);
 
       // external iDigBio
       configuration.getTypeAliasRegistry().registerAlias("MachineTagDto", MachineTagDto.class);
@@ -228,6 +241,14 @@ public class MyBatisConfiguration {
       configuration
           .getTypeAliasRegistry()
           .registerAlias("IDigBioCollectionDto", IDigBioCollectionDto.class);
+
+      configuration
+        .getTypeAliasRegistry()
+        .registerAlias("DwcA", Dataset.DwcA.class);
+
+      configuration
+        .getTypeAliasRegistry()
+        .registerAlias("DataPackage", Dataset.DataPackage.class);
     };
   }
 }

@@ -10,8 +10,6 @@
     <result property="contentTypes" column="content_type" typeHandler="StringArrayTypeHandler"/>
     <result property="preservationTypes" column="preservation_type" typeHandler="StringArrayTypeHandler"/>
     <result property="incorporatedCollections" column="incorporated_collections" typeHandler="StringArrayTypeHandler"/>
-    <result property="importantCollectors" column="important_collectors" typeHandler="StringArrayTypeHandler"/>
-    <result property="collectionSummary" column="collection_summary" typeHandler="CollectionSummaryTypeHandler"/>
     <result property="alternativeCodes" column="alternative_codes" typeHandler="AlternativeCodesTypeHandler"/>
     <result property="catalogUrls" column="catalog_url" typeHandler="UriArrayTypeHandler"/>
     <result property="apiUrls" column="api_url" typeHandler="UriArrayTypeHandler"/>
@@ -40,7 +38,7 @@
     key, code, name, description, content_type, active, personal_collection, doi, email, phone, homepage, catalog_url, api_url,
     preservation_type, accession_status, institution_key, mailing_address_key, address_key,
     created_by, modified_by, created, modified, number_specimens,
-    taxonomic_coverage, geographic_coverage, notes, incorporated_collections, important_collectors, collection_summary, alternative_codes,
+    taxonomic_coverage, geographic_coverage, notes, incorporated_collections, alternative_codes,
     master_source, division, department, display_on_NHCPortal, featured_image_url, featured_image_license, temporal_coverage, featured_image_attribution
   </sql>
 
@@ -48,7 +46,7 @@
     c.key, c.code, c.name, c.description, c.content_type, c.active, c.personal_collection, c.doi, c.email, c.phone, c.homepage,
     c.catalog_url, c.api_url, c.preservation_type, c.accession_status, c.institution_key, c.mailing_address_key,
     c.address_key, c.created_by, c.modified_by, c.created, c.modified, c.deleted, c.number_specimens,
-    c.taxonomic_coverage, c.geographic_coverage, c.notes, c.incorporated_collections, c.important_collectors, c.collection_summary, c.alternative_codes,
+    c.taxonomic_coverage, c.geographic_coverage, c.notes, c.incorporated_collections, c.alternative_codes,
     c.replaced_by, c.master_source, c.master_sync_metadata_key, c.division, c.department, c.display_on_NHCPortal,
     c.occurrence_count, c.type_specimen_count, c.featured_image_url, c.featured_image_license, c.temporal_coverage, c.featured_image_attribution
   </sql>
@@ -81,8 +79,6 @@
     #{geographicCoverage,jdbcType=VARCHAR},
     #{notes,jdbcType=VARCHAR},
     #{incorporatedCollections,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler},
-    #{importantCollectors,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler},
-    #{collectionSummary,jdbcType=OTHER,typeHandler=CollectionSummaryTypeHandler}::hstore,
     #{alternativeCodes,jdbcType=OTHER,typeHandler=AlternativeCodesTypeHandler}::hstore,
     #{masterSource,jdbcType=OTHER},
     #{division,jdbcType=VARCHAR},
@@ -120,8 +116,6 @@
     geographic_coverage = #{geographicCoverage,jdbcType=VARCHAR},
     notes = #{notes,jdbcType=VARCHAR},
     incorporated_collections = #{incorporatedCollections,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler},
-    important_collectors = #{importantCollectors,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler},
-    collection_summary = #{collectionSummary,jdbcType=OTHER,typeHandler=CollectionSummaryTypeHandler}::hstore,
     alternative_codes = #{alternativeCodes,jdbcType=OTHER,typeHandler=AlternativeCodesTypeHandler}::hstore,
     division = #{division,jdbcType=VARCHAR},
     department = #{department,jdbcType=VARCHAR},
@@ -200,7 +194,7 @@
                           c.created, c.key)
             <include refid="COLLECTION_READ_FIELDS"/>, inst.name institutionName, inst.code institutionCode, c.fulltext_search
             <if test="params.query != null" >,query</if>
-            <if test="params.fuzzyName != null">,similarity(c.name, #{params.fuzzyName,jdbcType=VARCHAR}) AS similarity_score</if>
+            <if test="params.fuzzyName != null">,similar_name_score(c.name, #{params.fuzzyName,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler}::text[]) AS similarity_score</if>
     FROM collection c
     <if test="params.query != null" >
       <include refid="FULLTEXT_SEARCH"/>
@@ -238,164 +232,57 @@
       INNER JOIN collection_identifier ci on ci.collection_key = c.key
       INNER JOIN identifier id on id.key = ci.identifier_key
     </if>
+    <if test="params.contactUserId != null || params.contactEmail != null" >
+      INNER JOIN collection_collection_contact ccc on ccc.collection_key = c.key
+      INNER JOIN collection_contact cc on cc.key = ccc.collection_contact_key
+    </if>
+    <!-- Hierarchical concept-based filtering for content types -->
+    <if test="params.contentTypes != null and params.contentTypes.size > 0">
+      INNER JOIN collection_concept_links cfl_content ON cfl_content.collection_key = c.key
+      INNER JOIN grscicoll_vocab_concept f_content ON cfl_content.concept_key = f_content.concept_key
+        AND f_content.vocabulary_name = 'CollectionContentType'
+        AND lower(f_content.name) IN
+        <foreach item="item" collection="params.contentTypes" open="(" separator="," close=")">
+          lower(#{item,jdbcType=VARCHAR})
+        </foreach>
+    </if>
+    <!-- Hierarchical concept-based filtering for preservation types -->
+    <if test="params.preservationTypes != null and params.preservationTypes.size > 0">
+      INNER JOIN collection_concept_links cfl_preservation ON cfl_preservation.collection_key = c.key
+      INNER JOIN grscicoll_vocab_concept f_preservation ON cfl_preservation.concept_key = f_preservation.concept_key
+        AND f_preservation.vocabulary_name = 'PreservationType'
+        AND lower(f_preservation.name) IN
+        <foreach item="item" collection="params.preservationTypes" open="(" separator="," close=")">
+          lower(#{item,jdbcType=VARCHAR})
+        </foreach>
+    </if>
+    <!-- Hierarchical concept-based filtering for accession status -->
+    <if test="params.accessionStatus != null and params.accessionStatus.size > 0">
+      INNER JOIN collection_concept_links cfl_accession ON cfl_accession.collection_key = c.key
+      INNER JOIN grscicoll_vocab_concept f_accession ON cfl_accession.concept_key = f_accession.concept_key
+        AND f_accession.vocabulary_name = 'AccessionStatus'
+        AND lower(f_accession.name) IN
+        <foreach item="item" collection="params.accessionStatus" open="(" separator="," close=")">
+          lower(#{item,jdbcType=VARCHAR})
+        </foreach>
+    </if>
     LEFT JOIN address addr ON addr.key = c.address_key
     LEFT JOIN address mail_addr ON mail_addr.key = c.mailing_address_key
     <if test="params.source != null || params.sourceId != null">
         INNER JOIN master_sync_metadata m ON c.master_sync_metadata_key = m.key
     </if>
     <where>
-      <choose>
-        <when test="params.deleted != null and params.deleted">
-          c.deleted IS NOT NULL
-        </when>
-        <otherwise>
-          c.deleted IS NULL
-        </otherwise>
-      </choose>
-      <if test="params.code != null" >
-        AND lower(c.code) = lower(#{params.code,jdbcType=VARCHAR})
-      </if>
-      <if test="params.alternativeCode != null" >
-        AND c.alternative_codes ?? #{params.alternativeCode,jdbcType=VARCHAR}
-      </if>
-      <if test="params.name != null" >
-        AND c.name = #{params.name,jdbcType=VARCHAR}
-      </if>
-      <if test="params.machineTagNamespace != null" >
-        AND mt.namespace = #{params.machineTagNamespace,jdbcType=VARCHAR}
-      </if>
-      <if test="params.machineTagName != null" >
-        AND mt.name = #{params.machineTagName,jdbcType=VARCHAR}
-      </if>
-      <if test="params.machineTagValue != null" >
-        AND mt.value = #{params.machineTagValue,jdbcType=VARCHAR}
-      </if>
-      <if test="params.identifierType != null" >
-        AND id.type = #{params.identifierType,jdbcType=OTHER}
-      </if>
-      <if test="params.identifier != null" >
-        AND id.identifier = #{params.identifier,jdbcType=VARCHAR}
-      </if>
-      <if test="params.countries != null and params.countries.size > 0">
-        AND (addr.country IN
-          <foreach item="item" collection="params.countries" open="(" separator="," close=")">
-            #{item,jdbcType=VARCHAR}
-          </foreach>
-          OR mail_addr.country IN
-          <foreach item="item" collection="params.countries" open="(" separator="," close=")">
-            #{item,jdbcType=VARCHAR}
-          </foreach>
-        )
-      </if>
-      <if test="params.regionCountries != null and params.regionCountries.size > 0">
-        AND (addr.country IN
-        <foreach item="item" collection="params.regionCountries" open="(" separator="," close=")">
-          #{item,jdbcType=VARCHAR}
-        </foreach>
-        OR mail_addr.country IN
-        <foreach item="item" collection="params.regionCountries" open="(" separator="," close=")">
-          #{item,jdbcType=VARCHAR}
-        </foreach>
-        )
-      </if>
-      <if test="params.city != null" >
-        AND (normalize_name(addr.city) = normalize_name(#{params.city,jdbcType=VARCHAR})
-        OR
-        normalize_name(mail_addr.city) = normalize_name(#{params.city,jdbcType=VARCHAR}))
-      </if>
-      <if test="params.fuzzyName != null" >
-        AND similar_name(c.name, #{params.fuzzyName,jdbcType=VARCHAR})
-      </if>
-      <if test="params.contentTypes != null and params.contentTypes.size > 0" >
-        AND c.content_type &amp;&amp; ARRAY
-        <foreach item="item" collection="params.contentTypes" open="[" separator="," close="]">
-          #{item,jdbcType=VARCHAR}::text
-        </foreach>
-      </if>
-      <if test="params.preservationTypes != null and params.preservationTypes.size > 0" >
-        AND c.preservation_type &amp;&amp; ARRAY
-        <foreach item="item" collection="params.preservationTypes" open="[" separator="," close="]">
-          #{item,jdbcType=VARCHAR}::text
-        </foreach>
-      </if>
-      <if test="params.accessionStatus != null and params.accessionStatus.size > 0" >
-        AND c.accession_status IN
-        <foreach item="item" collection="params.accessionStatus" open="(" separator="," close=")">
-          #{item,jdbcType=VARCHAR}::text
-        </foreach>
-      </if>
-      <if test="params.active != null" >
-        AND c.active = #{params.active,jdbcType=BOOLEAN}
-      </if>
-      <if test="params.personalCollection != null" >
-        AND c.personal_collection = #{params.personalCollection,jdbcType=BOOLEAN}
-      </if>
-      <if test="params.masterSourceType != null" >
-        AND c.master_source = #{params.masterSourceType,jdbcType=OTHER}
-      </if>
-      <if test="params.numberSpecimens != null" >
-        <choose>
-          <when test="params.numberSpecimens.exactValue != null">
-            AND c.number_specimens = #{params.numberSpecimens.exactValue,jdbcType=INTEGER}
-          </when>
-          <otherwise>
-            <if test="params.numberSpecimens.lowerBound != null" >
-              AND c.number_specimens >= #{params.numberSpecimens.lowerBound,jdbcType=INTEGER}
-            </if>
-            <if test="params.numberSpecimens.higherBound != null" >
-              AND c.number_specimens &lt;= #{params.numberSpecimens.higherBound,jdbcType=INTEGER}
-            </if>
-          </otherwise>
-        </choose>
-      </if>
-      <if test="params.occurrenceCount != null" >
-        <choose>
-          <when test="params.occurrenceCount.exactValue != null">
-            AND c.occurrence_count = #{params.occurrenceCount.exactValue,jdbcType=INTEGER}
-          </when>
-          <otherwise>
-            <if test="params.occurrenceCount.lowerBound != null" >
-              AND c.occurrence_count >= #{params.occurrenceCount.lowerBound,jdbcType=INTEGER}
-            </if>
-            <if test="params.occurrenceCount.higherBound != null" >
-              AND c.occurrence_count &lt;= #{params.occurrenceCount.higherBound,jdbcType=INTEGER}
-            </if>
-          </otherwise>
-        </choose>
-      </if>
-      <if test="params.typeSpecimenCount != null" >
-        <choose>
-          <when test="params.typeSpecimenCount.exactValue != null">
-            AND c.type_specimen_count = #{params.typeSpecimenCount.exactValue,jdbcType=INTEGER}
-          </when>
-          <otherwise>
-            <if test="params.typeSpecimenCount.lowerBound != null" >
-              AND c.type_specimen_count >= #{params.typeSpecimenCount.lowerBound,jdbcType=INTEGER}
-            </if>
-            <if test="params.typeSpecimenCount.higherBound != null" >
-              AND c.type_specimen_count &lt;= #{params.typeSpecimenCount.higherBound,jdbcType=INTEGER}
-            </if>
-          </otherwise>
-        </choose>
-      </if>
-      <if test="params.displayOnNHCPortal != null" >
-        AND c.display_on_NHCPortal = #{params.displayOnNHCPortal,jdbcType=BOOLEAN}
-      </if>
-      <if test="params.replacedBy != null" >
-        AND c.replaced_by = #{params.replacedBy,jdbcType=OTHER}
-      </if>
-      <if test="params.institutionKeys != null and params.institutionKeys.size > 0" >
-        AND c.institution_key IN
-        <foreach item="item" collection="params.institutionKeys" open="(" separator="," close=")">
-          #{item,jdbcType=VARCHAR}
-        </foreach>
-      </if>
-      <if test="params.source != null">
-        AND m.source = #{params.source,jdbcType=OTHER}
-      </if>
-      <if test="params.sourceId != null">
-        AND m.source_id = #{params.sourceId,jdbcType=VARCHAR}
-      </if>
+      <include refid="org.gbif.registry.persistence.mapper.collections.Common.COMMON_LIST_FILTER">
+        <property name="alias" value="c."/>
+      </include>
+      <include refid="org.gbif.registry.persistence.mapper.collections.Common.MULTIVALUE_BOOLEAN_FILTER">
+        <property name="values" value="params.personalCollection"/>
+        <property name="field" value="c.personal_collection"/>
+      </include>
+      <include refid="org.gbif.registry.persistence.mapper.collections.Common.MULTIVALUE_FILTER">
+        <property name="values" value="params.institutionKeys"/>
+        <property name="field" value="c.institution_key"/>
+      </include>
     </where>
   </sql>
 
@@ -508,13 +395,18 @@
           0 AS key_match, 0 AS identifier_match, 0 AS name_match_with_identifier, 1 AS code_match, 0 AS alternative_code_match,
           0 AS name_match_with_code, 0 AS explicit_mapping
           FROM collection c
-          WHERE c.code = #{code,jdbcType=VARCHAR} AND c.deleted is null
+          WHERE lower(c.code) = lower(#{code,jdbcType=VARCHAR}) AND c.deleted is null
         UNION ALL
           SELECT DISTINCT ON (c.key) <include refid="LOOKUP_MATCH_FIELDS"/>,
           0 AS key_match, 0 AS identifier_match, 0 AS name_match_with_identifier, 0 AS code_match, 1 AS alternative_code_match,
           0 AS name_match_with_code, 0 AS explicit_mapping
           FROM collection c
-          WHERE c.alternative_codes ?? #{code,jdbcType=VARCHAR} AND c.deleted is null
+          WHERE c.deleted IS NULL
+          AND EXISTS (
+            SELECT 1
+            FROM EACH(c.alternative_codes) AS kv
+            WHERE lower(kv.key)   = lower(#{code,jdbcType=VARCHAR})
+          )
         UNION ALL
           SELECT DISTINCT ON (c.key) <include refid="LOOKUP_MATCH_FIELDS"/>,
           0 AS key_match, 0 AS identifier_match, 0 AS name_match_with_identifier, 0 AS code_match, 0 AS alternative_code_match,
@@ -532,7 +424,7 @@
           INNER JOIN occurrence_mapping om ON om.key = com.occurrence_mapping_key
           WHERE c.deleted is null AND om.dataset_key = #{datasetKey,jdbcType=OTHER}
           <if test="code != null"> AND (om.code IS NULL OR om.code = #{code,jdbcType=VARCHAR})</if>
-          <if test="parentCode != null"> AND (om.parent_code IS NULL OR om.parent_code = #{parentCode,jdbcType=VARCHAR})</if>
+          <if test="parentCode != null"> AND (om.parent_code IS NULL OR lower(om.parent_code) = lower(#{parentCode,jdbcType=VARCHAR}))</if>
           <if test="identifier != null"> AND (om.identifier IS NULL OR om.identifier = #{identifier,jdbcType=VARCHAR})</if>
       </if>
     </trim>) AS matches
@@ -567,16 +459,17 @@
   <!-- END TAGS -->
 
   <!-- IDENTIFIERS -->
-  <insert id="addIdentifier">
-    INSERT INTO collection_identifier(collection_key,identifier_key)
+  <insert id="addCollectionIdentifier">
+    INSERT INTO collection_identifier(collection_key,identifier_key,is_primary)
     VALUES(
     #{targetEntityKey,jdbcType=OTHER},
-    #{identifierKey,jdbcType=INTEGER}
+    #{identifierKey,jdbcType=INTEGER},
+    #{isPrimary,jdbcType=BOOLEAN}
     )
   </insert>
 
   <select id="listIdentifiers" resultType="Identifier">
-    SELECT <include refid="org.gbif.registry.persistence.mapper.IdentifierMapper.IDENTIFIER_FIELDS"/>
+    SELECT <include refid="org.gbif.registry.persistence.mapper.IdentifierMapper.COLLECTION_IDENTIFIER_FIELDS"/>
     FROM identifier INNER JOIN collection_identifier ON identifier_key = key
     WHERE collection_key = #{targetEntityKey,jdbcType=OTHER}
     ORDER BY created DESC
@@ -598,6 +491,29 @@
     INNER JOIN identifier i ON i."key" = ci.identifier_key
     WHERE regexp_replace(i.identifier, 'http://', '') = regexp_replace(#{identifier,jdbcType=VARCHAR}, 'http://', '')
       AND c.deleted IS NULL;
+  </select>
+
+  <!-- Update existing primary identifier to false -->
+  <update id="setAllIdentifiersToNonPrimary">
+    UPDATE collection_identifier
+    SET is_primary = false
+    WHERE collection_key = #{targetEntityKey, jdbcType=OTHER}
+  </update>
+
+  <!-- Update identifier is_primary -->
+  <update id="updateIdentifier">
+    UPDATE collection_identifier
+    SET is_primary = #{primary,jdbcType=BOOLEAN}
+    WHERE collection_key = #{targetEntityKey,jdbcType=OTHER} AND identifier_key = #{identifierKey,jdbcType=OTHER}
+  </update>
+
+  <select id="areRelated" resultType="boolean">
+    SELECT EXISTS (
+    SELECT 1
+    FROM collection_identifier
+    WHERE collection_key = #{targetEntityKey,jdbcType=OTHER}
+    AND identifier_key = #{identifierKey,jdbcType=INTEGER}
+    )
   </select>
   <!-- END IDENTIFIERS -->
 
@@ -671,15 +587,24 @@
 
   <!-- Simple suggest -->
   <select id="suggest" resultType="org.gbif.api.model.registry.search.collections.KeyCodeNameResult">
-    SELECT key,code,name FROM (
-    (SELECT key,code,name FROM collection WHERE code ilike #{q}||'%' AND deleted IS NULL ORDER BY code LIMIT 20)
-    UNION ALL
-    (SELECT key,code,name FROM collection WHERE name ilike #{q}||'%' AND deleted IS NULL ORDER BY name LIMIT 20)
-    UNION ALL
-    (SELECT key,code,name FROM collection WHERE code ilike '%'||#{q}||'%' AND NOT code ilike #{q}||'%' AND deleted IS NULL ORDER BY code LIMIT 20)
-    UNION ALL
-    (SELECT key,code,name FROM collection WHERE name ilike '%'||#{q}||'%' AND NOT name ilike #{q}||'%' AND deleted IS NULL ORDER BY name LIMIT 20)
-    ) t1 LIMIT 20
+    <if test="q != null and !q.isEmpty()">
+      SELECT key, code, name
+      FROM (
+      SELECT key, code, name,
+      to_tsvector('english', code || ' ' || name) AS document,
+      to_tsquery('english', unaccent(regexp_replace(#{q} || ':*', ' ', '&amp;', 'g'))) AS query
+      FROM collection
+      WHERE deleted IS NULL
+      ) AS subquery
+      WHERE document @@ query
+      ORDER BY ts_rank(document, query) DESC
+      LIMIT 20;
+    </if>
+    <if test="q == null or q.isEmpty()">
+      SELECT key, code, name FROM collection
+      WHERE deleted IS NULL
+      LIMIT 20;
+    </if>
   </select>
 
   <!-- COMMENTS -->

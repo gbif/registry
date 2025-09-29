@@ -38,6 +38,7 @@ import org.gbif.api.vocabulary.TagName;
 import org.gbif.api.vocabulary.TagNamespace;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import org.springframework.cloud.openfeign.SpringQueryMap;
@@ -70,6 +71,13 @@ public interface BaseCollectionEntityClient<
       produces = MediaType.APPLICATION_JSON_VALUE)
   @ResponseBody
   List<Identifier> listIdentifiers(@PathVariable("key") UUID key);
+
+  @RequestMapping(
+    method = RequestMethod.PUT,
+    value = "{key}/identifier/{identifierKey}",
+    consumes = MediaType.APPLICATION_JSON_VALUE)
+  int updateIdentifier(
+    @PathVariable("key") UUID entityKey, @PathVariable("identifierKey") Integer identifierKey, @RequestBody Map<String, Boolean> isPrimaryMap);
 
   @RequestMapping(
       method = RequestMethod.POST,
@@ -260,6 +268,8 @@ public interface BaseCollectionEntityClient<
       @RequestParam(value = "type", required = false) Type type,
       @RequestParam(value = "proposerEmail", required = false) String proposerEmail,
       @RequestParam(value = "entityKey", required = false) UUID entityKey,
+      @RequestParam(value = "ihIdentifier", required = false) String ihIdentifier,
+      @RequestParam(value = "country", required = false) String country,
       @SpringQueryMap Pageable page);
 
   @RequestMapping(method = RequestMethod.PUT, value = "changeSuggestion/{key}/discard")

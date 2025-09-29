@@ -19,6 +19,7 @@ import org.gbif.api.model.pipelines.PipelineExecution;
 import org.gbif.api.model.pipelines.PipelineProcess;
 import org.gbif.api.model.pipelines.PipelineStep;
 import org.gbif.api.model.pipelines.RunPipelineResponse;
+import org.gbif.api.model.pipelines.StepRunner;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.api.model.pipelines.ws.SearchResult;
 
@@ -142,7 +143,8 @@ public interface RegistryPipelinesHistoryTrackingService {
    *
    * @param pageable paging request
    */
-  PagingResponse<PipelineProcess> getRunningPipelineProcess(Pageable pageable);
+  PagingResponse<PipelineProcess> getRunningPipelineProcess(
+      @Nullable StepType stepType, @Nullable StepRunner stepRunner, Pageable pageable);
 
   /**
    * Creates/persists a pipelines process of dataset for an attempt identifier. If the process
@@ -267,4 +269,11 @@ public interface RegistryPipelinesHistoryTrackingService {
    * @param message cause of the issue
    */
   void notifyAbsentIdentifiers(UUID datasetKey, int attempt, long executionKey, String message);
+
+  /**
+   * Sets the pipeline step state as QUEUED only if the step is in SUBMITTED state.
+   *
+   * @param pipelineStepKey key of the pipeline step
+   */
+  void setSubmittedPipelineStepToQueued(long pipelineStepKey, String user);
 }

@@ -24,6 +24,7 @@ import org.gbif.registry.persistence.ContactableMapper;
 import org.gbif.registry.persistence.mapper.CommentableMapper;
 import org.gbif.registry.persistence.mapper.IdentifiableMapper;
 import org.gbif.registry.persistence.mapper.MachineTaggableMapper;
+import org.gbif.registry.persistence.mapper.PrimaryIdentifiableMapper;
 import org.gbif.registry.persistence.mapper.TaggableMapper;
 import org.gbif.registry.persistence.mapper.params.Count;
 
@@ -41,7 +42,8 @@ public interface BaseMapper<T extends Taggable & Identifiable & MachineTaggable 
         CommentableMapper,
         ContactableMapper,
         OccurrenceMappeableMapper,
-        ReplaceableMapper {
+        ReplaceableMapper,
+  PrimaryIdentifiableMapper {
 
   T get(@Param("key") UUID key);
 

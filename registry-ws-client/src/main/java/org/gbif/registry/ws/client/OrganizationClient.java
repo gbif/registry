@@ -26,9 +26,11 @@ import org.gbif.api.vocabulary.Country;
 import java.util.List;
 import java.util.UUID;
 
+import org.geojson.FeatureCollection;
 import org.springframework.cloud.openfeign.SpringQueryMap;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -122,4 +124,9 @@ public interface OrganizationClient extends NetworkEntityClient<Organization>, O
   @ResponseBody
   @Override
   PagingResponse<Organization> list(@SpringQueryMap OrganizationRequestSearchParams searchParams);
+
+  @GetMapping(value = "geojson", produces = MediaType.APPLICATION_JSON_VALUE)
+  @ResponseBody
+  @Override
+  FeatureCollection listGeoJson(@SpringQueryMap OrganizationRequestSearchParams searchParams);
 }

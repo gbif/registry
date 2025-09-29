@@ -200,7 +200,7 @@
                           i.created, i.key)
       <include refid="INSTITUTION_READ_FIELDS"/>, i.fulltext_search
     <if test="params.query != null" >,query</if>
-      <if test="params.fuzzyName != null" >,similarity(i.name, #{params.fuzzyName,jdbcType=VARCHAR}) AS similarity_score</if>
+      <if test="params.fuzzyName != null" >,similar_name_score(i.name, #{params.fuzzyName,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler}::text[]) AS similarity_score</if>
     FROM institution i
     <if test="params.query != null" >
       <include refid="FULLTEXT_SEARCH"/>
@@ -233,7 +233,7 @@
     SELECT DISTINCT ON (<if test="params.query != null" >ts_rank_cd(i.fulltext_search, query), </if>
     <if test="params.fuzzyName != null" >similarity_score, </if> i.key)
     i.key, i.name, i.latitude, i.longitude
-    <if test="params.fuzzyName != null" >,similarity(i.name, #{params.fuzzyName,jdbcType=VARCHAR}) AS similarity_score</if>
+    <if test="params.fuzzyName != null" >,similar_name_score(i.name, #{params.fuzzyName,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler}::text[]) AS similarity_score</if>
     FROM institution i
     <if test="params.query != null" >
       <include refid="FULLTEXT_SEARCH"/>
@@ -257,161 +257,53 @@
       INNER JOIN institution_identifier ii on ii.institution_key = i.key
       INNER JOIN identifier id on id.key = ii.identifier_key
     </if>
+    <!-- Hierarchical concept-based filtering for types -->
+    <if test="params.types != null and params.types.size > 0">
+      INNER JOIN institution_concept_links icl_type ON icl_type.institution_key = i.key
+              INNER JOIN grscicoll_vocab_concept c_type ON icl_type.concept_key = c_type.concept_key
+        AND c_type.vocabulary_name = 'InstitutionType'
+        AND lower(c_type.name) IN
+        <foreach item="item" collection="params.types" open="(" separator="," close=")">
+          lower(#{item,jdbcType=VARCHAR})
+        </foreach>
+    </if>
+    <!-- Hierarchical concept-based filtering for disciplines -->
+    <if test="params.disciplines != null and params.disciplines.size > 0">
+      INNER JOIN institution_concept_links icl_discipline ON icl_discipline.institution_key = i.key
+              INNER JOIN grscicoll_vocab_concept c_discipline ON icl_discipline.concept_key = c_discipline.concept_key
+        AND c_discipline.vocabulary_name = 'Discipline'
+        AND lower(c_discipline.name) IN
+        <foreach item="item" collection="params.disciplines" open="(" separator="," close=")">
+          lower(#{item,jdbcType=VARCHAR})
+        </foreach>
+    </if>
+    <!-- Hierarchical concept-based filtering for institutional governance -->
+    <if test="params.institutionalGovernances != null and params.institutionalGovernances.size > 0">
+      INNER JOIN institution_concept_links icl_gov ON icl_gov.institution_key = i.key
+              INNER JOIN grscicoll_vocab_concept c_gov ON icl_gov.concept_key = c_gov.concept_key
+        AND c_gov.vocabulary_name = 'InstitutionalGovernance'
+        AND lower(c_gov.name) IN
+        <foreach item="item" collection="params.institutionalGovernances" open="(" separator="," close=")">
+          lower(#{item,jdbcType=VARCHAR})
+        </foreach>
+    </if>
     LEFT JOIN address addr ON addr.key = i.address_key
     LEFT JOIN address mail_addr ON mail_addr.key = i.mailing_address_key
     <if test="params.source != null || params.sourceId != null">
       INNER JOIN master_sync_metadata m ON i.master_sync_metadata_key = m.key
     </if>
+    <if test="params.contactUserId != null || params.contactEmail != null">
+      INNER JOIN institution_collection_contact icc ON icc.institution_key = i.key
+      INNER JOIN collection_contact cc ON cc.key = icc.collection_contact_key
+    </if>
     <where>
-      <choose>
-        <when test="params.deleted != null and params.deleted">
-          i.deleted IS NOT NULL
-        </when>
-        <otherwise>
-          i.deleted IS NULL
-        </otherwise>
-      </choose>
-      <if test="params.code != null" >
-        AND lower(i.code) = lower(#{params.code,jdbcType=VARCHAR})
-      </if>
-      <if test="params.alternativeCode != null" >
-        AND i.alternative_codes ?? #{params.alternativeCode,jdbcType=VARCHAR}
-      </if>
-      <if test="params.name != null" >
-        AND i.name = #{params.name,jdbcType=VARCHAR}
-      </if>
-      <if test="params.machineTagNamespace != null" >
-        AND mt.namespace = #{params.machineTagNamespace,jdbcType=VARCHAR}
-      </if>
-      <if test="params.machineTagName != null" >
-        AND mt.name = #{params.machineTagName,jdbcType=VARCHAR}
-      </if>
-      <if test="params.machineTagValue != null" >
-        AND mt.value = #{params.machineTagValue,jdbcType=VARCHAR}
-      </if>
-      <if test="params.identifierType != null" >
-        AND id.type = #{params.identifierType,jdbcType=OTHER}
-      </if>
-      <if test="params.identifier != null" >
-        AND id.identifier = #{params.identifier,jdbcType=VARCHAR}
-      </if>
-      <if test="params.countries != null and params.countries.size > 0">
-        AND (addr.country IN
-          <foreach item="item" collection="params.countries" open="(" separator="," close=")">
-            #{item,jdbcType=VARCHAR}
-          </foreach>
-          OR mail_addr.country IN
-          <foreach item="item" collection="params.countries" open="(" separator="," close=")">
-            #{item,jdbcType=VARCHAR}
-          </foreach>
-        )
-      </if>
-      <if test="params.regionCountries != null and params.regionCountries.size > 0">
-        AND (addr.country IN
-        <foreach item="item" collection="params.regionCountries" open="(" separator="," close=")">
-          #{item,jdbcType=VARCHAR}
-        </foreach>
-        OR mail_addr.country IN
-        <foreach item="item" collection="params.regionCountries" open="(" separator="," close=")">
-          #{item,jdbcType=VARCHAR}
-        </foreach>
-        )
-      </if>
-      <if test="params.city != null" >
-        AND (normalize_name(addr.city) = normalize_name(#{params.city,jdbcType=VARCHAR})
-        OR
-        normalize_name(mail_addr.city) = normalize_name(#{params.city,jdbcType=VARCHAR}))
-      </if>
-      <if test="params.fuzzyName != null" >
-        AND similar_name(i.name, #{params.fuzzyName,jdbcType=VARCHAR})
-      </if>
-      <if test="params.types != null and params.types.size > 0" >
-        AND i.type &amp;&amp; ARRAY
-        <foreach item="item" collection="params.types" open="[" separator="," close="]">
-          #{item,jdbcType=VARCHAR}::text
-        </foreach>
-      </if>
-      <if test="params.institutionalGovernances != null and params.institutionalGovernances.size > 0" >
-        AND i.institutional_governance &amp;&amp; ARRAY
-        <foreach item="item" collection="params.institutionalGovernances" open="[" separator="," close="]">
-          #{item,jdbcType=VARCHAR}::text
-        </foreach>
-      </if>
-      <if test="params.disciplines != null and params.disciplines.size > 0" >
-        AND i.discipline &amp;&amp; ARRAY
-        <foreach item="item" collection="params.disciplines" open="[" separator="," close="]">
-          #{item,jdbcType=VARCHAR}::text
-        </foreach>
-      </if>
-      <if test="params.active != null" >
-        AND i.active = #{params.active,jdbcType=OTHER}
-      </if>
-      <if test="params.masterSourceType != null" >
-        AND i.master_source = #{params.masterSourceType,jdbcType=OTHER}
-      </if>
-      <if test="params.numberSpecimens != null" >
-        <choose>
-          <when test="params.numberSpecimens.exactValue != null">
-            AND i.number_specimens = #{params.numberSpecimens.exactValue,jdbcType=INTEGER}
-          </when>
-          <otherwise>
-            <if test="params.numberSpecimens.lowerBound != null" >
-              AND i.number_specimens >= #{params.numberSpecimens.lowerBound,jdbcType=INTEGER}
-            </if>
-            <if test="params.numberSpecimens.higherBound != null" >
-              AND i.number_specimens &lt;= #{params.numberSpecimens.higherBound,jdbcType=INTEGER}
-            </if>
-          </otherwise>
-        </choose>
-      </if>
-      <if test="params.occurrenceCount != null" >
-        <choose>
-          <when test="params.occurrenceCount.exactValue != null">
-            AND i.occurrence_count = #{params.occurrenceCount.exactValue,jdbcType=INTEGER}
-          </when>
-          <otherwise>
-            <if test="params.occurrenceCount.lowerBound != null" >
-              AND i.occurrence_count >= #{params.occurrenceCount.lowerBound,jdbcType=INTEGER}
-            </if>
-            <if test="params.occurrenceCount.higherBound != null" >
-              AND i.occurrence_count &lt;= #{params.occurrenceCount.higherBound,jdbcType=INTEGER}
-            </if>
-          </otherwise>
-        </choose>
-      </if>
-      <if test="params.typeSpecimenCount != null" >
-        <choose>
-          <when test="params.typeSpecimenCount.exactValue != null">
-            AND i.type_specimen_count = #{params.typeSpecimenCount.exactValue,jdbcType=INTEGER}
-          </when>
-          <otherwise>
-            <if test="params.typeSpecimenCount.lowerBound != null" >
-              AND i.type_specimen_count >= #{params.typeSpecimenCount.lowerBound,jdbcType=INTEGER}
-            </if>
-            <if test="params.typeSpecimenCount.higherBound != null" >
-              AND i.type_specimen_count &lt;= #{params.typeSpecimenCount.higherBound,jdbcType=INTEGER}
-            </if>
-          </otherwise>
-        </choose>
-      </if>
-      <if test="params.displayOnNHCPortal != null" >
-        AND i.display_on_NHCPortal = #{params.displayOnNHCPortal,jdbcType=BOOLEAN}
-      </if>
-      <if test="params.replacedBy != null" >
-        AND i.replaced_by = #{params.replacedBy,jdbcType=OTHER}
-      </if>
-      <if test="params.institutionKeys != null and params.institutionKeys.size > 0" >
-        AND i.key IN
-        <foreach item="item" collection="params.institutionKeys" open="(" separator="," close=")">
-          #{item,jdbcType=VARCHAR}
-        </foreach>
-      </if>
-      <if test="params.source != null">
-        AND m.source = #{params.source,jdbcType=OTHER}
-      </if>
-      <if test="params.sourceId != null">
-        AND m.source_id = #{params.sourceId,jdbcType=VARCHAR}
-      </if>
+      <include refid="org.gbif.registry.persistence.mapper.collections.Common.COMMON_LIST_FILTER">
+        <property name="alias" value="i."/>
+      </include>
+      <include refid="org.gbif.registry.persistence.mapper.collections.Common.MULTIVALUE_FILTER">
+        <property name="values" value="params.institutionKeys"/>
+        <property name="field" value="i.key"/>
+      </include>
     </where>
   </sql>
 
@@ -492,13 +384,18 @@
         0 AS key_match, 0 AS identifier_match, 0 AS name_match_with_identifier, 1 AS code_match, 0 AS alternative_code_match,
         0 AS name_match_with_code, 0 AS explicit_mapping
         FROM institution i
-        WHERE i.code = #{code,jdbcType=VARCHAR} AND i.deleted is null
+        WHERE lower(i.code) = lower(#{code,jdbcType=VARCHAR}) AND i.deleted is null
       UNION ALL
         SELECT DISTINCT ON (i.key) <include refid="LOOKUP_MATCH_FIELDS"/>,
         0 AS key_match, 0 AS identifier_match, 0 AS name_match_with_identifier, 0 AS code_match, 1 AS alternative_code_match,
         0 AS name_match_with_code, 0 AS explicit_mapping
         FROM institution i
-        WHERE i.alternative_codes ?? #{code,jdbcType=VARCHAR} AND i.deleted is null
+        WHERE i.deleted IS NULL
+        AND EXISTS (
+          SELECT 1
+          FROM EACH(i.alternative_codes) AS kv
+          WHERE lower(kv.key)   = lower(#{code,jdbcType=VARCHAR})
+        )
       UNION ALL
         SELECT DISTINCT ON (i.key) <include refid="LOOKUP_MATCH_FIELDS"/>,
         0 AS key_match, 0 AS identifier_match, 0 AS name_match_with_identifier, 0 AS code_match, 0 AS alternative_code_match,
@@ -515,7 +412,7 @@
         INNER JOIN institution_occurrence_mapping iom ON iom.institution_key = i.key
         INNER JOIN occurrence_mapping om ON om.key = iom.occurrence_mapping_key
         WHERE i.deleted is null AND om.dataset_key = #{datasetKey,jdbcType=OTHER}
-        <if test="code != null"> AND (om.code IS NULL OR om.code = #{code,jdbcType=VARCHAR})</if>
+        <if test="code != null"> AND (om.code IS NULL OR lower(om.code) = lower(#{code,jdbcType=VARCHAR}))</if>
         <if test="identifier != null"> AND (om.identifier IS NULL OR om.identifier = #{identifier,jdbcType=VARCHAR})</if>
       </if>
     </trim>) AS matches
@@ -551,16 +448,17 @@
   <!-- END TAGS -->
 
   <!-- IDENTIFIERS -->
-  <insert id="addIdentifier">
-    INSERT INTO institution_identifier(institution_key,identifier_key)
+  <insert id="addCollectionIdentifier">
+    INSERT INTO institution_identifier(institution_key,identifier_key,is_primary)
     VALUES(
     #{targetEntityKey,jdbcType=OTHER},
-    #{identifierKey,jdbcType=INTEGER}
+    #{identifierKey,jdbcType=INTEGER},
+    #{isPrimary,jdbcType=BOOLEAN}
     )
   </insert>
 
   <select id="listIdentifiers" resultType="Identifier">
-    SELECT <include refid="org.gbif.registry.persistence.mapper.IdentifierMapper.IDENTIFIER_FIELDS"/>
+    SELECT <include refid="org.gbif.registry.persistence.mapper.IdentifierMapper.COLLECTION_IDENTIFIER_FIELDS"/>
     FROM identifier INNER JOIN institution_identifier ON identifier_key = key
     WHERE institution_key = #{targetEntityKey,jdbcType=OTHER}
     ORDER BY created DESC
@@ -582,6 +480,29 @@
     INNER JOIN identifier i ON i."key" = ii.identifier_key
     WHERE regexp_replace(i.identifier, 'http://', '') = regexp_replace(#{identifier,jdbcType=VARCHAR}, 'http://', '')
       AND inst.deleted IS NULL;
+  </select>
+
+  <!-- Update existing primary identifier to false -->
+  <update id="setAllIdentifiersToNonPrimary">
+    UPDATE institution_identifier
+    SET is_primary = false
+    WHERE institution_key = #{targetEntityKey,jdbcType=OTHER}
+  </update>
+
+  <!-- Update identifier is_primary -->
+  <update id="updateIdentifier">
+    UPDATE institution_identifier
+    SET is_primary = #{primary,jdbcType=BOOLEAN}
+    WHERE institution_key = #{targetEntityKey,jdbcType=OTHER} AND identifier_key = #{identifierKey,jdbcType=OTHER}
+  </update>
+
+  <select id="areRelated" resultType="boolean">
+    SELECT EXISTS (
+    SELECT 1
+    FROM institution_identifier
+    WHERE institution_key = #{targetEntityKey,jdbcType=OTHER}
+    AND identifier_key = #{identifierKey,jdbcType=INTEGER}
+    )
   </select>
   <!-- END IDENTIFIERS -->
 
@@ -655,15 +576,24 @@
 
   <!-- Simple suggest -->
   <select id="suggest" resultType="org.gbif.api.model.registry.search.collections.KeyCodeNameResult">
-    SELECT key,code,name FROM (
-    (SELECT key,code,name FROM institution WHERE code ilike #{q}||'%' AND deleted IS NULL ORDER BY code LIMIT 20)
-    UNION ALL
-    (SELECT key,code,name FROM institution WHERE name ilike #{q}||'%' AND deleted IS NULL ORDER BY name LIMIT 20)
-    UNION ALL
-    (SELECT key,code,name FROM institution WHERE code ilike '%'||#{q}||'%' AND NOT code ilike #{q}||'%' AND deleted IS NULL ORDER BY code LIMIT 20)
-    UNION ALL
-    (SELECT key,code,name FROM institution WHERE name ilike '%'||#{q}||'%' AND NOT name ilike #{q}||'%' AND deleted IS NULL ORDER BY name LIMIT 20)
-    ) t1 LIMIT 20
+    <if test="q != null and !q.isEmpty()">
+      SELECT key, code, name
+      FROM (
+        SELECT key, code, name,
+        to_tsvector('english', code || ' ' || name) AS document,
+        to_tsquery('english', unaccent(regexp_replace(#{q} || ':*', ' ', '&amp;', 'g'))) AS query
+        FROM institution
+        WHERE deleted IS NULL
+      ) AS subquery
+      WHERE document @@ query
+      ORDER BY ts_rank(document, query) DESC
+      LIMIT 20;
+    </if>
+    <if test="q == null or q.isEmpty()">
+      SELECT key, code, name FROM institution
+      WHERE deleted IS NULL
+      LIMIT 20;
+    </if>
   </select>
 
   <!-- COMMENTS -->

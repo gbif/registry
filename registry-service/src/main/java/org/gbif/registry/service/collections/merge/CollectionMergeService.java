@@ -15,7 +15,13 @@ package org.gbif.registry.service.collections.merge;
 
 import org.gbif.api.model.collections.AlternativeCode;
 import org.gbif.api.model.collections.Collection;
+import org.gbif.api.model.collections.descriptors.DescriptorGroup;
 import org.gbif.api.service.collections.CollectionService;
+import org.gbif.registry.persistence.mapper.collections.DescriptorsMapper;
+import org.gbif.registry.persistence.mapper.collections.params.DescriptorGroupParams;
+
+import java.util.List;
+import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -26,9 +32,12 @@ import com.google.common.base.Preconditions;
 @Service
 public class CollectionMergeService extends BaseMergeService<Collection> {
 
+  private final DescriptorsMapper descriptorsMapper;
+
   @Autowired
-  protected CollectionMergeService(CollectionService collectionService) {
+  protected CollectionMergeService(CollectionService collectionService, DescriptorsMapper descriptorsMapper) {
     super(collectionService);
+    this.descriptorsMapper = descriptorsMapper;
   }
 
   @Override
@@ -57,8 +66,6 @@ public class CollectionMergeService extends BaseMergeService<Collection> {
         mergeLists(
             entityToReplace.getIncorporatedCollections(),
             replacement.getIncorporatedCollections()));
-    replacement.setImportantCollectors(
-        mergeLists(entityToReplace.getImportantCollectors(), replacement.getImportantCollectors()));
 
     // codes of the replaced entity are added as alternative codes of the replacement
     replacement
@@ -73,5 +80,29 @@ public class CollectionMergeService extends BaseMergeService<Collection> {
   }
 
   @Override
-  void additionalOperations(Collection entityToReplace, Collection replacement) {}
+  void additionalOperations(Collection entityToReplace, Collection replacement) {
+    moveDescriptorsToCollection(entityToReplace.getKey(), replacement.getKey());
+  }
+
+  /**
+   * Moves all descriptor groups from the source collection to the target collection.
+   * This includes all associated descriptors and verbatim data.
+   *
+   * @param sourceCollectionKey the collection key to move descriptors from
+   * @param targetCollectionKey the collection key to move descriptors to
+   */
+  private void moveDescriptorsToCollection(UUID sourceCollectionKey, UUID targetCollectionKey) {
+    // Get all descriptor groups for the source collection
+    List<DescriptorGroup> descriptorGroups = descriptorsMapper.listDescriptorGroups(
+        DescriptorGroupParams.builder()
+            .collectionKey(sourceCollectionKey)
+            .build()
+    );
+
+    // Move each descriptor group to the target collection
+    descriptorGroups.forEach(descriptorGroup -> {
+      descriptorGroup.setCollectionKey(targetCollectionKey);
+      descriptorsMapper.moveDescriptorGroupForCollectionMerge(descriptorGroup);
+    });
+  }
 }

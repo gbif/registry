@@ -67,6 +67,8 @@ public class GrSciCollEditorAuthorizationFilter extends OncePerRequestFilter {
       Pattern.compile(".*/grscicoll/(collection|institution|person)/([a-f0-9-]+)$");
   public static final Pattern CHANGE_SUGGESTION_UPDATE_PATTERN =
       Pattern.compile(".*/grscicoll/(collection|institution)/changeSuggestion/([0-9]+).*");
+  public static final Pattern DESCRIPTION_CHANGE_SUGGESTION_UPDATE_PATTERN =
+    Pattern.compile(".*/grscicoll/collection/([a-f0-9-]+)/descriptorGroup/suggestion/([0-9]+).*");
   public static final Pattern INST_COLL_CREATE_PATTERN =
       Pattern.compile(".*/grscicoll/(collection|institution)$");
   public static final Pattern MACHINE_TAG_PATTERN_DELETE =
@@ -119,8 +121,13 @@ public class GrSciCollEditorAuthorizationFilter extends OncePerRequestFilter {
               "User has no GrSciColl editor rights", HttpStatus.FORBIDDEN);
         }
 
-        if (isChangeSuggestionRequest(path)) {
+        if (isReinterpretAllDescriptorGroupsRequest(path)
+            && !checkUserInRole(authentication, UserRoles.GRSCICOLL_ADMIN_ROLE)) {
+          throw new WebApplicationException(
+              "User has no GrSciColl admin rights", HttpStatus.FORBIDDEN);
+        } else if (isChangeSuggestionRequest(path)) {
           checkChangeSuggestionUpdate(path, authentication);
+          checkDescriptionChangeSuggestionUpdate(path, authentication);
         } else if (!isBatchRequest(path)) {
           // editors cannot edit machine tags
           checkMachineTagsPermissions(request, path, authentication);
@@ -135,7 +142,11 @@ public class GrSciCollEditorAuthorizationFilter extends OncePerRequestFilter {
   }
 
   private boolean isChangeSuggestionRequest(String path) {
-    return path.contains("/changeSuggestion");
+    return path.contains("/changeSuggestion") || path.contains("/suggestion");
+  }
+
+  private boolean isReinterpretAllDescriptorGroupsRequest(String path) {
+    return path.contains("/reinterpretAllDescriptorGroups");
   }
 
   private boolean isBatchRequest(String path) {
@@ -158,6 +169,20 @@ public class GrSciCollEditorAuthorizationFilter extends OncePerRequestFilter {
                 "User {0} is not allowed to update change suggestion {1}",
                 authentication.getName(), key),
             HttpStatus.FORBIDDEN);
+      }
+    }
+  }
+
+  private void checkDescriptionChangeSuggestionUpdate(String path, Authentication authentication) {
+    Matcher matcher = DESCRIPTION_CHANGE_SUGGESTION_UPDATE_PATTERN.matcher(path);
+    if (matcher.matches()) {
+      int key = Integer.parseInt(matcher.group(2));
+      if (!authService.allowedToUpdateDescriptorChangeSuggestion(key, authentication)) {
+        throw new WebApplicationException(
+          MessageFormat.format(
+            "User {0} is not allowed to update descriptor change suggestion {1}",
+            authentication.getName(), key),
+          HttpStatus.FORBIDDEN);
       }
     }
   }
@@ -238,18 +263,21 @@ public class GrSciCollEditorAuthorizationFilter extends OncePerRequestFilter {
           new GrSciCollAuthorizationService.EntityOperationResponse();
       if (INSTITUTION.equalsIgnoreCase(entityType)) {
         Institution institution = readEntity(request, Institution.class);
-        entityOperationResponse = authService.allowedToCreateInstitution(institution, authentication);
+        entityOperationResponse =
+            authService.allowedToCreateInstitution(institution, authentication);
       } else if (COLLECTION.equalsIgnoreCase(entityType)) {
         Collection collection = readEntity(request, Collection.class);
         entityOperationResponse = authService.allowedToCreateCollection(collection, authentication);
       }
 
       if (!entityOperationResponse.isAllowed()) {
-        String errorMessage = MessageFormat.format(
-          "User {0} is not allowed to create entity {1}",
-          authentication.getName(), entityType);
+        String errorMessage =
+            MessageFormat.format(
+                "User {0} is not allowed to create entity {1}",
+                authentication.getName(), entityType);
 
-        if (entityOperationResponse.getMessage() != null && !entityOperationResponse.getMessage().isEmpty()) {
+        if (entityOperationResponse.getMessage() != null
+            && !entityOperationResponse.getMessage().isEmpty()) {
           errorMessage += ". Reason: " + entityOperationResponse.getMessage();
         }
 

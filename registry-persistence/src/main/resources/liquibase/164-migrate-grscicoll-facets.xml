@@ -1,0 +1,127 @@
+<databaseChangeLog
+  xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+  <changeSet id="164" author="auzun" runInTransaction="false" ignore="true">
+    <sql splitStatements="false" stripComments="true">
+      <![CDATA[
+-- This migration script correctly populates concept link tables for both institutions and collections
+-- from their old array-based columns. It ensures full hierarchical data is migrated by finding
+-- all parent concepts for each vocabulary term using the LTREE path.
+
+DO $$
+BEGIN
+  RAISE NOTICE 'Starting hierarchical vocabulary concept migration for institutions and collections...';
+
+  -- 1. Migrate Institution Disciplines
+  RAISE NOTICE 'Migrating institution disciplines...';
+  WITH target_concepts AS (
+    SELECT DISTINCT
+      i.key AS institution_key,
+      vc.path
+    FROM institution i
+    CROSS JOIN unnest(i.discipline) AS discipline_name
+    JOIN grscicoll_vocab_concept vc
+      ON vc.name = discipline_name AND vc.vocabulary_name = 'Discipline'
+    WHERE i.discipline IS NOT NULL AND array_length(i.discipline, 1) > 0
+  )
+  INSERT INTO institution_concept_links (institution_key, concept_key)
+  SELECT DISTINCT
+    tc.institution_key,
+    p.concept_key
+  FROM target_concepts tc
+  JOIN grscicoll_vocab_concept p ON p.path @> tc.path
+  WHERE p.vocabulary_name = 'Discipline'
+  ON CONFLICT (institution_key, concept_key) DO NOTHING;
+
+  -- 2. Migrate Institution Types
+  RAISE NOTICE 'Migrating institution types...';
+  WITH target_concepts AS (
+    SELECT DISTINCT
+      i.key AS institution_key,
+      vc.path
+    FROM institution i
+    CROSS JOIN unnest(i.type) AS type_name
+    JOIN grscicoll_vocab_concept vc
+      ON vc.name = type_name AND vc.vocabulary_name = 'InstitutionType'
+    WHERE i.type IS NOT NULL AND array_length(i.type, 1) > 0
+  )
+  INSERT INTO institution_concept_links (institution_key, concept_key)
+  SELECT DISTINCT
+    tc.institution_key,
+    p.concept_key
+  FROM target_concepts tc
+  JOIN grscicoll_vocab_concept p ON p.path @> tc.path
+  WHERE p.vocabulary_name = 'InstitutionType'
+  ON CONFLICT (institution_key, concept_key) DO NOTHING;
+
+  -- 3. Migrate Institutional Governances
+  RAISE NOTICE 'Migrating institutional governances...';
+  WITH target_concepts AS (
+    SELECT DISTINCT
+      i.key AS institution_key,
+      vc.path
+    FROM institution i
+    CROSS JOIN unnest(i.institutional_governance) AS governance_name
+    JOIN grscicoll_vocab_concept vc
+      ON vc.name = governance_name AND vc.vocabulary_name = 'InstitutionalGovernance'
+    WHERE i.institutional_governance IS NOT NULL AND array_length(i.institutional_governance, 1) > 0
+  )
+  INSERT INTO institution_concept_links (institution_key, concept_key)
+  SELECT DISTINCT
+    tc.institution_key,
+    p.concept_key
+  FROM target_concepts tc
+  JOIN grscicoll_vocab_concept p ON p.path @> tc.path
+  WHERE p.vocabulary_name = 'InstitutionalGovernance'
+  ON CONFLICT (institution_key, concept_key) DO NOTHING;
+
+  -- 4. Migrate Collection Content Types
+  RAISE NOTICE 'Migrating collection content types...';
+  WITH target_concepts AS (
+    SELECT DISTINCT
+      c.key AS collection_key,
+      vc.path
+    FROM collection c
+    CROSS JOIN unnest(c.content_type) AS content_type_name
+    JOIN grscicoll_vocab_concept vc
+      ON vc.name = content_type_name AND vc.vocabulary_name = 'CollectionContentType'
+    WHERE c.content_type IS NOT NULL AND array_length(c.content_type, 1) > 0
+  )
+  INSERT INTO collection_concept_links (collection_key, concept_key)
+  SELECT DISTINCT
+    tc.collection_key,
+    p.concept_key
+  FROM target_concepts tc
+  JOIN grscicoll_vocab_concept p ON p.path @> tc.path
+  WHERE p.vocabulary_name = 'CollectionContentType'
+  ON CONFLICT (collection_key, concept_key) DO NOTHING;
+
+  -- 5. Migrate Collection Preservation Types
+  RAISE NOTICE 'Migrating collection preservation types...';
+  WITH target_concepts AS (
+    SELECT DISTINCT
+      c.key AS collection_key,
+      vc.path
+    FROM collection c
+    CROSS JOIN unnest(c.preservation_type) AS preservation_type_name
+    JOIN grscicoll_vocab_concept vc
+      ON vc.name = preservation_type_name AND vc.vocabulary_name = 'PreservationType'
+    WHERE c.preservation_type IS NOT NULL AND array_length(c.preservation_type, 1) > 0
+  )
+  INSERT INTO collection_concept_links (collection_key, concept_key)
+  SELECT DISTINCT
+    tc.collection_key,
+    p.concept_key
+  FROM target_concepts tc
+  JOIN grscicoll_vocab_concept p ON p.path @> tc.path
+  WHERE p.vocabulary_name = 'PreservationType'
+  ON CONFLICT (collection_key, concept_key) DO NOTHING;
+
+  RAISE NOTICE 'Hierarchical vocabulary concept migration completed.';
+END $$;
+      ]]>
+    </sql>
+  </changeSet>
+</databaseChangeLog>

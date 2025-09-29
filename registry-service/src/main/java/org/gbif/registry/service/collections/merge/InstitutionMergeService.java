@@ -26,6 +26,7 @@ import org.gbif.api.model.registry.MachineTag;
 import org.gbif.api.service.collections.CollectionService;
 import org.gbif.api.service.collections.InstitutionService;
 
+import java.util.Collections;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
@@ -206,7 +207,9 @@ public class InstitutionMergeService extends BaseMergeService<Institution> {
     // move the collections to the entity to keep
     PagingResponse<CollectionView> collections =
         collectionService.list(
-            CollectionSearchRequest.builder().institution(sourceInstitutionKey).build());
+            CollectionSearchRequest.builder()
+                .institution(Collections.singletonList(sourceInstitutionKey))
+                .build());
     collections
         .getResults()
         .forEach(

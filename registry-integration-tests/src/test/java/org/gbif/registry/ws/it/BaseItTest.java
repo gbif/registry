@@ -24,6 +24,7 @@ import org.gbif.ws.security.KeyStore;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -111,6 +112,7 @@ public class BaseItTest extends BaseDBTest {
     return clientBuilder
         .withUrl("http://localhost:" + localServerPort)
         .withAppKeyCredentials(username, appKey, keyStore.getPrivateKey(appKey))
+        .withFormEncoder()
         .build(cls);
   }
 
@@ -123,6 +125,10 @@ public class BaseItTest extends BaseDBTest {
       default:
         throw new IllegalStateException("Must be resource or client");
     }
+  }
+
+  protected <T> List<T> asList(T value) {
+    return Collections.singletonList(value);
   }
 
   @DynamicPropertySource

@@ -13,15 +13,6 @@
  */
 package org.gbif.registry.ws.it.collections.service;
 
-import static org.junit.jupiter.api.Assertions.*;
-
-import java.math.BigDecimal;
-import java.net.URI;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.UUID;
-import javax.validation.ConstraintViolationException;
-import javax.validation.ValidationException;
 import org.gbif.api.model.collections.*;
 import org.gbif.api.model.collections.latimercore.ContactDetail;
 import org.gbif.api.model.collections.latimercore.MeasurementOrFact;
@@ -36,21 +27,38 @@ import org.gbif.api.service.registry.InstallationService;
 import org.gbif.api.service.registry.NodeService;
 import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.api.vocabulary.*;
+import org.gbif.api.vocabulary.collections.CollectionsSortField;
 import org.gbif.api.vocabulary.collections.IdType;
 import org.gbif.api.vocabulary.collections.MasterSourceType;
 import org.gbif.api.vocabulary.collections.Source;
+import org.gbif.registry.persistence.mapper.GrScicollVocabConceptMapper;
 import org.gbif.registry.service.collections.duplicates.InstitutionDuplicatesService;
 import org.gbif.registry.service.collections.utils.LatimerCoreConverter;
+import org.gbif.registry.ws.it.collections.ConceptTestSetup;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
+
+import java.math.BigDecimal;
+import java.net.URI;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.UUID;
+
+import javax.validation.ConstraintViolationException;
+import javax.validation.ValidationException;
+
 import org.geojson.FeatureCollection;
 import org.geojson.Point;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 /** Tests the {@link InstitutionService}. */
 public class InstitutionServiceIT extends BaseCollectionEntityServiceIT<Institution> {
 
   private final InstitutionService institutionService;
+  private final GrScicollVocabConceptMapper grScicollVocabConceptMapper;
 
   @Autowired
   public InstitutionServiceIT(
@@ -60,7 +68,8 @@ public class InstitutionServiceIT extends BaseCollectionEntityServiceIT<Institut
       OrganizationService organizationService,
       InstallationService installationService,
       SimplePrincipalProvider principalProvider,
-      InstitutionDuplicatesService duplicatesService) {
+      InstitutionDuplicatesService duplicatesService,
+      GrScicollVocabConceptMapper grScicollVocabConceptMapper) {
     super(
         institutionService,
         datasetService,
@@ -71,6 +80,12 @@ public class InstitutionServiceIT extends BaseCollectionEntityServiceIT<Institut
         duplicatesService,
         Institution.class);
     this.institutionService = institutionService;
+    this.grScicollVocabConceptMapper = grScicollVocabConceptMapper;
+  }
+
+  @BeforeEach
+  public void setupFacets() {
+    ConceptTestSetup.setupCommonConcepts(grScicollVocabConceptMapper);
   }
 
   @Test
@@ -91,6 +106,14 @@ public class InstitutionServiceIT extends BaseCollectionEntityServiceIT<Institut
     institution1.setDisplayOnNHCPortal(false);
     institution1.setAlternativeCodes(Collections.singletonList(new AlternativeCode("alt", "test")));
     UUID key1 = institutionService.create(institution1);
+
+    // Add contact to institution
+    Contact contact = new Contact();
+    contact.setFirstName("Test");
+    contact.setLastName("User");
+    contact.setUserIds(Collections.singletonList(new UserId(IdType.ORCID, "0000-0000-0000-0001")));
+    contact.setEmail(Collections.singletonList("test-contact@gbif.org"));
+    institutionService.addContactPerson(key1, contact);
 
     Institution institution2 = testData.newEntity();
     institution2.setCode("c2");
@@ -127,7 +150,10 @@ public class InstitutionServiceIT extends BaseCollectionEntityServiceIT<Institut
 
     response =
         institutionService.list(
-            InstitutionSearchRequest.builder().source(Source.IH_IRN).sourceId("test-123").build());
+            InstitutionSearchRequest.builder()
+                .source(Collections.singletonList(Source.IH_IRN))
+                .sourceId(Collections.singletonList("test-123"))
+                .build());
     assertEquals(1, response.getResults().size());
     // empty queries are ignored and return all elements
     response =
@@ -191,7 +217,7 @@ public class InstitutionServiceIT extends BaseCollectionEntityServiceIT<Institut
         institutionService
             .list(
                 InstitutionSearchRequest.builder()
-                    .code("c1")
+                    .code(Collections.singletonList("c1"))
                     .limit(DEFAULT_PAGE.getLimit())
                     .offset(DEFAULT_PAGE.getOffset())
                     .build())
@@ -202,7 +228,7 @@ public class InstitutionServiceIT extends BaseCollectionEntityServiceIT<Institut
         institutionService
             .list(
                 InstitutionSearchRequest.builder()
-                    .name("n2")
+                    .name(Collections.singletonList("n2"))
                     .limit(DEFAULT_PAGE.getLimit())
                     .offset(DEFAULT_PAGE.getOffset())
                     .build())
@@ -213,8 +239,8 @@ public class InstitutionServiceIT extends BaseCollectionEntityServiceIT<Institut
         institutionService
             .list(
                 InstitutionSearchRequest.builder()
-                    .code("c1")
-                    .name("n1")
+                    .code(Collections.singletonList("c1"))
+                    .name(Collections.singletonList("n1"))
                     .limit(DEFAULT_PAGE.getLimit())
                     .offset(DEFAULT_PAGE.getOffset())
                     .build())
@@ -225,8 +251,8 @@ public class InstitutionServiceIT extends BaseCollectionEntityServiceIT<Institut
         institutionService
             .list(
                 InstitutionSearchRequest.builder()
-                    .code("c2")
-                    .name("n1")
+                    .code(Collections.singletonList("c2"))
+                    .name(Collections.singletonList("n1"))
                     .limit(DEFAULT_PAGE.getLimit())
                     .offset(DEFAULT_PAGE.getOffset())
                     .build())
@@ -299,12 +325,38 @@ public class InstitutionServiceIT extends BaseCollectionEntityServiceIT<Institut
                     .build())
             .getResults()
             .size());
+
+    // Test contact email search
+    assertEquals(
+        1,
+        institutionService
+            .list(
+                InstitutionSearchRequest.builder()
+                    .contactEmail("test-contact@gbif.org")
+                    .limit(DEFAULT_PAGE.getLimit())
+                    .offset(DEFAULT_PAGE.getOffset())
+                    .build())
+            .getResults()
+            .size());
+
+    // Test contact userId search
+    assertEquals(
+        1,
+        institutionService
+            .list(
+                InstitutionSearchRequest.builder()
+                    .contactUserId("0000-0000-0000-0001")
+                    .limit(DEFAULT_PAGE.getLimit())
+                    .offset(DEFAULT_PAGE.getOffset())
+                    .build())
+            .getResults()
+            .size());
     assertEquals(
         2,
         institutionService
             .list(
                 InstitutionSearchRequest.builder()
-                    .active(true)
+                    .active(Collections.singletonList(true))
                     .limit(DEFAULT_PAGE.getLimit())
                     .offset(DEFAULT_PAGE.getOffset())
                     .build())
@@ -359,7 +411,7 @@ public class InstitutionServiceIT extends BaseCollectionEntityServiceIT<Institut
     response =
         institutionService.list(
             InstitutionSearchRequest.builder()
-                .alternativeCode("alt")
+                .alternativeCode(Collections.singletonList("alt"))
                 .limit(DEFAULT_PAGE.getLimit())
                 .offset(DEFAULT_PAGE.getOffset())
                 .build());
@@ -368,7 +420,7 @@ public class InstitutionServiceIT extends BaseCollectionEntityServiceIT<Institut
     response =
         institutionService.list(
             InstitutionSearchRequest.builder()
-                .alternativeCode("foo")
+                .alternativeCode(Collections.singletonList("foo"))
                 .limit(DEFAULT_PAGE.getLimit())
                 .offset(DEFAULT_PAGE.getOffset())
                 .build());
@@ -428,7 +480,7 @@ public class InstitutionServiceIT extends BaseCollectionEntityServiceIT<Institut
     response =
         institutionService.list(
             InstitutionSearchRequest.builder()
-                .city("city2")
+                .city(Collections.singletonList("city2"))
                 .limit(DEFAULT_PAGE.getLimit())
                 .offset(DEFAULT_PAGE.getOffset())
                 .build());
@@ -437,7 +489,7 @@ public class InstitutionServiceIT extends BaseCollectionEntityServiceIT<Institut
     response =
         institutionService.list(
             InstitutionSearchRequest.builder()
-                .city("foo")
+                .city(Collections.singletonList("foo"))
                 .limit(DEFAULT_PAGE.getLimit())
                 .offset(DEFAULT_PAGE.getOffset())
                 .build());
@@ -465,7 +517,7 @@ public class InstitutionServiceIT extends BaseCollectionEntityServiceIT<Institut
         institutionService
             .list(
                 InstitutionSearchRequest.builder()
-                    .displayOnNHCPortal(true)
+                    .displayOnNHCPortal(Collections.singletonList(true))
                     .limit(DEFAULT_PAGE.getLimit())
                     .offset(DEFAULT_PAGE.getOffset())
                     .build())
@@ -478,7 +530,7 @@ public class InstitutionServiceIT extends BaseCollectionEntityServiceIT<Institut
         institutionService
             .list(
                 InstitutionSearchRequest.builder()
-                    .numberSpecimens("100")
+                    .numberSpecimens(Collections.singletonList("100"))
                     .limit(DEFAULT_PAGE.getLimit())
                     .offset(DEFAULT_PAGE.getOffset())
                     .build())
@@ -490,7 +542,7 @@ public class InstitutionServiceIT extends BaseCollectionEntityServiceIT<Institut
         institutionService
             .list(
                 InstitutionSearchRequest.builder()
-                    .numberSpecimens("98")
+                    .numberSpecimens(Collections.singletonList("98"))
                     .limit(DEFAULT_PAGE.getLimit())
                     .offset(DEFAULT_PAGE.getOffset())
                     .build())
@@ -502,7 +554,7 @@ public class InstitutionServiceIT extends BaseCollectionEntityServiceIT<Institut
         institutionService
             .list(
                 InstitutionSearchRequest.builder()
-                    .numberSpecimens("* , 100")
+                    .numberSpecimens(Collections.singletonList("* , 100"))
                     .limit(DEFAULT_PAGE.getLimit())
                     .offset(DEFAULT_PAGE.getOffset())
                     .build())
@@ -514,7 +566,7 @@ public class InstitutionServiceIT extends BaseCollectionEntityServiceIT<Institut
         institutionService
             .list(
                 InstitutionSearchRequest.builder()
-                    .numberSpecimens("97,300")
+                    .numberSpecimens(Collections.singletonList("97,300"))
                     .limit(DEFAULT_PAGE.getLimit())
                     .offset(DEFAULT_PAGE.getOffset())
                     .build())
@@ -643,6 +695,8 @@ public class InstitutionServiceIT extends BaseCollectionEntityServiceIT<Institut
     assertEquals(2, institutionService.suggest("II").size());
     assertEquals(1, institutionService.suggest("II2").size());
     assertEquals(1, institutionService.suggest("name2").size());
+    assertEquals(1, institutionService.suggest("Institution name2").size());
+    assertDoesNotThrow(() -> institutionService.suggest(""));
   }
 
   @Test
@@ -676,7 +730,7 @@ public class InstitutionServiceIT extends BaseCollectionEntityServiceIT<Institut
     UUID key4 = institutionService.create(institution4);
 
     InstitutionSearchRequest searchRequest = InstitutionSearchRequest.builder().build();
-    searchRequest.setReplacedBy(key4);
+    searchRequest.setReplacedBy(Collections.singletonList(key4));
     assertEquals(0, institutionService.listDeleted(searchRequest).getResults().size());
     institutionService.replace(key3, key4);
     assertEquals(1, institutionService.listDeleted(searchRequest).getResults().size());
@@ -1061,7 +1115,8 @@ public class InstitutionServiceIT extends BaseCollectionEntityServiceIT<Institut
             .getFeatures()
             .size());
     FeatureCollection featuresC1 =
-        institutionService.listGeojson(InstitutionSearchRequest.builder().code("c1").build());
+        institutionService.listGeojson(
+            InstitutionSearchRequest.builder().code(Collections.singletonList("c1")).build());
     assertEquals(1, featuresC1.getFeatures().size());
     assertTrue(featuresC1.getFeatures().get(0).getGeometry() instanceof Point);
     assertEquals(2, featuresC1.getFeatures().get(0).getProperties().size());

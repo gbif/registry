@@ -305,4 +305,15 @@ public class MockDatasetMapper implements DatasetMapper {
   public Dataset getLightweight(UUID key) {
     return null;
   }
+
+  @Override
+  public void createDwcaDataset(UUID datasetKey, Dataset.DwcA dwcaDataset) {}
+
+  @Override
+  public void updateDwcaDataset(UUID datasetKey, Dataset.DwcA dwcaDataset) {}
+
+  @Override
+  public List<Dataset> findDatasetsWithDeprecatedCategories(Set<String> deprecatedCategories) {
+    return List.of();
+  }
 }

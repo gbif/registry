@@ -35,6 +35,7 @@ import org.gbif.api.service.collections.BatchService;
 import org.gbif.api.service.collections.ChangeSuggestionService;
 import org.gbif.api.service.collections.CollectionEntityService;
 import org.gbif.api.vocabulary.*;
+import org.gbif.api.vocabulary.collections.CollectionsSortField;
 import org.gbif.api.vocabulary.collections.MasterSourceType;
 import org.gbif.registry.persistence.mapper.collections.params.DuplicatesSearchParams;
 import org.gbif.registry.service.collections.duplicates.DuplicatesService;
@@ -51,7 +52,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 import javax.servlet.http.HttpServletRequest;
@@ -78,6 +83,7 @@ import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.extensions.Extension;
 import io.swagger.v3.oas.annotations.extensions.ExtensionProperty;
 import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import lombok.SneakyThrows;
@@ -207,7 +213,7 @@ public abstract class BaseCollectionEntityResource<
         @Parameter(
             name = "numberSpecimens",
             description =
-                "Number of specimens. It supports ranges and a '*' can be used as a wildcard",
+                "Number of specimens. It supports ranges and a `*` can be used as a wildcard",
             schema = @Schema(implementation = String.class),
             in = ParameterIn.QUERY),
         @Parameter(
@@ -223,13 +229,13 @@ public abstract class BaseCollectionEntityResource<
         @Parameter(
             name = "occurrenceCount",
             description =
-                "Count of occurrences linked. It supports ranges and a '*' can be used as a wildcard",
+                "Count of occurrences linked. It supports ranges and a `*` can be used as a wildcard",
             schema = @Schema(implementation = String.class),
             in = ParameterIn.QUERY),
         @Parameter(
             name = "typeSpecimenCount",
             description =
-                "Count of type specimens linked. It supports ranges and a '*' can be used as a wildcard",
+                "Count of type specimens linked. It supports ranges and a `*` can be used as a wildcard",
             schema = @Schema(implementation = String.class),
             in = ParameterIn.QUERY),
         @Parameter(
@@ -248,6 +254,16 @@ public abstract class BaseCollectionEntityResource<
             name = "sortOrder",
             description = "Sort order to use with the sortBy parameter",
             schema = @Schema(implementation = SortOrder.class),
+            in = ParameterIn.QUERY),
+        @Parameter(
+            name = "contactUserId",
+            description = "Filter by contact user ID",
+            schema = @Schema(implementation = String.class),
+            in = ParameterIn.QUERY),
+        @Parameter(
+            name = "contactEmail",
+            description = "Filter by contact email",
+            schema = @Schema(implementation = String.class),
             in = ParameterIn.QUERY),
         @Parameter(name = "searchRequest", hidden = true)
       })
@@ -506,8 +522,10 @@ public abstract class BaseCollectionEntityResource<
       @RequestParam(value = "type", required = false) Type type,
       @RequestParam(value = "proposerEmail", required = false) String proposerEmail,
       @RequestParam(value = "entityKey", required = false) UUID entityKey,
+      @RequestParam(value = "ihIdentifier", required = false) String ihIdentifier,
+      @RequestParam(value = "country", required = false) String country,
       Pageable page) {
-    return changeSuggestionService.list(status, type, proposerEmail, entityKey, page);
+    return changeSuggestionService.list(status, type, proposerEmail, entityKey, ihIdentifier, country, page);
   }
 
   @Operation(
@@ -534,7 +552,7 @@ public abstract class BaseCollectionEntityResource<
               name = "Order",
               properties = @ExtensionProperty(name = "Order", value = "0485")))
   @Docs.DefaultEntityKeyParameter
-  @ApiResponse(responseCode = "200", description = "Apply suggestion discarded")
+  @ApiResponse(responseCode = "200", description = "Change suggestion applied")
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
   @PutMapping(value = "changeSuggestion/{key}/apply")
@@ -628,7 +646,7 @@ public abstract class BaseCollectionEntityResource<
               name = "Order",
               properties = @ExtensionProperty(name = "Order", value = "0433")))
   @Docs.DefaultEntityKeyParameter
-  @ApiResponse(responseCode = "204", description = "Endpoint deleted")
+  @ApiResponse(responseCode = "204", description = "Identifier deleted")
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
   @DeleteMapping("{key}/identifier/{identifierKey}")
@@ -653,6 +671,40 @@ public abstract class BaseCollectionEntityResource<
   @Nullable
   public List<Identifier> listIdentifiers(@PathVariable UUID key) {
     return collectionEntityService.listIdentifiers(key);
+  }
+
+  @Operation(
+    operationId = "updateIdentifier",
+    summary = "Update an identifier for a specified entity",
+    description = "Updates the `isPrimary` status of an identifier. The request body should be a JSON object with a single key `isPrimary`.",
+    requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+      description = "A JSON object containing the `isPrimary` field.",
+      required = true,
+      content = @Content(
+        mediaType = MediaType.APPLICATION_JSON_VALUE,
+        schema = @Schema(name = "isPrimary", type = "boolean", example = "true"),
+        examples = @ExampleObject(value = "{\"isPrimary\": true}")
+      )
+    ),
+    extensions = @Extension(
+      name = "Order",
+      properties = @ExtensionProperty(name = "Order", value = "0436"))
+  )
+  @Docs.DefaultEntityKeyParameter
+  @ApiResponse(responseCode = "204", description = "Identifier updated")
+  @Docs.DefaultUnsuccessfulReadResponses
+  @Docs.DefaultUnsuccessfulWriteResponses
+  @PutMapping(value = "{key}/identifier/{identifierKey}", consumes = MediaType.APPLICATION_JSON_VALUE)
+  @Transactional
+  public int updateIdentifier(
+    @PathVariable("key") UUID entityKey,
+    @PathVariable("identifierKey") Integer identifierKey,
+    @RequestBody Map<String, Boolean> isPrimaryMap) {
+    checkArgument(
+      Objects.nonNull(isPrimaryMap.get("isPrimary")),
+      "The 'isPrimary' parameter must not be null."
+    );
+    return collectionEntityService.updateIdentifier(entityKey, identifierKey, isPrimaryMap.get("isPrimary"));
   }
 
   @Operation(
@@ -955,5 +1007,13 @@ public abstract class BaseCollectionEntityResource<
 
   private String getNormalizedApiBaseUrl() {
     return apiBaseUrl.endsWith("/") ? apiBaseUrl.substring(0, apiBaseUrl.length() - 1) : apiBaseUrl;
+  }
+
+  protected <S> String join(List<S> values, Function<S, String> mapper) {
+    return values != null ? values.stream().map(mapper).collect(Collectors.joining("-")) : null;
+  }
+
+  protected String join(List<String> values) {
+    return values != null ? String.join("-", values) : null;
   }
 }

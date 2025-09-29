@@ -17,6 +17,7 @@ import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.occurrence.Download;
+import org.gbif.api.model.occurrence.Download.Status;
 import org.gbif.api.model.occurrence.DownloadFormat;
 import org.gbif.api.model.occurrence.DownloadType;
 import org.gbif.api.model.occurrence.PredicateDownloadRequest;
@@ -40,11 +41,11 @@ import org.gbif.api.vocabulary.Extension;
 import org.gbif.api.vocabulary.License;
 import org.gbif.api.vocabulary.OrganizationUsageSortField;
 import org.gbif.api.vocabulary.SortOrder;
+import org.gbif.api.vocabulary.UserRole;
 import org.gbif.registry.database.TestCaseDatabaseInitializer;
 import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.test.TestDataFactory;
 import org.gbif.registry.ws.client.OccurrenceDownloadClient;
-import org.gbif.registry.ws.it.fixtures.TestConstants;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 import org.gbif.ws.security.KeyStore;
 
@@ -61,18 +62,24 @@ import java.util.UUID;
 
 import javax.validation.ValidationException;
 
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.server.LocalServerPort;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import static org.gbif.registry.ws.it.fixtures.TestConstants.TEST_ADMIN;
+import static org.gbif.registry.ws.it.fixtures.TestConstants.TEST_USER;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Runs tests for the {@link OccurrenceDownloadService} implementations. This is parameterized to
@@ -100,6 +107,8 @@ public class OccurrenceDownloadIT extends BaseItTest {
   private final OrganizationService organizationService;
   private final NodeService nodeService;
   private final InstallationService installationService;
+  private static final ObjectMapper mapper = new ObjectMapper();
+  private static final JsonNode machineDescription = mapper.createObjectNode().put("key", "value");
 
   @Autowired
   public OccurrenceDownloadIT(
@@ -151,12 +160,14 @@ public class OccurrenceDownloadIT extends BaseItTest {
     download.setRequest(
         new PredicateDownloadRequest(
             new EqualsPredicate(OccurrenceSearchParameter.TAXON_KEY, "212", false),
-            TestConstants.TEST_ADMIN,
+            TEST_ADMIN,
             Collections.singleton("downloadtest@gbif.org"),
             true,
             DownloadFormat.DWCA,
             DownloadType.OCCURRENCE,
-            Collections.singleton(Extension.AUDUBON)));
+            "testDescription",
+            machineDescription,
+            Collections.singleton(Extension.AUDUBON),null));
     return download;
   }
 
@@ -170,12 +181,14 @@ public class OccurrenceDownloadIT extends BaseItTest {
     download.setRequest(
         new PredicateDownloadRequest(
             null,
-            TestConstants.TEST_ADMIN,
+            TEST_ADMIN,
             Collections.singleton("downloadtest@gbif.org"),
             true,
             DownloadFormat.DWCA,
             DownloadType.OCCURRENCE,
-            Collections.singleton(Extension.AUDUBON)));
+          "testDescription",
+          machineDescription,
+          Collections.singleton(Extension.AUDUBON), null));
     return download;
   }
 
@@ -223,6 +236,42 @@ public class OccurrenceDownloadIT extends BaseItTest {
     Download occurrenceDownload2 = service.get(occurrenceDownload.getKey());
     assertNotNull(occurrenceDownload2);
     assertEquals(occurrenceDownload.getRequest(), occurrenceDownload2.getRequest());
+  }
+
+  /**
+   * Tests that sensitive fields (description, creator) are correctly hidden
+   * when fetching a download with a null predicate and a predicate-based download.
+   */
+  @Test
+  public void testCreateAndGetHiddenSensitiveFields() {
+    OccurrenceDownloadService service =
+      getService(ServiceType.RESOURCE, occurrenceDownloadResource, occurrenceDownloadClient);
+
+    Download nullPredicateDownload = getTestInstanceNullPredicateDownload();
+    service.create(nullPredicateDownload);
+
+    Download predicateDownload = getTestInstancePredicateDownload();
+    service.create(predicateDownload);
+
+    //Hide the sensitive fields if the user is not an admin
+    resetSecurityContext(TEST_USER, UserRole.USER);
+    Download retrievedNullPredicate = service.get(nullPredicateDownload.getKey());
+    assertNull(retrievedNullPredicate.getRequest().getDescription(), "Description should be hidden");
+    assertNull(retrievedNullPredicate.getRequest().getCreator(), "Creator should be hidden");
+
+    Download retrievedPredicateDownload = service.get(predicateDownload.getKey());
+    assertNull(retrievedPredicateDownload.getRequest().getDescription(), "Description should be hidden for predicate download");
+    assertNull(retrievedPredicateDownload.getRequest().getCreator(), "Creator should be hidden");
+
+    //Show all fields if the user is an admin
+    resetSecurityContext(TEST_ADMIN, UserRole.GRSCICOLL_ADMIN);
+    Download retrievedNullPredicate3 = service.get(nullPredicateDownload.getKey());
+    assertNotNull(retrievedNullPredicate3.getRequest().getDescription(), "Description should not be hidden");
+    assertNotNull(retrievedNullPredicate3.getRequest().getCreator(), "Creator should not be hidden");
+
+    Download retrievedPredicateDownload4 = service.get(predicateDownload.getKey());
+    assertNotNull(retrievedPredicateDownload4.getRequest().getDescription(), "Description should not be hidden for predicate download");
+    assertNotNull(retrievedPredicateDownload4.getRequest().getCreator(), "Creator should not be hidden");
   }
 
   /** Tests the persistence of the DownloadRequest's DownloadFormat. */
@@ -294,13 +343,9 @@ public class OccurrenceDownloadIT extends BaseItTest {
       for (int i = 1; i <= 5; i++) {
         service.create(getTestInstancePredicateDownload());
       }
-      assertTrue(
-          service
-                  .listByUser(TestConstants.TEST_ADMIN, new PagingRequest(3, 5), null, null, true)
-                  .getResults()
-                  .size()
-              > 0,
-          "List by user operation should return 5 records");
+      assertFalse(service
+        .listByUser(TEST_ADMIN, new PagingRequest(3, 5), null, null, true)
+        .getResults().isEmpty(), "List by user operation should return 5 records");
 
     } else {
       // Just to make the test pass for the webservice version
@@ -320,13 +365,9 @@ public class OccurrenceDownloadIT extends BaseItTest {
     for (int i = 1; i <= 5; i++) {
       service.create(getTestInstancePredicateDownload());
     }
-    assertTrue(
-        service
-                .listByUser(TestConstants.TEST_ADMIN, new PagingRequest(3, 5), null, null, true)
-                .getResults()
-                .size()
-            > 0,
-        "List by user operation should return 5 records");
+    assertFalse(service
+      .listByUser(TEST_ADMIN, new PagingRequest(0, 5), null, null, true)
+      .getResults().isEmpty(), "List by user operation should return 5 records");
   }
 
   /**
@@ -341,13 +382,9 @@ public class OccurrenceDownloadIT extends BaseItTest {
     for (int i = 1; i <= 5; i++) {
       service.create(getTestInstancePredicateDownload());
     }
-    assertTrue(
-        service
-                .list(new PagingRequest(0, 5), Download.Status.EXECUTING_STATUSES, null)
-                .getResults()
-                .size()
-            > 0,
-        "List by status operation should return 5 records");
+    assertFalse(service
+      .list(new PagingRequest(0, 5), Status.EXECUTING_STATUSES, null)
+      .getResults().isEmpty(), "List by status operation should return 5 records");
   }
 
   /**
@@ -430,19 +467,18 @@ public class OccurrenceDownloadIT extends BaseItTest {
 
     PagingResponse<Download> downloads =
         service.listByUser(
-            TestConstants.TEST_ADMIN,
+            TEST_ADMIN,
             new PagingRequest(0, 5),
             Download.Status.EXECUTING_STATUSES,
             LocalDateTime.now().minusMinutes(30),
             true);
 
-    assertTrue(
-        downloads.getResults().size() > 0,
-        "List by user and status operation should return 5 records");
+    assertFalse(downloads.getResults().isEmpty(),
+      "List by user and status operation should return 5 records");
 
     long count =
         service.countByUser(
-            TestConstants.TEST_ADMIN,
+            TEST_ADMIN,
             Download.Status.EXECUTING_STATUSES,
             LocalDateTime.now().minusMinutes(30));
     assertEquals(downloads.getResults().size(), count);
@@ -451,7 +487,7 @@ public class OccurrenceDownloadIT extends BaseItTest {
         0,
         service
             .listByUser(
-                TestConstants.TEST_ADMIN,
+                TEST_ADMIN,
                 new PagingRequest(0, 5),
                 Download.Status.EXECUTING_STATUSES,
                 LocalDateTime.now(),
@@ -462,7 +498,7 @@ public class OccurrenceDownloadIT extends BaseItTest {
     assertEquals(
         0,
         service.countByUser(
-            TestConstants.TEST_ADMIN, Download.Status.EXECUTING_STATUSES, LocalDateTime.now()));
+            TEST_ADMIN, Download.Status.EXECUTING_STATUSES, LocalDateTime.now()));
   }
 
   /** Tests the status update of {@link Download}. */
@@ -506,6 +542,29 @@ public class OccurrenceDownloadIT extends BaseItTest {
     Download occurrenceDownload2 = service.get(occurrenceDownload.getKey());
     assertSame(Download.Status.SUCCEEDED, occurrenceDownload2.getStatus());
     assertNotNull(occurrenceDownload2.getModified());
+    assertEquals(200L, occurrenceDownload2.getSize());
+    assertEquals(600L, occurrenceDownload2.getTotalRecords());
+  }
+
+  /** Tests the status update of {@link Download}. */
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  public void testUpdateStatusFailed(ServiceType serviceType) {
+    OccurrenceDownloadService service =
+      getService(serviceType, occurrenceDownloadResource, occurrenceDownloadClient);
+    Download occurrenceDownload = getTestInstancePredicateDownload();
+    occurrenceDownload.setStatus(Status.FAILED);
+    service.create(occurrenceDownload);
+    // reload to get latest db modifications like created date
+    occurrenceDownload = service.get(occurrenceDownload.getKey());
+    occurrenceDownload.setStatus(Download.Status.FAILED);
+    occurrenceDownload.setSize(200L);
+    occurrenceDownload.setTotalRecords(600L);
+    service.update(occurrenceDownload);
+    Download occurrenceDownload2 = service.get(occurrenceDownload.getKey());
+    assertSame(Download.Status.FAILED, occurrenceDownload2.getStatus());
+    assertNotNull(occurrenceDownload2.getModified());
+    assertNull(occurrenceDownload2.getDoi());
     assertEquals(200L, occurrenceDownload2.getSize());
     assertEquals(600L, occurrenceDownload2.getTotalRecords());
   }

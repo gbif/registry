@@ -13,16 +13,6 @@
  */
 package org.gbif.registry.ws.resources.collections;
 
-import io.swagger.v3.oas.annotations.Hidden;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.Parameters;
-import io.swagger.v3.oas.annotations.enums.ParameterIn;
-import io.swagger.v3.oas.annotations.extensions.Extension;
-import io.swagger.v3.oas.annotations.extensions.ExtensionProperty;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import org.gbif.api.annotation.NullToNotFound;
 import org.gbif.api.annotation.Trim;
 import org.gbif.api.documentation.CommonParameters;
@@ -40,9 +30,7 @@ import org.gbif.api.service.collections.InstitutionService;
 import org.gbif.api.util.iterables.Iterables;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.GbifRegion;
-import org.gbif.api.vocabulary.collections.Discipline;
-import org.gbif.api.vocabulary.collections.InstitutionGovernance;
-import org.gbif.api.vocabulary.collections.InstitutionType;
+import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.api.vocabulary.collections.Source;
 import org.gbif.registry.service.collections.batch.InstitutionBatchService;
 import org.gbif.registry.service.collections.duplicates.InstitutionDuplicatesService;
@@ -51,14 +39,7 @@ import org.gbif.registry.service.collections.suggestions.InstitutionChangeSugges
 import org.gbif.registry.service.collections.utils.MasterSourceUtils;
 import org.gbif.registry.ws.export.CsvWriter;
 import org.gbif.registry.ws.resources.Docs;
-import org.geojson.FeatureCollection;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.ContentDisposition;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.*;
 
-import javax.servlet.http.HttpServletResponse;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
@@ -69,7 +50,26 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
+
+import javax.servlet.http.HttpServletResponse;
+
+import org.geojson.FeatureCollection;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.*;
+
+import io.swagger.v3.oas.annotations.Hidden;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.Parameters;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
+import io.swagger.v3.oas.annotations.extensions.Extension;
+import io.swagger.v3.oas.annotations.extensions.ExtensionProperty;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 
 /**
  * Class that acts both as the WS endpoint for {@link Institution} entities and also provides an *
@@ -123,31 +123,33 @@ public class InstitutionResource
       value = {
         @Parameter(
             name = "type",
-            description = "Type of a GrSciColl institution",
-            schema = @Schema(implementation = InstitutionType.class),
+            description = "Type of a GrSciColl institution. Accepts multiple values, for example "
+              + "`type=Museum&type=BotanicalGarden",
+            schema = @Schema(implementation = String.class),
             in = ParameterIn.QUERY),
         @Parameter(
             name = "institutionalGovernance",
-            description = "Instutional governance of a GrSciColl institution",
-            schema = @Schema(implementation = InstitutionGovernance.class),
+            description = "Institutional governance of a GrSciColl institution. Accepts multiple values, for example "
+              + "`InstitutionalGovernance=NonProfit&InstitutionalGovernance=Local`",
+            schema = @Schema(implementation = String.class),
             in = ParameterIn.QUERY),
         @Parameter(
-            name = "disciplines",
+            name = "discipline",
             description =
                 "Discipline of a GrSciColl institution. Accepts multiple values, for example "
-                    + "`discipline=ARCHAEOLOGY_PREHISTORIC&discipline=ARCHAEOLOGY_HISTORIC`",
-            schema = @Schema(implementation = Discipline.class),
+                    + "`discipline=Zoology&discipline=Biological`",
+            schema = @Schema(implementation = String.class),
             in = ParameterIn.QUERY),
         @Parameter(
-           name = "sourceId",
-           description = "sourceId of MasterSourceMetadata",
-           schema = @Schema(implementation = String.class),
-           in = ParameterIn.QUERY),
+            name = "sourceId",
+            description = "sourceId of MasterSourceMetadata",
+            schema = @Schema(implementation = String.class),
+            in = ParameterIn.QUERY),
         @Parameter(
-          name = "source",
-          description = "Source attribute of MasterSourceMetadata",
-          schema = @Schema(implementation = Source.class),
-          in = ParameterIn.QUERY)
+            name = "source",
+            description = "Source attribute of MasterSourceMetadata",
+            schema = @Schema(implementation = Source.class),
+            in = ParameterIn.QUERY)
       })
   @SearchRequestParameters
   @interface InstitutionSearchParameters {}
@@ -334,31 +336,21 @@ public class InstitutionResource
     String preFileName =
         CsvWriter.notNullJoiner(
             "-",
-            searchRequest.getGbifRegion() != null
-                ? searchRequest.getGbifRegion().stream()
-                    .map(GbifRegion::name)
-                    .collect(Collectors.joining("-"))
-                : null,
-            searchRequest.getCountry() != null
-                ? searchRequest.getCountry().stream()
-                    .map(Country::getIso2LetterCode)
-                    .collect(Collectors.joining("-"))
-                : null,
-            searchRequest.getCity(),
-            searchRequest.getAlternativeCode(),
-            searchRequest.getCode(),
-            searchRequest.getName(),
-            searchRequest.getContact() != null ? searchRequest.getContact().toString() : null,
-            searchRequest.getIdentifierType() != null
-                ? searchRequest.getIdentifierType().name()
-                : null,
-            searchRequest.getIdentifier(),
-            searchRequest.getMachineTagNamespace(),
-            searchRequest.getMachineTagName(),
-            searchRequest.getMachineTagValue(),
-            searchRequest.getFuzzyName(),
+            join(searchRequest.getGbifRegion(), GbifRegion::name),
+            join(searchRequest.getCountry(), Country::getIso2LetterCode),
+            join(searchRequest.getCity()),
+            join(searchRequest.getAlternativeCode()),
+            join(searchRequest.getCode()),
+            join(searchRequest.getName()),
+            join(searchRequest.getContact(), UUID::toString),
+            join(searchRequest.getIdentifierType(), IdentifierType::name),
+            join(searchRequest.getIdentifier()),
+            join(searchRequest.getMachineTagNamespace()),
+            join(searchRequest.getMachineTagName()),
+            join(searchRequest.getMachineTagValue()),
+            join(searchRequest.getFuzzyName()),
             searchRequest.getQ());
-    if (preFileName.length() > 0) {
+    if (!preFileName.isEmpty()) {
       preFileName += "-";
     }
 

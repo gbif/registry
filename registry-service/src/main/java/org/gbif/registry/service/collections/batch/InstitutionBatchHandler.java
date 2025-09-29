@@ -24,6 +24,7 @@ import org.gbif.registry.service.collections.batch.FileFields.InstitutionFields;
 import org.gbif.registry.service.collections.batch.model.ParsedData;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -86,13 +87,17 @@ public class InstitutionBatchHandler extends BaseBatchHandler<Institution> {
     if (!Strings.isNullOrEmpty(code)) {
       institutionsFound =
           institutionService
-              .list(InstitutionSearchRequest.builder().code(code).build())
+              .list(
+                  InstitutionSearchRequest.builder().code(Collections.singletonList(code)).build())
               .getResults();
 
       if (institutionsFound.isEmpty()) {
         institutionsFound =
             institutionService
-                .list(InstitutionSearchRequest.builder().alternativeCode(code).build())
+                .list(
+                    InstitutionSearchRequest.builder()
+                        .alternativeCode(Collections.singletonList(code))
+                        .build())
                 .getResults();
       }
     }
@@ -105,8 +110,8 @@ public class InstitutionBatchHandler extends BaseBatchHandler<Institution> {
             institutionService
                 .list(
                     InstitutionSearchRequest.builder()
-                        .identifier(identifier.getIdentifier())
-                        .identifierType(identifier.getType())
+                        .identifier(Collections.singletonList(identifier.getIdentifier()))
+                        .identifierType(Collections.singletonList(identifier.getType()))
                         .build())
                 .getResults();
         i++;

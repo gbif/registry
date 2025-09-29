@@ -13,30 +13,6 @@
  */
 package org.gbif.registry.ws.resources.collections;
 
-import com.google.common.base.Preconditions;
-import io.swagger.v3.oas.annotations.Hidden;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.Parameters;
-import io.swagger.v3.oas.annotations.enums.ParameterIn;
-import io.swagger.v3.oas.annotations.extensions.Extension;
-import io.swagger.v3.oas.annotations.extensions.ExtensionProperty;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import java.io.BufferedWriter;
-import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.io.Writer;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
-import java.util.List;
-import java.util.UUID;
-import java.util.stream.Collectors;
-import javax.servlet.http.HttpServletResponse;
-import lombok.SneakyThrows;
 import org.gbif.api.annotation.NullToNotFound;
 import org.gbif.api.annotation.Trim;
 import org.gbif.api.documentation.CommonParameters;
@@ -44,24 +20,30 @@ import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.CollectionImportParams;
 import org.gbif.api.model.collections.SourceableField;
 import org.gbif.api.model.collections.descriptors.Descriptor;
-import org.gbif.api.model.collections.descriptors.DescriptorSet;
+import org.gbif.api.model.collections.descriptors.DescriptorChangeSuggestion;
+import org.gbif.api.model.collections.descriptors.DescriptorChangeSuggestionRequest;
+import org.gbif.api.model.collections.descriptors.DescriptorGroup;
 import org.gbif.api.model.collections.latimercore.ObjectGroup;
 import org.gbif.api.model.collections.request.CollectionSearchRequest;
+import org.gbif.api.model.collections.request.DescriptorGroupSearchRequest;
 import org.gbif.api.model.collections.request.DescriptorSearchRequest;
-import org.gbif.api.model.collections.request.DescriptorSetSearchRequest;
+import org.gbif.api.model.collections.request.InstitutionSearchRequest;
 import org.gbif.api.model.collections.suggestions.CollectionChangeSuggestion;
+import org.gbif.api.model.collections.suggestions.Status;
+import org.gbif.api.model.collections.suggestions.Type;
 import org.gbif.api.model.collections.view.CollectionView;
 import org.gbif.api.model.common.export.ExportFormat;
+import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.search.collections.KeyCodeNameResult;
 import org.gbif.api.service.collections.CollectionService;
+import org.gbif.api.service.collections.DescriptorChangeSuggestionService;
 import org.gbif.api.service.collections.DescriptorsService;
 import org.gbif.api.util.iterables.Iterables;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.GbifRegion;
-import org.gbif.api.vocabulary.collections.AccessionStatus;
-import org.gbif.api.vocabulary.collections.CollectionContentType;
-import org.gbif.api.vocabulary.collections.PreservationType;
+import org.gbif.api.vocabulary.IdentifierType;
+import org.gbif.api.vocabulary.Rank;
 import org.gbif.api.vocabulary.collections.Source;
 import org.gbif.registry.service.collections.batch.CollectionBatchService;
 import org.gbif.registry.service.collections.duplicates.CollectionDuplicatesService;
@@ -70,13 +52,63 @@ import org.gbif.registry.service.collections.suggestions.CollectionChangeSuggest
 import org.gbif.registry.service.collections.utils.MasterSourceUtils;
 import org.gbif.registry.ws.export.CsvWriter;
 import org.gbif.registry.ws.resources.Docs;
+import org.gbif.ws.WebApplicationException;
+
+import java.io.BufferedWriter;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.attribute.PosixFilePermission;
+import java.nio.file.attribute.PosixFilePermissions;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
+import java.util.stream.Collectors;
+import java.util.Objects;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
+
+import javax.servlet.http.HttpServletResponse;
+
+import org.apache.commons.io.IOUtils;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.Resource;
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.util.StreamUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+
+import com.google.common.base.Preconditions;
+
+import io.swagger.v3.oas.annotations.Hidden;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.Parameters;
+import io.swagger.v3.oas.annotations.enums.Explode;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
+import io.swagger.v3.oas.annotations.extensions.Extension;
+import io.swagger.v3.oas.annotations.extensions.ExtensionProperty;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import lombok.SneakyThrows;
 
 /**
  * Class that acts both as the WS endpoint for {@link Collection} entities and also provides an
@@ -105,12 +137,15 @@ public class CollectionResource
 
   private final CollectionService collectionService;
   private final DescriptorsService descriptorsService;
+  private final DescriptorChangeSuggestionService descriptorChangeSuggestionService;
 
   // Prefix for the export file format
   private static final String EXPORT_FILE_NAME = "%scollections.%s";
 
   // Page size to iterate over download stats export service
   private static final int EXPORT_LIMIT = 1_000;
+  private static final String INVALID_COLLECTION_KEY_IN_DESCRIPTOR_GROUP =
+      "The collection key in the path doesn't match the one in the descriptor group";
 
   public CollectionResource(
       CollectionMergeService collectionMergeService,
@@ -119,7 +154,8 @@ public class CollectionResource
       CollectionChangeSuggestionService collectionChangeSuggestionService,
       CollectionBatchService batchService,
       DescriptorsService descriptorsService,
-      @Value("${api.root.url}") String apiBaseUrl) {
+      @Value("${api.root.url}") String apiBaseUrl,
+    DescriptorChangeSuggestionService descriptorChangeSuggestionService) {
     super(
         collectionMergeService,
         collectionService,
@@ -130,6 +166,7 @@ public class CollectionResource
         Collection.class);
     this.collectionService = collectionService;
     this.descriptorsService = descriptorsService;
+    this.descriptorChangeSuggestionService = descriptorChangeSuggestionService;
   }
 
   @Target({ElementType.METHOD, ElementType.TYPE})
@@ -146,20 +183,21 @@ public class CollectionResource
             name = "contentType",
             description =
                 "Content type of a GrSciColl collection. Accepts multiple values, for example "
-                    + "`contentType=PALEONTOLOGICAL_OTHER&contentType=EARTH_PLANETARY_MINERALS`.",
-            schema = @Schema(implementation = CollectionContentType.class),
+                    + "`contentType=Paleontological&contentType=EarthPlanetary`.",
+            schema = @Schema(implementation = String.class),
             in = ParameterIn.QUERY),
         @Parameter(
             name = "preservationType",
             description =
                 "Preservation type of a GrSciColl collection. Accepts multiple values, for example "
-                    + "`preservationType=SAMPLE_CRYOPRESERVED&preservationType=SAMPLE_FLUID_PRESERVED`.",
-            schema = @Schema(implementation = PreservationType.class),
+                    + "`preservationType=SampleCryopreserved&preservationType=SampleFluidPreserved`.",
+            schema = @Schema(implementation = String.class),
             in = ParameterIn.QUERY),
         @Parameter(
             name = "accessionStatus",
-            description = "Accession status of a GrSciColl collection",
-            schema = @Schema(implementation = AccessionStatus.class),
+            description = "Accession status of a GrSciColl collection. Accepts multiple values, for example "
+                    + "`accessionStatus=Institutional&accessionStatus=Project",
+            schema = @Schema(implementation = String.class),
             in = ParameterIn.QUERY),
         @Parameter(
             name = "personalCollection",
@@ -343,34 +381,22 @@ public class CollectionResource
     String preFileName =
         CsvWriter.notNullJoiner(
             "-",
-            searchRequest.getGbifRegion() != null
-                ? searchRequest.getGbifRegion().stream()
-                    .map(GbifRegion::name)
-                    .collect(Collectors.joining("-"))
-                : null,
-            searchRequest.getCountry() != null
-                ? searchRequest.getCountry().stream()
-                    .map(Country::getIso2LetterCode)
-                    .collect(Collectors.joining("-"))
-                : null,
-            searchRequest.getCity(),
-            searchRequest.getInstitution() != null
-                ? searchRequest.getInstitution().toString()
-                : null,
-            searchRequest.getAlternativeCode(),
-            searchRequest.getCode(),
-            searchRequest.getName(),
-            searchRequest.getContact() != null ? searchRequest.getContact().toString() : null,
-            searchRequest.getIdentifierType() != null
-                ? searchRequest.getIdentifierType().name()
-                : null,
-            searchRequest.getIdentifier(),
-            searchRequest.getMachineTagNamespace(),
-            searchRequest.getMachineTagName(),
-            searchRequest.getMachineTagValue(),
-            searchRequest.getFuzzyName(),
+            join(searchRequest.getGbifRegion(), GbifRegion::name),
+            join(searchRequest.getCountry(), Country::getIso2LetterCode),
+            join(searchRequest.getCity()),
+            join(searchRequest.getInstitution(), UUID::toString),
+            join(searchRequest.getAlternativeCode()),
+            join(searchRequest.getCode()),
+            join(searchRequest.getName()),
+            join(searchRequest.getContact(), UUID::toString),
+            join(searchRequest.getIdentifierType(), IdentifierType::name),
+            join(searchRequest.getIdentifier()),
+            join(searchRequest.getMachineTagNamespace()),
+            join(searchRequest.getMachineTagName()),
+            join(searchRequest.getMachineTagValue()),
+            join(searchRequest.getFuzzyName()),
             searchRequest.getQ());
-    if (preFileName.length() > 0) {
+    if (!preFileName.isEmpty()) {
       preFileName += "-";
     }
     return ContentDisposition.builder("attachment")
@@ -403,6 +429,73 @@ public class CollectionResource
       CsvWriter.collections(
               Iterables.collections(searchRequest, collectionService, EXPORT_LIMIT), format)
           .export(writer);
+    }
+  }
+
+  @Operation(
+      operationId = "listCollectionsForInstitutions",
+      summary = "List collections for institutions matching search criteria",
+      description = "Returns collections that belong to institutions matching the provided search criteria. "
+          + "The method first retrieves all matching institutions using pagination, then returns their collections.",
+      extensions =
+          @Extension(
+              name = "Order",
+              properties = @ExtensionProperty(name = "Order", value = "0104")))
+  @ApiResponse(responseCode = "200", description = "Collections found and returned")
+  @ApiResponse(responseCode = "400", description = "Invalid search query provided")
+  @GetMapping("listForInstitution")
+  public PagingResponse<CollectionView> listForInstitutions(InstitutionSearchRequest searchRequest) {
+    List<CollectionView> collections = collectionService.getCollectionsForInstitutionsBySearch(searchRequest);
+    return new PagingResponse<>(new PagingResponse<>(), (long) collections.size(), collections);
+  }
+
+  @Operation(
+      operationId = "exportCollectionsForInstitutions",
+      summary = "Export collections for institutions matching search criteria",
+      description = "Download collections that belong to institutions matching the provided search criteria. "
+          + "The method first retrieves all matching institutions using pagination, then exports their collections "
+          + "in the specified format (TSV or CSV).",
+      extensions =
+          @Extension(
+              name = "Order",
+              properties = @ExtensionProperty(name = "Order", value = "0103")))
+  @ApiResponse(responseCode = "200", description = "Collections exported successfully")
+  @ApiResponse(responseCode = "204", description = "No institutions found matching the search criteria")
+  @ApiResponse(responseCode = "400", description = "Invalid search query provided")
+  @GetMapping("exportForInstitution")
+  public void exportForInstitutions(HttpServletResponse response,
+    @RequestParam(value = "format", defaultValue = "TSV") ExportFormat format, InstitutionSearchRequest searchRequest) throws IOException {
+
+    List<CollectionView> collections = collectionService.getCollectionsForInstitutionsBySearch(searchRequest);
+
+    if (collections.isEmpty()) {
+      response.setStatus(HttpServletResponse.SC_NO_CONTENT);
+      return;
+    }
+
+    // Create collection search request with the search parameters for the file header
+    CollectionSearchRequest collectionRequest = CollectionSearchRequest.builder()
+        .country(searchRequest.getCountry())
+        .gbifRegion(searchRequest.getGbifRegion())
+        .city(searchRequest.getCity())
+        .name(searchRequest.getName())
+        .code(searchRequest.getCode())
+        .alternativeCode(searchRequest.getAlternativeCode())
+        .identifierType(searchRequest.getIdentifierType())
+        .identifier(searchRequest.getIdentifier())
+        .machineTagNamespace(searchRequest.getMachineTagNamespace())
+        .machineTagName(searchRequest.getMachineTagName())
+        .machineTagValue(searchRequest.getMachineTagValue())
+        .fuzzyName(searchRequest.getFuzzyName())
+        .q(searchRequest.getInstitutionalGovernance() != null
+            ? searchRequest.getInstitutionalGovernance().stream().filter(Objects::nonNull).collect(Collectors.joining(","))
+            : null)
+        .build();
+
+    response.setHeader(HttpHeaders.CONTENT_DISPOSITION, getExportFileHeader(collectionRequest, format));
+
+    try (Writer writer = new BufferedWriter(new OutputStreamWriter(response.getOutputStream()))) {
+      CsvWriter.collections(collections, format).export(writer);
     }
   }
 
@@ -466,93 +559,124 @@ public class CollectionResource
     return MasterSourceUtils.COLLECTION_SOURCEABLE_FIELDS;
   }
 
-  // TODO: check descriptor docs
   @Operation(
-      operationId = "getCollectionDescriptorSets",
-      summary = "Lists the descriptor sets of the collection.",
-      description = "Lists the descriptor sets of the collection.",
+      operationId = "getCollectionDescriptorGroups",
+      summary = "Lists the descriptor groups of the collection.",
+      description = "Lists the descriptor groups of the collection.",
       extensions =
           @Extension(
               name = "Order",
               properties = @ExtensionProperty(name = "Order", value = "0500")))
+  @Parameters(
+      value = {
+        @Parameter(
+            name = "title",
+            description = "Descriptor group title",
+            schema = @Schema(implementation = String.class),
+            in = ParameterIn.QUERY),
+        @Parameter(
+            name = "description",
+            description = "Descriptor group description",
+            schema = @Schema(implementation = String.class),
+            in = ParameterIn.QUERY),
+        @Parameter(
+            name = "deleted",
+            description = "Boolean flag to indicate if we want deleted descriptor groups",
+            schema = @Schema(implementation = Boolean.class),
+            in = ParameterIn.QUERY)
+      })
+  @CommonParameters.QParameter
+  @Pageable.OffsetLimitParameters
   @Docs.DefaultEntityKeyParameter
-  @ApiResponse(responseCode = "200", description = "Collection descriptor sets found and returned")
+  @ApiResponse(
+      responseCode = "200",
+      description = "Collection descriptor groups found and returned")
   @Docs.DefaultUnsuccessfulReadResponses
-  @GetMapping("{collectionKey}/descriptorSet")
-  @NullToNotFound("/grscicoll/collection/{collectionKey}/descriptorSet")
-  public PagingResponse<DescriptorSet> listCollectionDescriptorSets(
-      @PathVariable("collectionKey") UUID collectionKey, DescriptorSetSearchRequest searchRequest) {
-    return descriptorsService.listDescriptorSets(collectionKey, searchRequest);
+  @GetMapping("{collectionKey}/descriptorGroup")
+  @NullToNotFound("/grscicoll/collection/{collectionKey}/descriptorGroup")
+  public PagingResponse<DescriptorGroup> listCollectionDescriptorGroups(
+      @PathVariable("collectionKey") UUID collectionKey,
+      DescriptorGroupSearchRequest searchRequest) {
+    return descriptorsService.listDescriptorGroups(collectionKey, searchRequest);
   }
 
   @Operation(
-      operationId = "createCollectionDescriptorSet",
-      summary = "Create a new collection descriptor set",
-      description = "Creates a new collection descriptor set.",
+      operationId = "createCollectionDescriptorGroup",
+      summary = "Create a new collection descriptor group",
+      description = "Creates a new collection descriptor group.",
       extensions =
           @Extension(
               name = "Order",
               properties = @ExtensionProperty(name = "Order", value = "0501")))
   @ApiResponse(
       responseCode = "201",
-      description = "Collection descriptor set created, new descriptor set's key returned")
+      description = "Collection descriptor group created, new descriptor group's key returned")
   @Docs.DefaultUnsuccessfulWriteResponses
   @SneakyThrows
   @PostMapping(
-      value = "{collectionKey}/descriptorSet",
+      value = "{collectionKey}/descriptorGroup",
       consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-  public long createDescriptorSet(
+  public long createDescriptorGroup(
       @PathVariable UUID collectionKey,
       @RequestParam(value = "format", defaultValue = "CSV") ExportFormat format,
-      @RequestPart("descriptorsFile") MultipartFile descriptorsFile,
+      @RequestPart(value = "descriptorsFile", required = false) MultipartFile descriptorsFile,
       @RequestParam("title") @Trim String title,
-      @RequestParam(value = "description", required = false) @Trim String description) {
-    return descriptorsService.createDescriptorSet(
+      @RequestParam(value = "description", required = false) @Trim String description,
+      @RequestParam(value = "tags", required = false) Set<String> tags) {
+    return descriptorsService.createDescriptorGroup(
         StreamUtils.copyToByteArray(descriptorsFile.getResource().getInputStream()),
         format,
         title,
         description,
+        tags,
         collectionKey);
   }
 
   @Operation(
-      operationId = "updateCollectionDescriptorSet",
-      summary = "Update an existing collection descriptor set",
+      operationId = "updateCollectionDescriptorGroup",
+      summary = "Update an existing collection descriptor group",
       description =
-          "Updates the existing collection descriptor set. It updates the metadata and reimport the file by deleting the "
+          "Updates the existing collection descriptor group. It updates the metadata and reimport the file by deleting the "
               + "existing descriptors and creating new ones.",
       extensions =
           @Extension(
               name = "Order",
               properties = @ExtensionProperty(name = "Order", value = "0502")))
   @Docs.DefaultEntityKeyParameter
-  @ApiResponse(responseCode = "204", description = "Collection descriptor set updated")
+  @ApiResponse(responseCode = "204", description = "Collection descriptor group updated")
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
   @SneakyThrows
   @PutMapping(
-      value = "{collectionKey}/descriptorSet/{key}",
+      value = "{collectionKey}/descriptorGroup/{key}",
       consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-  public void updateDescriptorSet(
+  public void updateDescriptorGroup(
       @PathVariable("collectionKey") UUID collectionKey,
-      @PathVariable("key") long descriptorSetKey,
+      @PathVariable("key") long descriptorGroupKey,
       @RequestParam(value = "format", defaultValue = "CSV") ExportFormat format,
-      @RequestPart("descriptorsFile") MultipartFile descriptorsFile,
+      @RequestPart(value = "descriptorsFile", required = false) MultipartFile descriptorsFile,
       @RequestParam("title") @Trim String title,
-      @RequestParam(value = "description", required = false) @Trim String description) {
-    DescriptorSet existingDescriptorSet = descriptorsService.getDescriptorSet(descriptorSetKey);
-    Preconditions.checkArgument(existingDescriptorSet.getCollectionKey().equals(collectionKey));
+      @RequestParam(value = "description", required = false) @Trim String description,
+      @RequestParam(value = "tags", required = false) Set<String> tags) {
+    DescriptorGroup existingDescriptorGroup =
+        descriptorsService.getDescriptorGroup(descriptorGroupKey);
+    if (existingDescriptorGroup == null) {
+      throw new WebApplicationException("Descriptor group was not found", HttpStatus.NOT_FOUND);
+    }
 
-    descriptorsService.updateDescriptorSet(
-        descriptorSetKey,
-        StreamUtils.copyToByteArray(descriptorsFile.getResource().getInputStream()),
+    Preconditions.checkArgument(existingDescriptorGroup.getCollectionKey().equals(collectionKey));
+    byte[] file = descriptorsFile != null ? StreamUtils.copyToByteArray(descriptorsFile.getResource().getInputStream()) : null;
+    descriptorsService.updateDescriptorGroup(
+        descriptorGroupKey,
+        file,
         format,
         title,
+        tags,
         description);
   }
 
   @Operation(
-      operationId = "getCollectionDescriptor",
+      operationId = "getCollectionDescriptorGroup",
       summary = "Get details of a single collection descriptor",
       description = "Details of a single collection descriptor",
       extensions =
@@ -562,14 +686,155 @@ public class CollectionResource
   @Docs.DefaultEntityKeyParameter
   @ApiResponse(responseCode = "200", description = "Collection found and returned")
   @Docs.DefaultUnsuccessfulReadResponses
-  @GetMapping("{collectionKey}/descriptorSet/{key}")
-  @NullToNotFound("/grscicoll/collection/{collectionKey}/descriptorSet/{key}")
-  public DescriptorSet getCollectionDescriptorSet(
+  @GetMapping("{collectionKey}/descriptorGroup/{key}")
+  @NullToNotFound("/grscicoll/collection/{collectionKey}/descriptorGroup/{key}")
+  public DescriptorGroup getCollectionDescriptorGroup(
       @PathVariable("collectionKey") UUID collectionKey,
-      @PathVariable("key") long descriptorSetKey) {
-    DescriptorSet existingDescriptorSet = descriptorsService.getDescriptorSet(descriptorSetKey);
-    Preconditions.checkArgument(existingDescriptorSet.getCollectionKey().equals(collectionKey));
-    return existingDescriptorSet;
+      @PathVariable("key") long descriptorGroupKey) {
+    DescriptorGroup existingDescriptorGroup =
+        descriptorsService.getDescriptorGroup(descriptorGroupKey);
+
+    if (existingDescriptorGroup != null) {
+      Preconditions.checkArgument(
+          existingDescriptorGroup.getCollectionKey().equals(collectionKey),
+          INVALID_COLLECTION_KEY_IN_DESCRIPTOR_GROUP);
+    }
+
+    return existingDescriptorGroup;
+  }
+
+  @Operation(
+      operationId = "deleteCollectionDescriptorGroup",
+      summary = "Deletes a collection descriptor group",
+      description = "Deletes a collection descriptor group",
+      extensions =
+          @Extension(
+              name = "Order",
+              properties = @ExtensionProperty(name = "Order", value = "0510")))
+  @Docs.DefaultEntityKeyParameter
+  @ApiResponse(responseCode = "204", description = "Descriptor group marked as deleted")
+  @Docs.DefaultUnsuccessfulReadResponses
+  @Docs.DefaultUnsuccessfulWriteResponses
+  @DeleteMapping("{collectionKey}/descriptorGroup/{key}")
+  public void deleteCollectionDescriptorGroup(
+      @PathVariable("collectionKey") UUID collectionKey,
+      @PathVariable("key") long descriptorGroupKey) {
+    DescriptorGroup existingDescriptorGroup =
+        descriptorsService.getDescriptorGroup(descriptorGroupKey);
+    if (existingDescriptorGroup == null) {
+      throw new WebApplicationException("Descriptor group was not found", HttpStatus.NOT_FOUND);
+    }
+
+    Preconditions.checkArgument(
+        existingDescriptorGroup.getCollectionKey().equals(collectionKey),
+        INVALID_COLLECTION_KEY_IN_DESCRIPTOR_GROUP);
+
+    descriptorsService.deleteDescriptorGroup(descriptorGroupKey);
+  }
+
+  @Operation(
+      operationId = "CollectionDescriptorGroupExport",
+      summary = "Exports a collection descriptor group.",
+      description = "Download a collection descriptor group as CSV or TSV.",
+      extensions =
+          @Extension(
+              name = "Order",
+              properties = @ExtensionProperty(name = "Order", value = "0520")))
+  @CollectionSearchParameters
+  @ApiResponse(responseCode = "200", description = "Collection search successful")
+  @ApiResponse(responseCode = "400", description = "Invalid search query provided")
+  @GetMapping(value = "{collectionKey}/descriptorGroup/{key}/export", produces = "application/zip")
+  public ResponseEntity<Resource> exportDescriptorGroup(
+      HttpServletResponse response,
+      @PathVariable("collectionKey") UUID collectionKey,
+      @PathVariable("key") long descriptorGroupKey,
+      @RequestParam(value = "format", defaultValue = "TSV") ExportFormat format)
+      throws IOException {
+    DescriptorGroup existingDescriptorGroup =
+        descriptorsService.getDescriptorGroup(descriptorGroupKey);
+    if (existingDescriptorGroup == null) {
+      throw new WebApplicationException("Descriptor group was not found", HttpStatus.NOT_FOUND);
+    }
+
+    Preconditions.checkArgument(
+        existingDescriptorGroup.getCollectionKey().equals(collectionKey),
+        INVALID_COLLECTION_KEY_IN_DESCRIPTOR_GROUP);
+
+    DescriptorSearchRequest searchRequest =
+        DescriptorSearchRequest.builder().descriptorGroupKey(descriptorGroupKey).build();
+
+    Preconditions.checkArgument(
+        descriptorsService.countDescriptors(searchRequest) > 0,
+        "The descriptor group doesn't have descriptors");
+
+    long ts = System.currentTimeMillis();
+
+    Path interpretedCsv =
+        Files.createFile(
+            Paths.get("interpreted" + ts + "." + format.name().toLowerCase()),
+            PosixFilePermissions.asFileAttribute(filePermissions()));
+    try (Writer writer =
+        new OutputStreamWriter(new FileOutputStream(interpretedCsv.toFile().getName()))) {
+      CsvWriter.descriptors(
+              Iterables.descriptors(descriptorsService, searchRequest, EXPORT_LIMIT), format)
+          .export(writer);
+    }
+
+    Path verbatimCsv =
+        Files.createFile(
+            Paths.get("verbatim" + ts + "." + format.name().toLowerCase()),
+            PosixFilePermissions.asFileAttribute(filePermissions()));
+    Set<String> verbatimFields = descriptorsService.getVerbatimNames(descriptorGroupKey);
+    try (Writer writer =
+        new OutputStreamWriter(Files.newOutputStream(Paths.get(verbatimCsv.toFile().getName())))) {
+      CsvWriter.descriptorVerbatims(
+              Iterables.descriptorVerbatims(descriptorsService, searchRequest, EXPORT_LIMIT),
+              format,
+              verbatimFields)
+          .exportMap(writer);
+    }
+
+    Path zipFile = zipFiles(existingDescriptorGroup, interpretedCsv, verbatimCsv);
+    ByteArrayResource resource = new ByteArrayResource(Files.readAllBytes(zipFile));
+    return ResponseEntity.ok()
+        .header("Content-Disposition", "attachment; filename=" + zipFile.toFile().getName())
+        .body(resource);
+  }
+
+  private static Set<PosixFilePermission> filePermissions() {
+    return Set.of(
+        PosixFilePermission.OWNER_WRITE,
+        PosixFilePermission.OWNER_READ,
+        PosixFilePermission.OWNER_EXECUTE,
+        PosixFilePermission.OTHERS_WRITE,
+        PosixFilePermission.OTHERS_READ,
+        PosixFilePermission.OTHERS_EXECUTE);
+  }
+
+  private static Path zipFiles(
+      DescriptorGroup existingDescriptorGroup, Path interpretedCsv, Path verbatimCsv)
+      throws IOException {
+    Path zipFile =
+        Files.createTempFile(
+            "descriptorGroup" + existingDescriptorGroup.getKey() + "_export", ".zip");
+
+    try (ZipOutputStream zipOut = new ZipOutputStream(new FileOutputStream(zipFile.toFile()))) {
+      for (Path f : Arrays.asList(interpretedCsv, verbatimCsv)) {
+        try (FileInputStream fis = new FileInputStream(f.toFile())) {
+          ZipEntry zipEntry = new ZipEntry(f.toFile().getName().replaceAll("[0-9]", ""));
+          zipOut.putNextEntry(zipEntry);
+          byte[] bytes = new byte[1024];
+          int length;
+          while ((length = fis.read(bytes)) >= 0) {
+            zipOut.write(bytes, 0, length);
+          }
+          zipOut.closeEntry();
+        }
+        Files.delete(f);
+      }
+    }
+
+    return zipFile;
   }
 
   @Operation(
@@ -580,16 +845,119 @@ public class CollectionResource
           @Extension(
               name = "Order",
               properties = @ExtensionProperty(name = "Order", value = "0700")))
+  @Parameters(
+      value = {
+        @Parameter(
+            name = "descriptorGroupKey",
+            description = "Key of the descriptor group",
+            schema = @Schema(implementation = Long.class),
+            in = ParameterIn.QUERY),
+        @Parameter(
+            name = "usageKey",
+            description = "Taxon usage key of the descriptor",
+            schema = @Schema(implementation = Integer.class),
+            in = ParameterIn.QUERY,
+            explode = Explode.TRUE),
+        @Parameter(
+            name = "usageName",
+            description = "Taxon usage name of the descriptor",
+            schema = @Schema(implementation = String.class),
+            in = ParameterIn.QUERY,
+            explode = Explode.TRUE),
+        @Parameter(
+            name = "usageRank",
+            description = "Taxon usage rank of the descriptor",
+            schema = @Schema(implementation = Rank.class),
+            in = ParameterIn.QUERY,
+            explode = Explode.TRUE),
+        @Parameter(
+            name = "taxonKey",
+            description = "Taxon key of the descriptor",
+            schema = @Schema(implementation = Integer.class),
+            in = ParameterIn.QUERY,
+            explode = Explode.TRUE),
+        @Parameter(
+            name = "country",
+            description = "Country of the descriptor",
+            schema = @Schema(implementation = Country.class),
+            in = ParameterIn.QUERY,
+            explode = Explode.TRUE),
+        @Parameter(
+            name = "individualCount",
+            description =
+                "Individual count of the descriptor. It supports ranges and a `*` can be used as a wildcard",
+            schema = @Schema(implementation = String.class),
+            in = ParameterIn.QUERY),
+        @Parameter(
+            name = "identifiedBy",
+            description = "Identified by field of the descriptor",
+            schema = @Schema(implementation = String.class),
+            in = ParameterIn.QUERY,
+            explode = Explode.TRUE),
+        @Parameter(
+            name = "dateIdentified",
+            description = "Date identified field of the descriptor",
+            schema = @Schema(implementation = Date.class),
+            in = ParameterIn.QUERY),
+        @Parameter(
+            name = "dateIdentifiedFrom",
+            description = "Date identified of the descriptor is equal or higher than the specified",
+            schema = @Schema(implementation = Date.class),
+            in = ParameterIn.QUERY),
+        @Parameter(
+            name = "dateIdentifiedBefore",
+            description = "Date identified of the descriptor is lower than the specified",
+            schema = @Schema(implementation = Date.class),
+            in = ParameterIn.QUERY),
+        @Parameter(
+            name = "typeStatus",
+            description = "Type status of the descriptor",
+            schema = @Schema(implementation = String.class),
+            in = ParameterIn.QUERY,
+            explode = Explode.TRUE),
+        @Parameter(
+            name = "recordedBy",
+            description = "RecordedBy of the descriptor",
+            schema = @Schema(implementation = String.class),
+            in = ParameterIn.QUERY,
+            explode = Explode.TRUE),
+        @Parameter(
+            name = "discipline",
+            description = "Discipline of the descriptor",
+            schema = @Schema(implementation = String.class),
+            in = ParameterIn.QUERY,
+            explode = Explode.TRUE),
+        @Parameter(
+            name = "objectClassification",
+            description = "Object classification of the descriptor",
+            schema = @Schema(implementation = String.class),
+            in = ParameterIn.QUERY,
+            explode = Explode.TRUE),
+        @Parameter(
+            name = "issues",
+            description = "Issues of the descriptor",
+            schema = @Schema(implementation = String.class),
+            in = ParameterIn.QUERY,
+            explode = Explode.TRUE)
+      })
+  @CommonParameters.QParameter
+  @Pageable.OffsetLimitParameters
   @Docs.DefaultEntityKeyParameter
   @ApiResponse(responseCode = "200", description = "Descriptors found and returned")
   @Docs.DefaultUnsuccessfulReadResponses
-  @GetMapping("{collectionKey}/descriptorSet/{key}/descriptor")
-  @NullToNotFound("/grscicoll/collection/{collectionKey}/descriptorSet/{key}/descriptor")
+  @GetMapping("{collectionKey}/descriptorGroup/{key}/descriptor")
+  @NullToNotFound("/grscicoll/collection/{collectionKey}/descriptorGroup/{key}/descriptor")
   public PagingResponse<Descriptor> listCollectionDescriptors(
       @PathVariable("collectionKey") UUID collectionKey,
-      @PathVariable("key") long descriptorSetKey,
+      @PathVariable("key") long descriptorGroupKey,
       DescriptorSearchRequest searchRequest) {
-    searchRequest.setDescriptorSetKey(descriptorSetKey);
+    DescriptorGroup existingDescriptorGroup =
+        descriptorsService.getDescriptorGroup(descriptorGroupKey);
+    if (existingDescriptorGroup == null) {
+      return null;
+    }
+
+    searchRequest.setDescriptorGroupKey(descriptorGroupKey);
     return descriptorsService.listDescriptors(searchRequest);
   }
 
@@ -604,17 +972,309 @@ public class CollectionResource
   @Docs.DefaultEntityKeyParameter
   @ApiResponse(responseCode = "200", description = "Descriptor found and returned")
   @Docs.DefaultUnsuccessfulReadResponses
-  @GetMapping("{collectionKey}/descriptorSet/{descriptorSetKey}/descriptor/{key}")
+  @GetMapping("{collectionKey}/descriptorGroup/{descriptorGroupKey}/descriptor/{key}")
   @NullToNotFound(
-      "/grscicoll/collection/{collectionKey}/descriptorSet/{descriptorSetKey}/descriptor/{key}")
+      "/grscicoll/collection/{collectionKey}/descriptorGroup/{descriptorGroupKey}/descriptor/{key}")
   public Descriptor getCollectionDescriptor(
       @PathVariable("collectionKey") UUID collectionKey,
-      @PathVariable("descriptorSetKey") long descriptorSetKey,
+      @PathVariable("descriptorGroupKey") long descriptorGroupKey,
       @PathVariable("key") long descriptorKey) {
+    DescriptorGroup existingDescriptorGroup =
+        descriptorsService.getDescriptorGroup(descriptorGroupKey);
+    if (existingDescriptorGroup == null) {
+      return null;
+    }
+
     Descriptor descriptor = descriptorsService.getDescriptor(descriptorKey);
-    Preconditions.checkArgument(descriptor.getDescriptorSetKey().equals(descriptorSetKey));
-    DescriptorSet descriptorSet = descriptorsService.getDescriptorSet(descriptorSetKey);
-    Preconditions.checkArgument(descriptorSet.getCollectionKey().equals(collectionKey));
+    Preconditions.checkArgument(descriptor.getDescriptorGroupKey().equals(descriptorGroupKey));
+    Preconditions.checkArgument(existingDescriptorGroup.getCollectionKey().equals(collectionKey));
     return descriptor;
   }
+
+  @Operation(
+      operationId = "reinterpretCollectionDescriptorGroup",
+      summary = "Reinterprets a collection descriptor group",
+      description = "Reinterprets a collection descriptor group.",
+      extensions =
+          @Extension(
+              name = "Order",
+              properties = @ExtensionProperty(name = "Order", value = "0501")))
+  @ApiResponse(responseCode = "204", description = "Collection descriptor group reinterpreted")
+  @Docs.DefaultUnsuccessfulWriteResponses
+  @SneakyThrows
+  @PostMapping("{collectionKey}/descriptorGroup/{key}/reinterpret")
+  public void reinterpretCollectionDescriptorGroup(
+      @PathVariable("collectionKey") UUID collectionKey,
+      @PathVariable("key") long descriptorGroupKey) {
+    DescriptorGroup existingDescriptorGroup =
+        descriptorsService.getDescriptorGroup(descriptorGroupKey);
+
+    if (existingDescriptorGroup != null) {
+      Preconditions.checkArgument(
+          existingDescriptorGroup.getCollectionKey().equals(collectionKey),
+          INVALID_COLLECTION_KEY_IN_DESCRIPTOR_GROUP);
+    }
+    descriptorsService.reinterpretDescriptorGroup(descriptorGroupKey);
+  }
+
+  @Operation(
+      operationId = "reinterpretCollectionDescriptorGroups",
+      summary = "Reinterprets all the descriptor groups of the collection",
+      description = "Reinterprets all the descriptor groups of the collection",
+      extensions =
+          @Extension(
+              name = "Order",
+              properties = @ExtensionProperty(name = "Order", value = "0501")))
+  @ApiResponse(responseCode = "204", description = "Collection descriptor groups reinterpreted")
+  @Docs.DefaultUnsuccessfulWriteResponses
+  @SneakyThrows
+  @PostMapping("{collectionKey}/descriptorGroup/reinterpretAll")
+  public void reinterpretCollectionDescriptorGroups(
+      @PathVariable("collectionKey") UUID collectionKey) {
+    descriptorsService.reinterpretCollectionDescriptorGroups(collectionKey);
+  }
+
+  @Operation(
+      operationId = "reinterpretAllDescriptorGroups",
+      summary = "Reinterprets all the descriptor groups",
+      description = "Reinterprets all the descriptor groups",
+      extensions =
+          @Extension(
+              name = "Order",
+              properties = @ExtensionProperty(name = "Order", value = "0501")))
+  @ApiResponse(responseCode = "204", description = "All descriptor groups reinterpreted")
+  @Docs.DefaultUnsuccessfulWriteResponses
+  @SneakyThrows
+  @PostMapping("reinterpretAllDescriptorGroups")
+  public void reinterpretAllDescriptorGroups() {
+    descriptorsService.reinterpretAllDescriptorGroups();
+  }
+
+  @Operation(
+      operationId = "createDescriptorSuggestion",
+      summary = "Create a new descriptor change suggestion",
+      description = "Creates a new suggestion for changing a collection's descriptor.",
+      extensions =
+          @Extension(
+              name = "Order",
+              properties = @ExtensionProperty(name = "Order", value = "0300")))
+  @ApiResponse(
+      responseCode = "201",
+      description = "Descriptor suggestion created, new suggestion's key returned")
+  @Docs.DefaultUnsuccessfulWriteResponses
+  @PostMapping(value = "{collectionKey}/descriptorGroup/suggestion", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+  public DescriptorChangeSuggestion createDescriptorSuggestion(
+      @PathVariable("collectionKey") UUID collectionKey,
+      @RequestPart(value = "file", required = false) MultipartFile file,
+      @RequestParam("type") Type type,
+      @RequestParam(value = "descriptorGroupKey", required = false) Long descriptorGroupKey,
+      @RequestParam("title") String title,
+      @RequestParam(value = "description", required = false) String description,
+      @RequestParam("format") ExportFormat format,
+      @RequestParam("comments") List<String> comments,
+      @RequestParam("proposerEmail") String proposerEmail,
+      @RequestParam(value = "tags", required = false) Set<String> tags) throws IOException {
+
+    if (type == Type.CREATE && (file == null || file.isEmpty())) {
+      throw new IllegalArgumentException("File is required for CREATE type suggestions");
+    }
+
+    DescriptorChangeSuggestionRequest request = new DescriptorChangeSuggestionRequest();
+    request.setCollectionKey(collectionKey);
+    request.setType(type);
+    request.setDescriptorGroupKey(descriptorGroupKey);
+    request.setTitle(title);
+    request.setDescription(description);
+    request.setFormat(format);
+    request.setComments(comments);
+    request.setTags(tags);
+    request.setProposerEmail(proposerEmail);
+
+    return descriptorChangeSuggestionService.createSuggestion(
+      file != null ? file.getInputStream() : null,
+      file != null ? file.getOriginalFilename() : null,
+      request);
+  }
+
+  @Operation(
+      operationId = "exportDescriptorSuggestionFile",
+      summary = "Export a descriptor suggestion file",
+      description = "Downloads the file associated with a descriptor change suggestion.",
+      extensions =
+          @Extension(
+              name = "Order",
+              properties = @ExtensionProperty(name = "Order", value = "0301")))
+  @ApiResponse(responseCode = "200", description = "File found and returned")
+  @Docs.DefaultUnsuccessfulReadResponses
+  @GetMapping(value = "{collectionKey}/descriptorGroup/suggestion/{key}/file", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
+  public ResponseEntity<Resource> exportDescriptorSuggestionFile(
+      @PathVariable("collectionKey") UUID collectionKey,
+      @PathVariable("key") Integer key) throws IOException {
+
+    // Get the suggestion details to include in the filename
+    DescriptorChangeSuggestion suggestion = descriptorChangeSuggestionService.getSuggestion(key);
+    if (suggestion == null) {
+      throw new WebApplicationException("Descriptor suggestion was not found", HttpStatus.NOT_FOUND);
+    }
+
+    // Verify collection key matches
+    Preconditions.checkArgument(
+        suggestion.getCollectionKey().equals(collectionKey),
+        "The collection key in the path does not match the suggestion's collection key");
+
+    // Get the file content
+    InputStream stream = descriptorChangeSuggestionService.getSuggestionFile(key);
+    if (stream == null) {
+      throw new WebApplicationException("Descriptor group suggestion file was not found",
+        HttpStatus.NOT_FOUND);
+    }
+    byte[] fileBytes = IOUtils.toByteArray(stream);
+
+    // Generate a descriptive filename
+    String extension = suggestion.getFormat() != null ?
+        suggestion.getFormat().name().toLowerCase() : "csv";
+    String filename = "descriptor_suggestion_" + suggestion.getTitle() + "." + extension;
+
+    // Create the ByteArrayResource from the file bytes
+    ByteArrayResource resource = new ByteArrayResource(fileBytes);
+
+    return ResponseEntity.ok()
+        .header("Content-Disposition", "attachment; filename=\"" + filename + "\"")
+        .contentLength(fileBytes.length)
+        .contentType(MediaType.APPLICATION_OCTET_STREAM)
+        .body(resource);
+  }
+
+  @Operation(
+      operationId = "getDescriptorSuggestion",
+      summary = "Get a descriptor change suggestion",
+      description = "Retrieves details of a single descriptor change suggestion.",
+      extensions =
+          @Extension(
+              name = "Order",
+              properties = @ExtensionProperty(name = "Order", value = "0302")))
+  @ApiResponse(responseCode = "200", description = "Suggestion found and returned")
+  @Docs.DefaultUnsuccessfulReadResponses
+  @GetMapping(value = "{collectionKey}/descriptorGroup/suggestion/{key}")
+  public DescriptorChangeSuggestion getDescriptorSuggestion(
+      @PathVariable("collectionKey") UUID collectionKey,
+      @PathVariable("key") long key) {
+    return descriptorChangeSuggestionService.getSuggestion(key);
+  }
+
+  @Operation(
+      operationId = "applyDescriptorSuggestion",
+      summary = "Apply a descriptor change suggestion",
+      description = "Applies a pending descriptor change suggestion.",
+      extensions =
+          @Extension(
+              name = "Order",
+              properties = @ExtensionProperty(name = "Order", value = "0303")))
+  @ApiResponse(responseCode = "200", description = "Suggestion applied successfully")
+  @Docs.DefaultUnsuccessfulWriteResponses
+  @PutMapping(value = "{collectionKey}/descriptorGroup/suggestion/{key}/apply", consumes = MediaType.ALL_VALUE)
+  public void applyDescriptorSuggestion(
+      @PathVariable("collectionKey") UUID collectionKey,
+      @PathVariable("key") long key) throws IOException {
+    descriptorChangeSuggestionService.applySuggestion(key);
+  }
+
+  @Operation(
+      operationId = "discardDescriptorSuggestion",
+      summary = "Discard a descriptor change suggestion",
+      description = "Discards a pending descriptor change suggestion.",
+      extensions =
+          @Extension(
+              name = "Order",
+              properties = @ExtensionProperty(name = "Order", value = "0304")))
+  @ApiResponse(responseCode = "200", description = "Suggestion discarded successfully")
+  @Docs.DefaultUnsuccessfulWriteResponses
+  @PutMapping(value = "{collectionKey}/descriptorGroup/suggestion/{key}/discard")
+  public void discardDescriptorSuggestion(
+      @PathVariable("collectionKey") UUID collectionKey,
+      @PathVariable("key") long key) {
+    descriptorChangeSuggestionService.discardSuggestion(key);
+  }
+
+  @Operation(
+      operationId = "updateDescriptorSuggestion",
+      summary = "Update a descriptor change suggestion",
+      description = "Updates an existing descriptor change suggestion.",
+      extensions =
+          @Extension(
+              name = "Order",
+              properties = @ExtensionProperty(name = "Order", value = "0306")))
+  @ApiResponse(responseCode = "200", description = "Suggestion updated successfully")
+  @Docs.DefaultUnsuccessfulWriteResponses
+  @PutMapping(value = "{collectionKey}/descriptorGroup/suggestion/{key}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+  public void updateDescriptorSuggestion(
+      @PathVariable("collectionKey") UUID collectionKey,
+      @PathVariable("key") long key,
+      @RequestPart(value = "file", required = false) MultipartFile file,
+      @RequestParam("type") Type type,
+      @RequestParam("title") String title,
+      @RequestParam("description") String description,
+      @RequestParam("format") ExportFormat format,
+      @RequestParam("comments") List<String> comments,
+      @RequestParam(value = "tags", required = false) Set<String> tags,
+      @RequestParam("proposerEmail") String proposerEmail) throws IOException {
+
+    DescriptorChangeSuggestionRequest request = new DescriptorChangeSuggestionRequest();
+    request.setCollectionKey(collectionKey);
+    request.setType(type);
+    request.setTitle(title);
+    request.setDescription(description);
+    request.setFormat(format);
+    request.setComments(comments);
+    request.setTags(tags);
+    request.setProposerEmail(proposerEmail);
+
+    descriptorChangeSuggestionService.updateSuggestion(
+      key,
+      request,
+      file != null ? file.getInputStream() : null,
+      file != null ? file.getOriginalFilename() : null);
+  }
+
+  @Operation(
+      operationId = "listDescriptorSuggestions",
+      summary = "List descriptor change suggestions",
+      description = "Lists all descriptor change suggestions for a collection.",
+      extensions =
+          @Extension(
+              name = "Order",
+              properties = @ExtensionProperty(name = "Order", value = "0306")))
+  @ApiResponse(responseCode = "200", description = "List of suggestions returned")
+  @Docs.DefaultUnsuccessfulReadResponses
+  @GetMapping(value = "{collectionKey}/descriptorGroup/suggestion")
+  public PagingResponse<DescriptorChangeSuggestion> listDescriptorSuggestions(
+      @PathVariable("collectionKey") UUID collectionKey,
+      @RequestParam(value = "status", required = false) Status status,
+      @RequestParam(value = "type", required = false) Type type,
+      @RequestParam(value = "proposerEmail", required = false) String proposerEmail,
+      @RequestParam(value = "country", required = false) Country country,
+      Pageable page) {
+    return descriptorChangeSuggestionService.list(page, status, type, proposerEmail, collectionKey, country);
+  }
+
+  @Operation(
+      operationId = "listAllDescriptorSuggestions",
+      summary = "List all descriptor change suggestions",
+      description = "Lists all descriptor change suggestions across all collections.",
+      extensions =
+          @Extension(
+              name = "Order",
+              properties = @ExtensionProperty(name = "Order", value = "0307")))
+  @ApiResponse(responseCode = "200", description = "List of suggestions returned")
+  @Docs.DefaultUnsuccessfulReadResponses
+  @GetMapping(value = "descriptorGroup/suggestion")
+  public PagingResponse<DescriptorChangeSuggestion> listAllDescriptorSuggestions(
+      @RequestParam(value = "status", required = false) Status status,
+      @RequestParam(value = "type", required = false) Type type,
+      @RequestParam(value = "proposerEmail", required = false) String proposerEmail,
+      @RequestParam(value = "country", required = false) Country country,
+      Pageable page) {
+    return descriptorChangeSuggestionService.list(page, status, type, proposerEmail, null, country);
+  }
+
 }

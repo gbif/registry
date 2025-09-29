@@ -273,6 +273,23 @@ public class UserManagementResource {
     // erase user from downloads
     occurrenceDownloadMapper.updateNotificationAddresses(oldUsername, newUsername, "{}");
 
+    // Clean up user rights before deletion to prevent permission inheritance
+    // by new users with the same username
+    List<UUID> editorRights = identityService.listEditorRights(oldUsername);
+    for (UUID key : editorRights) {
+      identityService.deleteEditorRight(oldUsername, key);
+    }
+    
+    List<String> namespaceRights = identityService.listNamespaceRights(oldUsername);
+    for (String namespace : namespaceRights) {
+      identityService.deleteNamespaceRight(oldUsername, namespace);
+    }
+    
+    List<Country> countryRights = identityService.listCountryRights(oldUsername);
+    for (Country country : countryRights) {
+      identityService.deleteCountryRight(oldUsername, country);
+    }
+
     GbifUser userErasedPersonalData = new GbifUser(user);
 
     // remove sensitive data, delete user and send an email

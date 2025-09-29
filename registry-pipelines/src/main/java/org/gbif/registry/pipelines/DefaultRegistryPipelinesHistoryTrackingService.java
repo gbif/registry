@@ -64,8 +64,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-
 import javax.annotation.Nullable;
 
 import org.apache.commons.lang3.StringUtils;
@@ -80,6 +78,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -107,6 +106,7 @@ public class DefaultRegistryPipelinesHistoryTrackingService
           PipelineStep.Status.COMPLETED, PipelineStep.Status.ABORTED, PipelineStep.Status.FAILED);
 
   private ObjectMapper objectMapper;
+
   /** The messagePublisher can be optional. */
   private final MessagePublisher publisher;
 
@@ -271,7 +271,7 @@ public class DefaultRegistryPipelinesHistoryTrackingService
   @VisibleForTesting
   Optional<PipelineStep> getLatestSuccessfulStep(PipelineProcess pipelineProcess, StepType step) {
     return pipelineProcess.getExecutions().stream()
-        .filter(ex-> !ex.getStepsToRun().isEmpty())
+        .filter(ex -> !ex.getStepsToRun().isEmpty())
         .sorted(Comparator.comparing(PipelineExecution::getCreated).reversed())
         .flatMap(ex -> ex.getSteps().stream())
         .filter(s -> step.equals(s.getType()))
@@ -391,7 +391,7 @@ public class DefaultRegistryPipelinesHistoryTrackingService
     Map<StepType, PipelineBasedMessage> stepsToSend = new EnumMap<>(StepType.class);
     for (StepType stepName : prioritizeSteps(steps, dataset)) {
       Optional<? extends PipelineBasedMessage> message =
-        createStepMessage(stepName, process, prefix, interpretTypes);
+          createStepMessage(stepName, process, prefix, interpretTypes);
       message.ifPresent(m -> stepsToSend.put(stepName, m));
     }
 
@@ -446,8 +446,8 @@ public class DefaultRegistryPipelinesHistoryTrackingService
     return responseBuilder.build();
   }
 
-  private Optional<? extends PipelineBasedMessage> createStepMessage(StepType stepName, PipelineProcess process, String prefix,
-      Set<String> interpretTypes){
+  private Optional<? extends PipelineBasedMessage> createStepMessage(
+      StepType stepName, PipelineProcess process, String prefix, Set<String> interpretTypes) {
     Optional<PipelineStep> latestStepOpt = getLatestSuccessfulStep(process, stepName);
 
     if (latestStepOpt.isEmpty()) {
@@ -458,9 +458,11 @@ public class DefaultRegistryPipelinesHistoryTrackingService
     String jsonMessage = latestStepOpt.get().getMessage();
     switch (stepName) {
       case INTERPRETED_TO_INDEX:
-      case HDFS_VIEW:
       case FRAGMENTER:
         return createInterpretedMessage(prefix, jsonMessage, stepName);
+      case HDFS_VIEW:
+      case EVENTS_HDFS_VIEW:
+        return createInterpretedMessage(prefix, jsonMessage, stepName, interpretTypes);
       case VERBATIM_TO_INTERPRETED:
         return createVerbatimMessage(prefix, jsonMessage, interpretTypes);
       case DWCA_TO_VERBATIM:
@@ -472,7 +474,6 @@ public class DefaultRegistryPipelinesHistoryTrackingService
       case EVENTS_VERBATIM_TO_INTERPRETED:
         return deserializeMessage(jsonMessage, PipelinesEventsMessage.class);
       case EVENTS_INTERPRETED_TO_INDEX:
-        return deserializeMessage(jsonMessage, PipelinesEventsInterpretedMessage.class);
       default:
         return Optional.empty();
     }
@@ -539,7 +540,7 @@ public class DefaultRegistryPipelinesHistoryTrackingService
       message.getInterpretTypes().add(RecordType.METADATA.name());
       message.getInterpretTypes().add(RecordType.BASIC.name());
       message.getInterpretTypes().add(RecordType.TEMPORAL.name());
-      message.getInterpretTypes().add(RecordType.TAXONOMY.name());
+      message.getInterpretTypes().add(RecordType.MULTI_TAXONOMY.name());
       message.getInterpretTypes().add(RecordType.LOCATION.name());
       message.getInterpretTypes().add(RecordType.GRSCICOLL.name());
       message.getInterpretTypes().add(RecordType.CLUSTERING.name());
@@ -549,7 +550,7 @@ public class DefaultRegistryPipelinesHistoryTrackingService
   }
 
   private Optional<PipelineBasedMessage> createInterpretedMessage(
-      String prefix, String jsonMessage, StepType stepType) {
+      String prefix, String jsonMessage, StepType stepType, Set<String> interpretTypes) {
     PipelinesInterpretedMessage message =
         deserializeMessage(jsonMessage, PipelinesInterpretedMessage.class).orElse(null);
     if (message == null) {
@@ -557,7 +558,17 @@ public class DefaultRegistryPipelinesHistoryTrackingService
     }
     Optional.ofNullable(prefix).ifPresent(message::setResetPrefix);
     message.setPipelineSteps(Set.of(stepType.name()));
+
+    if (interpretTypes != null && !interpretTypes.isEmpty()) {
+      message.setInterpretTypes(interpretTypes);
+    }
+
     return Optional.of(message);
+  }
+
+  private Optional<PipelineBasedMessage> createInterpretedMessage(
+      String prefix, String jsonMessage, StepType stepType) {
+    return createInterpretedMessage(prefix, jsonMessage, stepType, null);
   }
 
   @Override
@@ -572,11 +583,12 @@ public class DefaultRegistryPipelinesHistoryTrackingService
   }
 
   @Override
-  public PagingResponse<PipelineProcess> getRunningPipelineProcess(Pageable pageable) {
-    long count = mapper.getRunningPipelineProcessCount();
+  public PagingResponse<PipelineProcess> getRunningPipelineProcess(
+      @Nullable StepType stepType, @Nullable StepRunner stepRunner, Pageable pageable) {
+    long count = mapper.getRunningPipelineProcessCount(stepType, stepRunner);
     List<PipelineProcess> running = Collections.emptyList();
     if (count > 0) {
-      running = mapper.getRunningPipelineProcess(pageable);
+      running = mapper.getRunningPipelineProcess(stepType, stepRunner, pageable);
     }
 
     return new PagingResponse<>(pageable, count, running);
@@ -644,11 +656,14 @@ public class DefaultRegistryPipelinesHistoryTrackingService
     Objects.requireNonNull(pipelineStep, "PipelineStep can't be null");
     Preconditions.checkArgument(StringUtils.isNotEmpty(user), "user can't be null");
 
-    pipelineStep.setStarted(LocalDateTime.now());
-    pipelineStep.setCreatedBy(user);
+    pipelineStep.setModified(LocalDateTime.now());
+    pipelineStep.setModifiedBy(user);
 
-    LOG.info("Update pipelines step: {}, type: {}, state: {}", pipelineStep.getKey(), pipelineStep.getType(),
-      pipelineStep.getState());
+    LOG.info(
+        "Update pipelines step: {}, type: {}, state: {}",
+        pipelineStep.getKey(),
+        pipelineStep.getType(),
+        pipelineStep.getState());
 
     mapper.updatePipelineStep(pipelineStep);
     return pipelineStep.getKey();
@@ -749,7 +764,7 @@ public class DefaultRegistryPipelinesHistoryTrackingService
       // check if there is an open issue for this dataset
       List<IssueResult> existingIssues =
           githubApiClient.listIssues(
-                  Collections.singletonList(datasetKey.toString()), "open", 1, 1);
+              Collections.singletonList(datasetKey.toString()), "open", 1, 1);
 
       if (existingIssues.isEmpty()) {
         LOG.info(
@@ -786,23 +801,29 @@ public class DefaultRegistryPipelinesHistoryTrackingService
                 .build());
       }
     } catch (HttpClientErrorException | HttpServerErrorException e) {
-        LOG.error("Error occurred calling GitHub API: {}", e.getMessage(), e);
+      LOG.error("Error occurred calling GitHub API: {}", e.getMessage(), e);
     } catch (Exception e) {
       LOG.error("Error in notifyAbsentIdentifiers: {}", e.getMessage(), e);
     }
   }
 
   @Override
+  public void setSubmittedPipelineStepToQueued(long pipelineStepKey, String user) {
+    Preconditions.checkArgument(StringUtils.isNotEmpty(user), "user can't be null");
+    mapper.setSubmittedPipelineStepToQueued(pipelineStepKey, user);
+  }
+
+  @Override
   public void allowAbsentIndentifiers(UUID datasetKey, int attempt) {
-    allowAbsentIndentifiersCommon(datasetKey, attempt);
+    allowAbsentIdentifiersCommon(datasetKey, attempt);
   }
 
   @Override
   public void allowAbsentIndentifiers(UUID datasetKey) {
-    allowAbsentIndentifiersCommon(datasetKey, null);
+    allowAbsentIdentifiersCommon(datasetKey, null);
   }
 
-  public void allowAbsentIndentifiersCommon(UUID datasetKey, Integer attempt) {
+  public void allowAbsentIdentifiersCommon(UUID datasetKey, Integer attempt) {
     try {
       // GET History messages
       Integer latestAttempt =
@@ -817,7 +838,11 @@ public class DefaultRegistryPipelinesHistoryTrackingService
         Optional<PipelineStep> identifierStep =
             steps.stream().filter(x -> x.getType() == StepType.VERBATIM_TO_IDENTIFIER).findAny();
 
-        if (identifierStep.isPresent() && identifierStep.get().getState() == Status.FAILED) {
+        if (identifierStep.isPresent()
+            && FINISHED_STATE_SET.contains(identifierStep.get().getState())
+            && identifierStep.get().getMessage() != null
+            && !identifierStep.get().getMessage().isEmpty()) {
+
           // Update and mark identier as OK
           PipelineStep pipelineStep = identifierStep.get();
           pipelineStep.setState(Status.COMPLETED);
@@ -855,7 +880,8 @@ public class DefaultRegistryPipelinesHistoryTrackingService
               attempt);
         } else {
           LOG.warn(
-              "Execution ID - {} doesn't contain failed identifier step", pipelineExecution.getKey());
+              "Execution ID - {} doesn't contain failed identifier step",
+              pipelineExecution.getKey());
         }
       }
     } catch (IOException ex) {
@@ -908,7 +934,7 @@ public class DefaultRegistryPipelinesHistoryTrackingService
 
     Dataset dataset = datasetService.get(process.getDatasetKey());
     if (dataset != null) {
-        process.setDatasetTitle(dataset.getTitle());
+      process.setDatasetTitle(dataset.getTitle());
     }
   }
 }

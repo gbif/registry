@@ -13,13 +13,11 @@
  */
 package org.gbif.registry.service.collections.suggestions;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Strings;
-import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.*;
+import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.suggestions.Change;
 import org.gbif.api.model.collections.suggestions.ChangeSuggestion;
+import org.gbif.api.model.collections.suggestions.CollectionChangeSuggestion;
 import org.gbif.api.model.collections.suggestions.Status;
 import org.gbif.api.model.collections.suggestions.Type;
 import org.gbif.api.model.common.GbifUser;
@@ -33,8 +31,10 @@ import org.gbif.api.model.registry.Taggable;
 import org.gbif.api.service.collections.ChangeSuggestionService;
 import org.gbif.api.service.collections.ContactService;
 import org.gbif.api.service.collections.CrudService;
+import org.gbif.api.util.VocabularyUtils;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.UserRole;
+import org.gbif.api.vocabulary.collections.MasterSourceType;
 import org.gbif.registry.events.EventManager;
 import org.gbif.registry.events.collections.EventType;
 import org.gbif.registry.events.collections.SubEntityCollectionEvent;
@@ -48,13 +48,7 @@ import org.gbif.registry.persistence.mapper.collections.dto.ChangeDto;
 import org.gbif.registry.persistence.mapper.collections.dto.ChangeSuggestionDto;
 import org.gbif.registry.security.grscicoll.GrSciCollAuthorizationService;
 import org.gbif.registry.service.collections.merge.MergeService;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.security.access.annotation.Secured;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.gbif.registry.service.collections.utils.MasterSourceUtils;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -63,8 +57,22 @@ import java.math.BigDecimal;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.security.access.annotation.Secured;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Strings;
+
 import static com.google.common.base.Preconditions.checkArgument;
 import static org.gbif.registry.security.UserRoles.*;
+import static org.gbif.registry.service.collections.utils.MasterSourceUtils.COLLECTION_LOCKABLE_FIELDS;
+import static org.gbif.registry.service.collections.utils.MasterSourceUtils.IH_SYNC_USER;
 import static org.gbif.registry.service.collections.utils.MasterSourceUtils.hasExternalMasterSource;
 
 public abstract class BaseChangeSuggestionService<
@@ -249,7 +257,7 @@ public abstract class BaseChangeSuggestionService<
     T currentEntity = crudService.get(changeSuggestion.getEntityKey());
     dto.setChanges(extractChanges(changeSuggestion.getSuggestedEntity(), currentEntity));
     dto.setCountryScope(getCountry(currentEntity));
-
+    dto.setCountryIsoCode(getCountry(currentEntity) != null ? getCountry(currentEntity).getIso2LetterCode() : null);
     return dto;
   }
 
@@ -261,6 +269,15 @@ public abstract class BaseChangeSuggestionService<
     dto.setChanges(
         extractChanges(changeSuggestion.getSuggestedEntity(), createEmptyEntityInstance()));
     dto.setCountryScope(getCountry(changeSuggestion.getSuggestedEntity()));
+
+    Country country = getCountry(changeSuggestion.getSuggestedEntity());
+    if (country != null) {
+      dto.setCountryIsoCode(country.getIso2LetterCode());
+    }
+    if (changeSuggestion instanceof CollectionChangeSuggestion) {
+      dto.setCreateInstitution(((CollectionChangeSuggestion) changeSuggestion).getCreateInstitution());
+      dto.setIhIdentifier(((CollectionChangeSuggestion) changeSuggestion).getIhIdentifier());
+    }
 
     return dto;
   }
@@ -276,7 +293,12 @@ public abstract class BaseChangeSuggestionService<
     }
 
     ChangeSuggestionDto dto = createBaseChangeSuggestionDto(changeSuggestion);
-    dto.setCountryScope(getCountry(currentEntity));
+
+    Country country = getCountry(currentEntity);
+    dto.setCountryScope(country);
+    if (country != null) {
+      dto.setCountryIsoCode(country.getIso2LetterCode());
+    }
 
     return dto;
   }
@@ -289,7 +311,12 @@ public abstract class BaseChangeSuggestionService<
     dto.setMergeTargetKey(changeSuggestion.getMergeTargetKey());
 
     T currentEntity = crudService.get(changeSuggestion.getEntityKey());
-    dto.setCountryScope(getCountry(currentEntity));
+
+    Country country = getCountry(currentEntity);
+    dto.setCountryScope(country);
+    if (country != null) {
+      dto.setCountryIsoCode(country.getIso2LetterCode());
+    }
 
     return dto;
   }
@@ -300,13 +327,15 @@ public abstract class BaseChangeSuggestionService<
     ChangeSuggestionDto dto = changeSuggestionMapper.get(updatedChangeSuggestion.getKey());
 
     checkArgument(
-        updatedChangeSuggestion.getComments().size() > dto.getComments().size(),
+    updatedChangeSuggestion.getComments().size() > dto.getComments().size(),
         "A comment is required");
 
     if (dto.getType() == Type.CREATE || dto.getType() == Type.UPDATE) {
       // we get the current entity from the DB to update the suggested entity with the current state
       // and minimize the risk of having race conditions
       R changeSuggestion = dtoToChangeSuggestion(dto);
+
+      lockFields(changeSuggestion, updatedChangeSuggestion);
 
       Set<ChangeDto> newChanges =
           extractChanges(
@@ -319,7 +348,12 @@ public abstract class BaseChangeSuggestionService<
             .forEach(c -> c.setOverwritten(true));
         dto.getChanges().add(newChange);
       }
-
+      if (updatedChangeSuggestion.getSuggestedEntity() instanceof Collection && IH_SYNC_USER.equals(updatedChangeSuggestion.getProposedBy())) {
+        Collection collection = (Collection) updatedChangeSuggestion.getSuggestedEntity();
+        if (collection.getInstitutionKey() != null) {
+          dto.setCreateInstitution(false);
+        }
+      }
       dto.setSuggestedEntity(toJson(updatedChangeSuggestion.getSuggestedEntity()));
     }
 
@@ -468,13 +502,7 @@ public abstract class BaseChangeSuggestionService<
   }
 
   private void createContacts(R changeSuggestion, UUID createdEntity) {
-    if (changeSuggestion.getSuggestedEntity().getContactPersons() != null
-        && !changeSuggestion.getSuggestedEntity().getContactPersons().isEmpty()) {
-      changeSuggestion
-          .getSuggestedEntity()
-          .getContactPersons()
-          .forEach(c -> contactService.addContactPerson(createdEntity, c));
-    }
+    contactService.addSuggestionContacts(createdEntity, changeSuggestion);
   }
 
   @Override
@@ -483,15 +511,22 @@ public abstract class BaseChangeSuggestionService<
       @Nullable Type type,
       @Nullable String proposerEmail,
       @Nullable UUID entityKey,
+      @Nullable String ihIdentifier,
+      @Nullable String country,
       @Nullable Pageable pageable) {
     Pageable page = pageable == null ? new PagingRequest() : pageable;
 
+    // Use VocabularyUtils to handle flexible country code input
+    String countryCode = VocabularyUtils.lookup(country, Country.class)
+        .map(Country::getIso2LetterCode)
+        .orElse(country);
+
     List<ChangeSuggestionDto> dtos =
         changeSuggestionMapper.list(
-            status, type, collectionEntityType, proposerEmail, entityKey, page);
+            status, type, collectionEntityType, proposerEmail, entityKey, ihIdentifier, countryCode, page);
 
     long count =
-        changeSuggestionMapper.count(status, type, collectionEntityType, proposerEmail, entityKey);
+        changeSuggestionMapper.count(status, type, collectionEntityType, proposerEmail, entityKey, countryCode);
 
     List<R> changeSuggestions =
         dtos.stream().map(this::dtoToChangeSuggestion).collect(Collectors.toList());
@@ -511,29 +546,50 @@ public abstract class BaseChangeSuggestionService<
 
       if (field.getName().equals(CONTACTS_FIELD_NAME)) {
         Map<Integer, Contact> currentContactsMap =
-            currentEntity.getContactPersons().stream()
-                .collect(Collectors.toMap(Contact::getKey, c -> c));
+          currentEntity.getContactPersons().stream()
+            .filter(c -> c.getKey() != null)
+            .collect(Collectors.toMap(Contact::getKey, c -> c));
+
+        List<Contact> currentNullKeyContacts = currentEntity.getContactPersons().stream()
+          .filter(c -> c.getKey() == null)
+          .collect(Collectors.toList());
 
         suggestedEntity
-            .getContactPersons()
-            .forEach(
-                sugg -> {
-                  Contact current = currentContactsMap.get(sugg.getKey());
-                  if (current == null || !current.lenientEquals(sugg)) {
-                    // contact has changed
-                    changes.add(createChangeDto(field, sugg, current, Contact.class));
-                  }
-                  // remove from map
-                  if (current != null) {
-                    currentContactsMap.remove(current.getKey());
-                  }
-                });
+          .getContactPersons()
+          .forEach(sugg -> {
+            // If the key is non-null, proceed as usual
+            if (sugg.getKey() != null) {
+              Contact current = currentContactsMap.get(sugg.getKey());
+              if (current == null || !current.lenientEquals(sugg)) {
+                changes.add(createChangeDto(field, sugg, current, Contact.class));
+              }
+              if (current != null) {
+                currentContactsMap.remove(current.getKey());  // Remove from map if processed
+              }
+            } else {
+              // Handle null-key contacts separately by comparing with the list of null-key current contacts
+              Optional<Contact> currentWithNullKey = currentNullKeyContacts.stream()
+                .filter(current -> current.lenientEquals(sugg))
+                .findFirst();
+
+              if (!currentWithNullKey.isPresent()) {
+                changes.add(createChangeDto(field, sugg, null, Contact.class));
+              } else {
+                // Remove from null key list if matched
+                currentNullKeyContacts.remove(currentWithNullKey.get());
+              }
+            }
+          });
 
         // contacts deleted
         if (!currentContactsMap.isEmpty()) {
           currentContactsMap
-              .values()
-              .forEach(c -> changes.add(createChangeDto(field, null, c, Contact.class)));
+            .values()
+            .forEach(c -> changes.add(createChangeDto(field, null, c, Contact.class)));
+        }
+        //contacts deleted (with null keys)
+        if (!currentNullKeyContacts.isEmpty()) {
+          currentNullKeyContacts.forEach(c -> changes.add(createChangeDto(field, null, c, Contact.class)));
         }
       } else {
         try {
@@ -621,6 +677,22 @@ public abstract class BaseChangeSuggestionService<
     dto.setProposerEmail(changeSuggestion.getProposerEmail());
     dto.setProposedBy(getUsername());
     dto.setModifiedBy(getUsername());
+
+    // Set the country for the change suggestion
+    if (changeSuggestion.getEntityKey() != null) {
+      // For updates, get country from existing entity
+      T entity = crudService.get(changeSuggestion.getEntityKey());
+      Country country = getCountry(entity);
+      if (country != null) {
+        dto.setCountryIsoCode(country.getIso2LetterCode());
+      }
+    } else if (changeSuggestion.getSuggestedEntity() != null) {
+      // For creates, get country from suggested entity
+      Country country = getCountry(changeSuggestion.getSuggestedEntity());
+      if (country != null) {
+        dto.setCountryIsoCode(country.getIso2LetterCode());
+      }
+    }
 
     return dto;
   }
@@ -801,7 +873,7 @@ public abstract class BaseChangeSuggestionService<
     }
   }
 
-  private <S> S readJson(String content, Class<S> clazz) {
+  protected <S> S readJson(String content, Class<S> clazz) {
     try {
       return objectMapper.readValue(content, clazz);
     } catch (JsonProcessingException e) {
@@ -833,9 +905,29 @@ public abstract class BaseChangeSuggestionService<
         && address.getCountry() == null;
   }
 
+  private void lockFields(R entityOld, R entityNew) {
+    List<MasterSourceUtils.LockableField> fieldsToLock;
+    if (entityOld instanceof CollectionChangeSuggestion
+      && IH_SYNC_USER.equals(entityOld.getProposedBy())) {
+      fieldsToLock = COLLECTION_LOCKABLE_FIELDS.get(MasterSourceType.IH);
+      fieldsToLock.forEach(
+        f -> {
+          try {
+            f.getSetter().invoke(entityNew.getSuggestedEntity(), f.getGetter().invoke(entityOld.getSuggestedEntity()));
+          } catch (Exception e) {
+            throw new IllegalStateException("Could not lock field", e);
+          }
+        });
+    }
+  }
+
   protected abstract R newEmptyChangeSuggestion();
 
   protected abstract ChangeSuggestionDto createConvertToCollectionSuggestionDto(R changeSuggestion);
 
   protected abstract UUID applyConversionToCollection(ChangeSuggestionDto dto);
+
+  protected static String decodeIRN(String irn) {
+    return irn.replace("gbif:ih:irn:", "");
+  }
 }

@@ -31,10 +31,14 @@ import java.io.InputStream;
 import java.util.List;
 import java.util.UUID;
 
+import javax.validation.constraints.NotNull;
+
 import org.apache.commons.io.IOUtils;
 import org.springframework.cloud.openfeign.SpringQueryMap;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -190,4 +194,13 @@ public interface DatasetClient extends NetworkEntityClient<Dataset>, DatasetServ
       @PathVariable("prefix") String prefix,
       @PathVariable("suffix") String suffix,
       @SpringQueryMap Pageable pageable);
+
+
+  @PostMapping(value = "{datasetKey}/dwca", consumes = MediaType.APPLICATION_JSON_VALUE)
+  @Override
+  void createDwcaData(@NotNull @PathVariable("datasetKey") UUID datasetKey, @RequestBody Dataset.DwcA dwcA);
+
+  @PutMapping(value = "{datasetKey}/dwca", consumes = MediaType.APPLICATION_JSON_VALUE)
+  @Override
+  void updateDwcaData(@NotNull @PathVariable("datasetKey") UUID datasetKey, @RequestBody  Dataset.DwcA dwcA);
 }

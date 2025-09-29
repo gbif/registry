@@ -15,7 +15,6 @@ package org.gbif.registry.ws.resources;
 
 import org.gbif.api.model.occurrence.DownloadType;
 import org.gbif.api.service.common.IdentityAccessService;
-import org.gbif.registry.doi.DoiIssuingService;
 import org.gbif.registry.doi.DownloadDoiDataCiteHandlingService;
 import org.gbif.registry.persistence.mapper.DatasetOccurrenceDownloadMapper;
 import org.gbif.registry.persistence.mapper.OccurrenceDownloadMapper;
@@ -36,13 +35,11 @@ public class OccurrenceDownloadResource extends BaseDownloadResource {
   public OccurrenceDownloadResource(
       OccurrenceDownloadMapper occurrenceDownloadMapper,
       DatasetOccurrenceDownloadMapper datasetOccurrenceDownloadMapper,
-      DoiIssuingService doiIssuingService,
       @Lazy DownloadDoiDataCiteHandlingService doiDataCiteHandlingService,
       @Qualifier("baseIdentityAccessService") IdentityAccessService identityService) {
     super(
         occurrenceDownloadMapper,
         datasetOccurrenceDownloadMapper,
-        doiIssuingService,
         doiDataCiteHandlingService,
         identityService,
         DownloadType.OCCURRENCE);

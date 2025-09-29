@@ -1,37 +1,59 @@
+/*
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.gbif.registry.service.collections.descriptors;
 
-import static org.gbif.api.vocabulary.Kingdom.INCERTAE_SEDIS;
-import static org.gbif.api.vocabulary.OccurrenceIssue.*;
+import org.gbif.api.model.collections.descriptors.DescriptorValidationResult;
+import org.gbif.api.v2.RankedName;
+import org.gbif.registry.persistence.mapper.collections.dto.DescriptorDto;
+import org.gbif.api.vocabulary.Country;
+import org.gbif.api.vocabulary.DescriptorIssue;
+import org.gbif.api.vocabulary.OccurrenceIssue;
+import org.gbif.common.parsers.CountryParser;
+import org.gbif.common.parsers.NumberParser;
+import org.gbif.common.parsers.core.OccurrenceParseResult;
+import org.gbif.common.parsers.core.ParseResult;
+import org.gbif.common.parsers.date.MultiinputTemporalParser;
+import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.kvs.species.NameUsageMatchRequest;
+import org.gbif.registry.service.collections.utils.Vocabularies;
+import org.gbif.rest.client.species.NameUsageMatchResponse;
+import org.gbif.rest.client.species.NameUsageMatchingService;
+import org.gbif.vocabulary.client.ConceptClient;
+import org.gbif.vocabulary.model.search.LookupResult;
 
-import com.google.common.base.Strings;
-import com.google.common.collect.Range;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.temporal.TemporalAccessor;
 import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import com.google.common.base.Strings;
+import com.google.common.collect.Range;
+
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.Singular;
-import org.gbif.api.model.checklistbank.NameUsage;
-import org.gbif.api.model.checklistbank.NameUsageMatch;
-import org.gbif.api.v2.NameUsageMatch2;
-import org.gbif.api.v2.RankedName;
-import org.gbif.api.vocabulary.Country;
-import org.gbif.api.vocabulary.OccurrenceIssue;
-import org.gbif.api.vocabulary.Rank;
-import org.gbif.api.vocabulary.TypeStatus;
-import org.gbif.checklistbank.ws.client.NubResourceClient;
-import org.gbif.common.parsers.CountryParser;
-import org.gbif.common.parsers.NumberParser;
-import org.gbif.common.parsers.TypeStatusParser;
-import org.gbif.common.parsers.core.OccurrenceParseResult;
-import org.gbif.common.parsers.core.ParseResult;
-import org.gbif.common.parsers.date.MultiinputTemporalParser;
-import org.gbif.dwc.terms.DwcTerm;
+
+import static org.gbif.api.vocabulary.Kingdom.INCERTAE_SEDIS;
+import static org.gbif.api.vocabulary.OccurrenceIssue.*;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class Interpreter {
@@ -41,15 +63,16 @@ public class Interpreter {
   private static final Pattern INT_POSITIVE_PATTERN = Pattern.compile("(^\\d{1,10}$)");
   private static final MultiinputTemporalParser temporalParser = MultiinputTemporalParser.create();
   private static final CountryParser countryParser = CountryParser.getInstance();
-  private static final TypeStatusParser typeStatusParser = TypeStatusParser.getInstance();
+  private static final Set<String> SUSPECTED_TYPE_STATUS_VALUES =
+      Set.of("?", "possible", "possibly", "potential", "maybe", "perhaps");
 
   public static InterpretedResult<List<String>> interpretStringList(
-      String[] values, Map<String, Integer> headersByName, DwcTerm term) {
-    if (values.length == 0) {
+      Map<String, String> valuesMap, DwcTerm term) {
+    if (valuesMap.isEmpty()) {
       return InterpretedResult.empty();
     }
 
-    List<String> verbatimValue = extractListValue(values, headersByName, term);
+    List<String> verbatimValue = extractListValue(valuesMap, term);
     if (verbatimValue == null || verbatimValue.isEmpty()) {
       return InterpretedResult.empty();
     }
@@ -58,17 +81,17 @@ public class Interpreter {
   }
 
   public static InterpretedResult<String> interpretString(
-      String[] values, Map<String, Integer> headersByName, DwcTerm term) {
-    return interpretString(values, headersByName, term.prefixedName());
+      Map<String, String> valuesMap, DwcTerm term) {
+    return interpretString(valuesMap, term.prefixedName());
   }
 
   public static InterpretedResult<String> interpretString(
-      String[] values, Map<String, Integer> headersByName, String fieldName) {
-    if (values.length == 0) {
+      Map<String, String> valuesMap, String fieldName) {
+    if (valuesMap.isEmpty()) {
       return InterpretedResult.empty();
     }
 
-    String verbatimValue = extractValue(values, headersByName, fieldName);
+    String verbatimValue = extractValue(valuesMap, fieldName);
     if (Strings.isNullOrEmpty(verbatimValue)) {
       return InterpretedResult.empty();
     }
@@ -76,42 +99,111 @@ public class Interpreter {
     return InterpretedResult.<String>builder().result(verbatimValue).build();
   }
 
-  public static InterpretedResult<List<TypeStatus>> interpretTypeStatus(
-      String[] values, Map<String, Integer> headersByName) {
-    if (values.length == 0) {
+  public static InterpretedResult<List<String>> interpretTypeStatus(
+      Map<String, String> valuesMap, ConceptClient conceptClient) {
+    if (valuesMap.isEmpty()) {
       return InterpretedResult.empty();
     }
 
-    List<String> verbatimValue = extractListValue(values, headersByName, DwcTerm.typeStatus);
-    if (verbatimValue == null || verbatimValue.isEmpty()) {
+    List<String> verbatimValues = extractListValue(valuesMap, DwcTerm.typeStatus);
+    if (verbatimValues == null || verbatimValues.isEmpty()) {
       return InterpretedResult.empty();
     }
 
-    List<TypeStatus> results = new ArrayList<>();
     Set<String> issues = new HashSet<>();
-    verbatimValue.forEach(
+    List<String> results = new ArrayList<>();
+    verbatimValues.forEach(
         v -> {
-          ParseResult<TypeStatus> parseResult = typeStatusParser.parse(v);
-          if (parseResult.isSuccessful()) {
-            results.add(parseResult.getPayload());
+          List<LookupResult> lookupResults =
+              Vocabularies.lookupLatestRelease(Vocabularies.TYPE_STATUS, v, conceptClient);
+
+          if (lookupResults != null && lookupResults.size() == 1) {
+            results.add(lookupResults.get(0).getConceptName());
+          } else if (lookupResults != null
+              && lookupResults.isEmpty()
+              && SUSPECTED_TYPE_STATUS_VALUES.stream()
+                  .anyMatch(sts -> v.toLowerCase().contains(sts))) {
+            issues.add(OccurrenceIssue.SUSPECTED_TYPE.getId());
           } else {
-            issues.add(TYPE_STATUS_INVALID.getId());
+            issues.add(OccurrenceIssue.TYPE_STATUS_INVALID.getId());
           }
         });
 
-    return InterpretedResult.<List<TypeStatus>>builder()
+    return InterpretedResult.<List<String>>builder()
         .result(results)
         .issues(new ArrayList<>(issues))
         .build();
   }
 
-  public static InterpretedResult<Date> interpretDateIdentified(
-      String[] values, Map<String, Integer> headersByName) {
-    if (values.length == 0) {
+  /**
+   * Interprets biome type field with graceful vocabulary validation.
+   * Invalid values are left blank rather than causing the entire operation to fail.
+   */
+  public static InterpretedResult<String> interpretBiomeType(
+      ConceptClient conceptClient, Map<String, String> valuesMap) {
+
+    String verbatimValue = extractValue(valuesMap, "ltc:biomeType");
+    if (verbatimValue == null || verbatimValue.trim().isEmpty()) {
+      return InterpretedResult.<String>builder().build();
+    }
+
+    // Use graceful validation - invalid values are simply ignored
+    DescriptorDto tempDescriptor = new DescriptorDto();
+    tempDescriptor.setBiomeType(verbatimValue);
+    DescriptorValidationResult validationResult =
+        Vocabularies.validateDescriptorVocabsValues(conceptClient, tempDescriptor);
+
+    Set<String> issues = new HashSet<>();
+    if (validationResult.hasIssues()) {
+      validationResult.getIssues().forEach(issue ->
+        issues.add(DescriptorIssue.BIOME_TYPE_VALIDATION_ISSUE.getId() + ": " + issue));
+    }
+
+    return InterpretedResult.<String>builder()
+        .result(validationResult.getValidBiomeType())
+        .issues(new ArrayList<>(issues))
+        .build();
+  }
+
+  /**
+   * Interprets object classification field with graceful vocabulary validation.
+   * Invalid values are left blank rather than causing the entire operation to fail.
+   */
+  public static InterpretedResult<String> interpretObjectClassification(
+      Map<String, String> valuesMap, ConceptClient conceptClient) {
+    if (valuesMap.isEmpty()) {
       return InterpretedResult.empty();
     }
 
-    String verbatimDateIdentified = extractValue(values, headersByName, DwcTerm.dateIdentified);
+    String verbatimValue = extractValue(valuesMap, "ltc:objectClassificationName");
+    if (Strings.isNullOrEmpty(verbatimValue)) {
+      return InterpretedResult.empty();
+    }
+
+    // Use graceful validation - invalid values are simply ignored
+    DescriptorDto tempDescriptor = new DescriptorDto();
+    tempDescriptor.setObjectClassificationName(verbatimValue);
+    DescriptorValidationResult validationResult =
+        Vocabularies.validateDescriptorVocabsValues(conceptClient, tempDescriptor);
+
+    Set<String> issues = new HashSet<>();
+    if (validationResult.hasIssues()) {
+      validationResult.getIssues().forEach(issue ->
+          issues.add(DescriptorIssue.OBJECT_CLASSIFICATION_VALIDATION_ISSUE.getId()+": " + issue));
+    }
+
+    return InterpretedResult.<String>builder()
+        .result(validationResult.getValidObjectClassification()) // Will be null if invalid
+        .issues(new ArrayList<>(issues))
+        .build();
+  }
+
+  public static InterpretedResult<Date> interpretDateIdentified(Map<String, String> valuesMap) {
+    if (valuesMap.isEmpty()) {
+      return InterpretedResult.empty();
+    }
+
+    String verbatimDateIdentified = extractValue(valuesMap, DwcTerm.dateIdentified);
     if (Strings.isNullOrEmpty(verbatimDateIdentified)) {
       return InterpretedResult.empty();
     }
@@ -132,20 +224,27 @@ public class Interpreter {
                     .map(OccurrenceIssue::getId)
                     .collect(Collectors.toList()));
 
-    if (parsed.isSuccessful()) {
-      resultBuilder.result(new Date(Instant.from(parsed.getPayload()).toEpochMilli()));
+    if (parsed.isSuccessful() && parsed.getPayload() != null) {
+      ZonedDateTime zdt;
+      if (parsed.getPayload() instanceof LocalDateTime) {
+        zdt = ((LocalDateTime) parsed.getPayload()).atZone(ZoneId.systemDefault());
+      } else if (parsed.getPayload() instanceof LocalDate) {
+        zdt = ((LocalDate) parsed.getPayload()).atStartOfDay(ZoneId.systemDefault());
+      } else {
+        zdt = Instant.from(parsed.getPayload()).atZone(ZoneId.systemDefault());
+      }
+      resultBuilder.result(new Date(zdt.toInstant().toEpochMilli()));
     }
 
     return resultBuilder.build();
   }
 
-  public static InterpretedResult<Integer> interpretIndividualCount(
-      String[] values, Map<String, Integer> headersByName) {
-    if (values.length == 0) {
+  public static InterpretedResult<Integer> interpretIndividualCount(Map<String, String> valuesMap) {
+    if (valuesMap.isEmpty()) {
       return InterpretedResult.empty();
     }
 
-    String verbatimIndividualCount = extractValue(values, headersByName, DwcTerm.individualCount);
+    String verbatimIndividualCount = extractValue(valuesMap, DwcTerm.individualCount);
     if (Strings.isNullOrEmpty(verbatimIndividualCount)) {
       return InterpretedResult.empty();
     }
@@ -162,14 +261,13 @@ public class Interpreter {
         .build();
   }
 
-  public static InterpretedResult<Country> interpretCountry(
-      String[] values, Map<String, Integer> headersByName) {
-    if (values.length == 0) {
+  public static InterpretedResult<Country> interpretCountry(Map<String, String> valuesMap) {
+    if (valuesMap.isEmpty()) {
       return InterpretedResult.empty();
     }
 
-    String verbatimCountry = extractValue(values, headersByName, DwcTerm.country);
-    String verbatimCountryCode = extractValue(values, headersByName, DwcTerm.countryCode);
+    String verbatimCountry = extractValue(valuesMap, DwcTerm.country);
+    String verbatimCountryCode = extractValue(valuesMap, DwcTerm.countryCode);
 
     if (Strings.isNullOrEmpty(verbatimCountry) && Strings.isNullOrEmpty(verbatimCountryCode)) {
       return InterpretedResult.empty();
@@ -214,51 +312,65 @@ public class Interpreter {
   }
 
   public static InterpretedResult<TaxonData> interpretTaxonomy(
-      String[] values, Map<String, Integer> headersByName, NubResourceClient nubResourceClient) {
-    if (values.length == 0) {
+      Map<String, String> valuesMap, NameUsageMatchingService nameUsageMatchingService) {
+    if (valuesMap.isEmpty()) {
       return InterpretedResult.empty();
     }
 
-    String kingdom = extractValue(values, headersByName, DwcTerm.kingdom);
-    String phylum = extractValue(values, headersByName, DwcTerm.phylum);
-    String clazz = extractValue(values, headersByName, DwcTerm.class_);
-    String order = extractValue(values, headersByName, DwcTerm.order);
-    String family = extractValue(values, headersByName, DwcTerm.family);
-    String genus = extractValue(values, headersByName, DwcTerm.genus);
-    String scientificName = extractValue(values, headersByName, DwcTerm.scientificName);
-    String genericName = extractValue(values, headersByName, DwcTerm.genericName);
-    String specificEpithet = extractValue(values, headersByName, DwcTerm.specificEpithet);
-    String infraspecificEpithet = extractValue(values, headersByName, DwcTerm.infraspecificEpithet);
-    String scientificNameAuthorship =
-        extractValue(values, headersByName, DwcTerm.scientificNameAuthorship);
-    String taxonRank = extractValue(values, headersByName, DwcTerm.taxonRank);
-    String taxonID = extractValue(values, headersByName, DwcTerm.taxonID);
+    String kingdom = extractValue(valuesMap, DwcTerm.kingdom);
+    String phylum = extractValue(valuesMap, DwcTerm.phylum);
+    String clazz = extractValue(valuesMap, DwcTerm.class_);
+    String order = extractValue(valuesMap, DwcTerm.order);
+    String family = extractValue(valuesMap, DwcTerm.family);
+    String genus = extractValue(valuesMap, DwcTerm.genus);
+    String scientificName = extractValue(valuesMap, DwcTerm.scientificName);
+    String genericName = extractValue(valuesMap, DwcTerm.genericName);
+    String specificEpithet = extractValue(valuesMap, DwcTerm.specificEpithet);
+    String infraspecificEpithet = extractValue(valuesMap, DwcTerm.infraspecificEpithet);
+    String scientificNameAuthorship = extractValue(valuesMap, DwcTerm.scientificNameAuthorship);
+    String taxonRank = extractValue(valuesMap, DwcTerm.taxonRank);
+    String taxonID = extractValue(valuesMap, DwcTerm.taxonID);
 
-    NameUsage nameUsageParam = new NameUsage();
-    nameUsageParam.setKingdom(kingdom);
-    nameUsageParam.setPhylum(phylum);
-    nameUsageParam.setClazz(clazz);
-    nameUsageParam.setOrder(order);
-    nameUsageParam.setFamily(family);
-    nameUsageParam.setGenus(genus);
-    nameUsageParam.setTaxonID(taxonID);
-
-    // TODO: also do backbone match by ID??
-    NameUsageMatch2 nameUsageMatch =
-        nubResourceClient.match2(
+    if (Stream.of(
+            kingdom,
+            phylum,
+            clazz,
+            order,
+            family,
+            genus,
             scientificName,
-            scientificNameAuthorship,
-            taxonRank,
             genericName,
             specificEpithet,
             infraspecificEpithet,
-            nameUsageParam,
-            false,
-            false);
+            scientificNameAuthorship,
+            taxonRank,
+            taxonID)
+        .allMatch(Strings::isNullOrEmpty)) {
+      return InterpretedResult.empty();
+    }
 
-    if (nameUsageMatch == null
-        || isEmptyResponse(nameUsageMatch)
-        || checkFuzzy(nameUsageMatch, nameUsageParam)) {
+    NameUsageMatchRequest nameUsageMatchRequest = NameUsageMatchRequest.builder()
+      .withScientificName(scientificName)
+      .withScientificNameAuthorship(scientificNameAuthorship)
+      .withTaxonRank(taxonRank)
+      .withGenericName(genericName)
+      .withSpecificEpithet(specificEpithet)
+      .withInfraspecificEpithet(infraspecificEpithet)
+      .withKingdom(kingdom)
+      .withPhylum(phylum)
+      .withClazz(clazz)
+      .withOrder(order)
+      .withFamily(family)
+      .withGenus(genus)
+      .withTaxonID(taxonID)
+      .withStrict(false)
+      .withVerbose(false).build();
+
+    NameUsageMatchResponse nameUsageMatchResponse = nameUsageMatchingService.match(nameUsageMatchRequest);
+
+    if (nameUsageMatchResponse == null
+        || isEmptyResponse(nameUsageMatchResponse)
+        || checkFuzzy(nameUsageMatchRequest, nameUsageMatchResponse)) {
 
       return InterpretedResult.<TaxonData>builder()
           .result(
@@ -269,35 +381,35 @@ public class Interpreter {
           .issues(Collections.singletonList(TAXON_MATCH_NONE.getId()))
           .build();
     } else {
-      NameUsageMatch.MatchType matchType = nameUsageMatch.getDiagnostics().getMatchType();
+      NameUsageMatchResponse.MatchType matchType = nameUsageMatchResponse.getDiagnostics().getMatchType();
 
       List<String> issues = new ArrayList<>();
-      if (NameUsageMatch.MatchType.NONE == matchType) {
+      if (NameUsageMatchResponse.MatchType.NONE == matchType) {
         issues.add(TAXON_MATCH_NONE.getId());
-      } else if (NameUsageMatch.MatchType.FUZZY == matchType) {
+      } else if (NameUsageMatchResponse.MatchType.VARIANT == matchType) {
         issues.add(TAXON_MATCH_FUZZY.getId());
-      } else if (NameUsageMatch.MatchType.HIGHERRANK == matchType) {
+      } else if (NameUsageMatchResponse.MatchType.HIGHERRANK == matchType) {
         issues.add(TAXON_MATCH_HIGHERRANK.getId());
       }
 
       TaxonData.TaxonDataBuilder taxonDataBuilder = TaxonData.builder();
-      Set<Integer> taxonKeys = new HashSet<>();
+      Set<String> taxonKeys = new HashSet<>();
       taxonDataBuilder.taxonKeys(taxonKeys);
-      if (nameUsageMatch.getUsage() != null) {
+      if (nameUsageMatchResponse.getUsage() != null) {
         taxonDataBuilder
-            .usageName(nameUsageMatch.getUsage().getName())
-            .usageKey(nameUsageMatch.getUsage().getKey())
-            .usageRank(nameUsageMatch.getUsage().getRank());
-        taxonKeys.add(nameUsageMatch.getUsage().getKey());
+            .usageName(nameUsageMatchResponse.getUsage().getName())
+            .usageKey(String.valueOf(nameUsageMatchResponse.getUsage().getKey()))
+            .usageRank(nameUsageMatchResponse.getUsage().getRank());
+        taxonKeys.add(String.valueOf(nameUsageMatchResponse.getUsage().getKey()));
       }
 
-      if (nameUsageMatch.getClassification() != null) {
-        nameUsageMatch
+      if (nameUsageMatchResponse.getClassification() != null) {
+        nameUsageMatchResponse
             .getClassification()
             .forEach(
-                c -> {
-                  taxonDataBuilder.rankedName(c);
-                  taxonKeys.add(c.getKey());
+                rankedName -> {
+                  taxonDataBuilder.rankedName(new RankedName(rankedName.getKey(), rankedName.getName(), rankedName.getRank(),  null));
+                  taxonKeys.add(String.valueOf(rankedName.getKey()));
                 });
       }
 
@@ -308,29 +420,20 @@ public class Interpreter {
     }
   }
 
-  private static String extractValue(
-      String[] values, Map<String, Integer> headersByName, DwcTerm term) {
-    return extractValue(values, headersByName, term.prefixedName());
+  private static String extractValue(Map<String, String> valuesMap, DwcTerm term) {
+    return extractValue(valuesMap, term.prefixedName());
   }
 
-  private static String extractValue(
-      String[] values, Map<String, Integer> headersByName, String fieldName) {
-    return Optional.ofNullable(headersByName.get(fieldName.toLowerCase()))
-        .map(i -> values[i])
-        .filter(v -> !v.isEmpty())
-        .orElse(null);
+  private static String extractValue(Map<String, String> valuesMap, String fieldName) {
+    return Optional.ofNullable(valuesMap.get(fieldName)).filter(v -> !v.isEmpty()).orElse(null);
   }
 
-  private static Optional<String> extractOptValue(
-      String[] values, Map<String, Integer> headersByName, DwcTerm term) {
-    return Optional.ofNullable(headersByName.get(term.prefixedName().toLowerCase()))
-        .map(i -> values[i])
-        .filter(v -> !v.isEmpty());
+  private static Optional<String> extractOptValue(Map<String, String> valuesMap, DwcTerm term) {
+    return Optional.ofNullable(valuesMap.get(term.prefixedName())).filter(v -> !v.isEmpty());
   }
 
-  private static List<String> extractListValue(
-      String[] values, Map<String, Integer> headersByName, DwcTerm term) {
-    return extractOptValue(values, headersByName, term)
+  private static List<String> extractListValue(Map<String, String> valuesMap, DwcTerm term) {
+    return extractOptValue(valuesMap, term)
         .map(
             x ->
                 Arrays.stream(x.split(DEFAULT_SEPARATOR))
@@ -340,31 +443,31 @@ public class Interpreter {
         .orElse(Collections.emptyList());
   }
 
-  private static boolean isEmptyResponse(NameUsageMatch2 response) {
+   private static boolean isEmptyResponse(NameUsageMatchResponse response) {
     return response == null || response.getUsage() == null || response.getDiagnostics() == null;
   }
 
-  private static boolean checkFuzzy(NameUsageMatch2 usageMatch, NameUsage nameUsageParam) {
-    boolean isFuzzy = NameUsageMatch.MatchType.FUZZY == usageMatch.getDiagnostics().getMatchType();
+  private static boolean checkFuzzy(NameUsageMatchRequest nameUsageRequest, NameUsageMatchResponse usageMatchResponse) {
+    boolean isFuzzy = NameUsageMatchResponse.MatchType.VARIANT == usageMatchResponse.getDiagnostics().getMatchType();
     boolean isEmptyTaxa =
-        Strings.isNullOrEmpty(nameUsageParam.getKingdom())
-            && Strings.isNullOrEmpty(nameUsageParam.getPhylum())
-            && Strings.isNullOrEmpty(nameUsageParam.getClazz())
-            && Strings.isNullOrEmpty(nameUsageParam.getOrder())
-            && Strings.isNullOrEmpty(nameUsageParam.getFamily());
+        Strings.isNullOrEmpty(nameUsageRequest.getKingdom())
+            && Strings.isNullOrEmpty(nameUsageRequest.getPhylum())
+            && Strings.isNullOrEmpty(nameUsageRequest.getClazz())
+            && Strings.isNullOrEmpty(nameUsageRequest.getOrder())
+            && Strings.isNullOrEmpty(nameUsageRequest.getFamily());
     return isFuzzy && isEmptyTaxa;
   }
 
   @Data
   @Builder
   static class TaxonData {
-    private Integer usageKey;
+    private String usageKey;
     private String usageName;
-    private Rank usageRank;
+    private String usageRank;
 
     @Singular("rankedName")
     private List<RankedName> taxonClassification;
 
-    private Set<Integer> taxonKeys;
+    private Set<String> taxonKeys;
   }
 }

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+  <changeSet id="155" author="ahkz">
+    <sql splitStatements="false" stripComments="false">
+      <![CDATA[
+        -- Add country_iso_code column to change_suggestion table
+        ALTER TABLE change_suggestion ADD COLUMN country_iso_code char(2);
+
+        -- Create index for faster searching by country
+        CREATE INDEX change_suggestion_country_iso_code_idx ON change_suggestion(country_iso_code);
+      ]]>
+    </sql>
+  </changeSet>
+</databaseChangeLog>

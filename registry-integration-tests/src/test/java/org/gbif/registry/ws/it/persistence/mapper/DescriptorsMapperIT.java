@@ -13,15 +13,8 @@
  */
 package org.gbif.registry.ws.it.persistence.mapper;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.UUID;
 import org.gbif.api.model.collections.Collection;
-import org.gbif.api.model.collections.descriptors.DescriptorSet;
+import org.gbif.api.model.collections.descriptors.DescriptorGroup;
 import org.gbif.api.v2.RankedName;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.Rank;
@@ -30,14 +23,24 @@ import org.gbif.registry.database.TestCaseDatabaseInitializer;
 import org.gbif.registry.persistence.mapper.collections.CollectionMapper;
 import org.gbif.registry.persistence.mapper.collections.DescriptorsMapper;
 import org.gbif.registry.persistence.mapper.collections.dto.DescriptorDto;
+import org.gbif.registry.persistence.mapper.collections.params.DescriptorGroupParams;
 import org.gbif.registry.persistence.mapper.collections.params.DescriptorParams;
-import org.gbif.registry.persistence.mapper.collections.params.DescriptorSetParams;
 import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.ws.it.BaseItTest;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
+
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Set;
+import java.util.UUID;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Autowired;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class DescriptorsMapperIT extends BaseItTest {
 
@@ -45,7 +48,7 @@ public class DescriptorsMapperIT extends BaseItTest {
   protected TestCaseDatabaseInitializer databaseRule =
       new TestCaseDatabaseInitializer(
           "collection",
-          "collection_descriptor_set",
+          "collection_descriptor_group",
           "collection_descriptor",
           "collection_descriptor_verbatim");
 
@@ -74,44 +77,45 @@ public class DescriptorsMapperIT extends BaseItTest {
     collectionMapper.create(collection);
     assertNotNull(collection.getKey());
 
-    DescriptorSet descriptorSet = new DescriptorSet();
-    descriptorSet.setTitle("title");
-    descriptorSet.setDescription("description");
-    descriptorSet.setCreatedBy("user");
-    descriptorSet.setModifiedBy("user");
-    descriptorSet.setCollectionKey(collection.getKey());
-    descriptorsMapper.createDescriptorSet(descriptorSet);
-    assertTrue(descriptorSet.getKey() > 0);
+    DescriptorGroup descriptorGroup = new DescriptorGroup();
+    descriptorGroup.setTitle("title");
+    descriptorGroup.setDescription("description");
+    descriptorGroup.setCreatedBy("user");
+    descriptorGroup.setModifiedBy("user");
+    descriptorGroup.setCollectionKey(collection.getKey());
+    descriptorGroup.setTags(Set.of("tag"));
+    descriptorsMapper.createDescriptorGroup(descriptorGroup);
+    assertTrue(descriptorGroup.getKey() > 0);
 
-    DescriptorSet created = descriptorsMapper.getDescriptorSet(descriptorSet.getKey());
-    assertTrue(descriptorSet.lenientEquals(created));
+    DescriptorGroup created = descriptorsMapper.getDescriptorGroup(descriptorGroup.getKey());
+    assertTrue(descriptorGroup.lenientEquals(created));
 
     created.setTitle("title2");
-    descriptorsMapper.updateDescriptorSet(created);
+    descriptorsMapper.updateDescriptorGroup(created);
 
-    DescriptorSet updated = descriptorsMapper.getDescriptorSet(descriptorSet.getKey());
+    DescriptorGroup updated = descriptorsMapper.getDescriptorGroup(descriptorGroup.getKey());
     assertTrue(updated.lenientEquals(created));
 
     assertEquals(
         1,
         descriptorsMapper
-            .listDescriptorSets(
-                DescriptorSetParams.builder().collectionKey(collection.getKey()).build())
+            .listDescriptorGroups(
+                DescriptorGroupParams.builder().collectionKey(collection.getKey()).build())
             .size());
 
     DescriptorDto descriptorDto = new DescriptorDto();
-    descriptorDto.setDescriptorSetKey(descriptorSet.getKey());
+    descriptorDto.setDescriptorGroupKey(descriptorGroup.getKey());
     descriptorDto.setCountry(Country.DENMARK);
     descriptorDto.setDiscipline("discipline");
     descriptorDto.setIssues(Arrays.asList("i1", "i2"));
-    descriptorDto.setTypeStatus(Collections.singletonList(TypeStatus.ALLOLECTOTYPE));
-    descriptorDto.setUsageRank(Rank.ABERRATION);
+    descriptorDto.setTypeStatus(Collections.singletonList(TypeStatus.ALLOLECTOTYPE.name()));
+    descriptorDto.setUsageRank(Rank.ABERRATION.toString());
     descriptorDto.setUsageName("usage");
-    descriptorDto.setUsageKey(5);
+    descriptorDto.setUsageKey(String.valueOf(5));
 
     descriptorDto.setTaxonClassification(
         Arrays.asList(
-            new RankedName(1, "Kingdom", Rank.KINGDOM), new RankedName(3, "Phylum", Rank.PHYLUM)));
+            new RankedName("1", "Kingdom", Rank.KINGDOM.toString(), ""), new RankedName("3", "Phylum", Rank.PHYLUM.toString(), "")));
     descriptorsMapper.createDescriptor(descriptorDto);
     assertTrue(descriptorDto.getKey() > 0);
 
@@ -123,21 +127,23 @@ public class DescriptorsMapperIT extends BaseItTest {
     assertEquals(1, createdDescriptor.getTypeStatus().size());
     assertEquals(Country.DENMARK, createdDescriptor.getCountry());
     assertEquals(2, createdDescriptor.getVerbatim().size());
-    assertEquals(Rank.ABERRATION, createdDescriptor.getUsageRank());
+    assertEquals(Rank.ABERRATION.toString(), createdDescriptor.getUsageRank());
     assertEquals(2, createdDescriptor.getTaxonClassification().size());
+
+    assertEquals(2, descriptorsMapper.getVerbatimNames(descriptorGroup.getKey()).size());
 
     assertEquals(
         1,
         descriptorsMapper
             .listDescriptors(
-                DescriptorParams.builder().descriptorSetKey(descriptorSet.getKey()).build())
+                DescriptorParams.builder().descriptorGroupKey(descriptorGroup.getKey()).build())
             .size());
 
     assertEquals(
         1,
         descriptorsMapper
             .listDescriptors(
-                DescriptorParams.builder().usageKey(Collections.singletonList(5)).build())
+                DescriptorParams.builder().usageKey(Collections.singletonList("5")).build())
             .size());
 
     assertEquals(
@@ -145,30 +151,43 @@ public class DescriptorsMapperIT extends BaseItTest {
         descriptorsMapper
             .listDescriptors(
                 DescriptorParams.builder()
-                    .usageRank(Collections.singletonList(Rank.ABERRATION))
+                    .usageRank(Collections.singletonList(Rank.ABERRATION.toString()))
                     .build())
             .size());
 
-    descriptorsMapper.deleteDescriptorSet(descriptorSet.getKey());
+    descriptorsMapper.deleteDescriptorGroup(descriptorGroup.getKey());
     assertTrue(
         descriptorsMapper
-            .listDescriptorSets(
-                DescriptorSetParams.builder().collectionKey(collection.getKey()).build())
+            .listDescriptorGroups(
+                DescriptorGroupParams.builder().collectionKey(collection.getKey()).build())
             .isEmpty());
 
     assertEquals(
         1,
         descriptorsMapper
-            .listDescriptorSets(DescriptorSetParams.builder().deleted(true).build())
+            .listDescriptorGroups(DescriptorGroupParams.builder().deleted(true).build())
             .size());
 
-    descriptorsMapper.deleteDescriptors(descriptorSet.getKey());
+    // update descriptor
+    createdDescriptor.setCountry(Country.COCOS_ISLANDS);
+    createdDescriptor.setUsageName("NEW");
+    createdDescriptor.setTaxonClassification(
+        Arrays.asList(new RankedName("1", "Kingdom2", Rank.KINGDOM.toString(), "")));
+    descriptorsMapper.updateDescriptor(createdDescriptor);
+
+    DescriptorDto updatedDescriptor = descriptorsMapper.getDescriptor(createdDescriptor.getKey());
+    assertEquals(Country.COCOS_ISLANDS, updatedDescriptor.getCountry());
+    assertEquals("NEW", updatedDescriptor.getUsageName());
+    assertEquals(1, updatedDescriptor.getTaxonClassification().size());
+    assertEquals("Kingdom2", updatedDescriptor.getTaxonClassification().get(0).getName());
+
+    descriptorsMapper.deleteDescriptors(descriptorGroup.getKey());
 
     assertEquals(
         0,
         descriptorsMapper
             .listDescriptors(
-                DescriptorParams.builder().descriptorSetKey(descriptorSet.getKey()).build())
+                DescriptorParams.builder().descriptorGroupKey(descriptorGroup.getKey()).build())
             .size());
   }
 }

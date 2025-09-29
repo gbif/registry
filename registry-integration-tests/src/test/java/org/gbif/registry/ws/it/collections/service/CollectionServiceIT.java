@@ -13,13 +13,6 @@
  */
 package org.gbif.registry.ws.it.collections.service;
 
-import static org.junit.jupiter.api.Assertions.*;
-
-import java.net.URI;
-import java.util.*;
-import java.util.stream.Collectors;
-import javax.validation.ConstraintViolationException;
-import javax.validation.ValidationException;
 import org.gbif.api.model.collections.*;
 import org.gbif.api.model.collections.Address;
 import org.gbif.api.model.collections.Collection;
@@ -38,16 +31,30 @@ import org.gbif.api.service.registry.InstallationService;
 import org.gbif.api.service.registry.NodeService;
 import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.api.vocabulary.*;
+import org.gbif.api.vocabulary.collections.CollectionsSortField;
 import org.gbif.api.vocabulary.collections.IdType;
 import org.gbif.api.vocabulary.collections.MasterSourceType;
 import org.gbif.api.vocabulary.collections.Source;
+import org.gbif.registry.persistence.mapper.GrScicollVocabConceptMapper;
 import org.gbif.registry.persistence.mapper.collections.params.DuplicatesSearchParams;
 import org.gbif.registry.service.collections.duplicates.CollectionDuplicatesService;
 import org.gbif.registry.service.collections.utils.LatimerCoreConverter;
 import org.gbif.registry.test.mocks.ConceptClientMock;
+import org.gbif.registry.ws.it.collections.ConceptTestSetup;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
+
+import java.net.URI;
+import java.util.*;
+import java.util.stream.Collectors;
+
+import javax.validation.ConstraintViolationException;
+import javax.validation.ValidationException;
+
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 /** Tests the {@link CollectionService}. */
 public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collection> {
@@ -55,6 +62,7 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
   private final CollectionService collectionService;
   private final CollectionDuplicatesService duplicatesService;
   private final InstitutionService institutionService;
+  private final GrScicollVocabConceptMapper grScicollVocabConceptMapper;
 
   @Autowired
   public CollectionServiceIT(
@@ -65,7 +73,8 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
       OrganizationService organizationService,
       InstallationService installationService,
       SimplePrincipalProvider principalProvider,
-      CollectionDuplicatesService duplicatesService) {
+      CollectionDuplicatesService duplicatesService,
+      GrScicollVocabConceptMapper grScicollVocabConceptMapper) {
     super(
         collectionService,
         datasetService,
@@ -78,7 +87,14 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
     this.collectionService = collectionService;
     this.duplicatesService = duplicatesService;
     this.institutionService = institutionService;
+    this.grScicollVocabConceptMapper = grScicollVocabConceptMapper;
   }
+
+  @BeforeEach
+  public void setupFacets() {
+    ConceptTestSetup.setupCommonConcepts(grScicollVocabConceptMapper);
+  }
+
 
   @Test
   public void listTest() {
@@ -99,6 +115,14 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
     collection1.setNumberSpecimens(100);
     collection1.setDisplayOnNHCPortal(false);
     UUID key1 = collectionService.create(collection1);
+
+    // Add contact to collection
+    Contact contact = new Contact();
+    contact.setFirstName("Test");
+    contact.setLastName("User");
+    contact.setUserIds(Collections.singletonList(new UserId(IdType.ORCID, "0000-0000-0000-0001")));
+    contact.setEmail(Collections.singletonList("test-contact@gbif.org"));
+    collectionService.addContactPerson(key1, contact);
 
     Collection collection2 = testData.newEntity();
     collection2.setCode("c2");
@@ -139,7 +163,10 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
 
     response =
         collectionService.list(
-            CollectionSearchRequest.builder().source(Source.IH_IRN).sourceId("test-123").build());
+            CollectionSearchRequest.builder()
+                .source(Collections.singletonList(Source.IH_IRN))
+                .sourceId(Collections.singletonList("test-123"))
+                .build());
     assertEquals(1, response.getResults().size());
 
     // empty queries are ignored and return all elements
@@ -238,13 +265,39 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
             .getResults()
             .size());
 
+    // Test contact email search
+    assertEquals(
+        1,
+        collectionService
+            .list(
+                CollectionSearchRequest.builder()
+                    .contactEmail("test-contact@gbif.org")
+                    .limit(DEFAULT_PAGE.getLimit())
+                    .offset(DEFAULT_PAGE.getOffset())
+                    .build())
+            .getResults()
+            .size());
+
+    // Test contact userId search
+    assertEquals(
+        1,
+        collectionService
+            .list(
+                CollectionSearchRequest.builder()
+                    .contactUserId("0000-0000-0000-0001")
+                    .limit(DEFAULT_PAGE.getLimit())
+                    .offset(DEFAULT_PAGE.getOffset())
+                    .build())
+            .getResults()
+            .size());
+
     // code and name params
     assertEquals(
         1,
         collectionService
             .list(
                 CollectionSearchRequest.builder()
-                    .code("c1")
+                    .code(Collections.singletonList("c1"))
                     .limit(DEFAULT_PAGE.getLimit())
                     .offset(DEFAULT_PAGE.getOffset())
                     .build())
@@ -255,7 +308,7 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
         collectionService
             .list(
                 CollectionSearchRequest.builder()
-                    .name("n2")
+                    .name(Collections.singletonList("n2"))
                     .limit(DEFAULT_PAGE.getLimit())
                     .offset(DEFAULT_PAGE.getOffset())
                     .build())
@@ -266,8 +319,8 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
         collectionService
             .list(
                 CollectionSearchRequest.builder()
-                    .code("c1")
-                    .name("n1")
+                    .code(Collections.singletonList("c1"))
+                    .name(Collections.singletonList("n1"))
                     .limit(DEFAULT_PAGE.getLimit())
                     .offset(DEFAULT_PAGE.getOffset())
                     .build())
@@ -278,8 +331,8 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
         collectionService
             .list(
                 CollectionSearchRequest.builder()
-                    .code("c2")
-                    .name("n1")
+                    .code(Collections.singletonList("c2"))
+                    .name(Collections.singletonList("n1"))
                     .limit(DEFAULT_PAGE.getLimit())
                     .offset(DEFAULT_PAGE.getOffset())
                     .build())
@@ -290,7 +343,7 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
         collectionService
             .list(
                 CollectionSearchRequest.builder()
-                    .active(true)
+                    .active(Collections.singletonList(true))
                     .limit(DEFAULT_PAGE.getLimit())
                     .offset(DEFAULT_PAGE.getOffset())
                     .build())
@@ -351,12 +404,52 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
                     .build())
             .getResults()
             .size());
+
+    // Test case-insensitive search for contentType
+    assertEquals(
+        2,
+        collectionService
+            .list(
+                CollectionSearchRequest.builder()
+                    .contentTypes(Collections.singletonList("archaeological"))
+                    .limit(DEFAULT_PAGE.getLimit())
+                    .offset(DEFAULT_PAGE.getOffset())
+                    .build())
+            .getResults()
+            .size());
+
+    // Test case-insensitive search for preservationType
+    assertEquals(
+        2,
+        collectionService
+            .list(
+                CollectionSearchRequest.builder()
+                    .preservationTypes(Collections.singletonList("sampledried"))
+                    .limit(DEFAULT_PAGE.getLimit())
+                    .offset(DEFAULT_PAGE.getOffset())
+                    .build())
+            .getResults()
+            .size());
+
+    // Test case insensitive search for accessionStatus
+    assertEquals(
+        2,
+        collectionService
+            .list(
+                CollectionSearchRequest.builder()
+                    .accessionStatus(Collections.singletonList("institutional"))
+                    .limit(DEFAULT_PAGE.getLimit())
+                    .offset(DEFAULT_PAGE.getOffset())
+                    .build())
+            .getResults()
+            .size());
+
     assertEquals(
         1,
         collectionService
             .list(
                 CollectionSearchRequest.builder()
-                    .personalCollection(true)
+                    .personalCollection(Collections.singletonList(true))
                     .limit(DEFAULT_PAGE.getLimit())
                     .offset(DEFAULT_PAGE.getOffset())
                     .build())
@@ -369,7 +462,7 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
         collectionService
             .list(
                 CollectionSearchRequest.builder()
-                    .alternativeCode("alt")
+                    .alternativeCode(Collections.singletonList("alt"))
                     .limit(DEFAULT_PAGE.getLimit())
                     .offset(DEFAULT_PAGE.getOffset())
                     .build())
@@ -380,7 +473,7 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
         collectionService
             .list(
                 CollectionSearchRequest.builder()
-                    .alternativeCode("foo")
+                    .alternativeCode(Collections.singletonList("foo"))
                     .limit(DEFAULT_PAGE.getLimit())
                     .offset(DEFAULT_PAGE.getOffset())
                     .build())
@@ -450,7 +543,7 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
         collectionService
             .list(
                 CollectionSearchRequest.builder()
-                    .city("city2")
+                    .city(Collections.singletonList("city2"))
                     .limit(DEFAULT_PAGE.getLimit())
                     .offset(DEFAULT_PAGE.getOffset())
                     .build())
@@ -462,7 +555,7 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
         collectionService
             .list(
                 CollectionSearchRequest.builder()
-                    .city("foo")
+                    .city(Collections.singletonList("foo"))
                     .limit(DEFAULT_PAGE.getLimit())
                     .offset(DEFAULT_PAGE.getOffset())
                     .build())
@@ -491,7 +584,7 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
         collectionService
             .list(
                 CollectionSearchRequest.builder()
-                    .displayOnNHCPortal(true)
+                    .displayOnNHCPortal(Collections.singletonList(true))
                     .limit(DEFAULT_PAGE.getLimit())
                     .offset(DEFAULT_PAGE.getOffset())
                     .build())
@@ -504,7 +597,7 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
         collectionService
             .list(
                 CollectionSearchRequest.builder()
-                    .numberSpecimens("100")
+                    .numberSpecimens(Collections.singletonList("100"))
                     .limit(DEFAULT_PAGE.getLimit())
                     .offset(DEFAULT_PAGE.getOffset())
                     .build())
@@ -516,7 +609,7 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
         collectionService
             .list(
                 CollectionSearchRequest.builder()
-                    .numberSpecimens("98")
+                    .numberSpecimens(Collections.singletonList("98"))
                     .limit(DEFAULT_PAGE.getLimit())
                     .offset(DEFAULT_PAGE.getOffset())
                     .build())
@@ -528,7 +621,7 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
         collectionService
             .list(
                 CollectionSearchRequest.builder()
-                    .numberSpecimens("* , 100")
+                    .numberSpecimens(Collections.singletonList("* , 100"))
                     .limit(DEFAULT_PAGE.getLimit())
                     .offset(DEFAULT_PAGE.getOffset())
                     .build())
@@ -540,7 +633,7 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
         collectionService
             .list(
                 CollectionSearchRequest.builder()
-                    .numberSpecimens("97,300")
+                    .numberSpecimens(Collections.singletonList("97,300"))
                     .limit(DEFAULT_PAGE.getLimit())
                     .offset(DEFAULT_PAGE.getOffset())
                     .build())
@@ -618,7 +711,7 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
     PagingResponse<CollectionView> response =
         collectionService.list(
             CollectionSearchRequest.builder()
-                .institution(institutionKey1)
+                .institution(Collections.singletonList(institutionKey1))
                 .limit(DEFAULT_PAGE.getLimit())
                 .offset(DEFAULT_PAGE.getOffset())
                 .build());
@@ -627,7 +720,7 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
     response =
         collectionService.list(
             CollectionSearchRequest.builder()
-                .institution(institutionKey2)
+                .institution(Collections.singletonList(institutionKey2))
                 .limit(DEFAULT_PAGE.getLimit())
                 .offset(DEFAULT_PAGE.getOffset())
                 .build());
@@ -636,7 +729,7 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
     response =
         collectionService.list(
             CollectionSearchRequest.builder()
-                .institution(UUID.randomUUID())
+                .institution(Collections.singletonList(UUID.randomUUID()))
                 .limit(DEFAULT_PAGE.getLimit())
                 .offset(DEFAULT_PAGE.getOffset())
                 .build());
@@ -679,6 +772,8 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
     collection1.setActive(true);
     collection1.setAccessionStatus(null);
     collection1.setPersonalCollection(true);
+    collection1.setOccurrenceCount(12);
+    collection1.setTypeSpecimenCount(35);
     collection1.setContentTypes(Arrays.asList("Archaeological", "Biological"));
     collection1.setPreservationTypes(Arrays.asList("SampleDried", "SampleFluidPreserved"));
     Address address = new Address();
@@ -877,7 +972,7 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
         collectionService.list(
             CollectionSearchRequest.builder()
                 .q("code1")
-                .institution(institutionKey1)
+                .institution(Collections.singletonList(institutionKey1))
                 .limit(DEFAULT_PAGE.getLimit())
                 .offset(DEFAULT_PAGE.getOffset())
                 .build());
@@ -887,7 +982,7 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
         collectionService.list(
             CollectionSearchRequest.builder()
                 .q("foo")
-                .institution(institutionKey1)
+                .institution(Collections.singletonList(institutionKey1))
                 .limit(DEFAULT_PAGE.getLimit())
                 .offset(DEFAULT_PAGE.getOffset())
                 .build());
@@ -897,7 +992,7 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
         collectionService.list(
             CollectionSearchRequest.builder()
                 .q("code2")
-                .institution(institutionKey2)
+                .institution(Collections.singletonList(institutionKey2))
                 .limit(DEFAULT_PAGE.getLimit())
                 .offset(DEFAULT_PAGE.getOffset())
                 .build());
@@ -907,7 +1002,7 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
         collectionService.list(
             CollectionSearchRequest.builder()
                 .q("code2")
-                .institution(institutionKey1)
+                .institution(Collections.singletonList(institutionKey1))
                 .limit(DEFAULT_PAGE.getLimit())
                 .offset(DEFAULT_PAGE.getOffset())
                 .build());
@@ -928,7 +1023,7 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
         collectionService.list(
             CollectionSearchRequest.builder()
                 .q("Name1")
-                .institution(institutionKey1)
+                .institution(Collections.singletonList(institutionKey1))
                 .limit(DEFAULT_PAGE.getLimit())
                 .offset(DEFAULT_PAGE.getOffset())
                 .build());
@@ -938,7 +1033,7 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
         collectionService.list(
             CollectionSearchRequest.builder()
                 .q("abcde")
-                .institution(institutionKey1)
+                .institution(Collections.singletonList(institutionKey1))
                 .limit(DEFAULT_PAGE.getLimit())
                 .offset(DEFAULT_PAGE.getOffset())
                 .build());
@@ -948,7 +1043,7 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
         collectionService.list(
             CollectionSearchRequest.builder()
                 .q("aa1@aa.com")
-                .institution(institutionKey1)
+                .institution(Collections.singletonList(institutionKey1))
                 .limit(DEFAULT_PAGE.getLimit())
                 .offset(DEFAULT_PAGE.getOffset())
                 .build());
@@ -958,11 +1053,23 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
         collectionService.list(
             CollectionSearchRequest.builder()
                 .q("aves")
-                .institution(institutionKey1)
+                .institution(Collections.singletonList(institutionKey1))
                 .limit(DEFAULT_PAGE.getLimit())
                 .offset(DEFAULT_PAGE.getOffset())
                 .build());
     assertEquals(1, response.getResults().size());
+
+    assertEquals(
+      1,
+      collectionService
+        .list(
+          CollectionSearchRequest.builder()
+            .contactEmail("aa1@aa.com")
+            .limit(DEFAULT_PAGE.getLimit())
+            .offset(DEFAULT_PAGE.getOffset())
+            .build())
+        .getResults()
+        .size());
   }
 
   @Test
@@ -1020,7 +1127,7 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
     UUID key4 = collectionService.create(collection4);
 
     CollectionSearchRequest searchRequest = CollectionSearchRequest.builder().build();
-    searchRequest.setReplacedBy(key4);
+    searchRequest.setReplacedBy(Collections.singletonList(key4));
     assertEquals(0, collectionService.listDeleted(searchRequest).getResults().size());
     collectionService.replace(key3, key4);
     assertEquals(1, collectionService.listDeleted(searchRequest).getResults().size());
@@ -1333,5 +1440,93 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
                     .build())
             .getResults()
             .size());
+  }
+
+  @Test
+  public void testCollectionFacetLinksCreatedOnCreate() {
+    Collection collection = testData.newEntity();
+    collection.setContentTypes(Arrays.asList("Biological", "Archaeological"));
+    collection.setPreservationTypes(Arrays.asList("SampleDried", "StorageIndoors"));
+
+    UUID key = collectionService.create(collection);
+    assertNotNull(key);
+
+    // Verify that facet links were created automatically
+    // This would require access to FacetMapper to verify, but we can test indirectly
+    // by checking that facet-based search finds the collection
+
+    PagingResponse<CollectionView> response = collectionService.list(
+        CollectionSearchRequest.builder()
+            .contentTypes(Collections.singletonList("Biological"))
+            .limit(DEFAULT_PAGE.getLimit())
+            .offset(DEFAULT_PAGE.getOffset())
+            .build());
+
+    assertTrue(response.getResults().stream().anyMatch(cv -> cv.getCollection().getKey().equals(key)));
+
+    // Clean up
+    collectionService.delete(key);
+  }
+
+  @Test
+  public void testCollectionFacetLinksUpdatedOnUpdate() {
+    Collection collection = testData.newEntity();
+    collection.setContentTypes(Arrays.asList("Biological"));
+    collection.setPreservationTypes(Arrays.asList("SampleDried"));
+    UUID key = collectionService.create(collection);
+    assertNotNull(key);
+
+    // Update with different content types
+    collection = collectionService.get(key);
+    collection.setContentTypes(Arrays.asList("Archaeological", "Paleontological"));
+    collection.setPreservationTypes(Arrays.asList("StorageIndoors", "StorageOther"));
+
+    collectionService.update(collection);
+
+    // Verify that old facet links are removed and new ones are created
+    PagingResponse<CollectionView> biologicalResponse = collectionService.list(
+        CollectionSearchRequest.builder()
+            .contentTypes(Collections.singletonList("Biological"))
+            .limit(DEFAULT_PAGE.getLimit())
+            .offset(DEFAULT_PAGE.getOffset())
+            .build());
+
+    // Should not find the collection with old content type
+    assertFalse(biologicalResponse.getResults().stream().anyMatch(cv -> cv.getCollection().getKey().equals(key)));
+
+    PagingResponse<CollectionView> archaeologicalResponse = collectionService.list(
+        CollectionSearchRequest.builder()
+            .contentTypes(Collections.singletonList("Archaeological"))
+            .limit(DEFAULT_PAGE.getLimit())
+            .offset(DEFAULT_PAGE.getOffset())
+            .build());
+
+    // Should find the collection with new content type
+    assertTrue(archaeologicalResponse.getResults().stream().anyMatch(cv -> cv.getCollection().getKey().equals(key)));
+
+    // Clean up
+    collectionService.delete(key);
+  }
+
+  @Test
+  public void testAccessionStatusNotInFacetLinks() {
+    Collection collection = testData.newEntity();
+    collection.setContentTypes(Arrays.asList("Biological"));
+
+    UUID key = collectionService.create(collection);
+    assertNotNull(key);
+
+    // Verify that accession status filtering still works (array-based)
+    PagingResponse<CollectionView> response = collectionService.list(
+        CollectionSearchRequest.builder()
+            .accessionStatus(Collections.singletonList("Institutional"))
+            .limit(DEFAULT_PAGE.getLimit())
+            .offset(DEFAULT_PAGE.getOffset())
+            .build());
+
+    assertTrue(response.getResults().stream().anyMatch(cv -> cv.getCollection().getKey().equals(key)));
+
+    // Clean up
+    collectionService.delete(key);
   }
 }

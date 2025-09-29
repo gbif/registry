@@ -65,10 +65,13 @@ import org.gbif.registry.persistence.mapper.TagMapper;
 import org.gbif.registry.persistence.mapper.params.BaseListParams;
 import org.gbif.registry.persistence.mapper.params.DatasetListParams;
 import org.gbif.registry.persistence.mapper.params.NetworkListParams;
+import org.gbif.registry.persistence.mapper.pipelines.PipelineProcessMapper;
 import org.gbif.registry.persistence.service.MapperServiceLocator;
 import org.gbif.registry.service.RegistryDatasetService;
 import org.gbif.registry.service.WithMyBatis;
+import org.gbif.registry.service.collections.utils.Vocabularies;
 import org.gbif.registry.ws.export.CsvWriter;
+import org.gbif.vocabulary.client.ConceptClient;
 import org.gbif.ws.NotFoundException;
 
 import java.io.BufferedWriter;
@@ -89,6 +92,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
@@ -185,6 +189,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset, DatasetL
   private final TagMapper tagMapper;
   private final NetworkMapper networkMapper;
   private final DatasetProcessStatusMapper datasetProcessStatusMapper;
+  private final PipelineProcessMapper pipelineProcessMapper;
   private final DatasetDoiDataCiteHandlingService doiDataCiteHandlingService;
   private final DataCiteMetadataBuilderService metadataBuilderService;
   private final DoiIssuingService doiIssuingService;
@@ -193,6 +198,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset, DatasetL
 
   // The messagePublisher can be optional
   private final MessagePublisher messagePublisher;
+  private final ConceptClient conceptClient;
 
   public DatasetResource(
       MapperServiceLocator mapperServiceLocator,
@@ -202,8 +208,10 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset, DatasetL
       DatasetDoiDataCiteHandlingService doiDataCiteHandlingService,
       DataCiteMetadataBuilderService metadataBuilderService,
       DoiIssuingService doiIssuingService,
+      PipelineProcessMapper pipelineProcessMapper,
       WithMyBatis withMyBatis,
-      @Autowired(required = false) MessagePublisher messagePublisher) {
+      @Autowired(required = false) MessagePublisher messagePublisher,
+      ConceptClient conceptClient) {
     super(
         mapperServiceLocator.getDatasetMapper(),
         mapperServiceLocator,
@@ -219,12 +227,14 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset, DatasetL
     this.tagMapper = mapperServiceLocator.getTagMapper();
     this.datasetProcessStatusMapper = mapperServiceLocator.getDatasetProcessStatusMapper();
     this.networkMapper = mapperServiceLocator.getNetworkMapper();
+    this.pipelineProcessMapper = pipelineProcessMapper;
     this.doiDataCiteHandlingService = doiDataCiteHandlingService;
     this.metadataBuilderService = metadataBuilderService;
     this.doiIssuingService = doiIssuingService;
     this.messagePublisher = messagePublisher;
     this.withMyBatis = withMyBatis;
     this.emlWriter = EMLWriter.newInstance(false);
+    this.conceptClient = conceptClient;
   }
 
   @Target({ElementType.METHOD, ElementType.TYPE})
@@ -311,14 +321,14 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset, DatasetL
         @Parameter(
             name = "recordCount",
             description =
-                "Number of records of the dataset. Accepts ranges and a '*' can be used as a wildcard.",
+                "Number of records of the dataset. Accepts ranges and a `*` can be used as a wildcard.",
             schema = @Schema(implementation = String.class),
             in = ParameterIn.QUERY,
             example = "100,*"),
         @Parameter(
             name = "modifiedDate",
             description =
-                "Date when the dataset was modified the last time. Accepts ranges and a '*' can be used as a wildcard.",
+                "Date when the dataset was modified the last time. Accepts ranges and a `*` can be used as a wildcard.",
             schema = @Schema(implementation = String.class),
             in = ParameterIn.QUERY,
             example = "2022-05-01,*"),
@@ -346,6 +356,21 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset, DatasetL
           name = "endpointType",
           description = "Type of the endpoint of the dataset.",
           schema = @Schema(implementation = EndpointType.class),
+          in = ParameterIn.QUERY),
+        @Parameter(
+          name = "category",
+          description = "Category of the dataset.",
+          schema = @Schema(implementation = Set.class),
+          in = ParameterIn.QUERY),
+        @Parameter(
+          name = "contactUserId",
+          description = "Filter datasets by contact user ID (e.g., ORCID).",
+          schema = @Schema(implementation = String.class),
+          in = ParameterIn.QUERY),
+        @Parameter(
+          name = "contactEmail",
+          description = "Filter datasets by contact email address.",
+          schema = @Schema(implementation = String.class),
           in = ParameterIn.QUERY),
         @Parameter(name = "request", hidden = true),
         @Parameter(name = "searchRequest", hidden = true),
@@ -511,6 +536,8 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset, DatasetL
             .mtNamespace(request.getMachineTagNamespace())
             .mtName(request.getMachineTagName())
             .mtValue(request.getMachineTagValue())
+            .contactUserId(request.getContactUserId())
+            .contactEmail(request.getContactEmail())
             .page(request.getPage())
             .build();
 
@@ -884,6 +911,9 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset, DatasetL
   @Secured({ADMIN_ROLE, EDITOR_ROLE, IPT_ROLE})
   @Override
   public UUID create(@RequestBody @Trim Dataset dataset) {
+    // Validate vocabulary values
+    Vocabularies.checkDatasetVocabsValues(conceptClient, dataset);
+
     if (dataset.getDoi() == null) {
       dataset.setDoi(doiIssuingService.newDatasetDOI());
     }
@@ -935,6 +965,9 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset, DatasetL
 
   @Override
   public void update(Dataset dataset) {
+
+    Vocabularies.checkDatasetVocabsValues(conceptClient, dataset);
+
     Dataset old = super.get(dataset.getKey());
     if (old == null) {
       throw new IllegalArgumentException("Dataset " + dataset.getKey() + " not existing");
@@ -1365,6 +1398,13 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset, DatasetL
   public void crawl(
       @PathVariable("key") UUID datasetKey,
       @RequestParam(value = "platform", required = false) String platform) {
+    Long pipelineExecutionKey = pipelineProcessMapper.getRunningExecutionKey(datasetKey);
+    if (pipelineExecutionKey != null) {
+      throw new IllegalArgumentException(
+          "Can't start a new crawl because there is a pipeline execution already running for this dataset with key: "
+              + pipelineExecutionKey);
+    }
+
     Platform indexingPlatform = Platform.parse(platform).orElse(Platform.ALL);
     if (messagePublisher != null) {
       LOG.info("Requesting crawl of dataset[{}]", datasetKey);
@@ -1541,6 +1581,27 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset, DatasetL
   public PagingResponse<Dataset> listByDOI(
       @PathVariable("prefix") String prefix, @PathVariable("suffix") String suffix, Pageable page) {
     return listByDOI(new DOI(prefix, suffix).getDoiName(), page);
+  }
+
+
+  @Hidden
+  @PostMapping(value = "{datasetKey}/dwca", consumes = MediaType.APPLICATION_JSON_VALUE)
+  @Trim
+  @Transactional
+  @Secured(ADMIN_ROLE)
+  @Override
+  public void createDwcaData(@PathVariable("datasetKey") UUID datasetKey, @RequestBody @Trim Dataset.DwcA dwcA) {
+    registryDatasetService.createDwcaData(datasetKey, dwcA);
+  }
+
+  @Hidden
+  @PutMapping(value = "{datasetKey}/dwca", consumes = MediaType.APPLICATION_JSON_VALUE)
+  @Trim
+  @Transactional
+  @Secured(ADMIN_ROLE)
+  @Override
+  public void updateDwcaData(@PathVariable("datasetKey") UUID datasetKey, @RequestBody @Trim Dataset.DwcA dwcA) {
+    registryDatasetService.updateDwcaData(datasetKey, dwcA);
   }
 
   /** Encapsulates the params to pass in the body for the crawAll method. */

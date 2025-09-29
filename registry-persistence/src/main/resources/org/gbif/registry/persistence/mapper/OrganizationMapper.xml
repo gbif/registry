@@ -29,6 +29,12 @@
     <result property="language" column="language" typeHandler="org.gbif.mybatis.type.LanguageTypeHandler" />
   </resultMap>
 
+  <resultMap id="ORGANIZATION_GEOJSON_DTO_MAP" type="OrganizationGeoJsonDto" autoMapping="true">
+    <id property="key" column="key"/>
+    <result property="title" column="title" />
+    <association property="numPublishedDatasets" column="key" select="countPublishedDatasets" />
+  </resultMap>
+
   <sql id="WRITABLE_ORGANIZATION_FIELDS">
     key,endorsing_node_key,password,title,abbreviation,description,language,email,
     phone,homepage,logo_url,address,city,province,country,postal_code,latitude,longitude,created,created_by,
@@ -223,6 +229,10 @@
     <if test="params.endorsedByNodeKey != null">
       INNER JOIN node n ON o.endorsing_node_key = n.key
     </if>
+    <if test="params.contactUserId != null or params.contactEmail != null">
+      INNER JOIN organization_contact oc ON oc.organization_key = o.key
+      INNER JOIN contact c ON c.key = oc.contact_key
+    </if>
     <where>
       <choose>
         <when test="params.deleted != null and params.deleted">
@@ -260,6 +270,42 @@
       </if>
       <if test="params.endorsedByNodeKey != null">
         AND n.deleted IS NULL AND n.key = #{params.endorsedByNodeKey,jdbcType=OTHER}
+      </if>
+      <if test="params.contactUserId != null">
+        AND c.user_id @> ARRAY[#{params.contactUserId}::text]
+      </if>
+      <if test="params.contactEmail != null">
+        AND c.email @> ARRAY[#{params.contactEmail}::text]
+      </if>
+      <if test="params.numPublishedDatasets != null">
+        <if test="params.numPublishedDatasets.hasLowerBound() and params.numPublishedDatasets.hasUpperBound() and params.numPublishedDatasets.lowerEndpoint().equals(params.numPublishedDatasets.upperEndpoint())">
+          <!-- Exact match -->
+          AND (
+            SELECT COUNT(*)
+            FROM dataset d2
+            WHERE d2.publishing_organization_key = o.key
+              AND d2.deleted IS NULL
+          ) = #{params.numPublishedDatasets.from,jdbcType=INTEGER}
+        </if>
+        <if test="!(params.numPublishedDatasets.hasLowerBound() and params.numPublishedDatasets.hasUpperBound() and params.numPublishedDatasets.lowerEndpoint().equals(params.numPublishedDatasets.upperEndpoint()))">
+          <!-- Range match -->
+          <if test="params.numPublishedDatasets.hasLowerBound()">
+            AND (
+              SELECT COUNT(*)
+              FROM dataset d2
+              WHERE d2.publishing_organization_key = o.key
+                AND d2.deleted IS NULL
+            ) &gt;= #{params.numPublishedDatasets.from,jdbcType=INTEGER}
+          </if>
+          <if test="params.numPublishedDatasets.hasUpperBound()">
+            AND (
+              SELECT COUNT(*)
+              FROM dataset d2
+              WHERE d2.publishing_organization_key = o.key
+                AND d2.deleted IS NULL
+            ) &lt;= #{params.numPublishedDatasets.to,jdbcType=INTEGER}
+          </if>
+        </if>
       </if>
     </where>
   </sql>
@@ -483,6 +529,15 @@
     <if test="georeferenced != null and georeferenced == true" >
       AND o.latitude IS NOT NULL AND o.longitude IS NOT NULL
     </if>
+  </select>
+
+  <select id="listGeoJson" resultType="OrganizationGeoJsonDto" resultMap="ORGANIZATION_GEOJSON_DTO_MAP">
+    SELECT DISTINCT ON(<if test="params.query != null" >ts_rank_cd(o.fulltext_search, query), </if>o.created, o.key)
+    <include refid="ORGANIZATION_FIELDS"/>
+    <include refid="LIST_FILTER" />
+    AND o.latitude IS NOT NULL
+    AND o.longitude IS NOT NULL
+    ORDER BY <if test="params.query != null" >ts_rank_cd(o.fulltext_search, query) DESC, </if>o.created DESC, o.key
   </select>
 
   <select id="getChallengeCodeKey" resultType="Integer">

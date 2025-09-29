@@ -207,6 +207,7 @@ public class RegistryDatasetServiceImpl implements RegistryDatasetService {
     target.setLicense(supplementary.getLicense());
     target.setMaintenanceUpdateFrequency(supplementary.getMaintenanceUpdateFrequency());
     target.setLockedForAutoUpdate(supplementary.isLockedForAutoUpdate());
+    target.setCategory(supplementary.getCategory());
     target.setCreated(supplementary.getCreated());
     target.setCreatedBy(supplementary.getCreatedBy());
     target.setModified(supplementary.getModified());
@@ -219,6 +220,7 @@ public class RegistryDatasetServiceImpl implements RegistryDatasetService {
     target.setIdentifiers(supplementary.getIdentifiers());
     target.setMachineTags(supplementary.getMachineTags());
     target.setTags(supplementary.getTags());
+    target.setDwca(supplementary.getDwca());
 
     return target;
   }
@@ -403,5 +405,20 @@ public class RegistryDatasetServiceImpl implements RegistryDatasetService {
     }
 
     return result;
+  }
+
+  @Override
+  public void createDwcaData(UUID datasetKey, Dataset.DwcA dwcA) {
+    datasetMapper.createDwcaDataset(datasetKey, dwcA);
+  }
+
+  @Override
+  public void updateDwcaData(UUID datasetKey, Dataset.DwcA dwcA) {
+    datasetMapper.updateDwcaDataset(datasetKey, dwcA);
+  }
+
+  @Override
+  public List<Dataset> findDatasetsWithDeprecatedCategories(Set<String> deprecatedCategories){
+    return datasetMapper.findDatasetsWithDeprecatedCategories(deprecatedCategories);
   }
 }

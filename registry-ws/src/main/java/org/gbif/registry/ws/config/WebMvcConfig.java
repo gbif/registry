@@ -13,22 +13,20 @@
  */
 package org.gbif.registry.ws.config;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.module.SimpleModule;
-import com.fasterxml.jackson.dataformat.xml.XmlMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.fasterxml.jackson.module.jaxb.JaxbAnnotationModule;
-import java.util.*;
-import org.gbif.checklistbank.ws.client.NubResourceClient;
 import org.gbif.registry.domain.ws.*;
 import org.gbif.registry.security.precheck.AuthPreCheckInterceptor;
+import org.gbif.registry.ws.converter.CountryMessageConverter;
 import org.gbif.registry.ws.converter.UuidTextMessageConverter;
 import org.gbif.registry.ws.provider.CollectionDescriptorsSearchRequestHandlerMethodArgumentResolver;
 import org.gbif.registry.ws.provider.CollectionSearchRequestHandlerMethodArgumentResolver;
+import org.gbif.registry.ws.provider.CountryListHandlerMethodArgumentResolver;
+import org.gbif.registry.ws.provider.InstitutionFacetedSearchRequestHandlerMethodArgumentResolver;
 import org.gbif.registry.ws.provider.InstitutionSearchRequestHandlerMethodArgumentResolver;
 import org.gbif.registry.ws.provider.PartialDateHandlerMethodArgumentResolver;
 import org.gbif.registry.ws.provider.networkEntitiesList.*;
+import org.gbif.rest.client.RestClientFactory;
+import org.gbif.rest.client.configuration.ClientConfiguration;
+import org.gbif.rest.client.species.NameUsageMatchingService;
 import org.gbif.vocabulary.client.ConceptClient;
 import org.gbif.ws.client.ClientBuilder;
 import org.gbif.ws.json.JacksonJsonObjectMapperProvider;
@@ -37,6 +35,9 @@ import org.gbif.ws.server.provider.CountryHandlerMethodArgumentResolver;
 import org.gbif.ws.server.provider.DatasetSearchRequestHandlerMethodArgumentResolver;
 import org.gbif.ws.server.provider.DatasetSuggestRequestHandlerMethodArgumentResolver;
 import org.gbif.ws.server.provider.PageableHandlerMethodArgumentResolver;
+
+import java.util.*;
+
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.BeanPostProcessor;
@@ -52,6 +53,13 @@ import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.module.SimpleModule;
+import com.fasterxml.jackson.dataformat.xml.XmlMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.fasterxml.jackson.module.jaxb.JaxbAnnotationModule;
+
 @Configuration
 public class WebMvcConfig implements WebMvcConfigurer {
 
@@ -64,6 +72,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
   public void addArgumentResolvers(List<HandlerMethodArgumentResolver> argumentResolvers) {
     argumentResolvers.add(new PageableHandlerMethodArgumentResolver());
     argumentResolvers.add(new CountryHandlerMethodArgumentResolver());
+    argumentResolvers.add(new CountryListHandlerMethodArgumentResolver());
     argumentResolvers.add(new PartialDateHandlerMethodArgumentResolver());
     argumentResolvers.add(new DatasetSearchRequestHandlerMethodArgumentResolver());
     argumentResolvers.add(new DatasetSuggestRequestHandlerMethodArgumentResolver());
@@ -73,6 +82,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
     argumentResolvers.add(new NetworkRequestSearchParamsHandlerMethodArgumentResolver());
     argumentResolvers.add(new NodeRequestSearchParamsHandlerMethodArgumentResolver());
     argumentResolvers.add(new InstitutionSearchRequestHandlerMethodArgumentResolver());
+    argumentResolvers.add(new InstitutionFacetedSearchRequestHandlerMethodArgumentResolver());
     argumentResolvers.add(new CollectionSearchRequestHandlerMethodArgumentResolver());
     argumentResolvers.add(new CollectionDescriptorsSearchRequestHandlerMethodArgumentResolver());
   }
@@ -180,12 +190,14 @@ public class WebMvcConfig implements WebMvcConfigurer {
   }
 
   @Bean
-  public NubResourceClient nubResourceClient(@Value("${api.root.url}") String apiRootUrl) {
-    return new ClientBuilder()
-        .withObjectMapper(
-            JacksonJsonObjectMapperProvider.getObjectMapperWithBuilderSupport()
-                .registerModule(new JavaTimeModule()))
-        .withUrl(apiRootUrl)
-        .build(NubResourceClient.class);
+  public NameUsageMatchingService nameUsageMatchingService(@Value("${api.nameUsageMatchingService.ws.url}") String nameUsageMatchingServiceUrl) {
+    return RestClientFactory.createNameMatchService(ClientConfiguration.builder()
+        .withBaseApiUrl(nameUsageMatchingServiceUrl)
+        .build());
+  }
+
+  @Bean
+  public CountryMessageConverter countryMessageConverter() {
+    return new CountryMessageConverter();
   }
 }

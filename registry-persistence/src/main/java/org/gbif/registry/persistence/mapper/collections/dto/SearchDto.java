@@ -13,17 +13,15 @@
  */
 package org.gbif.registry.persistence.mapper.collections.dto;
 
+import org.gbif.api.vocabulary.Country;
+import org.gbif.api.vocabulary.Rank;
+
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.Setter;
-import org.gbif.api.vocabulary.Country;
-import org.gbif.api.vocabulary.Rank;
-import org.gbif.api.vocabulary.TypeStatus;
 
 @EqualsAndHashCode(callSuper = true)
 @Data
@@ -37,7 +35,7 @@ public class SearchDto extends BaseSearchDto {
 
   // descriptors fields
   private Long descriptorKey;
-  private Long descriptorSetKey;
+  private Long descriptorGroupKey;
   private Long descriptorUsageKey;
   private String descriptorUsageName;
   private Rank descriptorUsageRank;
@@ -49,5 +47,7 @@ public class SearchDto extends BaseSearchDto {
   private List<String> descriptorRecordedBy;
   private String descriptorDiscipline;
   private String descriptorObjectClassification;
+  private String descriptorBiome;
+  private String descriptorBiomeType;
   private List<String> descriptorIssues;
 }

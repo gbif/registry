@@ -3,7 +3,7 @@
     <parent>
         <artifactId>registry-parent</artifactId>
         <groupId>org.gbif.registry</groupId>
-        <version>3.96.8-SNAPSHOT</version>
+        <version>4.1.15-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -87,26 +87,41 @@
             <artifactId>cache2k-api</artifactId>
         </dependency>
 
-        <!-- Test dependencies -->
-        <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter-engine</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.mockito</groupId>
-            <artifactId>mockito-core</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.mockito</groupId>
-            <artifactId>mockito-junit-jupiter</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.gbif.registry</groupId>
-            <artifactId>registry-security</artifactId>
-        </dependency>
+      <dependency>
+        <groupId>io.github.resilience4j</groupId>
+        <artifactId>resilience4j-retry</artifactId>
+      </dependency>
+
+      <dependency>
+        <groupId>org.gbif.checklistbank</groupId>
+        <artifactId>checklistbank-ws-client</artifactId>
+      </dependency>
+
+      <dependency>
+        <groupId>org.gbif.kvs</groupId>
+        <artifactId>kvs-rest-clients</artifactId>
+      </dependency>
+
+      <!-- Test dependencies -->
+      <dependency>
+          <groupId>org.junit.jupiter</groupId>
+          <artifactId>junit-jupiter-engine</artifactId>
+          <scope>test</scope>
+      </dependency>
+      <dependency>
+          <groupId>org.mockito</groupId>
+          <artifactId>mockito-core</artifactId>
+          <scope>test</scope>
+      </dependency>
+      <dependency>
+          <groupId>org.mockito</groupId>
+          <artifactId>mockito-junit-jupiter</artifactId>
+          <scope>test</scope>
+      </dependency>
+      <dependency>
+          <groupId>org.gbif.registry</groupId>
+          <artifactId>registry-security</artifactId>
+      </dependency>
     </dependencies>
 
     <build>

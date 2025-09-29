@@ -14,12 +14,13 @@
 package org.gbif.registry.ws.provider;
 
 import org.gbif.api.model.collections.request.InstitutionSearchRequest;
+
+import java.util.Map;
+
 import org.springframework.core.MethodParameter;
 import org.springframework.web.bind.support.WebDataBinderFactory;
 import org.springframework.web.context.request.NativeWebRequest;
 import org.springframework.web.method.support.ModelAndViewContainer;
-
-import java.util.Arrays;
 
 @SuppressWarnings("NullableProblems")
 public class InstitutionSearchRequestHandlerMethodArgumentResolver
@@ -38,23 +39,19 @@ public class InstitutionSearchRequestHandlerMethodArgumentResolver
       WebDataBinderFactory binderFactory) {
 
     InstitutionSearchRequest searchRequest = InstitutionSearchRequest.builder().build();
-    fillSearchRequestParams(searchRequest, webRequest);
-
-    String[] types = webRequest.getParameterValues("type");
-    if (types != null && types.length > 0) {
-      searchRequest.setType(Arrays.asList(types));
-    }
-
-    String[] governances = webRequest.getParameterValues("institutionalGovernance");
-    if (governances != null && governances.length > 0) {
-      searchRequest.setInstitutionalGovernance(Arrays.asList(governances));
-    }
-
-    String[] disciplines = webRequest.getParameterValues("discipline");
-    if (disciplines != null && disciplines.length > 0) {
-      searchRequest.setDisciplines(Arrays.asList(disciplines));
-    }
+    fillInstitutionSearchParameters(searchRequest, webRequest);
 
     return searchRequest;
+  }
+
+  protected void fillInstitutionSearchParameters(
+      InstitutionSearchRequest searchRequest, NativeWebRequest webRequest) {
+    fillSearchRequestParams(searchRequest, webRequest);
+
+    Map<String, String[]> params = toCaseInsensitiveParams(webRequest);
+    extractMultivalueParam(params, "type").ifPresent(searchRequest::setType);
+    extractMultivalueParam(params, "institutionalGovernance")
+        .ifPresent(searchRequest::setInstitutionalGovernance);
+    extractMultivalueParam(params, "discipline").ifPresent(searchRequest::setDisciplines);
   }
 }
