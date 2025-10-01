@@ -13,20 +13,19 @@
  */
 package org.gbif.registry.ws.resources;
 
+import io.swagger.v3.oas.annotations.Hidden;
 import org.gbif.api.model.occurrence.DownloadType;
 import org.gbif.api.service.common.IdentityAccessService;
 import org.gbif.registry.doi.DownloadDoiDataCiteHandlingService;
 import org.gbif.registry.persistence.mapper.DatasetOccurrenceDownloadMapper;
-import org.gbif.registry.persistence.mapper.OccurrenceDownloadMapper;
-
+import org.gbif.registry.persistence.mapper.DownloadStatisticsMapper;
+import org.gbif.registry.persistence.mapper.EventDownloadMapper;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.http.MediaType;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import io.swagger.v3.oas.annotations.Hidden;
 
 /** Event download resource/web service. */
 @Hidden
@@ -36,13 +35,15 @@ import io.swagger.v3.oas.annotations.Hidden;
 public class EventDownloadResource extends BaseDownloadResource {
 
   public EventDownloadResource(
-      OccurrenceDownloadMapper occurrenceDownloadMapper,
+      EventDownloadMapper eventDownloadMapper,
       DatasetOccurrenceDownloadMapper datasetOccurrenceDownloadMapper,
+      DownloadStatisticsMapper downloadStatisticsMapper,
       @Lazy DownloadDoiDataCiteHandlingService doiDataCiteHandlingService,
       @Qualifier("baseIdentityAccessService") IdentityAccessService identityService) {
     super(
-        occurrenceDownloadMapper,
+        eventDownloadMapper,
         datasetOccurrenceDownloadMapper,
+        downloadStatisticsMapper,
         doiDataCiteHandlingService,
         identityService,
         DownloadType.EVENT);

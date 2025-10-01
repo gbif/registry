@@ -13,14 +13,9 @@
  */
 package org.gbif.registry.persistence.mapper;
 
-import java.util.Date;
-
-import org.apache.ibatis.annotations.Param;
-
 import org.springframework.stereotype.Repository;
 
-/** Mapper that perform operations on occurrence downloads. */
+/** Mapper that perform operations on dataset usages in occurrence downloads. */
 @Repository
-public interface OccurrenceDownloadMapper extends DownloadMapper {
-
+public interface DatasetEventDownloadMapper extends DatasetDownloadMapper{
 }

@@ -1,0 +1,14 @@
+<databaseChangeLog
+  xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+  <changeSet id="172" author="mlopez" runInTransaction="false">
+    <sql splitStatements="false" stripComments="false">
+      <![CDATA[
+        ALTER TABLE occurrence_download DROP COLUMN type;
+      ]]>
+    </sql>
+  </changeSet>
+
+</databaseChangeLog>

@@ -42,7 +42,8 @@ import org.gbif.api.vocabulary.OrganizationUsageSortField;
 import org.gbif.api.vocabulary.SortOrder;
 import org.gbif.registry.doi.DownloadDoiDataCiteHandlingService;
 import org.gbif.registry.persistence.mapper.DatasetOccurrenceDownloadMapper;
-import org.gbif.registry.persistence.mapper.OccurrenceDownloadMapper;
+import org.gbif.registry.persistence.mapper.DownloadMapper;
+import org.gbif.registry.persistence.mapper.DownloadStatisticsMapper;
 import org.gbif.registry.ws.export.CsvWriter;
 import org.gbif.registry.ws.provider.PartialDate;
 import org.gbif.registry.ws.util.DateUtils;
@@ -132,8 +133,9 @@ import static org.gbif.registry.security.util.DownloadSecurityUtils.clearSensiti
 @Slf4j
 public class BaseDownloadResource implements OccurrenceDownloadService {
 
-  private final OccurrenceDownloadMapper occurrenceDownloadMapper;
+  private final DownloadMapper downloadMapper;
   private final DatasetOccurrenceDownloadMapper datasetOccurrenceDownloadMapper;
+  private final DownloadStatisticsMapper downloadStatisticsMapper;
   private final IdentityAccessService identityService;
   private final DownloadDoiDataCiteHandlingService doiDataCiteHandlingService;
   private final DownloadType downloadType;
@@ -201,13 +203,15 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
   @interface FromToParameters {}
 
   public BaseDownloadResource(
-      OccurrenceDownloadMapper occurrenceDownloadMapper,
+      DownloadMapper downloadMapper,
       DatasetOccurrenceDownloadMapper datasetOccurrenceDownloadMapper,
+      DownloadStatisticsMapper downloadStatisticsMapper,
       @Lazy DownloadDoiDataCiteHandlingService doiDataCiteHandlingService,
       @Qualifier("baseIdentityAccessService") IdentityAccessService identityService,
       DownloadType downloadType) {
-    this.occurrenceDownloadMapper = occurrenceDownloadMapper;
+    this.downloadMapper = downloadMapper;
     this.datasetOccurrenceDownloadMapper = datasetOccurrenceDownloadMapper;
+    this.downloadStatisticsMapper = downloadStatisticsMapper;
     this.doiDataCiteHandlingService = doiDataCiteHandlingService;
     this.identityService = identityService;
     this.downloadType = downloadType;
@@ -223,7 +227,7 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
     try {
       occurrenceDownload.setLicense(License.UNSPECIFIED);
       occurrenceDownload.getRequest().setType(downloadType);
-      occurrenceDownloadMapper.create(occurrenceDownload);
+      downloadMapper.create(occurrenceDownload);
     } catch (Exception ex) {
       LOG.error(NOTIFY_ADMIN, "Error creating download", ex);
       throw new RuntimeException(ex);
@@ -278,9 +282,9 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
 
     Download download;
     if (Boolean.TRUE.equals(statistics)) {
-      download = occurrenceDownloadMapper.getWithCounts(key);
+      download = downloadMapper.getWithCounts(key);
     } else {
-      download = occurrenceDownloadMapper.get(key);
+      download = downloadMapper.get(key);
     }
 
     if (download == null) {
@@ -313,7 +317,7 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
       @NotNull @PathVariable String prefix, @NotNull @PathVariable String suffix) {
     Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-    Download download = occurrenceDownloadMapper.getByDOI(new DOI(prefix, suffix));
+    Download download = downloadMapper.getByDOI(new DOI(prefix, suffix));
     clearSensitiveData(authentication, download);
     assertDownloadType(download);
 
@@ -331,8 +335,8 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
       @RequestParam(value = "source", required = false) String source) {
     return new PagingResponse<>(
         page,
-        (long) occurrenceDownloadMapper.count(status, downloadType, source),
-        occurrenceDownloadMapper.list(page, status, downloadType, source));
+        (long) downloadMapper.count(status, downloadType, source),
+        downloadMapper.list(page, status, downloadType, source));
   }
 
   /** Count all the downloads. **/
@@ -343,7 +347,7 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
   public long count(
       @RequestParam(value = "status", required = false) Set<Download.Status> status,
       @RequestParam(value = "source", required = false) String source) {
-    return occurrenceDownloadMapper.count(status, downloadType, source);
+    return downloadMapper.count(status, downloadType, source);
   }
 
   /**
@@ -411,14 +415,13 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     checkUserIsInSecurityContext(user, authentication);
 
-    long count = occurrenceDownloadMapper.countByUser(user, status, downloadType, from);
+    long count = downloadMapper.countByUser(user, status, downloadType, from);
 
     List<Download> downloads;
     if (Boolean.FALSE.equals(statistics)) {
-      downloads =
-          occurrenceDownloadMapper.listByUserLightweight(user, page, status, downloadType, from);
+      downloads = downloadMapper.listByUserLightweight(user, page, status, downloadType, from);
     } else {
-      downloads = occurrenceDownloadMapper.listByUser(user, page, status, downloadType, from);
+      downloads = downloadMapper.listByUser(user, page, status, downloadType, from);
     }
 
     return new PagingResponse<>(page, count, downloads);
@@ -464,7 +467,7 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
           LocalDateTime from) {
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     checkUserIsInSecurityContext(user, authentication);
-    return occurrenceDownloadMapper.countByUser(user, status, downloadType, from);
+    return downloadMapper.countByUser(user, status, downloadType, from);
   }
 
   /**
@@ -488,8 +491,8 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
 
     return new PagingResponse<>(
         page,
-        (long) occurrenceDownloadMapper.countByEraseAfter(eraseAfter, size, erasureNotification),
-        occurrenceDownloadMapper.listByEraseAfter(page, eraseAfter, size, erasureNotification));
+        (long) downloadMapper.countByEraseAfter(eraseAfter, size, erasureNotification),
+        downloadMapper.listByEraseAfter(page, eraseAfter, size, erasureNotification));
   }
 
   @SuppressWarnings("MVCPathVariableInspection")
@@ -522,8 +525,8 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
       download.setDownloadLink("");
     }
 
-    occurrenceDownloadMapper.update(download);
-    return occurrenceDownloadMapper.get(download.getKey());
+    downloadMapper.update(download);
+    return downloadMapper.get(download.getKey());
   }
 
   @Override
@@ -873,7 +876,7 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
   public Map<Integer, Map<Integer, Long>> getDownloadsByUserCountry(
       @PartialDate Date fromDate, @PartialDate Date toDate, Country userCountry) {
     return groupByYear(
-        occurrenceDownloadMapper.getDownloadsByUserCountry(
+        downloadStatisticsMapper.getDownloadsByUserCountry(
             fromDate,
             toDate,
             Optional.ofNullable(userCountry).map(Country::getIso2LetterCode).orElse(null),
@@ -901,7 +904,7 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
   public Map<Integer, Map<Integer, Long>> getDownloadsBySource(
       @PartialDate Date fromDate, @PartialDate Date toDate, String source) {
     return groupByYear(
-        occurrenceDownloadMapper.getDownloadsBySource(fromDate, toDate, source, downloadType));
+        downloadStatisticsMapper.getDownloadsBySource(fromDate, toDate, source, downloadType));
   }
 
   @Tag(name = "Occurrence download statistics")
@@ -945,7 +948,7 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
       @RequestParam(value = "datasetKey", required = false) UUID datasetKey,
       @RequestParam(value = "publishingOrgKey", required = false) UUID publishingOrgKey) {
     return groupByYear(
-        occurrenceDownloadMapper.getDownloadedRecordsByDataset(
+        downloadStatisticsMapper.getDownloadedRecordsByDataset(
             fromDate,
             toDate,
             Optional.ofNullable(publishingCountry).map(Country::getIso2LetterCode).orElse(null),
@@ -995,7 +998,7 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
       @RequestParam(value = "datasetKey", required = false) UUID datasetKey,
       @RequestParam(value = "publishingOrgKey", required = false) UUID publishingOrgKey) {
     return groupByYear(
-        occurrenceDownloadMapper.getDownloadsByDataset(
+        downloadStatisticsMapper.getDownloadsByDataset(
             fromDate,
             toDate,
             Optional.ofNullable(publishingCountry).map(Country::getIso2LetterCode).orElse(null),
@@ -1050,9 +1053,9 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
         Optional.ofNullable(publishingCountry).map(Country::getIso2LetterCode).orElse(null);
     return new PagingResponse<>(
         page,
-        occurrenceDownloadMapper.countDownloadStatistics(
+        downloadStatisticsMapper.countDownloadStatistics(
             fromDate, toDate, country, datasetKey, publishingOrgKey, downloadType),
-        occurrenceDownloadMapper.getDownloadStatistics(
+        downloadStatisticsMapper.getDownloadStatistics(
             fromDate, toDate, country, datasetKey, publishingOrgKey, page, downloadType));
   }
 

@@ -29,6 +29,7 @@ import org.gbif.registry.domain.ws.UserUpdate;
 import org.gbif.registry.identity.model.LoggedUser;
 import org.gbif.registry.identity.model.UserModelMutationResult;
 import org.gbif.registry.identity.service.IdentityService;
+import org.gbif.registry.persistence.mapper.EventDownloadMapper;
 import org.gbif.registry.persistence.mapper.OccurrenceDownloadMapper;
 import org.gbif.registry.security.SecurityContextCheck;
 import org.gbif.registry.security.UserUpdateRulesManager;
@@ -115,15 +116,18 @@ public class UserManagementResource {
   private final IdentityService identityService;
   private final List<String> appKeyWhitelist;
   private final OccurrenceDownloadMapper occurrenceDownloadMapper;
+  private final EventDownloadMapper eventDownloadMapper;
 
   /** {@link UserManagementResource} main constructor. */
   public UserManagementResource(
       IdentityService identityService,
       AppkeysConfigurationProperties appkeysConfiguration,
-      OccurrenceDownloadMapper occurrenceDownloadMapper) {
+      OccurrenceDownloadMapper occurrenceDownloadMapper,
+      EventDownloadMapper eventDownloadMapper) {
     this.identityService = identityService;
     appKeyWhitelist = appkeysConfiguration.getWhitelist();
     this.occurrenceDownloadMapper = occurrenceDownloadMapper;
+    this.eventDownloadMapper = eventDownloadMapper;
   }
 
   @GetMapping("roles")
@@ -266,12 +270,15 @@ public class UserManagementResource {
     String newEmail = "deleted_" + newUsername + "@deleted.invalid";
     String oldUsername = user.getUserName();
 
-    // get all downloads before erase
+    // get all occurrence downloads before erase
     List<Download> downloads =
         occurrenceDownloadMapper.listByUser(user.getUserName(), null, null, null, null);
+    // get all event downloads before erase
+    downloads.addAll(eventDownloadMapper.listByUser(user.getUserName(), null, null, null, null));
 
     // erase user from downloads
     occurrenceDownloadMapper.updateNotificationAddresses(oldUsername, newUsername, "{}");
+    eventDownloadMapper.updateNotificationAddresses(oldUsername, newUsername, "{}");
 
     // Clean up user rights before deletion to prevent permission inheritance
     // by new users with the same username
@@ -279,12 +286,12 @@ public class UserManagementResource {
     for (UUID key : editorRights) {
       identityService.deleteEditorRight(oldUsername, key);
     }
-    
+
     List<String> namespaceRights = identityService.listNamespaceRights(oldUsername);
     for (String namespace : namespaceRights) {
       identityService.deleteNamespaceRight(oldUsername, namespace);
     }
-    
+
     List<Country> countryRights = identityService.listCountryRights(oldUsername);
     for (Country country : countryRights) {
       identityService.deleteCountryRight(oldUsername, country);

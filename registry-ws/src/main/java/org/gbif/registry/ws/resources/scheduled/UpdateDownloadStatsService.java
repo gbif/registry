@@ -13,24 +13,22 @@
  */
 package org.gbif.registry.ws.resources.scheduled;
 
-import org.gbif.registry.persistence.mapper.OccurrenceDownloadMapper;
-
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalAdjuster;
 import java.time.temporal.TemporalAdjusters;
 import java.util.Date;
-
+import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.gbif.api.model.occurrence.DownloadType;
+import org.gbif.registry.persistence.mapper.DownloadStatisticsMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.actuate.endpoint.annotation.Endpoint;
 import org.springframework.boot.actuate.endpoint.annotation.WriteOperation;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import lombok.AllArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 /** Utility service to update download statistics. */
 @Slf4j
@@ -39,7 +37,7 @@ import lombok.extern.slf4j.Slf4j;
 @Endpoint(id = "downloadStatistics")
 public class UpdateDownloadStatsService {
 
-  @Autowired private OccurrenceDownloadMapper occurrenceDownloadMapper;
+  @Autowired private DownloadStatisticsMapper downloadStatisticsMapper;
 
   @WriteOperation
   public void updateDownloadStatisticsEndpoint() {
@@ -71,10 +69,16 @@ public class UpdateDownloadStatsService {
     Date fromDate = toDate(date, TemporalAdjusters.firstDayOfMonth());
     Date toDate = toDate(date, TemporalAdjusters.firstDayOfNextMonth());
 
-    log.info("Updating downloads stats for [{},{}]", fromDate, toDate);
-    occurrenceDownloadMapper.updateDownloadStats(fromDate, toDate);
-    occurrenceDownloadMapper.updateDownloadUserStats(fromDate, toDate);
-    occurrenceDownloadMapper.updateDownloadSourceStats(fromDate, toDate);
-    log.info("Downloads stats update done for [{},{}]", fromDate, toDate);
+    log.info("Updating occurrence downloads stats for [{},{}]", fromDate, toDate);
+    downloadStatisticsMapper.updateDownloadStats(fromDate, toDate, DownloadType.OCCURRENCE);
+    downloadStatisticsMapper.updateDownloadUserStats(fromDate, toDate, DownloadType.OCCURRENCE);
+    downloadStatisticsMapper.updateDownloadSourceStats(fromDate, toDate, DownloadType.OCCURRENCE);
+    log.info("Occurrence downloads stats update done for [{},{}]", fromDate, toDate);
+
+    log.info("Updating event downloads stats for [{},{}]", fromDate, toDate);
+    downloadStatisticsMapper.updateDownloadStats(fromDate, toDate, DownloadType.EVENT);
+    downloadStatisticsMapper.updateDownloadUserStats(fromDate, toDate, DownloadType.EVENT);
+    downloadStatisticsMapper.updateDownloadSourceStats(fromDate, toDate, DownloadType.EVENT);
+    log.info("Event downloads stats update done for [{},{}]", fromDate, toDate);
   }
 }
