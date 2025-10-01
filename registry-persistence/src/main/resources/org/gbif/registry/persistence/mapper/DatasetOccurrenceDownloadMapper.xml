@@ -17,14 +17,14 @@
   <select id="listByDataset" resultMap="DATASET_OCCURRENCE_DOWNLOAD_MAP" parameterType="map">
     SELECT <include refid="org.gbif.registry.persistence.mapper.CommonDownload.DATASET_OCCURRENCE_DOWNLOAD_FIELDS"/>,
     <include refid="org.gbif.registry.persistence.mapper.CommonDownload.OCCURRENCE_DOWNLOAD_FIELDS"/>
-    FROM dataset_occurrence_download
+    FROM dataset_occurrence_download dod
     <include refid="org.gbif.registry.persistence.mapper.CommonDownload.LIST_BY_DATASET_COMMON"/>
   </select>
 
   <select id="listByDatasetWithoutDownload"
           resultMap="org.gbif.registry.persistence.mapper.CommonDownload.DATASET_OCCURRENCE_OMIT_DOWNLOAD_MAP" parameterType="map">
     SELECT <include refid="org.gbif.registry.persistence.mapper.CommonDownload.DATASET_OCCURRENCE_DOWNLOAD_FIELDS"/>
-    FROM dataset_occurrence_download
+    FROM dataset_occurrence_download dod
     <include refid="org.gbif.registry.persistence.mapper.CommonDownload.LIST_BY_DATASET_COMMON"/>
   </select>
 
