@@ -30,6 +30,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 @RequestMapping("dataset")
 public interface DatasetDataPackageClient extends DatasetDataPackageService {
@@ -44,22 +45,27 @@ public interface DatasetDataPackageClient extends DatasetDataPackageService {
   void update(@PathVariable("datasetKey") UUID datasetKey, @RequestBody @Trim Dataset.DataPackage dataPackage);
 
   @GetMapping(value = "{datasetKey}/datapackage", produces = MediaType.APPLICATION_JSON_VALUE)
+  @ResponseBody
   @Override
   Dataset.DataPackage get(@PathVariable("datasetKey") UUID datasetKey);
 
   @GetMapping(value = "{datasetKey}/datapackage/resource", produces = MediaType.APPLICATION_JSON_VALUE)
+  @ResponseBody
   @Override
   String getResources(@PathVariable("datasetKey") UUID datasetKey);
 
   @GetMapping(value = "{datasetKey}/datapackage/resource/{resourceName}", produces = MediaType.APPLICATION_JSON_VALUE)
+  @ResponseBody
   @Override
   String getResource(@PathVariable("datasetKey") UUID datasetKey, @PathVariable("resourceName") String resourceName);
 
   @GetMapping(value = "{datasetKey}/datapackage/resourceNames", produces = MediaType.APPLICATION_JSON_VALUE)
+  @ResponseBody
   @Override
   List<String> getResourceNames(@PathVariable("datasetKey") UUID datasetKey);
 
   @GetMapping(value = "/datapackage", produces = MediaType.APPLICATION_JSON_VALUE)
+  @ResponseBody
   @Override
   PagingResponse<Dataset.DataPackage> list(@SpringQueryMap PageableBase params);
 
