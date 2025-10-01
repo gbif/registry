@@ -2,15 +2,15 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="org.gbif.registry.persistence.mapper.OccurrenceDownloadMapper">
 
-  <!-- TODO: remove type column-->
-
-  <resultMap id="OCCURRENCE_DOWNLOAD_MAP" type="org.gbif.api.model.occurrence.Download"
+  <resultMap id="org.gbif.registry.persistence.mapper.CommonDownload.OCCURRENCE_DOWNLOAD_MAP"
+             type="org.gbif.api.model.occurrence.Download"
              extends="OCCURRENCE_DOWNLOAD_MAP_BASIC">
     <association property="numberDatasets" column="key" select="COUNT_DATASETS" fetchType="eager"/>
   </resultMap>
 
-  <resultMap id="OCCURRENCE_DOWNLOAD_WITH_COUNTS_MAP" type="org.gbif.api.model.occurrence.Download"
-             extends="OCCURRENCE_DOWNLOAD_MAP_BASIC">
+  <resultMap id="OCCURRENCE_DOWNLOAD_WITH_COUNTS_MAP"
+             type="org.gbif.api.model.occurrence.Download"
+             extends="org.gbif.registry.persistence.mapper.CommonDownload.OCCURRENCE_DOWNLOAD_MAP_BASIC">
     <association property="numberDatasets" column="key" select="COUNT_DATASETS" fetchType="eager"/>
     <association property="numberOrganizations" column="key" select="COUNT_ORGANIZATIONS" fetchType="eager"/>
     <association property="numberPublishingCountries" column="key" select="COUNT_PUBLISHING_COUNTRIES" fetchType="eager"/>
