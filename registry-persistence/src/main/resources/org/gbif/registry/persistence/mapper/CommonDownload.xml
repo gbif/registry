@@ -175,9 +175,9 @@
   </sql>
 
   <sql id="LIST_BY_USER_QUERY">
-    SELECT <include refid="OCCURRENCE_DOWNLOAD_FIELDS"/>
+    SELECT <include refid="org.gbif.registry.persistence.mapper.CommonDownload.OCCURRENCE_DOWNLOAD_FIELDS"/>
     FROM ${downloadTable}_download
-    <include refid="LIST_BY_USER_COMMON" />
+    <include refid="org.gbif.registry.persistence.mapper.CommonDownload.LIST_BY_USER_COMMON" />
     ORDER BY created DESC, key
     <if test="page != null" >
       LIMIT #{page.limit} OFFSET #{page.offset}
@@ -185,9 +185,9 @@
   </sql>
 
   <sql id="LIST_BY_USER_LIGHTWEIGHT_QUERY">
-    SELECT <include refid="OCCURRENCE_DOWNLOAD_FIELDS"/>
+    SELECT <include refid="org.gbif.registry.persistence.mapper.CommonDownload.OCCURRENCE_DOWNLOAD_FIELDS"/>
     FROM ${downloadTable}_download
-    <include refid="LIST_BY_USER_COMMON" />
+    <include refid="org.gbif.registry.persistence.mapper.CommonDownload.LIST_BY_USER_COMMON" />
     ORDER BY created DESC, key
     <if test="page != null" >
       LIMIT #{page.limit} OFFSET #{page.offset}
@@ -210,9 +210,9 @@
 
   <!-- Append safe ordering -->
   <sql id="LIST_QUERY">
-    SELECT <include refid="OCCURRENCE_DOWNLOAD_FIELDS"/>
+    SELECT <include refid="org.gbif.registry.persistence.mapper.CommonDownload.OCCURRENCE_DOWNLOAD_FIELDS"/>
     FROM ${downloadTable}_download
-    <include refid="LIST_WHERE"/>
+    <include refid="org.gbif.registry.persistence.mapper.CommonDownload.LIST_WHERE"/>
     ORDER BY created DESC, key
     <if test="page != null" >
       LIMIT #{page.limit} OFFSET #{page.offset}
@@ -232,9 +232,9 @@
   </sql>
 
   <sql id="LIST_BY_ERASE_AFTER_QUERY">
-    SELECT <include refid="OCCURRENCE_DOWNLOAD_FIELDS"/>
+    SELECT <include refid="org.gbif.registry.persistence.mapper.CommonDownload.OCCURRENCE_DOWNLOAD_FIELDS"/>
     FROM ${downloadTable}_download
-    <include refid="LIST_BY_ERASE_AFTER_WHERE"/>
+    <include refid="org.gbif.registry.persistence.mapper.CommonDownload.LIST_BY_ERASE_AFTER_WHERE"/>
     ORDER BY created DESC, key
     <if test="page != null" >
       LIMIT #{page.limit} OFFSET #{page.offset}
@@ -277,7 +277,7 @@
   </sql>
 
   <sql id="LIST_BY_DOWNLOAD_QUERY">
-    SELECT <include refid="DATASET_OCCURRENCE_DOWNLOAD_FIELDS"/>,o.country
+    SELECT <include refid="org.gbif.registry.persistence.mapper.CommonDownload.DATASET_OCCURRENCE_DOWNLOAD_FIELDS"/>,o.country
     FROM dataset_${downloadTable}_download dod
     INNER JOIN dataset d ON d.key = dod.dataset_key
     INNER JOIN organization o ON o.key = d.publishing_organization_key
