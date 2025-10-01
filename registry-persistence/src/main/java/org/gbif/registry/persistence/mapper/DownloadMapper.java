@@ -26,7 +26,6 @@ import org.gbif.api.model.occurrence.DownloadType;
 import org.springframework.stereotype.Repository;
 
 /** Mapper that perform operations on occurrence downloads. */
-@Repository
 public interface DownloadMapper {
 
   Download get(@Param("key") String key);

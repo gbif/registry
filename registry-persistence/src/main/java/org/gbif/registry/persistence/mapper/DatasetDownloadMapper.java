@@ -29,7 +29,6 @@ import org.gbif.api.vocabulary.SortOrder;
 import org.springframework.stereotype.Repository;
 
 /** Mapper that perform operations on dataset usages in occurrence downloads. */
-@Repository
 public interface DatasetDownloadMapper {
 
   List<DatasetOccurrenceDownloadUsage> listByDataset(
