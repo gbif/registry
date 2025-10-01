@@ -97,7 +97,7 @@
 
   <sql id="OCCURRENCE_DOWNLOAD_FIELDS">
     key,doi,license,filter,status,download_link,size,total_records,notification_addresses,created_by,send_notification,
-    format,created,modified,erase_after,erasure_notification,verbatim_extensions,source, description, machine_description,
+    format,created,modified,erase_after,erasure_notification,type,verbatim_extensions,source, description, machine_description,
     checklist_key
   </sql>
 
@@ -164,6 +164,7 @@
     now(), <!-- modified -->
     #{eraseAfter,jdbcType=TIMESTAMP},
     #{erasureNotification,jdbcType=TIMESTAMP},
+    #{request.type,jdbcType=OTHER},
     <choose>
       <when test="request.format.name().equals('SQL_TSV_ZIP')">NULL,</when>
       <otherwise>#{request.verbatimExtensions,jdbcType=ARRAY,typeHandler=ExtensionArrayTypeHandler},</otherwise>

@@ -17,17 +17,17 @@
   </resultMap>
 
   <select id="COUNT_DATASETS" resultType="Long">
-    <bind name="downloadTable" value="occurrence"/>
+    <bind name="downloadTable" value="'occurrence'"/>
     <include refid="org.gbif.registry.persistence.mapper.CommonDownload.COUNT_DATASETS_QUERY"/>
   </select>
 
   <select id="COUNT_ORGANIZATIONS" resultType="Long">
-    <bind name="downloadTable" value="occurrence"/>
+    <bind name="downloadTable" value="'occurrence'"/>
     <include refid="org.gbif.registry.persistence.mapper.CommonDownload.COUNT_ORGANIZATIONS_QUERY"/>
   </select>
 
   <select id="COUNT_PUBLISHING_COUNTRIES" resultType="Long">
-    <bind name="downloadTable" value="occurrence"/>
+    <bind name="downloadTable" value="'occurrence'"/>
     <include refid="org.gbif.registry.persistence.mapper.CommonDownload.COUNT_PUBLISHING_COUNTRIES_QUERY"/>
   </select>
 
@@ -69,7 +69,7 @@
 
   <!-- Append safe ordering -->
   <select id="listByUser" resultType="org.gbif.api.model.occurrence.Download" resultMap="OCCURRENCE_DOWNLOAD_MAP">
-    <bind name="downloadTable" value="occurrence"/>
+    <bind name="downloadTable" value="'occurrence'"/>
     <include refid="org.gbif.registry.persistence.mapper.CommonDownload.LIST_BY_USER_QUERY"/>
   </select>
 
@@ -81,13 +81,13 @@
 
   <select id="listByUserLightweight" resultType="org.gbif.api.model.occurrence.Download"
           resultMap="org.gbif.registry.persistence.mapper.CommonDownload.OCCURRENCE_DOWNLOAD_MAP_BASIC">
-    <bind name="downloadTable" value="occurrence"/>
+    <bind name="downloadTable" value="'occurrence'"/>
     <include refid="org.gbif.registry.persistence.mapper.CommonDownload.LIST_BY_USER_LIGHTWEIGHT_QUERY"/>
   </select>
 
   <!-- Append safe ordering -->
   <select id="list" resultType="org.gbif.api.model.occurrence.Download" resultMap="OCCURRENCE_DOWNLOAD_MAP">
-    <bind name="downloadTable" value="occurrence"/>
+    <bind name="downloadTable" value="'occurrence'"/>
     <include refid="org.gbif.registry.persistence.mapper.CommonDownload.LIST_QUERY"/>
   </select>
 
@@ -98,7 +98,7 @@
   </select>
 
   <select id="listByEraseAfter" resultType="org.gbif.api.model.occurrence.Download" resultMap="OCCURRENCE_DOWNLOAD_MAP">
-    <bind name="downloadTable" value="occurrence"/>
+    <bind name="downloadTable" value="'occurrence'"/>
     <include refid="org.gbif.registry.persistence.mapper.CommonDownload.LIST_BY_ERASE_AFTER_QUERY"/>
   </select>
 

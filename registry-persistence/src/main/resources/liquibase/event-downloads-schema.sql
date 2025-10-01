@@ -19,6 +19,7 @@ CREATE TABLE event_download (
   erase_after timestamp with time zone,
   erasure_notification timestamp with time zone,
   source text CHECK (assert_min_length(source, 1)),
+  type download_type NULL DEFAULT 'EVENT'::download_type,
   verbatim_extensions extension ARRAY DEFAULT array[]::extension[],
   description text,
   machine_description jsonb,

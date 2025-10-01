@@ -335,8 +335,8 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
       @RequestParam(value = "source", required = false) String source) {
     return new PagingResponse<>(
         page,
-        (long) downloadMapper.count(status, downloadType, source),
-        downloadMapper.list(page, status, downloadType, source));
+        (long) downloadMapper.count(status, source),
+        downloadMapper.list(page, status, source));
   }
 
   /** Count all the downloads. **/
@@ -347,7 +347,7 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
   public long count(
       @RequestParam(value = "status", required = false) Set<Download.Status> status,
       @RequestParam(value = "source", required = false) String source) {
-    return downloadMapper.count(status, downloadType, source);
+    return downloadMapper.count(status, source);
   }
 
   /**
@@ -415,13 +415,13 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     checkUserIsInSecurityContext(user, authentication);
 
-    long count = downloadMapper.countByUser(user, status, downloadType, from);
+    long count = downloadMapper.countByUser(user, status, from);
 
     List<Download> downloads;
     if (Boolean.FALSE.equals(statistics)) {
-      downloads = downloadMapper.listByUserLightweight(user, page, status, downloadType, from);
+      downloads = downloadMapper.listByUserLightweight(user, page, status, from);
     } else {
-      downloads = downloadMapper.listByUser(user, page, status, downloadType, from);
+      downloads = downloadMapper.listByUser(user, page, status, from);
     }
 
     return new PagingResponse<>(page, count, downloads);
@@ -467,7 +467,7 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
           LocalDateTime from) {
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     checkUserIsInSecurityContext(user, authentication);
-    return downloadMapper.countByUser(user, status, downloadType, from);
+    return downloadMapper.countByUser(user, status, from);
   }
 
   /**

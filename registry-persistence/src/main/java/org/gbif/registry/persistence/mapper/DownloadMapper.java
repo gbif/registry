@@ -41,12 +41,10 @@ public interface DownloadMapper {
   List<Download> list(
       @Nullable @Param("page") Pageable page,
       @Param("status") Set<Download.Status> status,
-      @Nullable @Param("type") DownloadType type,
       @Nullable @Param("source") String source);
 
   int count(
       @Param("status") Set<Download.Status> status,
-      @Nullable @Param("type") DownloadType type,
       @Nullable @Param("source") String source);
 
   void updateNotificationAddresses(
@@ -58,20 +56,17 @@ public interface DownloadMapper {
       @Param("creator") String creator,
       @Nullable @Param("page") Pageable page,
       @Param("status") Set<Download.Status> status,
-      @Nullable @Param("type") DownloadType type,
       @Nullable @Param("from") LocalDateTime from);
 
   List<Download> listByUser(
       @Param("creator") String creator,
       @Nullable @Param("page") Pageable page,
       @Param("status") Set<Download.Status> status,
-      @Nullable @Param("type") DownloadType type,
       @Nullable @Param("from") LocalDateTime from);
 
   int countByUser(
       @Param("creator") String creator,
       @Param("status") Set<Download.Status> status,
-      @Nullable @Param("type") DownloadType type,
       @Nullable @Param("from") LocalDateTime from);
 
   List<Download> listByEraseAfter(

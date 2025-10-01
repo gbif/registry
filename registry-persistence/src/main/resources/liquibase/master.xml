@@ -177,5 +177,4 @@
   <include file="liquibase/169-add-biome-field-collection-descriptors.xml" />
   <include file="liquibase/170-data-package-table.xml" />
   <include file="liquibase/171-event-downloads-table.xml" />
-  <include file="liquibase/172-remove-download-type.xml" />
 </databaseChangeLog>
