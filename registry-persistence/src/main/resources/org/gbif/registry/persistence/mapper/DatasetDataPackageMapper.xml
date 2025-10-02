@@ -31,7 +31,7 @@
     UPDATE dp_dataset
     SET metadata=CAST(#{dp.metadata,jdbcType=OTHER} AS jsonb),
     <if test="dp.endpointKey != null" >
-    SET endpoint_key=#{dp.endpointKey,jdbcType=OTHER},
+    endpoint_key=#{dp.endpointKey,jdbcType=OTHER},
     </if>
     modified= now()
     WHERE dataset_key=#{datasetKey,jdbcType=OTHER}
