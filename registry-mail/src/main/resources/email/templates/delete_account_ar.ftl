@@ -10,7 +10,7 @@
 </p>
 
 <#if downloadUrls?size != 0>
-<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">Occurrence download metadata is not deleted.  You can still cite any of the downloads you created:</p>
+<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">Download metadata is not deleted.  You can still cite any of the downloads you created:</p>
 <ul style="margin: 0 0 20px;padding: 0;line-height: 1.65;">
     <#list downloadUrls as downloadUrl>
     <li style="margin: 0 0 0 20px;padding: 0;line-height: 1.65;"><a href="${downloadUrl}" style="color: #4ba2ce;text-decoration: none;">${downloadUrl}</a></li>

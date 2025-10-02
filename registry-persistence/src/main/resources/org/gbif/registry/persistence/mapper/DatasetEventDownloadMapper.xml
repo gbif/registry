@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
-<mapper namespace="org.gbif.registry.persistence.mapper.DatasetOccurrenceDownloadMapper">
+<mapper namespace="org.gbif.registry.persistence.mapper.DatasetEventDownloadMapper">
 
-  <resultMap id="DATASET_OCCURRENCE_DOWNLOAD_MAP" type="org.gbif.api.model.registry.DatasetOccurrenceDownloadUsage" autoMapping="false">
+  <resultMap id="DATASET_EVENT_DOWNLOAD_MAP" type="org.gbif.api.model.registry.DatasetOccurrenceDownloadUsage" autoMapping="false">
     <id property="downloadKey" column="download_key"/>
     <id property="datasetKey" column="dataset_key"/>
     <result property="datasetTitle" column="dataset_title"/>
@@ -11,61 +11,61 @@
     <result property="numberRecords" column="number_records"/>
     <result property="publishingCountryCode" column="country"/>
     <association property="download" javaType="org.gbif.api.model.occurrence.Download"
-                 resultMap="org.gbif.registry.persistence.mapper.OccurrenceDownloadMapper.OCCURRENCE_DOWNLOAD_MAP"/>
+                 resultMap="org.gbif.registry.persistence.mapper.EventDownloadMapper.EVENT_DOWNLOAD_MAP"/>
   </resultMap>
 
-  <select id="listByDataset" resultMap="DATASET_OCCURRENCE_DOWNLOAD_MAP" parameterType="map">
+  <select id="listByDataset" resultMap="DATASET_EVENT_DOWNLOAD_MAP" parameterType="map">
     SELECT <include refid="org.gbif.registry.persistence.mapper.CommonDownload.DATASET_OCCURRENCE_DOWNLOAD_FIELDS"/>,
-    <include refid="org.gbif.registry.persistence.mapper.CommonDownload.OCCURRENCE_DOWNLOAD_FIELDS"/>
-    FROM dataset_occurrence_download dod
+           <include refid="org.gbif.registry.persistence.mapper.CommonDownload.OCCURRENCE_DOWNLOAD_FIELDS"/>
+    FROM dataset_event_download dod
     <include refid="org.gbif.registry.persistence.mapper.CommonDownload.LIST_BY_DATASET"/>
   </select>
 
   <select id="listByDatasetWithoutDownload"
           resultMap="org.gbif.registry.persistence.mapper.CommonDownload.DATASET_OCCURRENCE_OMIT_DOWNLOAD_MAP" parameterType="map">
     SELECT <include refid="org.gbif.registry.persistence.mapper.CommonDownload.DATASET_OCCURRENCE_DOWNLOAD_FIELDS"/>
-    FROM dataset_occurrence_download dod
+    FROM dataset_event_download dod
     <include refid="org.gbif.registry.persistence.mapper.CommonDownload.LIST_BY_DATASET_WITHOUT_DOWNLOAD"/>
   </select>
 
   <select id="listByDownload"
           resultMap="org.gbif.registry.persistence.mapper.CommonDownload.DATASET_OCCURRENCE_OMIT_DOWNLOAD_MAP"
           parameterType="org.gbif.api.model.common.paging.Pageable">
-    <bind name="downloadTable" value="'occurrence'"/>
+    <bind name="downloadTable" value="'event'"/>
     <include refid="org.gbif.registry.persistence.mapper.CommonDownload.LIST_BY_DOWNLOAD_QUERY"/>
   </select>
 
   <select id="listOrganizationsByDownload"
           resultMap="org.gbif.registry.persistence.mapper.CommonDownload.ORGANIZATION_OCCURRENCE_DOWNLOAD_MAP"
           parameterType="org.gbif.api.model.common.paging.Pageable">
-    <bind name="downloadTable" value="'occurrence'"/>
+    <bind name="downloadTable" value="'event'"/>
     <include refid="org.gbif.registry.persistence.mapper.CommonDownload.LIST_ORGANIZATIONS_BY_DOWNLOAD_QUERY"/>
   </select>
 
   <select id="listCountriesByDownload"
           resultMap="org.gbif.registry.persistence.mapper.CommonDownload.COUNTRY_OCCURRENCE_DOWNLOAD_MAP"
           parameterType="org.gbif.api.model.common.paging.Pageable">
-    <bind name="downloadTable" value="'occurrence'"/>
+    <bind name="downloadTable" value="'event'"/>
     <include refid="org.gbif.registry.persistence.mapper.CommonDownload.LIST_COUNTRIES_BY_DOWNLOAD"/>
   </select>
 
   <select id="countOrganizationsByDownload" resultType="Integer">
-    <bind name="downloadTable" value="'occurrence'"/>
+    <bind name="downloadTable" value="'event'"/>
     <include refid="org.gbif.registry.persistence.mapper.CommonDownload.COUNT_ORGANIZATIONS_BY_DOWNLOAD_QUERY"/>
   </select>
 
   <select id="countCountriesByDownload" resultType="Integer">
-    <bind name="downloadTable" value="'occurrence'"/>
+    <bind name="downloadTable" value="'event'"/>
     <include refid="org.gbif.registry.persistence.mapper.CommonDownload.COUNT_COUNTRIES_BY_DOWNLOAD_QUERY"/>
   </select>
 
   <select id="countByDataset" resultType="Integer" parameterType="map">
-    <bind name="downloadTable" value="'occurrence'"/>
+    <bind name="downloadTable" value="'event'"/>
     <include refid="org.gbif.registry.persistence.mapper.CommonDownload.COUNT_BY_DATASET_QUERY"/>
   </select>
 
   <insert id="createOrUpdateUsages">
-    <bind name="downloadTable" value="'occurrence'"/>
+    <bind name="downloadTable" value="'event'"/>
     <include refid="org.gbif.registry.persistence.mapper.CommonDownload.CREATE_OR_UPDATE_USAGES_QUERY"/>
   </insert>
 

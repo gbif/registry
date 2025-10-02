@@ -13,42 +13,34 @@
  */
 package org.gbif.registry.ws.resources;
 
+import static org.gbif.registry.security.util.DownloadSecurityUtils.clearSensitiveData;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import java.util.List;
+import java.util.UUID;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
-import org.gbif.api.model.occurrence.DownloadType;
 import org.gbif.api.model.registry.DatasetOccurrenceDownloadUsage;
 import org.gbif.api.service.registry.DatasetOccurrenceDownloadUsageService;
-import org.gbif.registry.persistence.mapper.DatasetOccurrenceDownloadMapper;
-
-import java.util.List;
-import java.util.UUID;
-
+import org.gbif.registry.persistence.mapper.DatasetDownloadMapper;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.enums.ParameterIn;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-
-import static org.gbif.registry.security.util.DownloadSecurityUtils.clearSensitiveData;
-
 /** Base download resource/web service. */
 public abstract class DatasetDownloadUsageResourceBase
     implements DatasetOccurrenceDownloadUsageService {
 
-  private final DatasetOccurrenceDownloadMapper datasetOccurrenceDownloadMapper;
+  private final DatasetDownloadMapper datasetDownloadMapper;
 
-  private final DownloadType downloadType;
-
-  public DatasetDownloadUsageResourceBase(
-      DatasetOccurrenceDownloadMapper datasetOccurrenceDownloadMapper, DownloadType downloadType) {
-    this.datasetOccurrenceDownloadMapper = datasetOccurrenceDownloadMapper;
-    this.downloadType = downloadType;
+  public DatasetDownloadUsageResourceBase(DatasetDownloadMapper datasetDownloadMapper) {
+    this.datasetDownloadMapper = datasetDownloadMapper;
   }
 
   @Operation(
@@ -83,16 +75,12 @@ public abstract class DatasetDownloadUsageResourceBase
 
     List<DatasetOccurrenceDownloadUsage> usages = null;
     if (Boolean.FALSE.equals(showDownloadDetails)) {
-      usages =
-          datasetOccurrenceDownloadMapper.listByDatasetWithoutDownload(
-              datasetKey, downloadType, page);
+      usages = datasetDownloadMapper.listByDatasetWithoutDownload(datasetKey, page);
     } else {
-      usages = datasetOccurrenceDownloadMapper.listByDataset(datasetKey, downloadType, page);
+      usages = datasetDownloadMapper.listByDataset(datasetKey, page);
     }
     clearSensitiveData(authentication, usages);
     return new PagingResponse<>(
-        page,
-        (long) datasetOccurrenceDownloadMapper.countByDataset(datasetKey, downloadType),
-        usages);
+        page, (long) datasetDownloadMapper.countByDataset(datasetKey), usages);
   }
 }
