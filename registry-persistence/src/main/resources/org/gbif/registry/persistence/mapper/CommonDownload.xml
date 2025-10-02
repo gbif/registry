@@ -268,7 +268,17 @@
     </choose>
   </sql>
 
-  <sql id="LIST_BY_DATASET_COMMON">
+  <sql id="LIST_BY_DATASET">
+      JOIN occurrence_download od ON dod.download_key = od.key
+      WHERE dod.dataset_key = #{datasetKey,jdbcType=OTHER}
+      ORDER BY RIGHT(download_key, 15) DESC, LEFT(download_key, 7) DESC
+      <if test="page != null" >
+        LIMIT #{page.limit} OFFSET #{page.offset}
+      </if>
+  </sql>
+
+
+  <sql id="LIST_BY_DATASET_WITHOUT_DOWNLOAD">
     WHERE dataset_key = #{datasetKey,jdbcType=OTHER}
     <!-- This is preferable to joining to the occurrence_download table to ORDER BY created DESC. -->
     ORDER BY RIGHT(download_key, 15) DESC, LEFT(download_key, 7) DESC
