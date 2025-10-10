@@ -17,6 +17,7 @@ import io.swagger.v3.oas.annotations.Hidden;
 import org.gbif.api.model.occurrence.DownloadType;
 import org.gbif.api.service.common.IdentityAccessService;
 import org.gbif.registry.doi.DownloadDoiDataCiteHandlingService;
+import org.gbif.registry.persistence.mapper.DatasetEventDownloadMapper;
 import org.gbif.registry.persistence.mapper.DatasetOccurrenceDownloadMapper;
 import org.gbif.registry.persistence.mapper.DownloadStatisticsMapper;
 import org.gbif.registry.persistence.mapper.EventDownloadMapper;
@@ -36,13 +37,13 @@ public class EventDownloadResource extends BaseDownloadResource {
 
   public EventDownloadResource(
       EventDownloadMapper eventDownloadMapper,
-      DatasetOccurrenceDownloadMapper datasetOccurrenceDownloadMapper,
+      DatasetEventDownloadMapper datasetEventDownloadMapper,
       DownloadStatisticsMapper downloadStatisticsMapper,
       @Lazy DownloadDoiDataCiteHandlingService doiDataCiteHandlingService,
       @Qualifier("baseIdentityAccessService") IdentityAccessService identityService) {
     super(
         eventDownloadMapper,
-        datasetOccurrenceDownloadMapper,
+        datasetEventDownloadMapper,
         downloadStatisticsMapper,
         doiDataCiteHandlingService,
         identityService,

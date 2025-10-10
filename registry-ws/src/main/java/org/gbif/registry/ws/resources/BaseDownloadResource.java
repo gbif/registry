@@ -41,6 +41,7 @@ import org.gbif.api.vocabulary.License;
 import org.gbif.api.vocabulary.OrganizationUsageSortField;
 import org.gbif.api.vocabulary.SortOrder;
 import org.gbif.registry.doi.DownloadDoiDataCiteHandlingService;
+import org.gbif.registry.persistence.mapper.DatasetDownloadMapper;
 import org.gbif.registry.persistence.mapper.DatasetOccurrenceDownloadMapper;
 import org.gbif.registry.persistence.mapper.DownloadMapper;
 import org.gbif.registry.persistence.mapper.DownloadStatisticsMapper;
@@ -134,7 +135,7 @@ import static org.gbif.registry.security.util.DownloadSecurityUtils.clearSensiti
 public class BaseDownloadResource implements OccurrenceDownloadService {
 
   private final DownloadMapper downloadMapper;
-  private final DatasetOccurrenceDownloadMapper datasetOccurrenceDownloadMapper;
+  private final DatasetDownloadMapper datasetDownloadMapper;
   private final DownloadStatisticsMapper downloadStatisticsMapper;
   private final IdentityAccessService identityService;
   private final DownloadDoiDataCiteHandlingService doiDataCiteHandlingService;
@@ -204,13 +205,13 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
 
   public BaseDownloadResource(
       DownloadMapper downloadMapper,
-      DatasetOccurrenceDownloadMapper datasetOccurrenceDownloadMapper,
+      DatasetDownloadMapper datasetDownloadMapper,
       DownloadStatisticsMapper downloadStatisticsMapper,
       @Lazy DownloadDoiDataCiteHandlingService doiDataCiteHandlingService,
       @Qualifier("baseIdentityAccessService") IdentityAccessService identityService,
       DownloadType downloadType) {
     this.downloadMapper = downloadMapper;
-    this.datasetOccurrenceDownloadMapper = datasetOccurrenceDownloadMapper;
+    this.datasetDownloadMapper = datasetDownloadMapper;
     this.downloadStatisticsMapper = downloadStatisticsMapper;
     this.doiDataCiteHandlingService = doiDataCiteHandlingService;
     this.identityService = identityService;
@@ -655,7 +656,7 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
     if (download != null) {
       page = page != null ? page : new PagingRequest();
       List<DatasetOccurrenceDownloadUsage> usages =
-          datasetOccurrenceDownloadMapper.listByDownload(
+          datasetDownloadMapper.listByDownload(
               key, Strings.emptyToNull(datasetTitle), sortBy, sortOrder, page);
       final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
       clearSensitiveData(authentication, usages);
@@ -711,11 +712,11 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
       page = page != null ? page : new PagingRequest();
 
       List<OrganizationOccurrenceDownloadUsage> results =
-          datasetOccurrenceDownloadMapper.listOrganizationsByDownload(
+          datasetDownloadMapper.listOrganizationsByDownload(
               downloadKey, Strings.emptyToNull(organizationTitle), sortBy, sortOrder, page);
 
       int count =
-          datasetOccurrenceDownloadMapper.countOrganizationsByDownload(
+          datasetDownloadMapper.countOrganizationsByDownload(
               downloadKey, Strings.emptyToNull(organizationTitle));
 
       return new PagingResponse<>(page, (long) count, results);
@@ -764,10 +765,9 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
       page = page != null ? page : new PagingRequest();
 
       List<CountryOccurrenceDownloadUsage> results =
-          datasetOccurrenceDownloadMapper.listCountriesByDownload(
-              downloadKey, sortBy, sortOrder, page);
+          datasetDownloadMapper.listCountriesByDownload(downloadKey, sortBy, sortOrder, page);
 
-      int count = datasetOccurrenceDownloadMapper.countCountriesByDownload(downloadKey);
+      int count = datasetDownloadMapper.countCountriesByDownload(downloadKey);
 
       return new PagingResponse<>(page, (long) count, results);
     }
@@ -787,7 +787,7 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
     Iterators.partition(datasetCitations.entrySet().iterator(), BATCH_SIZE)
         .forEachRemaining(
             batch ->
-                datasetOccurrenceDownloadMapper.createOrUpdateUsages(
+                datasetDownloadMapper.createOrUpdateUsages(
                     downloadKey,
                     batch.stream().collect(Collectors.toMap(Entry::getKey, Entry::getValue))));
   }
