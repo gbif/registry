@@ -327,8 +327,8 @@ public class Vocabularies {
 
     BiFunction<String, List<String>, List<String>> handleValues =
         (vocabName, values) -> {
-          if (values == null) {
-            return Collections.emptyList();
+          if (values == null || values.isEmpty()) {
+            return values;  // Return as-is
           }
 
           Set<String> allConceptsAndChildren = new HashSet<>(values);
@@ -357,20 +357,20 @@ public class Vocabularies {
       CollectionSearchRequest r = (CollectionSearchRequest) request;
 
       COLLECTION_SEARCH_REQ_VOCAB_FIELDS.forEach(
-          f -> {
-            List<String> allConceptsAndChildren =
-                handleValues.apply(f.vocabName, f.getter.apply(r));
-            f.setter.accept(r, allConceptsAndChildren);
-          });
+        f -> {
+          List<String> allConceptsAndChildren =
+            handleValues.apply(f.vocabName, f.getter.apply(r));
+          f.setter.accept(r, allConceptsAndChildren);
+        });
 
       if (r instanceof CollectionDescriptorsSearchRequest) {
         CollectionDescriptorsSearchRequest rr = (CollectionDescriptorsSearchRequest) r;
         COLLECTION_DESCRIPTORS_SEARCH_REQ_VOCAB_FIELDS.forEach(
-            f -> {
-              List<String> allConceptsAndChildren =
-                  handleValues.apply(f.vocabName, f.getter.apply(rr));
-              f.setter.accept(rr, allConceptsAndChildren);
-            });
+          f -> {
+            List<String> allConceptsAndChildren =
+              handleValues.apply(f.vocabName, f.getter.apply(rr));
+            f.setter.accept(rr, allConceptsAndChildren);
+          });
       }
     }
   }
@@ -460,3 +460,4 @@ public class Vocabularies {
     BiConsumer<T, List<String>> setter;
   }
 }
+
