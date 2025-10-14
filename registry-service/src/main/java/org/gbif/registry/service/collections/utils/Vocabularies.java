@@ -16,6 +16,7 @@ package org.gbif.registry.service.collections.utils;
 import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.CollectionEntity;
 import org.gbif.api.model.collections.Institution;
+import org.gbif.api.model.collections.request.CollectionDescriptorsSearchRequest;
 import org.gbif.api.model.collections.request.CollectionSearchRequest;
 import org.gbif.api.model.collections.request.InstitutionSearchRequest;
 import org.gbif.api.model.collections.request.SearchRequest;
@@ -68,6 +69,8 @@ public class Vocabularies {
       INSTITUTION_SEARCH_REQ_VOCAB_FIELDS = new ArrayList<>();
   static final List<SearchRequestField<CollectionSearchRequest>>
       COLLECTION_SEARCH_REQ_VOCAB_FIELDS = new ArrayList<>();
+  static final List<SearchRequestField<CollectionDescriptorsSearchRequest>>
+      COLLECTION_DESCRIPTORS_SEARCH_REQ_VOCAB_FIELDS = new ArrayList<>();
 
   public static final String DISCIPLINE = "Discipline";
 
@@ -144,6 +147,18 @@ public class Vocabularies {
             PRESERVATION_TYPE,
             CollectionSearchRequest::getPreservationTypes,
             CollectionSearchRequest::setPreservationTypes));
+
+    // CollectionDescriptorsSearchRequest specific fields
+    COLLECTION_DESCRIPTORS_SEARCH_REQ_VOCAB_FIELDS.add(
+        SearchRequestField.of(
+            OBJECT_CLASSIFICATION,
+            CollectionDescriptorsSearchRequest::getObjectClassification,
+            CollectionDescriptorsSearchRequest::setObjectClassification));
+    COLLECTION_DESCRIPTORS_SEARCH_REQ_VOCAB_FIELDS.add(
+        SearchRequestField.of(
+            BIOME_TYPE,
+            CollectionDescriptorsSearchRequest::getBiomeType,
+            CollectionDescriptorsSearchRequest::setBiomeType));
   }
 
   public static <T extends CollectionEntity> void checkVocabsValues(
@@ -339,17 +354,28 @@ public class Vocabularies {
             f.setter.accept(institutionSearchRequest, allConceptsAndChildren);
           });
     } else if (request instanceof CollectionSearchRequest) {
+      CollectionSearchRequest r = (CollectionSearchRequest) request;
+
       COLLECTION_SEARCH_REQ_VOCAB_FIELDS.forEach(
           f -> {
-            CollectionSearchRequest collectionSearchRequest = (CollectionSearchRequest) request;
             List<String> allConceptsAndChildren =
-                handleValues.apply(f.vocabName, f.getter.apply(collectionSearchRequest));
-            f.setter.accept(collectionSearchRequest, allConceptsAndChildren);
+                handleValues.apply(f.vocabName, f.getter.apply(r));
+            f.setter.accept(r, allConceptsAndChildren);
           });
+
+      if (r instanceof CollectionDescriptorsSearchRequest) {
+        CollectionDescriptorsSearchRequest rr = (CollectionDescriptorsSearchRequest) r;
+        COLLECTION_DESCRIPTORS_SEARCH_REQ_VOCAB_FIELDS.forEach(
+            f -> {
+              List<String> allConceptsAndChildren =
+                  handleValues.apply(f.vocabName, f.getter.apply(rr));
+              f.setter.accept(rr, allConceptsAndChildren);
+            });
+      }
     }
   }
 
-  private static Set<String> findChildren(
+    private static Set<String> findChildren(
       ConceptClient conceptClient, String vocabName, String conceptName, Set<String> allChildren) {
     PagingResponse<ConceptView> result =
         Retry.decorateSupplier(
