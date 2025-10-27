@@ -13,6 +13,8 @@
  */
 package org.gbif.registry.persistence.mapper.params;
 
+import java.util.Set;
+
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.DatasetType;
 
@@ -38,6 +40,7 @@ public class DatasetListParams extends BaseListParams {
   @Nullable private Boolean isSubdataset;
   @Nullable private String contactUserId;
   @Nullable private String contactEmail;
+  @Nullable private Set<String> category;
 
   public static DatasetListParams from(BaseListParams params) {
     return BaseListParams.copy(DatasetListParams.builder().build(), params);

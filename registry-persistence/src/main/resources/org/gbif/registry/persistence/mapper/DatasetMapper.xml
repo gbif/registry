@@ -482,6 +482,11 @@
       <if test="params.contactEmail != null">
         AND c.email @> ARRAY[#{params.contactEmail}::text]
       </if>
+      <if test="params.category != null and params.category.size() > 0">
+        <foreach collection="params.category" item="cat" separator="AND">
+          AND d.category @> ARRAY[#{cat}::text]
+        </foreach>
+      </if>
     </where>
   </sql>
 

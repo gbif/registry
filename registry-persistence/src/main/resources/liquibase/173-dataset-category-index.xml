@@ -1,0 +1,14 @@
+<databaseChangeLog
+  xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+  <changeSet id="173" author="auzun" runInTransaction="false">
+    <sql splitStatements="false" stripComments="true">
+      <![CDATA[
+       CREATE INDEX IF NOT EXISTS dataset_category_idx ON dataset USING gin(category);
+       CREATE INDEX IF NOT EXISTS derived_dataset_category_idx ON derived_dataset USING gin(category);
+      ]]>
+    </sql>
+  </changeSet>
+</databaseChangeLog>
