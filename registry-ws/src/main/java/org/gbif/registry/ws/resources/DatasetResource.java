@@ -538,6 +538,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset, DatasetL
             .mtValue(request.getMachineTagValue())
             .contactUserId(request.getContactUserId())
             .contactEmail(request.getContactEmail())
+            .category(request.getCategory())
             .page(request.getPage())
             .build();
 

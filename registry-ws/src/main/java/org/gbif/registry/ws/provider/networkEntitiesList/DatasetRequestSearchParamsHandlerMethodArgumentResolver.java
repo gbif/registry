@@ -13,6 +13,9 @@
  */
 package org.gbif.registry.ws.provider.networkEntitiesList;
 
+import java.util.Arrays;
+import java.util.stream.Collectors;
+
 import org.gbif.api.model.registry.search.DatasetRequestSearchParams;
 import org.gbif.api.util.VocabularyUtils;
 import org.gbif.api.vocabulary.Country;
@@ -69,6 +72,12 @@ public class DatasetRequestSearchParamsHandlerMethodArgumentResolver
     String contactEmailParam = webRequest.getParameter("contactEmail");
     if (!Strings.isNullOrEmpty(contactEmailParam)) {
       params.setContactEmail(contactEmailParam);
+    }
+
+    // category parameter
+    String[] categoryParam = webRequest.getParameterValues("category");
+    if (categoryParam != null && (categoryParam.length > 0)) {
+      params.setCategory(Arrays.stream(categoryParam).collect(Collectors.toSet()));
     }
 
     return params;
