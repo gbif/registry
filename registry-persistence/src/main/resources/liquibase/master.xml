@@ -176,4 +176,5 @@
   <include file="liquibase/169-add-biome-field-collection-descriptors.xml" />
   <include file="liquibase/173-dataset-category-index.xml" />
   <include file="liquibase/174-griscicol-lookup-index.xml" />
+  <include file="liquibase/175-grscicoll-occurrence-mapping-code-index.xml" />
 </databaseChangeLog>
