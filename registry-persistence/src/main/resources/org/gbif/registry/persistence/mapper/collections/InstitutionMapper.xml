@@ -390,12 +390,7 @@
         0 AS key_match, 0 AS identifier_match, 0 AS name_match_with_identifier, 0 AS code_match, 1 AS alternative_code_match,
         0 AS name_match_with_code, 0 AS explicit_mapping
         FROM institution i
-        WHERE i.deleted IS NULL
-        AND EXISTS (
-          SELECT 1
-          FROM EACH(i.alternative_codes) AS kv
-          WHERE lower(kv.key)   = lower(#{code,jdbcType=VARCHAR})
-        )
+        WHERE i.deleted IS NULL AND i.alternative_codes_lower @> ARRAY[lower(#{code,jdbcType=VARCHAR})]
       UNION ALL
         SELECT DISTINCT ON (i.key) <include refid="LOOKUP_MATCH_FIELDS"/>,
         0 AS key_match, 0 AS identifier_match, 0 AS name_match_with_identifier, 0 AS code_match, 0 AS alternative_code_match,

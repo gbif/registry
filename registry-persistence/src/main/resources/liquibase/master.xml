@@ -179,4 +179,5 @@
   <include file="liquibase/171-event-downloads-table.xml" />
   <include file="liquibase/172-interpreted-extensions-downloads-table.xml" />
   <include file="liquibase/173-dataset-category-index.xml" />
+  <include file="liquibase/174-griscicol-lookup-index.xml" />
 </databaseChangeLog>
