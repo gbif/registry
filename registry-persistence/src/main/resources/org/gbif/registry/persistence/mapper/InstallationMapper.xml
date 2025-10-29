@@ -341,7 +341,7 @@
   </select>
 
   <sql id="LIST_FILTER">
-    FROM installation i<if test="params.query != null" >, to_tsquery('english',regexp_replace(quote_literal(unaccent(trim(#{params.query}))),'\s+',':*&amp;','g')||':*') AS query</if>
+    FROM installation i<if test="params.query != null" >, to_tsquery('english',regexp_replace(quote_literal(unaccent(trim(#{params.query}))),'\s+',':* &amp; ','g')||':*') AS query</if>
     <if test="params.identifier != null or params.identifierType != null">
       INNER JOIN installation_identifier ii ON ii.installation_key = i.key
       INNER JOIN identifier id ON ii.identifier_key = id.key
