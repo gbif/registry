@@ -34,7 +34,7 @@ public class BaseDBTest {
   public static final PostgreSQLContainer PG_CONTAINER;
 
   static {
-    PG_CONTAINER = new PostgreSQLContainer("postgres:11.1").withDatabaseName("registry");
+    PG_CONTAINER = new PostgreSQLContainer("postgres:17.2").withDatabaseName("registry");
     PG_CONTAINER.withReuse(true).withLabel("reuse.tag", "registry_ITs_PG_container");
     PG_CONTAINER.setWaitStrategy(
         Wait.defaultWaitStrategy().withStartupTimeout(Duration.ofSeconds(60)));
