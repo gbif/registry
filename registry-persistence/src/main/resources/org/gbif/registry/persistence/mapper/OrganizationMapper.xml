@@ -212,7 +212,8 @@
   <sql id="LIST_FILTER">
     FROM organization o
     <if test="params.query != null" >
-      JOIN to_tsquery('english',regexp_replace(quote_literal(unaccent(trim(#{params.query}))),'\s+',':* &amp; ','g')||':*') AS query ON <include refid="SIMPLE_SEARCH"/>
+      JOIN to_tsquery('english', CASE WHEN regexp_replace(unaccent(trim(#{params.query})), '[^A-Za-z0-9@.\-\s]+', '', 'g') = '' THEN 'false'
+      ELSE regexp_replace(regexp_replace(unaccent(trim(#{params.query})), '[^A-Za-z0-9@.\-\s]+', '', 'g'), '\s+', ':* &amp; ', 'g') || ':*' END) AS query ON <include refid="SIMPLE_SEARCH"/>
     </if>
     <if test="params.identifier != null or params.identifierType != null">
       INNER JOIN organization_identifier oi ON oi.organization_key = o.key

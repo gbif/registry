@@ -7,11 +7,8 @@
     <sql splitStatements="false" stripComments="true">
       <![CDATA[
       CREATE OR REPLACE FUNCTION hstore_keys_lowered(hs HSTORE) RETURNS text[] AS $$
-        SELECT CASE
-          WHEN hs IS NULL THEN ARRAY[]::text[]
-          ELSE ARRAY(SELECT lower(t.val) FROM unnest(akeys(hs::HSTORE)) AS t(val))
-        END;
-      $$ LANGUAGE SQL IMMUTABLE PARALLEL SAFE
+        SELECT ARRAY(SELECT lower(t.val) FROM unnest(akeys(hs::HSTORE)) AS t(val));
+      $$ LANGUAGE SQL IMMUTABLE PARALLEL SAFE RETURNS NULL ON NULL INPUT
       SET search_path = public, pg_catalog;
       ]]>
     </sql>

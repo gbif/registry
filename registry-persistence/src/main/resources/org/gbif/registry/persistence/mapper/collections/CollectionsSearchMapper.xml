@@ -19,7 +19,8 @@
   </sql>
 
   <sql id="TS_QUERY">
-    to_tsquery('english',regexp_replace(quote_literal(unaccent(trim(#{params.query}))),'\s+',':* &amp; ','g')||':*')
+    to_tsquery('english', CASE WHEN regexp_replace(unaccent(trim(#{params.query})), '[^A-Za-z0-9@.\-\s]+', '', 'g') = '' THEN 'false'
+    ELSE regexp_replace(regexp_replace(unaccent(trim(#{params.query})), '[^A-Za-z0-9@.\-\s]+', '', 'g'), '\s+', ':* &amp; ', 'g') || ':*' END)
   </sql>
 
   <select id="search" resultMap="SEARCH_DTO_MAP">
@@ -242,7 +243,9 @@
   </select>
 
   <sql id="INSTITUTIONS_FULLTEXT_SEARCH">
-    JOIN safe_tsquery(#{params.query}) AS query ON query @@ fulltext_search
+    JOIN to_tsquery('english', CASE WHEN regexp_replace(unaccent(trim(#{params.query})), '[^A-Za-z0-9@.\-\s]+', '', 'g') = '' THEN 'false'
+    ELSE regexp_replace(regexp_replace(unaccent(trim(#{params.query})), '[^A-Za-z0-9@.\-\s]+', '', 'g'), '\s+', ':* &amp; ', 'g') || ':*' END)
+    AS query ON query @@ fulltext_search
     OR EXISTS(
     SELECT collection_contact_key
     FROM institution_collection_contact JOIN collection_contact cc ON cc.key = collection_contact_key
@@ -453,7 +456,9 @@
   </sql>
 
   <sql id="COLLECTIONS_FULLTEXT_SEARCH">
-    JOIN safe_tsquery(#{params.query}) AS query ON query @@ c.fulltext_search
+    JOIN to_tsquery('english', CASE WHEN regexp_replace(unaccent(trim(#{params.query})), '[^A-Za-z0-9@.\-\s]+', '', 'g') = '' THEN 'false'
+    ELSE regexp_replace(regexp_replace(unaccent(trim(#{params.query})), '[^A-Za-z0-9@.\-\s]+', '', 'g'), '\s+', ':* &amp; ', 'g') || ':*' END)
+    AS query ON query @@ c.fulltext_search
     OR EXISTS(
     SELECT collection_contact_key
     FROM collection_collection_contact JOIN collection_contact cc ON cc.key = collection_contact_key
