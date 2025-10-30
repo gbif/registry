@@ -181,4 +181,5 @@
   <include file="liquibase/173-dataset-category-index.xml" />
   <include file="liquibase/174-griscicol-lookup-index.xml" />
   <include file="liquibase/175-grscicoll-occurrence-mapping-code-index.xml" />
+  <include file="liquibase/176-fix-function-search-paths.xml" />
 </databaseChangeLog>

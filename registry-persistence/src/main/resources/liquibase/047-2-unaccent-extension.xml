@@ -5,7 +5,7 @@
 
   <changeSet id="47-2" author="mpodolskiy" runInTransaction="false">
     <sql splitStatements="false" stripComments="true" >
-      CREATE EXTENSION IF NOT EXISTS unaccent;
+      CREATE EXTENSION IF NOT EXISTS unaccent WITH SCHEMA public;
     </sql>
   </changeSet>
 </databaseChangeLog>
