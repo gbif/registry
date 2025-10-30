@@ -128,7 +128,9 @@
   </sql>
 
   <sql id="FULLTEXT_SEARCH">
-    JOIN to_tsquery('english',regexp_replace(quote_literal(unaccent(trim(#{params.query}))),'\s+',':*&amp;','g')||':*') AS query ON query @@ c.fulltext_search
+    JOIN to_tsquery('english', CASE WHEN regexp_replace(unaccent(trim(#{params.query})), '[^A-Za-z0-9@.\-\s]+', '', 'g') = '' THEN 'false'
+    ELSE regexp_replace(regexp_replace(unaccent(trim(#{params.query})), '[^A-Za-z0-9@.\-\s]+', '', 'g'), '\s+', ':* &amp; ', 'g') || ':*' END)
+    AS query ON query @@ c.fulltext_search
     OR EXISTS(
       SELECT collection_contact_key
       FROM collection_collection_contact JOIN collection_contact cc ON cc.key = collection_contact_key
@@ -411,7 +413,7 @@
           0 AS key_match, 0 AS identifier_match, 0 AS name_match_with_identifier, 0 AS code_match, 1 AS alternative_code_match,
           0 AS name_match_with_code, 0 AS explicit_mapping
           FROM collection c
-          WHERE c.deleted IS NULL AND i.alternative_codes_lower @> ARRAY[lower(#{code,jdbcType=VARCHAR})]
+          WHERE c.deleted IS NULL AND c.alternative_codes_lower @> ARRAY[lower(#{code,jdbcType=VARCHAR})]
         UNION ALL
           SELECT DISTINCT ON (c.key) <include refid="LOOKUP_MATCH_FIELDS"/>,
           0 AS key_match, 0 AS identifier_match, 0 AS name_match_with_identifier, 0 AS code_match, 0 AS alternative_code_match,
