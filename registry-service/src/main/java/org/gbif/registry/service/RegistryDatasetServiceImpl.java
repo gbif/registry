@@ -207,6 +207,7 @@ public class RegistryDatasetServiceImpl implements RegistryDatasetService {
     target.setLicense(supplementary.getLicense());
     target.setMaintenanceUpdateFrequency(supplementary.getMaintenanceUpdateFrequency());
     target.setLockedForAutoUpdate(supplementary.isLockedForAutoUpdate());
+    target.setCategory(supplementary.getCategory());
     target.setCreated(supplementary.getCreated());
     target.setCreatedBy(supplementary.getCreatedBy());
     target.setModified(supplementary.getModified());

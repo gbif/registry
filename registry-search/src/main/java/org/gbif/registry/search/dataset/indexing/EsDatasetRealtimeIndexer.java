@@ -97,16 +97,21 @@ public class EsDatasetRealtimeIndexer implements DatasetRealtimeIndexer {
   @Override
   public void index(Organization organization) {
     // Not implemented for real-time indexing
+
+    // first purge dataset and then gbifWsClient.getOrganizationPublishedDataset and hosted  which requires
+    //Iterable<Dataset> datasets index
   }
 
   @Override
   public void index(Installation installation) {
     // Not implemented for real-time indexing
+    //getInstallationDatasets and index
   }
 
   @Override
   public void index(Network network) {
     // Not implemented for real-time indexing
+    //gbifWsClient.getNetworkDatasets(
   }
 
   @Override
@@ -117,7 +122,7 @@ public class EsDatasetRealtimeIndexer implements DatasetRealtimeIndexer {
           .id(datasetKey)
           .index(index)
           .build();
-      
+
       elasticsearchClient.deleteAsync(
           deleteRequest,
           new co.elastic.clients.elasticsearch.ElasticsearchAsyncClient.Listener<DeleteResponse>() {

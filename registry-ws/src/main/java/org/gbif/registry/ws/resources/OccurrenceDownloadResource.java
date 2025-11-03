@@ -17,6 +17,7 @@ import org.gbif.api.model.occurrence.DownloadType;
 import org.gbif.api.service.common.IdentityAccessService;
 import org.gbif.registry.doi.DownloadDoiDataCiteHandlingService;
 import org.gbif.registry.persistence.mapper.DatasetOccurrenceDownloadMapper;
+import org.gbif.registry.persistence.mapper.DownloadStatisticsMapper;
 import org.gbif.registry.persistence.mapper.OccurrenceDownloadMapper;
 
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -35,11 +36,13 @@ public class OccurrenceDownloadResource extends BaseDownloadResource {
   public OccurrenceDownloadResource(
       OccurrenceDownloadMapper occurrenceDownloadMapper,
       DatasetOccurrenceDownloadMapper datasetOccurrenceDownloadMapper,
+      DownloadStatisticsMapper downloadStatisticsMapper,
       @Lazy DownloadDoiDataCiteHandlingService doiDataCiteHandlingService,
       @Qualifier("baseIdentityAccessService") IdentityAccessService identityService) {
     super(
         occurrenceDownloadMapper,
         datasetOccurrenceDownloadMapper,
+        downloadStatisticsMapper,
         doiDataCiteHandlingService,
         identityService,
         DownloadType.OCCURRENCE);

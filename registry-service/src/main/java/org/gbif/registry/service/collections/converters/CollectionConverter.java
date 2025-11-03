@@ -19,6 +19,7 @@ import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Identifier;
 import org.gbif.api.model.registry.Organization;
 import org.gbif.api.model.registry.eml.TaxonomicCoverages;
+import org.gbif.api.model.registry.eml.geospatial.GeospatialCoverage;
 import org.gbif.api.model.registry.eml.temporal.DateRange;
 import org.gbif.api.model.registry.eml.temporal.SingleDate;
 import org.gbif.api.model.registry.eml.temporal.VerbatimTimePeriod;
@@ -141,7 +142,10 @@ public class CollectionConverter {
 
     String geographicCoverage =
         dataset.getGeographicCoverages().stream()
-            .map(g -> g.getDescription().trim())
+            .map(GeospatialCoverage::getDescription)
+            .filter(Objects::nonNull)
+            .map(String::trim)
+            .filter(s -> !s.isEmpty())
             .collect(Collectors.joining("."));
     geographicCoverage = normalizePunctuationSigns(geographicCoverage).trim();
     existingCollection.setGeographicCoverage(geographicCoverage);
@@ -165,7 +169,8 @@ public class CollectionConverter {
                   }
                   return "";
                 })
-            .filter(s -> !s.isEmpty())
+            .map(String::trim)
+            .filter(s -> !s.isEmpty() && !s.equals("-"))
             .collect(Collectors.joining("; "));
     temporalCoverage = normalizePunctuationSigns(temporalCoverage).trim();
     existingCollection.setTemporalCoverage(temporalCoverage);

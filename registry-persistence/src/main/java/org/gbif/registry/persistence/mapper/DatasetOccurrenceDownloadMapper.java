@@ -34,51 +34,5 @@ import org.springframework.stereotype.Repository;
 
 /** Mapper that perform operations on dataset usages in occurrence downloads. */
 @Repository
-public interface DatasetOccurrenceDownloadMapper {
-
-  List<DatasetOccurrenceDownloadUsage> listByDataset(
-      @Param("datasetKey") UUID datasetKey,
-      @Param("type") DownloadType type,
-      @Nullable @Param("page") Pageable page);
-
-  List<DatasetOccurrenceDownloadUsage> listByDatasetWithoutDownload(
-    @Param("datasetKey") UUID datasetKey,
-    @Param("type") DownloadType type,
-    @Nullable @Param("page") Pageable page);
-
-  int countByDataset(@Param("datasetKey") UUID datasetKey, @Param("type") DownloadType type);
-
-  /**
-   * Note that the Download objects within the DatasetOccurrenceDownloadUsage are not retrieved, to
-   * avoid massive repetition, and high memory use for complex queries.
-   */
-  List<DatasetOccurrenceDownloadUsage> listByDownload(
-      @Param("downloadKey") String downloadKey,
-      @Param("datasetTitle") String datasetTitle,
-      @Param("sortBy") DatasetUsageSortField sortBy,
-      @Param("sortOrder") SortOrder sortOrder,
-      @Nullable @Param("page") Pageable page);
-
-  void createOrUpdateUsages(
-      @Param("downloadKey") String downloadKey,
-      @Param("citationMap") Map<UUID, Long> downloadDataset);
-
-  List<OrganizationOccurrenceDownloadUsage> listOrganizationsByDownload(
-      @Param("downloadKey") String downloadKey,
-      @Param("organizationTitle") String organizationTitle,
-      @Param("sortBy") OrganizationUsageSortField sortBy,
-      @Param("sortOrder") SortOrder sortOrder,
-      @Nullable @Param("page") Pageable page);
-
-  List<CountryOccurrenceDownloadUsage> listCountriesByDownload(
-      @Param("downloadKey") String downloadKey,
-      @Param("sortBy") CountryUsageSortField sortBy,
-      @Param("sortOrder") SortOrder sortOrder,
-      @Nullable @Param("page") Pageable page);
-
-  int countOrganizationsByDownload(
-      @Param("downloadKey") String downloadKey,
-      @Param("organizationTitle") String organizationTitle);
-
-  int countCountriesByDownload(@Param("downloadKey") String downloadKey);
+public interface DatasetOccurrenceDownloadMapper extends DatasetDownloadMapper{
 }

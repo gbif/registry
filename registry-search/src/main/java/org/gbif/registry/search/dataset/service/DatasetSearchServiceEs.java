@@ -89,6 +89,7 @@ public class DatasetSearchServiceEs implements DatasetSearchService {
           elasticsearchClient.search(searchRequest, org.gbif.registry.search.dataset.DatasetDocument.class);
       return esResponseParser.buildSuggestResponse(response, datasetSuggestRequest);
     } catch (IOException ex) {
+      log.error("Error executing the search operation", ex);
       throw new RuntimeException(ex);
     }
   }

@@ -62,6 +62,8 @@ public abstract class BaseSearchDto {
   private String descriptorRecordedByHighlight;
   private String descriptorDisciplineHighlight;
   private String descriptorObjectClassificationHighlight;
+  private String descriptorBiomeHighlight;
+  private String descriptorBiomeTypeHighlight;
   private String descriptorIssuesHighlight;
   private String descriptorGroupTitleHighlight;
   private String descriptorGroupDescriptionHighlight;

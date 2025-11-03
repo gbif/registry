@@ -10,232 +10,63 @@
     <result property="datasetCitation" column="dataset_citation"/>
     <result property="numberRecords" column="number_records"/>
     <result property="publishingCountryCode" column="country"/>
-    <association property="download" javaType="org.gbif.api.model.occurrence.Download" resultMap="org.gbif.registry.persistence.mapper.OccurrenceDownloadMapper.OCCURRENCE_DOWNLOAD_MAP"/>
+    <association property="download" javaType="org.gbif.api.model.occurrence.Download"
+                 resultMap="org.gbif.registry.persistence.mapper.OccurrenceDownloadMapper.OCCURRENCE_DOWNLOAD_MAP"/>
   </resultMap>
-
-  <resultMap id="DATASET_OCCURRENCE_OMIT_DOWNLOAD_MAP" type="org.gbif.api.model.registry.DatasetOccurrenceDownloadUsage" autoMapping="false">
-    <id property="downloadKey" column="download_key"/>
-    <id property="datasetKey" column="dataset_key"/>
-    <result property="datasetTitle" column="dataset_title"/>
-    <result property="datasetDOI" column="dataset_doi"/>
-    <result property="datasetCitation" column="dataset_citation"/>
-    <result property="numberRecords" column="number_records"/>
-    <result property="publishingCountryCode" column="country"/>
-    <!-- The download is null -->
-  </resultMap>
-
-  <resultMap id="ORGANIZATION_OCCURRENCE_DOWNLOAD_MAP" type="org.gbif.api.model.registry.OrganizationOccurrenceDownloadUsage" autoMapping="false">
-    <id property="downloadKey" column="download_key"/>
-    <id property="organizationKey" column="organizationKey"/>
-    <result property="organizationTitle" column="organizationTitle"/>
-    <result property="numberRecords" column="numberRecords"/>
-    <result property="publishingCountryCode" column="publishingCountryCode"/>
-  </resultMap>
-
-  <resultMap id="COUNTRY_OCCURRENCE_DOWNLOAD_MAP" type="org.gbif.api.model.registry.CountryOccurrenceDownloadUsage" autoMapping="false">
-    <id property="downloadKey" column="download_key"/>
-    <id property="publishingCountryCode" column="publishingCountryCode"/>
-    <result property="numberRecords" column="numberRecords"/>
-  </resultMap>
-
-  <sql id="DATASET_OCCURRENCE_DOWNLOAD_FIELDS">
-    dod.download_key,dod.dataset_key,dod.dataset_title,dod.dataset_doi,dod.dataset_citation,dod.number_records
-  </sql>
 
   <select id="listByDataset" resultMap="DATASET_OCCURRENCE_DOWNLOAD_MAP" parameterType="map">
-    SELECT <include refid="DATASET_OCCURRENCE_DOWNLOAD_FIELDS"/>,<include refid="org.gbif.registry.persistence.mapper.OccurrenceDownloadMapper.OCCURRENCE_DOWNLOAD_FIELDS"/>
+    SELECT <include refid="org.gbif.registry.persistence.mapper.CommonDownload.DATASET_OCCURRENCE_DOWNLOAD_FIELDS"/>,
+    <include refid="org.gbif.registry.persistence.mapper.CommonDownload.OCCURRENCE_DOWNLOAD_FIELDS"/>
     FROM dataset_occurrence_download dod
-    <!-- When events get their own download tables, this join to occurrence_download can be removed. -->
-    JOIN occurrence_download od ON dod.download_key = od.key
-    WHERE dod.dataset_key = #{datasetKey,jdbcType=OTHER}
-    <if test="type != null">
-      AND od.type = #{type,jdbcType=OTHER}
-    </if>
-    <!-- This is preferable to joining to the occurrence_download table to ORDER BY created DESC. -->
-    ORDER BY RIGHT(download_key, 15) DESC, LEFT(download_key, 7) DESC
-    <if test="page != null" >
-      LIMIT #{page.limit} OFFSET #{page.offset}
-    </if>
+    <include refid="org.gbif.registry.persistence.mapper.CommonDownload.LIST_BY_DATASET"/>
   </select>
 
-  <select id="listByDatasetWithoutDownload" resultMap="DATASET_OCCURRENCE_OMIT_DOWNLOAD_MAP" parameterType="map">
-    SELECT <include refid="DATASET_OCCURRENCE_DOWNLOAD_FIELDS"/>
+  <select id="listByDatasetWithoutDownload"
+          resultMap="org.gbif.registry.persistence.mapper.CommonDownload.DATASET_OCCURRENCE_OMIT_DOWNLOAD_MAP" parameterType="map">
+    SELECT <include refid="org.gbif.registry.persistence.mapper.CommonDownload.DATASET_OCCURRENCE_DOWNLOAD_FIELDS"/>
     FROM dataset_occurrence_download dod
-    <!-- When events get their own download tables, this join to occurrence_download can be removed. -->
-    JOIN occurrence_download od ON dod.download_key = od.key
-    WHERE dod.dataset_key = #{datasetKey,jdbcType=OTHER}
-    <if test="type != null">
-      AND od.type = #{type,jdbcType=OTHER}
-    </if>
-    <!-- This is preferable to joining to the occurrence_download table to ORDER BY created DESC. -->
-    ORDER BY RIGHT(download_key, 15) DESC, LEFT(download_key, 7) DESC
-    <if test="page != null" >
-      LIMIT #{page.limit} OFFSET #{page.offset}
-    </if>
+    <include refid="org.gbif.registry.persistence.mapper.CommonDownload.LIST_BY_DATASET_WITHOUT_DOWNLOAD"/>
   </select>
 
-  <select id="listByDownload" resultMap="DATASET_OCCURRENCE_OMIT_DOWNLOAD_MAP" parameterType="org.gbif.api.model.common.paging.Pageable">
-    SELECT <include refid="DATASET_OCCURRENCE_DOWNLOAD_FIELDS"/>,o.country
-    FROM dataset_occurrence_download dod
-    INNER JOIN dataset d ON d.key = dod.dataset_key
-    INNER JOIN organization o ON o.key = d.publishing_organization_key
-    WHERE dod.download_key = #{downloadKey,jdbcType=OTHER}
-    <if test="datasetTitle != null" >
-      AND dod.dataset_title = #{datasetTitle,jdbcType=VARCHAR}
-    </if>
-    ORDER BY
-    <if test="sortBy != null">
-      <choose>
-        <when test="sortBy.name.equals('DATASET_TITLE')">
-          dod.dataset_title
-        </when>
-        <when test="sortBy.name.equals('COUNTRY_CODE')">
-          o.country
-        </when>
-        <when test="sortBy.name.equals('RECORD_COUNT')">
-          dod.number_records
-        </when>
-        <otherwise/>
-      </choose>
-      <if test="sortOrder != null">
-        <choose>
-          <when test="sortOrder.name.equals('DESC')">
-            DESC
-          </when>
-          <otherwise>
-            ASC
-          </otherwise>
-        </choose>
-      </if>
-      ,
-    </if>
-    dod.number_records DESC, dod.dataset_key
-    <if test="page != null" >
-      LIMIT #{page.limit} OFFSET #{page.offset}
-    </if>
-  </select>
-
-  <select id="listOrganizationsByDownload" resultMap="ORGANIZATION_OCCURRENCE_DOWNLOAD_MAP"
+  <select id="listByDownload"
+          resultMap="org.gbif.registry.persistence.mapper.CommonDownload.DATASET_OCCURRENCE_OMIT_DOWNLOAD_MAP"
           parameterType="org.gbif.api.model.common.paging.Pageable">
-    SELECT o.key AS organizationKey, o.title AS organizationTitle, o.country AS publishingCountryCode, dod.download_key,
-    SUM(dod.number_records) AS numberRecords
-    FROM dataset_occurrence_download dod
-    INNER JOIN dataset d on d.key = dod.dataset_key
-    INNER JOIN organization o ON o.key = d.publishing_organization_key
-    WHERE dod.download_key = #{downloadKey,jdbcType=OTHER}
-    <if test="organizationTitle != null" >
-      AND o.title = #{organizationTitle,jdbcType=VARCHAR}
-    </if>
-    GROUP BY o.key, o.title, o.country, dod.download_key
-    ORDER BY
-    <if test="sortBy != null">
-      <choose>
-        <when test="sortBy.name.equals('ORGANIZATION_TITLE')">
-          o.title
-        </when>
-        <when test="sortBy.name.equals('COUNTRY_CODE')">
-          o.country
-        </when>
-        <when test="sortBy.name.equals('RECORD_COUNT')">
-          numberRecords
-        </when>
-        <otherwise/>
-      </choose>
-      <if test="sortOrder != null">
-        <choose>
-          <when test="sortOrder.name.equals('DESC')">
-            DESC
-          </when>
-          <otherwise>
-            ASC
-          </otherwise>
-        </choose>
-      </if>
-      ,
-    </if>
-    o.key
-    <if test="page != null" >
-      LIMIT #{page.limit} OFFSET #{page.offset}
-    </if>
+    <bind name="downloadTable" value="'occurrence'"/>
+    <include refid="org.gbif.registry.persistence.mapper.CommonDownload.LIST_BY_DOWNLOAD_QUERY"/>
   </select>
 
-  <select id="listCountriesByDownload" resultMap="COUNTRY_OCCURRENCE_DOWNLOAD_MAP"
+  <select id="listOrganizationsByDownload"
+          resultMap="org.gbif.registry.persistence.mapper.CommonDownload.ORGANIZATION_OCCURRENCE_DOWNLOAD_MAP"
           parameterType="org.gbif.api.model.common.paging.Pageable">
-    SELECT o.country AS publishingCountryCode, dod.download_key, SUM(dod.number_records) AS numberRecords
-    FROM dataset_occurrence_download dod
-    INNER JOIN dataset d on d.key = dod.dataset_key
-    INNER JOIN organization o ON o.key = d.publishing_organization_key
-    WHERE dod.download_key = #{downloadKey,jdbcType=OTHER}
-    GROUP BY o.country, dod.download_key
-    ORDER BY
-    <if test="sortBy != null">
-      <choose>
-        <when test="sortBy.name.equals('COUNTRY_CODE')">
-          o.country
-        </when>
-        <when test="sortBy.name.equals('RECORD_COUNT')">
-          numberRecords
-        </when>
-        <otherwise/>
-      </choose>
-      <if test="sortOrder != null">
-        <choose>
-          <when test="sortOrder.name.equals('DESC')">
-            DESC
-          </when>
-          <otherwise>
-            ASC
-          </otherwise>
-        </choose>
-      </if>
-      ,
-    </if>
-    o.country
-    <if test="page != null" >
-      LIMIT #{page.limit} OFFSET #{page.offset}
-    </if>
+    <bind name="downloadTable" value="'occurrence'"/>
+    <include refid="org.gbif.registry.persistence.mapper.CommonDownload.LIST_ORGANIZATIONS_BY_DOWNLOAD_QUERY"/>
+  </select>
+
+  <select id="listCountriesByDownload"
+          resultMap="org.gbif.registry.persistence.mapper.CommonDownload.COUNTRY_OCCURRENCE_DOWNLOAD_MAP"
+          parameterType="org.gbif.api.model.common.paging.Pageable">
+    <bind name="downloadTable" value="'occurrence'"/>
+    <include refid="org.gbif.registry.persistence.mapper.CommonDownload.LIST_COUNTRIES_BY_DOWNLOAD"/>
   </select>
 
   <select id="countOrganizationsByDownload" resultType="Integer">
-    SELECT COUNT(DISTINCT o.key)
-    FROM dataset_occurrence_download dod
-    INNER JOIN dataset d on d.key = dod.dataset_key
-    INNER JOIN organization o ON o.key = d.publishing_organization_key
-    WHERE dod.download_key = #{downloadKey,jdbcType=OTHER}
-    <if test="organizationTitle != null" >
-      AND o.title = #{organizationTitle,jdbcType=VARCHAR}
-    </if>
+    <bind name="downloadTable" value="'occurrence'"/>
+    <include refid="org.gbif.registry.persistence.mapper.CommonDownload.COUNT_ORGANIZATIONS_BY_DOWNLOAD_QUERY"/>
   </select>
 
   <select id="countCountriesByDownload" resultType="Integer">
-    SELECT COUNT(DISTINCT o.country)
-    FROM dataset_occurrence_download dod
-    INNER JOIN dataset d on d.key = dod.dataset_key
-    INNER JOIN organization o ON o.key = d.publishing_organization_key
-    WHERE dod.download_key = #{downloadKey,jdbcType=OTHER}
+    <bind name="downloadTable" value="'occurrence'"/>
+    <include refid="org.gbif.registry.persistence.mapper.CommonDownload.COUNT_COUNTRIES_BY_DOWNLOAD_QUERY"/>
   </select>
 
   <select id="countByDataset" resultType="Integer" parameterType="map">
-    SELECT COUNT(DISTINCT download_key)
-    <!-- When events get their own download tables, this join to occurrence_download can be removed. -->
-    FROM dataset_occurrence_download JOIN occurrence_download od ON download_key = od.key
-    WHERE dataset_key = #{datasetKey,jdbcType=OTHER}
-    <if test="type != null"> AND od.type = #{type,jdbcType=OTHER}</if>
+    <bind name="downloadTable" value="'occurrence'"/>
+    <include refid="org.gbif.registry.persistence.mapper.CommonDownload.COUNT_BY_DATASET_QUERY"/>
   </select>
 
   <insert id="createOrUpdateUsages">
-    WITH
-      dataset_usages(dataset_key, number_records) AS
-      ((VALUES
-        <foreach item="value" index="key" collection="citationMap" open="(" separator="),(" close=")">
-          cast(#{key} as uuid),#{value}
-        </foreach>
-      ))
-    INSERT INTO dataset_occurrence_download (
-      SELECT #{downloadKey} as download_key, d.key, dus.number_records, d.title, d.doi, d.citation
-      FROM dataset d
-      JOIN dataset_usages dus ON d.key = dus.dataset_key)
-    ON CONFLICT(download_key,dataset_key) DO UPDATE SET number_records = EXCLUDED.number_records
+    <bind name="downloadTable" value="'occurrence'"/>
+    <include refid="org.gbif.registry.persistence.mapper.CommonDownload.CREATE_OR_UPDATE_USAGES_QUERY"/>
   </insert>
 
 </mapper>

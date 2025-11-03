@@ -105,7 +105,7 @@ public class VocabularySynchronizerCommandIT extends BaseDBTest {
     VocabularySynchronizerConfiguration config = new VocabularySynchronizerConfiguration();
     config.setDbConfig(toDbConfig(PG_CONTAINER));
     config.apiRootUrl = "http://localhost:8080";
-    config.queueName = "vocabulary-released";
+    config.queueName = "vocabulary-released-registry";
     config.poolSize = 1;
     return config;
   }

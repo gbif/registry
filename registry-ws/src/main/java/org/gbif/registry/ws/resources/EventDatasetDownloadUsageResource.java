@@ -13,15 +13,12 @@
  */
 package org.gbif.registry.ws.resources;
 
-import org.gbif.api.model.occurrence.DownloadType;
-import org.gbif.registry.persistence.mapper.DatasetOccurrenceDownloadMapper;
-
+import io.swagger.v3.oas.annotations.Hidden;
+import org.gbif.registry.persistence.mapper.DatasetEventDownloadMapper;
 import org.springframework.http.MediaType;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import io.swagger.v3.oas.annotations.Hidden;
 
 /** Event download resource/web service. */
 @Hidden
@@ -30,8 +27,7 @@ import io.swagger.v3.oas.annotations.Hidden;
 @RequestMapping(value = "event/download/dataset", produces = MediaType.APPLICATION_JSON_VALUE)
 public class EventDatasetDownloadUsageResource extends DatasetDownloadUsageResourceBase {
 
-  public EventDatasetDownloadUsageResource(
-      DatasetOccurrenceDownloadMapper datasetOccurrenceDownloadMapper) {
-    super(datasetOccurrenceDownloadMapper, DownloadType.EVENT);
+  public EventDatasetDownloadUsageResource(DatasetEventDownloadMapper datasetEventDownloadMapper) {
+    super(datasetEventDownloadMapper);
   }
 }

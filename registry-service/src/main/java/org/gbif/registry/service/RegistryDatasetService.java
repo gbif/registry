@@ -45,22 +45,20 @@ public interface RegistryDatasetService {
   List<DerivedDatasetUsage> ensureDerivedDatasetDatasetUsagesValid(Map<String, Long> data);
 
   /**
-   * Add a new Contact to a target entity.
+   * Adds DwcA metadata to a target dataset.
    *
-   * @param targetEntityKey key of target entity
-   * @param contact         Contact to add
+   * @param datasetKey   key of target dataset
+   * @param dwcA         dqwcA metadata to add
    *
-   * @return key of Contact added
    */
   void createDwcaData(@NotNull UUID datasetKey, @NotNull @Valid Dataset.DwcA dwcA);
 
   /**
-   * Add a new Contact to a target entity.
+   * Updates DwcA metadata to a target dataset.
    *
-   * @param targetEntityKey key of target entity
-   * @param contact         Contact to add
+   * @param datasetKey   key of target dataset
+   * @param dwcA         dqwcA metadata
    *
-   * @return key of Contact added
    */
   void updateDwcaData(@NotNull UUID datasetKey, @NotNull @Valid Dataset.DwcA dwcA);
 

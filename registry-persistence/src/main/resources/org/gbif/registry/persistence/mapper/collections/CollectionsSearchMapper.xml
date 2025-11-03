@@ -19,7 +19,8 @@
   </sql>
 
   <sql id="TS_QUERY">
-    to_tsquery('english',regexp_replace(quote_literal(unaccent(trim(#{params.query}))),'\s+',':*&amp;','g')||':*')
+    to_tsquery('english', CASE WHEN regexp_replace(unaccent(trim(#{params.query})), '[^A-Za-z0-9@.\-\s]+', '', 'g') = '' THEN 'false'
+    ELSE regexp_replace(regexp_replace(unaccent(trim(#{params.query})), '[^A-Za-z0-9@.\-\s]+', '', 'g'), '\s+', ':* &amp; ', 'g') || ':*' END)
   </sql>
 
   <select id="search" resultMap="SEARCH_DTO_MAP">
@@ -242,7 +243,9 @@
   </select>
 
   <sql id="INSTITUTIONS_FULLTEXT_SEARCH">
-    JOIN to_tsquery('english',regexp_replace(quote_literal(unaccent(trim(#{params.query}))),'\s+',':*&amp;','g')||':*') AS query ON query @@ fulltext_search
+    JOIN to_tsquery('english', CASE WHEN regexp_replace(unaccent(trim(#{params.query})), '[^A-Za-z0-9@.\-\s]+', '', 'g') = '' THEN 'false'
+    ELSE regexp_replace(regexp_replace(unaccent(trim(#{params.query})), '[^A-Za-z0-9@.\-\s]+', '', 'g'), '\s+', ':* &amp; ', 'g') || ':*' END)
+    AS query ON query @@ fulltext_search
     OR EXISTS(
     SELECT collection_contact_key
     FROM institution_collection_contact JOIN collection_contact cc ON cc.key = collection_contact_key
@@ -270,7 +273,7 @@
       cd.individual_count AS descriptorIndividualCount, cd.identified_by AS descriptorIdentifiedBy,
       cd.date_identified as descriptorDateIdentified, cd.type_status AS descriptorTypeStatus,
       cd.recorded_by AS descriptorRecordedBy, cd.discipline AS descriptorDiscipline,
-      cd.object_classification_name AS descriptorObjectClassification, cd.issues AS descriptorIssues
+      cd.object_classification_name AS descriptorObjectClassification, cd.biome_type AS descriptorBiomeType, cd.biome AS descriptorBiome, cd.issues AS descriptorIssues
     </if>
     <if test="params.query != null &amp;&amp; params.highlight">
       ,ts_headline(c.code, c.query) code_highlight, ts_headline(c.name, c.query) name_highlight
@@ -289,6 +292,8 @@
         ts_headline(array_to_string(cd.recorded_by, ' '), c.query) descriptor_recorded_by_highlight,
         ts_headline(cd.discipline, c.query) descriptor_discipline_highlight,
         ts_headline(cd.object_classification_name, c.query) descriptor_object_classification_highlight,
+        ts_headline(cd.biome_type, c.query) descriptor_biome_type_highlight,
+        ts_headline(cd.biome, c.query) descriptor_biome_highlight,
         ts_headline(array_to_string(cd.issues, ' '), c.query) descriptor_issues_highlight,
         ts_headline(cdg.title, c.query) descriptor_group_title_highlight,
         ts_headline(cdg.description, c.query) descriptor_group_description_highlight
@@ -424,6 +429,18 @@
         #{item,jdbcType=VARCHAR}
       </foreach>
     </if>
+    <if test="params.biomeType != null  and params.biomeType.size > 0">
+      AND cd.biome_type IN
+      <foreach item="item" collection="params.biomeType" open="(" separator="," close=")">
+        #{item,jdbcType=VARCHAR}
+      </foreach>
+    </if>
+    <if test="params.biome != null  and params.biome.size > 0">
+      AND cd.biome IN
+      <foreach item="item" collection="params.biome" open="(" separator="," close=")">
+        #{item,jdbcType=VARCHAR}
+      </foreach>
+    </if>
     <if test="params.descriptorCountry != null  and params.descriptorCountry.size > 0">
       AND cd.country IN
       <foreach item="item" collection="params.descriptorCountry" open="(" separator="," close=")">
@@ -439,7 +456,9 @@
   </sql>
 
   <sql id="COLLECTIONS_FULLTEXT_SEARCH">
-    JOIN to_tsquery('english',regexp_replace(quote_literal(unaccent(trim(#{params.query}))),'\s+',':*&amp;','g')||':*') AS query ON query @@ c.fulltext_search
+    JOIN to_tsquery('english', CASE WHEN regexp_replace(unaccent(trim(#{params.query})), '[^A-Za-z0-9@.\-\s]+', '', 'g') = '' THEN 'false'
+    ELSE regexp_replace(regexp_replace(unaccent(trim(#{params.query})), '[^A-Za-z0-9@.\-\s]+', '', 'g'), '\s+', ':* &amp; ', 'g') || ':*' END)
+    AS query ON query @@ c.fulltext_search
     OR EXISTS(
     SELECT collection_contact_key
     FROM collection_collection_contact JOIN collection_contact cc ON cc.key = collection_contact_key
@@ -738,6 +757,12 @@
       <when test="params.facet.name.equals('OBJECT_CLASSIFICATION')">
         cd.object_classification_name
       </when>
+      <when test="params.facet.name.equals('BIOME_TYPE')">
+        cd.biome_type
+      </when>
+      <when test="params.facet.name.equals('BIOME')">
+        cd.biome
+      </when>
     </choose>
   </sql>
 
@@ -817,6 +842,12 @@
           </when>
           <when test="params.facet.name.equals('OBJECT_CLASSIFICATION')">
             cd.object_classification_name
+          </when>
+          <when test="params.facet.name.equals('BIOME_TYPE')">
+            cd.biome_type
+          </when>
+          <when test="params.facet.name.equals('BIOME')">
+            cd.biome
           </when>
         </choose>
         ) FROM collection c

@@ -1,0 +1,15 @@
+<databaseChangeLog
+  xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+  <changeSet id="172" author="mlopez" runInTransaction="false">
+    <sql>
+      ALTER TYPE extension ADD VALUE IF NOT EXISTS 'HUMBOLDT';
+      ALTER TYPE extension ADD VALUE IF NOT EXISTS 'OCCURRENCE';
+      ALTER TABLE occurrence_download ADD COLUMN interpreted_extensions extension ARRAY DEFAULT array[]::extension[];
+      ALTER TABLE event_download ADD COLUMN interpreted_extensions extension ARRAY DEFAULT array[]::extension[];
+    </sql>
+  </changeSet>
+
+</databaseChangeLog>

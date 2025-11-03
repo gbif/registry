@@ -128,7 +128,9 @@
   </sql>
 
   <sql id="FULLTEXT_SEARCH">
-    JOIN to_tsquery('english',regexp_replace(quote_literal(unaccent(trim(#{params.query}))),'\s+',':*&amp;','g')||':*') AS query ON query @@ c.fulltext_search
+    JOIN to_tsquery('english', CASE WHEN regexp_replace(unaccent(trim(#{params.query})), '[^A-Za-z0-9@.\-\s]+', '', 'g') = '' THEN 'false'
+    ELSE regexp_replace(regexp_replace(unaccent(trim(#{params.query})), '[^A-Za-z0-9@.\-\s]+', '', 'g'), '\s+', ':* &amp; ', 'g') || ':*' END)
+    AS query ON query @@ c.fulltext_search
     OR EXISTS(
       SELECT collection_contact_key
       FROM collection_collection_contact JOIN collection_contact cc ON cc.key = collection_contact_key
@@ -172,6 +174,16 @@
     FROM collection c
     LEFT JOIN institution inst ON inst.key = c.institution_key
     WHERE c.key = #{collectionKey,jdbcType=OTHER}
+  </select>
+
+  <select id="getCollectionDtos" resultMap="COLLECTION_DTO_MAP">
+    SELECT <include refid="COLLECTION_READ_FIELDS"/>, inst.name institutionName, inst.code institutionCode
+    FROM collection c
+    LEFT JOIN institution inst ON inst.key = c.institution_key
+    WHERE c.key IN
+    <foreach collection="keys" item="key" separator="," open="(" close=")">
+      #{key,jdbcType=OTHER}
+    </foreach>
   </select>
 
   <select id="getInstitutionKey" resultType="java.util.UUID" >
@@ -395,13 +407,13 @@
           0 AS key_match, 0 AS identifier_match, 0 AS name_match_with_identifier, 1 AS code_match, 0 AS alternative_code_match,
           0 AS name_match_with_code, 0 AS explicit_mapping
           FROM collection c
-          WHERE c.code = #{code,jdbcType=VARCHAR} AND c.deleted is null
+          WHERE lower(c.code) = lower(#{code,jdbcType=VARCHAR}) AND c.deleted is null
         UNION ALL
           SELECT DISTINCT ON (c.key) <include refid="LOOKUP_MATCH_FIELDS"/>,
           0 AS key_match, 0 AS identifier_match, 0 AS name_match_with_identifier, 0 AS code_match, 1 AS alternative_code_match,
           0 AS name_match_with_code, 0 AS explicit_mapping
           FROM collection c
-          WHERE c.alternative_codes ?? #{code,jdbcType=VARCHAR} AND c.deleted is null
+          WHERE c.deleted IS NULL AND c.alternative_codes_lower @> ARRAY[lower(#{code,jdbcType=VARCHAR})]
         UNION ALL
           SELECT DISTINCT ON (c.key) <include refid="LOOKUP_MATCH_FIELDS"/>,
           0 AS key_match, 0 AS identifier_match, 0 AS name_match_with_identifier, 0 AS code_match, 0 AS alternative_code_match,
@@ -419,7 +431,7 @@
           INNER JOIN occurrence_mapping om ON om.key = com.occurrence_mapping_key
           WHERE c.deleted is null AND om.dataset_key = #{datasetKey,jdbcType=OTHER}
           <if test="code != null"> AND (om.code IS NULL OR om.code = #{code,jdbcType=VARCHAR})</if>
-          <if test="parentCode != null"> AND (om.parent_code IS NULL OR om.parent_code = #{parentCode,jdbcType=VARCHAR})</if>
+          <if test="parentCode != null"> AND (om.parent_code IS NULL OR lower(om.parent_code) = lower(#{parentCode,jdbcType=VARCHAR}))</if>
           <if test="identifier != null"> AND (om.identifier IS NULL OR om.identifier = #{identifier,jdbcType=VARCHAR})</if>
       </if>
     </trim>) AS matches

@@ -36,6 +36,7 @@ import org.gbif.registry.mail.collections.CollectionsEmailManager;
 import org.gbif.registry.mail.config.CollectionsMailConfigurationProperties;
 import org.gbif.registry.persistence.mapper.UserMapper;
 import org.gbif.registry.persistence.mapper.collections.DescriptorChangeSuggestionMapper;
+import org.gbif.registry.security.grscicoll.GrSciCollAuthorizationService;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -83,6 +84,7 @@ public class DescriptorChangeSuggestionServiceImpl implements DescriptorChangeSu
   private final CollectionsEmailManager emailManager;
   private final CollectionsMailConfigurationProperties collectionsMailConfigurationProperties;
   private final UserMapper userMapper;
+  private final GrSciCollAuthorizationService grSciCollAuthorizationService;
 
   @Autowired
   public DescriptorChangeSuggestionServiceImpl(DescriptorChangeSuggestionMapper suggestionMapper,
@@ -92,7 +94,7 @@ public class DescriptorChangeSuggestionServiceImpl implements DescriptorChangeSu
     EmailSender emailSender,
     CollectionsEmailManager emailManager,
     CollectionsMailConfigurationProperties collectionsMailConfigurationProperties,
-    UserMapper userMapper) {
+    UserMapper userMapper, GrSciCollAuthorizationService grSciCollAuthorizationService) {
     this.suggestionMapper = suggestionMapper;
     this.descriptorsService = descriptorsService;
     this.eventManager = eventManager;
@@ -101,6 +103,7 @@ public class DescriptorChangeSuggestionServiceImpl implements DescriptorChangeSu
     this.emailManager = emailManager;
     this.collectionsMailConfigurationProperties = collectionsMailConfigurationProperties;
     this.userMapper = userMapper;
+    this.grSciCollAuthorizationService = grSciCollAuthorizationService;
   }
 
   @Override
@@ -228,7 +231,14 @@ public class DescriptorChangeSuggestionServiceImpl implements DescriptorChangeSu
 
   @Override
   public DescriptorChangeSuggestion getSuggestion(long key) {
-    return suggestionMapper.findByKey(key);
+    DescriptorChangeSuggestion suggestion = suggestionMapper.findByKey(key);
+
+    // Hide proposer email for users without proper permissions (data protection)
+    if (suggestion != null && !hasRightsToSeeProposerEmail(suggestion)) {
+      suggestion.setProposerEmail(null);
+    }
+
+    return suggestion;
   }
 
   @Override
@@ -408,6 +418,14 @@ public class DescriptorChangeSuggestionServiceImpl implements DescriptorChangeSu
     Pageable page = pageable == null ? new PagingRequest() : pageable;
     List<DescriptorChangeSuggestion> suggestions = suggestionMapper.list(page, status, type, proposerEmail, collectionKey, country);
     long total = suggestionMapper.count(status, type, proposerEmail, collectionKey, country);
+
+    // Hide proposer emails for users without proper permissions (data protection)
+    suggestions.forEach(suggestion -> {
+      if (!hasRightsToSeeProposerEmail(suggestion)) {
+        suggestion.setProposerEmail(null);
+      }
+    });
+
     return new PagingResponse<>(page, total, suggestions);
   }
 
@@ -513,5 +531,11 @@ public class DescriptorChangeSuggestionServiceImpl implements DescriptorChangeSu
     }
 
     return Collections.emptySet();
+  }
+
+  private boolean hasRightsToSeeProposerEmail(DescriptorChangeSuggestion suggestion) {
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    return grSciCollAuthorizationService.allowedToUpdateDescriptorChangeSuggestion(
+        (int) suggestion.getKey(), authentication);
   }
 }

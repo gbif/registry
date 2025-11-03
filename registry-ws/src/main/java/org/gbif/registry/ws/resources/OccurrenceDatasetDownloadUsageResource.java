@@ -41,6 +41,6 @@ public class OccurrenceDatasetDownloadUsageResource extends DatasetDownloadUsage
 
   public OccurrenceDatasetDownloadUsageResource(
       DatasetOccurrenceDownloadMapper datasetOccurrenceDownloadMapper) {
-    super(datasetOccurrenceDownloadMapper, DownloadType.OCCURRENCE);
+    super(datasetOccurrenceDownloadMapper);
   }
 }

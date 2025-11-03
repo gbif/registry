@@ -83,16 +83,16 @@ public class EsClient implements Closeable {
           .build();
       GetAliasResponse getAliasesResponse = elasticsearchClient.indices().getAlias(getAliasesRequest);
       Set<String> idxsToDelete = getAliasesResponse.result().keySet();
-      
+
       UpdateAliasesRequest.Builder updateAliasesRequestBuilder = new UpdateAliasesRequest.Builder();
       updateAliasesRequestBuilder.actions(a -> a.addAlias(alias, indexName));
-      
+
       if (!idxsToDelete.isEmpty()) {
         for (String idx : idxsToDelete) {
           updateAliasesRequestBuilder.actions(a -> a.removeAlias(idx, alias));
         }
         elasticsearchClient.indices().updateAliases(updateAliasesRequestBuilder.build());
-        
+
         // Delete old indices
         for (String idx : idxsToDelete) {
           DeleteIndexRequest deleteRequest = new DeleteIndexRequest.Builder()
@@ -135,10 +135,10 @@ public class EsClient implements Closeable {
             new InputStreamReader(
                 new BufferedInputStream(
                     getClass().getClassLoader().getResourceAsStream(settingsFile)))) {
-      
+
       String settingsJson = CharStreams.toString(settingsFileReader);
       String mappingJson = CharStreams.toString(mappingFileReader);
-      
+
       // Merge settings
       Map<String, JsonData> settingsMap = new java.util.HashMap<>();
       settings.forEach((k, v) -> {
@@ -148,13 +148,13 @@ public class EsClient implements Closeable {
           settingsMap.put(k, JsonData.of(v.toString()));
         }
       });
-      
+
       CreateIndexRequest createIndexRequest = new CreateIndexRequest.Builder()
           .index(indexName)
           .settings(s -> s.withJson(settingsJson))
           .mappings(m -> m.withJson(mappingJson))
           .build();
-      
+
       elasticsearchClient.indices().create(createIndexRequest);
     } catch (IOException ex) {
       throw new IllegalStateException(ex);
@@ -166,12 +166,12 @@ public class EsClient implements Closeable {
     try {
       Map<String, JsonData> settingsMap = new java.util.HashMap<>();
       settings.forEach((k, v) -> settingsMap.put(k, JsonData.of(v)));
-      
+
       UpdateSettingsRequest updateSettingsRequest = new UpdateSettingsRequest.Builder()
           .index(indexName)
           .settings(s -> s.withJson(settingsMap))
           .build();
-      
+
       elasticsearchClient.indices().putSettings(updateSettingsRequest);
     } catch (IOException ex) {
       throw new RuntimeException(ex);

@@ -16,11 +16,15 @@ package org.gbif.registry.service.collections.utils;
 import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.CollectionEntity;
 import org.gbif.api.model.collections.Institution;
+import org.gbif.api.model.collections.request.CollectionDescriptorsSearchRequest;
 import org.gbif.api.model.collections.request.CollectionSearchRequest;
 import org.gbif.api.model.collections.request.InstitutionSearchRequest;
 import org.gbif.api.model.collections.request.SearchRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
+import org.gbif.api.model.collections.descriptors.DescriptorValidationResult;
 import org.gbif.api.model.registry.Dataset;
+import org.gbif.api.vocabulary.DescriptorIssue;
+import org.gbif.registry.persistence.mapper.collections.dto.DescriptorDto;
 import org.gbif.vocabulary.api.ConceptListParams;
 import org.gbif.vocabulary.api.ConceptView;
 import org.gbif.vocabulary.client.ConceptClient;
@@ -59,10 +63,14 @@ public class Vocabularies {
       INSTITUTION_VOCAB_FIELDS = new HashMap<>();
   static final Map<String, Function<Collection, java.util.Collection<String>>>
       COLLECTION_VOCAB_FIELDS = new HashMap<>();
+  static final Map<String, Function<DescriptorDto, String>>
+      DESCRIPTOR_VOCAB_FIELDS = new HashMap<>();
   static final List<SearchRequestField<InstitutionSearchRequest>>
       INSTITUTION_SEARCH_REQ_VOCAB_FIELDS = new ArrayList<>();
   static final List<SearchRequestField<CollectionSearchRequest>>
       COLLECTION_SEARCH_REQ_VOCAB_FIELDS = new ArrayList<>();
+  static final List<SearchRequestField<CollectionDescriptorsSearchRequest>>
+      COLLECTION_DESCRIPTORS_SEARCH_REQ_VOCAB_FIELDS = new ArrayList<>();
 
   public static final String DISCIPLINE = "Discipline";
 
@@ -78,6 +86,10 @@ public class Vocabularies {
   public static final String TYPE_STATUS = "TypeStatus";
 
   public static final String COLLECTION_DESCRIPTOR_GROUP_TYPE = "CollectionDescriptorGroupTypes";
+
+  // Collection descriptor vocabulary fields
+  public static final String BIOME_TYPE = "BiomeType";
+  public static final String OBJECT_CLASSIFICATION = "ObjectClassificationName";
 
   // Dataset vocabulary fields
   public static final String DATASET_CATEGORY = "DatasetCategory";
@@ -98,6 +110,9 @@ public class Vocabularies {
     COLLECTION_VOCAB_FIELDS.put(
         ACCESSION_STATUS, c -> Collections.singletonList(c.getAccessionStatus()));
     COLLECTION_VOCAB_FIELDS.put(PRESERVATION_TYPE, Collection::getPreservationTypes);
+
+    DESCRIPTOR_VOCAB_FIELDS.put(BIOME_TYPE, DescriptorDto::getBiomeType);
+    DESCRIPTOR_VOCAB_FIELDS.put(OBJECT_CLASSIFICATION, DescriptorDto::getObjectClassificationName);
 
     DATASET_VOCAB_FIELDS.put(DATASET_CATEGORY, d -> d.getCategory() != null ? new ArrayList<>(d.getCategory()) : Collections.emptyList());
 
@@ -132,6 +147,18 @@ public class Vocabularies {
             PRESERVATION_TYPE,
             CollectionSearchRequest::getPreservationTypes,
             CollectionSearchRequest::setPreservationTypes));
+
+    // CollectionDescriptorsSearchRequest specific fields
+    COLLECTION_DESCRIPTORS_SEARCH_REQ_VOCAB_FIELDS.add(
+        SearchRequestField.of(
+            OBJECT_CLASSIFICATION,
+            CollectionDescriptorsSearchRequest::getObjectClassification,
+            CollectionDescriptorsSearchRequest::setObjectClassification));
+    COLLECTION_DESCRIPTORS_SEARCH_REQ_VOCAB_FIELDS.add(
+        SearchRequestField.of(
+            BIOME_TYPE,
+            CollectionDescriptorsSearchRequest::getBiomeType,
+            CollectionDescriptorsSearchRequest::setBiomeType));
   }
 
   public static <T extends CollectionEntity> void checkVocabsValues(
@@ -189,6 +216,97 @@ public class Vocabularies {
     }
   }
 
+  /**
+   * Validates descriptor vocabulary fields gracefully - invalid values are simply ignored
+   * rather than causing the entire operation to fail.
+   * This method checks both concept names and labels/hidden labels for matches.
+   *
+   * @param conceptClient The concept client for vocabulary validation
+   * @param descriptor The descriptor to validate
+   * @return ValidationResult containing valid values and any warnings
+   */
+  public static DescriptorValidationResult validateDescriptorVocabsValues(
+      ConceptClient conceptClient, DescriptorDto descriptor) {
+
+    DescriptorValidationResult result = DescriptorValidationResult.builder().build();
+
+    // Validate all descriptor vocabulary fields
+    DESCRIPTOR_VOCAB_FIELDS.forEach((vocabName, getter) -> {
+      String fieldValue = getter.apply(descriptor);
+      if (!Strings.isNullOrEmpty(fieldValue)) {
+        String validValue = findValidConceptName(conceptClient, vocabName, fieldValue, result);
+
+        // Set the valid value in the result based on the vocabulary type
+        if (BIOME_TYPE.equals(vocabName)) {
+          result.setValidBiomeType(validValue);
+        } else if (OBJECT_CLASSIFICATION.equals(vocabName)) {
+          result.setValidObjectClassification(validValue);
+        }
+      }
+    });
+
+    return result;
+  }
+
+
+  /**
+   * Gets the field name for a vocabulary (used in warning messages).
+   */
+  public static String getFieldNameForVocabulary(String vocabularyName) {
+    if (BIOME_TYPE.equals(vocabularyName)) {
+      return "ltc:biomeType";
+    } else if (OBJECT_CLASSIFICATION.equals(vocabularyName)) {
+      return "ltc:objectClassificationName";
+    }
+    return vocabularyName;
+  }
+
+  /**
+   * Finds a valid concept name by checking both direct concept names and labels/hidden labels.
+   *
+   * @param conceptClient The concept client
+   * @param vocabularyName The vocabulary name
+   * @param inputValue The input value to validate
+   * @param result The validation result to add warnings to
+   * @return The valid concept name, or null if not found
+   */
+  private static String findValidConceptName(ConceptClient conceptClient, String vocabularyName,
+                                           String inputValue, DescriptorValidationResult result) {
+
+    // First try direct concept name lookup
+    ConceptView directConcept = getConceptLatestRelease(vocabularyName, inputValue, conceptClient);
+    if (directConcept != null && directConcept.getConcept().getDeprecated() == null) {
+      return directConcept.getConcept().getName();
+    } else if (directConcept != null && directConcept.getConcept().getDeprecated() != null) {
+      result.addIssue(DescriptorIssue.VOCAB_VALUE_DEPRECATED.getId());
+      return directConcept.getConcept().getName();
+    }
+
+    // If direct lookup fails, try lookup through labels and hidden labels
+    List<LookupResult> lookupResults = lookupLatestRelease(vocabularyName, inputValue, conceptClient);
+
+    if (lookupResults != null && !lookupResults.isEmpty()) {
+      // Use the first match
+      LookupResult match = lookupResults.get(0);
+
+      if (match.getConceptName() != null) {
+        // Check if the matched concept is deprecated
+        ConceptView matchedConcept = getConceptLatestRelease(vocabularyName, match.getConceptName(), conceptClient);
+        if (matchedConcept != null && matchedConcept.getConcept().getDeprecated() == null) {
+          result.addIssue(DescriptorIssue.VOCAB_VALUE_MATCHED_LABEL.getId());
+          return match.getConceptName();
+        } else if (matchedConcept != null && matchedConcept.getConcept().getDeprecated() != null) {
+          result.addIssue(DescriptorIssue.VOCAB_VALUE_MATCHED_DEPRECATED_LABEL.getId());
+          return match.getConceptName();
+        }
+      }
+    }
+
+    // No valid match found
+    result.addIssue(DescriptorIssue.VOCAB_VALUE_NOT_FOUND.getId());
+    return null;
+  }
+
   private static void checkConcept(
       ConceptClient conceptClient, String vocabName, String conceptValue, StringJoiner errors) {
     ConceptView conceptFound =
@@ -209,8 +327,8 @@ public class Vocabularies {
 
     BiFunction<String, List<String>, List<String>> handleValues =
         (vocabName, values) -> {
-          if (values == null) {
-            return Collections.emptyList();
+          if (values == null || values.isEmpty()) {
+            return values;  // Return as-is
           }
 
           Set<String> allConceptsAndChildren = new HashSet<>(values);
@@ -236,17 +354,28 @@ public class Vocabularies {
             f.setter.accept(institutionSearchRequest, allConceptsAndChildren);
           });
     } else if (request instanceof CollectionSearchRequest) {
+      CollectionSearchRequest r = (CollectionSearchRequest) request;
+
       COLLECTION_SEARCH_REQ_VOCAB_FIELDS.forEach(
+        f -> {
+          List<String> allConceptsAndChildren =
+            handleValues.apply(f.vocabName, f.getter.apply(r));
+          f.setter.accept(r, allConceptsAndChildren);
+        });
+
+      if (r instanceof CollectionDescriptorsSearchRequest) {
+        CollectionDescriptorsSearchRequest rr = (CollectionDescriptorsSearchRequest) r;
+        COLLECTION_DESCRIPTORS_SEARCH_REQ_VOCAB_FIELDS.forEach(
           f -> {
-            CollectionSearchRequest collectionSearchRequest = (CollectionSearchRequest) request;
             List<String> allConceptsAndChildren =
-                handleValues.apply(f.vocabName, f.getter.apply(collectionSearchRequest));
-            f.setter.accept(collectionSearchRequest, allConceptsAndChildren);
+              handleValues.apply(f.vocabName, f.getter.apply(rr));
+            f.setter.accept(rr, allConceptsAndChildren);
           });
+      }
     }
   }
 
-  private static Set<String> findChildren(
+    private static Set<String> findChildren(
       ConceptClient conceptClient, String vocabName, String conceptName, Set<String> allChildren) {
     PagingResponse<ConceptView> result =
         Retry.decorateSupplier(
@@ -331,3 +460,4 @@ public class Vocabularies {
     BiConsumer<T, List<String>> setter;
   }
 }
+

@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="org.gbif.registry.persistence.mapper.DatasetDataPackageMapper">
+
+  <resultMap id="DP_MAP" type="DataPackage" autoMapping="false">
+    <result property="metadata" column="metadata"/>
+    <result property="modified" column="modified"/>
+    <result property="endpointKey" column="endpoint_key"/>
+  </resultMap>
+
+  <resultMap id="DP_MAP_LIST" type="DataPackage" autoMapping="false">
+    <result property="datasetKey" column="dataset_key"/>
+    <result property="endpointKey" column="endpoint_key"/>
+    <result property="metadata" column="metadata"/>
+    <result property="modified" column="modified"/>
+  </resultMap>
+
+  <!-- Create a DataPackage metadata record -->
+  <insert id="create" parameterType="map">
+    INSERT INTO dp_dataset(dataset_key,endpoint_key,metadata,modified)
+    VALUES(
+    #{datasetKey,jdbcType=OTHER},
+    #{dp.endpointKey,jdbcType=OTHER},
+    CAST(#{dp.metadata,jdbcType=OTHER} AS jsonb),
+    now()
+    )
+  </insert>
+
+  <!-- Update a DataPackage metadata record -->
+  <update id="update" parameterType="map">
+    UPDATE dp_dataset
+    SET metadata=CAST(#{dp.metadata,jdbcType=OTHER} AS jsonb),
+    <if test="dp.endpointKey != null" >
+    endpoint_key=#{dp.endpointKey,jdbcType=OTHER},
+    </if>
+    modified= now()
+    WHERE dataset_key=#{datasetKey,jdbcType=OTHER}
+  </update>
+
+  <!-- Get a DataPackage metadata record by dataset key -->
+  <select id="get" resultMap="DP_MAP">
+    SELECT metadata, modified, endpoint_key
+    FROM dp_dataset
+    WHERE dataset_key = #{datasetKey}
+  </select>
+
+  <!-- Get a DataPackage metadata resources by dataset key -->
+  <select id="getResources" resultType="String">
+    SELECT metadata -> 'resources'
+    FROM dp_dataset
+    WHERE dataset_key = #{datasetKey}
+  </select>
+
+  <!-- Get a DataPackage metadata resource by dataset key and resource name -->
+  <select id="getResource" resultType="String">
+    SELECT res AS resource
+    FROM dp_dataset,
+    LATERAL jsonb_array_elements(metadata->'resources') res
+    WHERE res->>'name' = #{resourceName} AND dataset_key = #{datasetKey}
+    LIMIT 1
+  </select>
+
+  <!-- Get a DataPackage metadata resource field by dataset key and field name -->
+  <select id="getResourceField" resultType="String">
+    SELECT jsonb_agg(res->>'${resourceNameFieldName}')
+    FROM dp_dataset,
+    LATERAL jsonb_array_elements(metadata->'resources') res
+    WHERE dataset_key = #{datasetKey}
+  </select>
+
+
+  <!-- Get a list of DataPackages -->
+  <select id="list" resultMap="DP_MAP_LIST" parameterType="org.gbif.api.model.common.paging.Pageable">
+    SELECT dataset_key,endpoint_key, modified, jsonb_build_object('name', metadata->>'name',
+                                                                  'title', metadata->>'title',
+                                                                  'resources', (SELECT jsonb_agg(res->>'name')
+                                                                                FROM jsonb_array_elements(metadata->'resources') res)
+                                                                                ) AS metadata
+    FROM dp_dataset
+    <if test="params != null" >
+    LIMIT #{params.limit} OFFSET #{params.offset}
+    </if>
+  </select>
+
+  <!-- Get a count of DataPackages -->
+  <select id="count" resultType="Long">
+    SELECT count(*)
+    FROM dp_dataset
+  </select>
+
+</mapper>

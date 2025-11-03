@@ -13,6 +13,8 @@
  */
 package org.gbif.registry.ws.it.collections.service.merge;
 
+import java.io.IOException;
+
 import org.gbif.api.model.collections.*;
 import org.gbif.api.model.collections.Address;
 import org.gbif.api.model.collections.Contact;
@@ -51,7 +53,7 @@ public abstract class BaseMergeServiceIT<
   protected final ContactService contactService;
   protected final MachineTagService machineTagService;
   protected final OccurrenceMappingService occurrenceMappingService;
-  protected final CollectionEntityService collectionEntityService;
+  protected final CollectionEntityService<T> collectionEntityService;
 
   @Autowired private DatasetService datasetService;
   @Autowired private NodeService nodeService;
@@ -78,7 +80,7 @@ public abstract class BaseMergeServiceIT<
   }
 
   @Test
-  public void mergeTest() {
+  public void mergeTest() throws IOException {
     T toReplace = createEntityToReplace();
 
     // addresses
@@ -91,6 +93,9 @@ public abstract class BaseMergeServiceIT<
     toReplace.setMailingAddress(ma1);
 
     crudService.create(toReplace);
+
+    // Allow subclasses to perform actions that require a persisted entity
+    postCreateToReplace(toReplace);
 
     // identifiers
     Identifier identifier = new Identifier(IdentifierType.LSID, "test");
@@ -266,4 +271,10 @@ public abstract class BaseMergeServiceIT<
   abstract T createReplacement();
 
   abstract void extraAsserts(T replaced, T replacement, T replacementUpdated);
+
+  /**
+   * Hook method for subclasses to perform actions after the entity to replace has been persisted.
+   * Default implementation is a no-op.
+   */
+  protected void postCreateToReplace(T toReplace) throws IOException {}
 }

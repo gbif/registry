@@ -247,7 +247,7 @@ public class DefaultCollectionService extends BaseCollectionEntityService<Collec
       );
 
       offset += institutions.getLimit();
-    } while (offset < institutions.getCount());
+    } while (institutions.getCount() != null && offset < institutions.getCount());
 
     if (institutionKeys.isEmpty()) {
       return Collections.emptyList();
@@ -258,9 +258,21 @@ public class DefaultCollectionService extends BaseCollectionEntityService<Collec
         .institution(institutionKeys)
         .build();
 
-    // Get all collections for these institutions
-    PagingResponse<CollectionView> response = list(collectionRequest);
-    return response.getResults();
+    // Get all collections for these institutions using pagination
+    List<CollectionView> collectionViews = new ArrayList<>();
+    long collectionOffset = 0;
+    PagingResponse<CollectionView> collectionResponse;
+
+    do {
+      collectionRequest.setOffset(collectionOffset);
+      collectionRequest.setLimit(20); // Use a reasonable page size
+      collectionResponse = list(collectionRequest);
+
+      collectionViews.addAll(collectionResponse.getResults());
+      collectionOffset += collectionResponse.getLimit();
+    } while (collectionResponse.getCount() != null && collectionOffset < collectionResponse.getCount());
+
+    return collectionViews;
   }
 
   @Override
@@ -375,6 +387,17 @@ public class DefaultCollectionService extends BaseCollectionEntityService<Collec
     eventManager.post(CreateCollectionEntityEvent.newInstance(collection));
 
     return collectionKey;
+  }
+
+  public List<CollectionView> getCollectionViews(List<UUID> keys) {
+    if (keys == null || keys.isEmpty()) {
+      return Collections.emptyList();
+    }
+
+    List<CollectionDto> collectionDtos = collectionMapper.getCollectionDtos(keys);
+    return collectionDtos.stream()
+      .map(this::convertToCollectionView)
+      .collect(Collectors.toList());
   }
 
   private CollectionView convertToCollectionView(CollectionDto dto) {

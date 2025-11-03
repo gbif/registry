@@ -17,6 +17,7 @@ import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.common.GbifUser;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.occurrence.Download;
+import org.gbif.api.model.occurrence.DownloadType;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.DatasetOccurrenceDownloadUsage;
 import org.gbif.api.model.registry.Organization;
@@ -29,6 +30,8 @@ import org.gbif.registry.doi.converter.DerivedDatasetConverter;
 import org.gbif.registry.doi.converter.DownloadConverter;
 import org.gbif.registry.domain.ws.DerivedDataset;
 import org.gbif.registry.domain.ws.DerivedDatasetUsage;
+import org.gbif.registry.persistence.mapper.DatasetDownloadMapper;
+import org.gbif.registry.persistence.mapper.DatasetEventDownloadMapper;
 import org.gbif.registry.persistence.mapper.DatasetOccurrenceDownloadMapper;
 import org.gbif.registry.persistence.mapper.OrganizationMapper;
 
@@ -50,16 +53,19 @@ public class DataCiteMetadataBuilderServiceImpl implements DataCiteMetadataBuild
   private final String apiRoot;
   private final OrganizationMapper organizationMapper;
   private final DatasetOccurrenceDownloadMapper datasetOccurrenceDownloadMapper;
+  private final DatasetEventDownloadMapper datasetEventDownloadMapper;
   private final TitleLookupService titleLookupService;
 
   public DataCiteMetadataBuilderServiceImpl(
       @Value("${api.root.url}") String apiRoot,
       OrganizationMapper organizationMapper,
       DatasetOccurrenceDownloadMapper datasetOccurrenceDownloadMapper,
+      DatasetEventDownloadMapper datasetEventDownloadMapper,
       TitleLookupService titleLookupService) {
     this.apiRoot = apiRoot;
     this.organizationMapper = organizationMapper;
     this.datasetOccurrenceDownloadMapper = datasetOccurrenceDownloadMapper;
+    this.datasetEventDownloadMapper = datasetEventDownloadMapper;
     this.titleLookupService = titleLookupService;
   }
 
@@ -75,10 +81,14 @@ public class DataCiteMetadataBuilderServiceImpl implements DataCiteMetadataBuild
     List<DatasetOccurrenceDownloadUsage> usages = Lists.newArrayList();
     PagingRequest pagingRequest = new PagingRequest(0, USAGES_PAGE_SIZE);
 
+    DatasetDownloadMapper datasetDownloadMapper =
+        download.getRequest().getType() == DownloadType.EVENT
+            ? datasetEventDownloadMapper
+            : datasetOccurrenceDownloadMapper;
+
     while (response == null || !response.isEmpty()) {
       response =
-          datasetOccurrenceDownloadMapper.listByDownload(
-              download.getKey(), null, null, null, pagingRequest);
+          datasetDownloadMapper.listByDownload(download.getKey(), null, null, null, pagingRequest);
       usages.addAll(response);
       pagingRequest.nextPage();
     }

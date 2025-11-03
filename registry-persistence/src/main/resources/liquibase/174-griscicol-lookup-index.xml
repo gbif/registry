@@ -1,0 +1,32 @@
+<databaseChangeLog
+  xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+  <changeSet id="174" author="mdoering" runInTransaction="false">
+    <sql splitStatements="false" stripComments="true">
+      <![CDATA[
+      CREATE OR REPLACE FUNCTION hstore_keys_lowered(hs HSTORE) RETURNS text[] AS $$
+        SELECT ARRAY(SELECT lower(t.val) FROM unnest(akeys(hs::HSTORE)) AS t(val));
+      $$ LANGUAGE SQL IMMUTABLE PARALLEL SAFE RETURNS NULL ON NULL INPUT
+      SET search_path = public, pg_catalog;
+      ]]>
+    </sql>
+
+    <!-- Generated columns and indexes in separate statement block -->
+    <sql splitStatements="true" stripComments="true">
+      <![CDATA[
+      ALTER TABLE institution ADD COLUMN alternative_codes_lower text[] GENERATED ALWAYS AS (hstore_keys_lowered(alternative_codes)) STORED;
+      ALTER TABLE collection ADD COLUMN alternative_codes_lower text[] GENERATED ALWAYS AS (hstore_keys_lowered(alternative_codes)) STORED;
+
+      CREATE INDEX ON institution USING GIN ( alternative_codes_lower );
+      CREATE INDEX ON collection USING GIN ( alternative_codes_lower );
+      CREATE INDEX ON occurrence_mapping (lower(parent_code));
+      CREATE INDEX ON institution (lower(code));
+      CREATE INDEX ON collection (lower(code));
+      CREATE INDEX ON identifier (key, normalize_identifier(identifier) ) WHERE type != 'GRSCICOLL_ID';
+      ]]>
+    </sql>
+  </changeSet>
+
+</databaseChangeLog>

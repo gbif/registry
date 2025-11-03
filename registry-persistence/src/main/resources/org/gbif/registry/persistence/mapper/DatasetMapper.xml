@@ -411,7 +411,8 @@
   <sql id="LIST_FILTER">
     FROM dataset d
     <if test="params.query != null" >
-      JOIN to_tsquery('english',regexp_replace(quote_literal(unaccent(trim(#{params.query}))),'\s+',':*&amp;','g')||':*') AS query ON <include refid="SIMPLE_SEARCH"/>
+      JOIN to_tsquery('english', CASE WHEN regexp_replace(unaccent(trim(#{params.query})), '[^A-Za-z0-9@.\-\s]+', '', 'g') = '' THEN 'false'
+      ELSE regexp_replace(regexp_replace(unaccent(trim(#{params.query})), '[^A-Za-z0-9@.\-\s]+', '', 'g'), '\s+', ':* &amp; ', 'g') || ':*' END)  AS query ON <include refid="SIMPLE_SEARCH"/>
     </if>
     INNER JOIN organization o ON d.publishing_organization_key = o.key
     <if test="params.identifier != null or params.identifierType != null or params.doi != null">
@@ -481,6 +482,11 @@
       </if>
       <if test="params.contactEmail != null">
         AND c.email @> ARRAY[#{params.contactEmail}::text]
+      </if>
+      <if test="params.category != null and params.category.size() > 0">
+        <foreach collection="params.category" item="cat" separator="AND">
+          AND d.category @> ARRAY[#{cat}::text]
+        </foreach>
       </if>
     </where>
   </sql>
@@ -554,6 +560,7 @@
   </select>
 
   <!-- DwC-A -->
+  <!-- Create a DwCA metadata record -->
   <insert id="createDwcaDataset" parameterType="map">
     INSERT INTO dwca_dataset(dataset_key,core_type,extensions,modified)
     VALUES(
@@ -564,7 +571,7 @@
     )
   </insert>
 
-  <!-- Update contact type and is_primary -->
+  <!-- Update a DwCA metadata record -->
   <update id="updateDwcaDataset" parameterType="map">
     UPDATE dwca_dataset
     SET core_type=#{dwca.coreType,jdbcType=VARCHAR},
@@ -573,6 +580,7 @@
     WHERE dataset_key=#{datasetKey,jdbcType=OTHER}
   </update>
 
+  <!-- Get a DwcA metadata record by dataset key -->
   <select id="selectDwcaDataset" resultMap="DWCA_MAP">
     SELECT dwca.core_type, dwca.extensions, dwca.modified
     FROM dwca_dataset dwca

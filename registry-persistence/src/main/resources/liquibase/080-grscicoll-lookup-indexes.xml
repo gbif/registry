@@ -13,7 +13,8 @@
           $BODY$
           LANGUAGE SQL
           IMMUTABLE
-          RETURNS NULL ON NULL INPUT;
+          RETURNS NULL ON NULL INPUT
+          SET search_path = public;
 
           CREATE INDEX normalized_institution_name_idx ON institution(normalize_name(name));
           CREATE INDEX normalized_collection_name_idx ON collection(normalize_name(name));
@@ -25,7 +26,8 @@
           $BODY$
           LANGUAGE SQL
           IMMUTABLE
-          RETURNS NULL ON NULL INPUT;
+          RETURNS NULL ON NULL INPUT
+          SET search_path = public;
 
           CREATE INDEX normalized_identifier_idx ON identifier(normalize_identifier(identifier));
        ]]>

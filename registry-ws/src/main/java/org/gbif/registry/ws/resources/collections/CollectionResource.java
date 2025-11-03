@@ -24,6 +24,7 @@ import org.gbif.api.model.collections.descriptors.DescriptorChangeSuggestion;
 import org.gbif.api.model.collections.descriptors.DescriptorChangeSuggestionRequest;
 import org.gbif.api.model.collections.descriptors.DescriptorGroup;
 import org.gbif.api.model.collections.latimercore.ObjectGroup;
+import org.gbif.api.model.collections.request.CollectionDescriptorsSearchRequest;
 import org.gbif.api.model.collections.request.CollectionSearchRequest;
 import org.gbif.api.model.collections.request.DescriptorGroupSearchRequest;
 import org.gbif.api.model.collections.request.DescriptorSearchRequest;
@@ -31,6 +32,8 @@ import org.gbif.api.model.collections.request.InstitutionSearchRequest;
 import org.gbif.api.model.collections.suggestions.CollectionChangeSuggestion;
 import org.gbif.api.model.collections.suggestions.Status;
 import org.gbif.api.model.collections.suggestions.Type;
+import org.gbif.api.model.collections.search.CollectionSearchResponse;
+import org.gbif.api.model.collections.search.FacetedSearchResponse;
 import org.gbif.api.model.collections.view.CollectionView;
 import org.gbif.api.model.common.export.ExportFormat;
 import org.gbif.api.model.common.paging.Pageable;
@@ -44,8 +47,11 @@ import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.GbifRegion;
 import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.api.vocabulary.Rank;
+import org.gbif.api.vocabulary.collections.CollectionFacetParameter;
 import org.gbif.api.vocabulary.collections.Source;
 import org.gbif.registry.service.collections.batch.CollectionBatchService;
+import org.gbif.registry.service.collections.CollectionsSearchService;
+import org.gbif.registry.service.collections.DefaultCollectionService;
 import org.gbif.registry.service.collections.duplicates.CollectionDuplicatesService;
 import org.gbif.registry.service.collections.merge.CollectionMergeService;
 import org.gbif.registry.service.collections.suggestions.CollectionChangeSuggestionService;
@@ -70,12 +76,14 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import java.util.Objects;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -137,6 +145,7 @@ public class CollectionResource
   private final CollectionService collectionService;
   private final DescriptorsService descriptorsService;
   private final DescriptorChangeSuggestionService descriptorChangeSuggestionService;
+  private final CollectionsSearchService collectionsSearchService;
 
   // Prefix for the export file format
   private static final String EXPORT_FILE_NAME = "%scollections.%s";
@@ -153,6 +162,7 @@ public class CollectionResource
       CollectionChangeSuggestionService collectionChangeSuggestionService,
       CollectionBatchService batchService,
       DescriptorsService descriptorsService,
+      CollectionsSearchService collectionsSearchService,
       @Value("${api.root.url}") String apiBaseUrl,
     DescriptorChangeSuggestionService descriptorChangeSuggestionService) {
     super(
@@ -166,6 +176,7 @@ public class CollectionResource
     this.collectionService = collectionService;
     this.descriptorsService = descriptorsService;
     this.descriptorChangeSuggestionService = descriptorChangeSuggestionService;
+    this.collectionsSearchService = collectionsSearchService;
   }
 
   @Target({ElementType.METHOD, ElementType.TYPE})
@@ -419,17 +430,46 @@ public class CollectionResource
   public void export(
       HttpServletResponse response,
       @RequestParam(value = "format", defaultValue = "TSV") ExportFormat format,
-      CollectionSearchRequest searchRequest)
+      CollectionDescriptorsSearchRequest searchRequest)
       throws IOException {
 
     response.setHeader(HttpHeaders.CONTENT_DISPOSITION, getExportFileHeader(searchRequest, format));
 
     try (Writer writer = new BufferedWriter(new OutputStreamWriter(response.getOutputStream()))) {
-      CsvWriter.collections(
-              Iterables.collections(searchRequest, collectionService, EXPORT_LIMIT), format)
-          .export(writer);
+      // Use collectionService.searchCollections() directly to support all descriptor parameters
+      // This is not ideal since we make duplicate db calls
+      List<CollectionView> collections = getAllCollectionsForExport(searchRequest);
+      CsvWriter.collections(collections, format).export(writer);
     }
   }
+
+  private List<CollectionView> getAllCollectionsForExport(CollectionDescriptorsSearchRequest searchRequest) {
+    List<CollectionView> allCollections = new ArrayList<>();
+    long offset = searchRequest.getOffset() != null ? searchRequest.getOffset() : 0L;
+    int limit = searchRequest.getLimit() != null ? searchRequest.getLimit() : 20;
+
+    FacetedSearchResponse<CollectionSearchResponse, CollectionFacetParameter> searchResponse;
+    do {
+      searchRequest.setOffset(offset);
+      searchRequest.setLimit(limit);
+
+      searchResponse = collectionsSearchService.searchCollections(searchRequest);
+
+        // Convert CollectionSearchResponse to CollectionView - Might be improved in case of performance issues
+        List<UUID> keys = searchResponse.getResults().stream()
+            .map(CollectionSearchResponse::getKey)
+            .collect(Collectors.toList());
+        List<CollectionView> pageCollections = ((DefaultCollectionService) collectionService).getCollectionViews(keys);
+
+      allCollections.addAll(pageCollections);
+      offset += limit;
+
+    } while (searchResponse.getCount() != null && offset < searchResponse.getCount());
+
+    return allCollections;
+  }
+
+
 
   @Operation(
       operationId = "listCollectionsForInstitutions",
@@ -472,12 +512,23 @@ public class CollectionResource
       return;
     }
 
-    // Create collection search request with the institution keys for the file header
+    // Create collection search request with the search parameters for the file header
     CollectionSearchRequest collectionRequest = CollectionSearchRequest.builder()
-        .institution(collections.stream()
-            .map(CollectionView::getCollection)
-            .map(Collection::getInstitutionKey)
-            .collect(Collectors.toList()))
+        .country(searchRequest.getCountry())
+        .gbifRegion(searchRequest.getGbifRegion())
+        .city(searchRequest.getCity())
+        .name(searchRequest.getName())
+        .code(searchRequest.getCode())
+        .alternativeCode(searchRequest.getAlternativeCode())
+        .identifierType(searchRequest.getIdentifierType())
+        .identifier(searchRequest.getIdentifier())
+        .machineTagNamespace(searchRequest.getMachineTagNamespace())
+        .machineTagName(searchRequest.getMachineTagName())
+        .machineTagValue(searchRequest.getMachineTagValue())
+        .fuzzyName(searchRequest.getFuzzyName())
+        .q(searchRequest.getInstitutionalGovernance() != null
+            ? searchRequest.getInstitutionalGovernance().stream().filter(Objects::nonNull).collect(Collectors.joining(","))
+            : null)
         .build();
 
     response.setHeader(HttpHeaders.CONTENT_DISPOSITION, getExportFileHeader(collectionRequest, format));

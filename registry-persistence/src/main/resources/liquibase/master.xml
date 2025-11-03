@@ -171,4 +171,15 @@
   <include file="liquibase/163-vocab-managed-fields-grscicoll.xml" />
   <include file="liquibase/164-migrate-grscicoll-facets.xml" />
   <include file="liquibase/165-dataset-category.xml" />
+  <include file="liquibase/166-add-rnc-colombia-identifier-type.xml" />
+  <include file="liquibase/167-occurrence-download-checklistkey.xml" />
+  <include file="liquibase/168-dwc-dp-endpoint-type.xml" />
+  <include file="liquibase/169-add-biome-field-collection-descriptors.xml" />
+  <include file="liquibase/170-data-package-table.xml" />
+  <include file="liquibase/171-event-downloads-table.xml" />
+  <include file="liquibase/172-interpreted-extensions-downloads-table.xml" />
+  <include file="liquibase/173-dataset-category-index.xml" />
+  <include file="liquibase/174-griscicol-lookup-index.xml" />
+  <include file="liquibase/175-grscicoll-occurrence-mapping-code-index.xml" />
+  <include file="liquibase/176-fix-function-search-paths.xml" />
 </databaseChangeLog>

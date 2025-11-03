@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="org.gbif.registry.persistence.mapper.EventDownloadMapper">
+
+  <resultMap id="EVENT_DOWNLOAD_MAP" type="org.gbif.api.model.occurrence.Download"
+             extends="org.gbif.registry.persistence.mapper.CommonDownload.OCCURRENCE_DOWNLOAD_MAP_BASIC">
+    <association property="numberDatasets" column="key" select="COUNT_DATASETS" fetchType="eager"/>
+  </resultMap>
+
+  <resultMap id="EVENT_DOWNLOAD_WITH_COUNTS_MAP" type="org.gbif.api.model.occurrence.Download"
+             extends="org.gbif.registry.persistence.mapper.CommonDownload.OCCURRENCE_DOWNLOAD_MAP_BASIC">
+    <association property="numberDatasets" column="key" select="COUNT_DATASETS" fetchType="eager"/>
+    <association property="numberOrganizations" column="key" select="COUNT_ORGANIZATIONS" fetchType="eager"/>
+    <association property="numberPublishingCountries" column="key" select="COUNT_PUBLISHING_COUNTRIES" fetchType="eager"/>
+  </resultMap>
+
+  <select id="COUNT_DATASETS" resultType="Long">
+    <bind name="downloadTable" value="'event'"/>
+    <include refid="org.gbif.registry.persistence.mapper.CommonDownload.COUNT_DATASETS_QUERY"/>
+  </select>
+
+  <select id="COUNT_ORGANIZATIONS" resultType="Long">
+    <bind name="downloadTable" value="'event'"/>
+    <include refid="org.gbif.registry.persistence.mapper.CommonDownload.COUNT_ORGANIZATIONS_QUERY"/>
+  </select>
+
+  <select id="COUNT_PUBLISHING_COUNTRIES" resultType="Long">
+    <bind name="downloadTable" value="'event'"/>
+    <include refid="org.gbif.registry.persistence.mapper.CommonDownload.COUNT_PUBLISHING_COUNTRIES_QUERY"/>
+  </select>
+
+  <select id="get" resultType="org.gbif.api.model.occurrence.Download" resultMap="EVENT_DOWNLOAD_MAP">
+    SELECT <include refid="org.gbif.registry.persistence.mapper.CommonDownload.OCCURRENCE_DOWNLOAD_FIELDS"/>
+    FROM event_download
+    WHERE key = #{key,jdbcType=VARCHAR}
+  </select>
+
+  <select id="getWithCounts" resultType="org.gbif.api.model.occurrence.Download"
+          resultMap="EVENT_DOWNLOAD_WITH_COUNTS_MAP">
+    SELECT <include refid="org.gbif.registry.persistence.mapper.CommonDownload.OCCURRENCE_DOWNLOAD_FIELDS"/>
+    FROM event_download
+    WHERE key = #{key,jdbcType=VARCHAR}
+  </select>
+
+  <select id="getByDOI" resultType="org.gbif.api.model.occurrence.Download" resultMap="EVENT_DOWNLOAD_MAP">
+    SELECT <include refid="org.gbif.registry.persistence.mapper.CommonDownload.OCCURRENCE_DOWNLOAD_FIELDS"/>
+    FROM event_download
+    WHERE doi = #{doi,jdbcType=VARCHAR}
+  </select>
+
+  <insert id="create" parameterType="org.gbif.api.model.occurrence.Download">
+    INSERT INTO event_download(<include refid="org.gbif.registry.persistence.mapper.CommonDownload.OCCURRENCE_DOWNLOAD_FIELDS"/>)
+    VALUES(<include refid="org.gbif.registry.persistence.mapper.CommonDownload.OCCURRENCE_DOWNLOAD_FIELD_TYPES"/>)
+  </insert>
+
+  <update id="update" parameterType="org.gbif.api.model.occurrence.Download">
+    UPDATE event_download
+    SET <include refid="org.gbif.registry.persistence.mapper.CommonDownload.OCCURRENCE_DOWNLOAD_UPDATE_STATUS"/>
+    WHERE key = #{key,jdbcType=VARCHAR}
+  </update>
+
+  <update id="updateNotificationAddresses">
+    UPDATE event_download
+    SET <include refid="org.gbif.registry.persistence.mapper.CommonDownload.OCCURRENCE_DOWNLOAD_UPDATE_NOTIFICATION_ADDRESSES"/>
+    WHERE created_by = #{oldCreator,jdbcType=VARCHAR}
+  </update>
+
+  <!-- Append safe ordering -->
+  <select id="listByUser" resultType="org.gbif.api.model.occurrence.Download" resultMap="EVENT_DOWNLOAD_MAP">
+    <bind name="downloadTable" value="'event'"/>
+    <include refid="org.gbif.registry.persistence.mapper.CommonDownload.LIST_BY_USER_QUERY"/>
+  </select>
+
+  <select id="countByUser" resultType="Integer">
+    SELECT COUNT(*)
+    FROM event_download
+    <include refid="org.gbif.registry.persistence.mapper.CommonDownload.LIST_BY_USER_COMMON" />
+  </select>
+
+  <select id="listByUserLightweight" resultType="org.gbif.api.model.occurrence.Download"
+          resultMap="org.gbif.registry.persistence.mapper.CommonDownload.OCCURRENCE_DOWNLOAD_MAP_BASIC">
+    <bind name="downloadTable" value="'event'"/>
+    <include refid="org.gbif.registry.persistence.mapper.CommonDownload.LIST_BY_USER_LIGHTWEIGHT_QUERY"/>
+  </select>
+
+  <!-- Append safe ordering -->
+  <select id="list" resultType="org.gbif.api.model.occurrence.Download" resultMap="EVENT_DOWNLOAD_MAP">
+    <bind name="downloadTable" value="'event'"/>
+    <include refid="org.gbif.registry.persistence.mapper.CommonDownload.LIST_QUERY"/>
+  </select>
+
+  <select id="count" resultType="Integer">
+    SELECT COUNT(*)
+    FROM event_download
+    <include refid="org.gbif.registry.persistence.mapper.CommonDownload.LIST_WHERE"/>
+  </select>
+
+  <select id="listByEraseAfter" resultType="org.gbif.api.model.occurrence.Download" resultMap="EVENT_DOWNLOAD_MAP">
+    <bind name="downloadTable" value="'event'"/>
+    <include refid="org.gbif.registry.persistence.mapper.CommonDownload.LIST_BY_ERASE_AFTER_QUERY"/>
+  </select>
+
+  <select id="countByEraseAfter" resultType="Integer">
+    SELECT COUNT(*)
+    FROM event_download
+    <include refid="org.gbif.registry.persistence.mapper.CommonDownload.LIST_BY_ERASE_AFTER_WHERE"/>
+  </select>
+
+</mapper>

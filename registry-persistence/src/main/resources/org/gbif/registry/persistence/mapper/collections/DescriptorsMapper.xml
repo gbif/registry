@@ -52,7 +52,8 @@
   </sql>
 
   <sql id="FULLTEXT_SEARCH">
-    JOIN to_tsquery('english',regexp_replace(quote_literal(unaccent(trim(#{params.query}))),'\s+',':*&amp;','g')||':*')
+    JOIN to_tsquery('english', CASE WHEN regexp_replace(unaccent(trim(#{params.query})), '[^A-Za-z0-9@.\-\s]+', '', 'g') = '' THEN 'false'
+    ELSE regexp_replace(regexp_replace(unaccent(trim(#{params.query})), '[^A-Za-z0-9@.\-\s]+', '', 'g'), '\s+', ':* &amp; ', 'g') || ':*' END)  AS query ON query @@ c.fulltext_search
   </sql>
 
   <insert id="createDescriptorGroup" parameterType="DescriptorGroup" useGeneratedKeys="true" keyProperty="key">
@@ -64,6 +65,14 @@
     UPDATE collection_descriptor_group
     SET
     <include refid="DESCRIPTOR_GROUP_PARAMS_UPDATE"/>
+    WHERE key = #{key,jdbcType=OTHER}
+  </update>
+
+  <update id="moveDescriptorGroupForCollectionMerge" parameterType="DescriptorGroup">
+    UPDATE collection_descriptor_group
+    SET
+    modified = now(),
+    collection_key = #{collectionKey,jdbcType=OTHER}
     WHERE key = #{key,jdbcType=OTHER}
   </update>
 
@@ -146,14 +155,14 @@
   <sql id="DESCRIPTOR_WRITE_FIELDS">
     collection_descriptor_group_key, usage_key, usage_name, usage_rank, taxon_classification, taxon_keys, country,
     individual_count, identified_by, date_identified, type_status, recorded_by, discipline, object_classification_name,
-    issues, kingdom_key, kingdom_name, phylum_key, phylum_name, class_key, class_name, order_key, order_name, family_key,
+    biome, biome_type, issues, kingdom_key, kingdom_name, phylum_key, phylum_name, class_key, class_name, order_key, order_name, family_key,
     family_name, genus_key, genus_name, species_key, species_name
   </sql>
 
   <sql id="DESCRIPTOR_READ_FIELDS">
     d.key, d.collection_descriptor_group_key, d.usage_key, d.usage_name, d.usage_rank, d.taxon_classification, d.country,
     d.individual_count, d.identified_by, d.date_identified, d.type_status, d.recorded_by, d.discipline,
-    d.object_classification_name, d.issues, d.kingdom_key, d.kingdom_name, d.phylum_key, d.phylum_name,
+    d.object_classification_name, d.biome, d.biome_type, d.issues, d.kingdom_key, d.kingdom_name, d.phylum_key, d.phylum_name,
     d.class_key, d.class_name, d.order_key, d.order_name, d.family_key, d.family_name, d.genus_key, d.genus_name,
     d.species_key, d.species_name
   </sql>
@@ -173,6 +182,8 @@
     #{recordedBy,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler},
     #{discipline,jdbcType=VARCHAR},
     #{objectClassificationName,jdbcType=VARCHAR},
+    #{biome,jdbcType=VARCHAR},
+    #{biomeType,jdbcType=VARCHAR},
     #{issues,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler},
     #{kingdomKey,jdbcType=VARCHAR},
     #{kingdomName,jdbcType=VARCHAR},
@@ -204,6 +215,8 @@
     recorded_by = #{recordedBy,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler},
     discipline = #{discipline,jdbcType=VARCHAR},
     object_classification_name = #{objectClassificationName,jdbcType=VARCHAR},
+    biome = #{biome,jdbcType=VARCHAR},
+    biome_type = #{biomeType,jdbcType=VARCHAR},
     issues = #{issues,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler},
     kingdom_key = #{kingdomKey,jdbcType=VARCHAR},
     kingdom_name = #{kingdomName,jdbcType=VARCHAR},
@@ -259,6 +272,19 @@
   <select id="countDescriptors" resultType="Long">
     SELECT COUNT(DISTINCT d.key)
     <include refid="LIST_DESCRIPTORS_FILTER"/>
+  </select>
+
+  <select id="listDescriptorsWithVocabularyField" resultType="DescriptorDto" resultMap="DESCRIPTOR_DTO_MAP">
+    SELECT <include refid="DESCRIPTOR_READ_FIELDS"/>
+    FROM collection_descriptor d
+    INNER JOIN collection_descriptor_group ds ON ds.key = d.collection_descriptor_group_key AND ds.deleted IS NULL
+    INNER JOIN collection_descriptor_verbatim v ON v.collection_descriptor_key = d.key
+    <where>
+      AND v.field_name = #{fieldName}
+      AND v.field_value IS NOT NULL
+      AND v.field_value != ''
+    </where>
+    ORDER BY d.key
   </select>
 
   <sql id="LIST_DESCRIPTORS_FILTER">
@@ -333,6 +359,18 @@
         #{item,jdbcType=VARCHAR}
       </foreach>
     </if>
+    <if test="params.biome != null and params.biome.size > 0">
+      AND d.biome IN
+      <foreach item="item" collection="params.biome" open="(" separator="," close=")">
+        #{item,jdbcType=VARCHAR}
+      </foreach>
+    </if>
+    <if test="params.biomeType != null and params.biomeType.size > 0">
+      AND d.biome_type IN
+      <foreach item="item" collection="params.biomeType" open="(" separator="," close=")">
+        #{item,jdbcType=VARCHAR}
+      </foreach>
+    </if>
     <if test="params.country != null and params.country.size > 0">
       AND d.country IN
       <foreach item="item" collection="params.country" open="(" separator="," close=")">
@@ -385,6 +423,13 @@
       FROM collection_descriptor_verbatim v
       INNER JOIN collection_descriptor cd ON cd.key = v.collection_descriptor_key
       WHERE cd.collection_descriptor_group_key = #{descriptorGroupKey,jdbcType=INTEGER}
+  </select>
+
+  <select id="getVerbatimValues" resultType="VerbatimDto" resultMap="VERBATIM_DTO_MAP">
+      SELECT <include refid="VERBATIM_READ_FIELDS"/>
+      FROM collection_descriptor_verbatim v
+      WHERE v.collection_descriptor_key = #{descriptorKey,jdbcType=INTEGER}
+      ORDER BY v.key ASC
   </select>
 
 </mapper>

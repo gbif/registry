@@ -84,6 +84,7 @@ public class EsSearchRequestBuilder<P extends SearchParameter> {
   // this instance is created only once and reused for all searches
   private final HighlightBuilder highlightBuilder =
       new HighlightBuilder()
+          .forceSource(true)
           .preTags(PRE_HL_TAG)
           .postTags(POST_HL_TAG)
           .encoder("html")
