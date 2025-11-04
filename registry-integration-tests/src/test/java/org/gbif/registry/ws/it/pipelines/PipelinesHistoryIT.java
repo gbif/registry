@@ -40,7 +40,7 @@ import org.gbif.api.vocabulary.*;
 import org.gbif.common.messaging.api.messages.PipelinesDwcaMessage;
 import org.gbif.common.messaging.api.messages.Platform;
 import org.gbif.registry.database.DatabaseCleaner;
-import org.gbif.registry.search.test.EsManageServer;
+import org.gbif.registry.search.test.ElasticsearchTestContainerConfiguration;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 import org.gbif.registry.ws.it.BaseItTest;
 import org.gbif.registry.ws.it.fixtures.TestConstants;
@@ -63,7 +63,7 @@ import org.junit.jupiter.api.parallel.ExecutionMode;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.web.server.LocalServerPort;
+import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.security.access.AccessDeniedException;
 
 import static org.gbif.api.model.pipelines.StepType.DWCA_TO_VERBATIM;
@@ -101,11 +101,11 @@ class PipelinesHistoryIT extends BaseItTest {
       NodeService nodeService,
       InstallationService installationService,
       SimplePrincipalProvider principalProvider,
-      EsManageServer esServer,
+      ElasticsearchTestContainerConfiguration elasticsearchTestContainer,
       @LocalServerPort int localServerPort,
       KeyStore keyStore,
       UserTestFixture userTestFixture) {
-    super(principalProvider, esServer);
+    super(principalProvider, elasticsearchTestContainer);
     this.pipelinesHistoryResource = pipelinesHistoryResource;
     this.datasetService = datasetService;
     this.organizationService = organizationService;

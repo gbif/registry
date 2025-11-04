@@ -37,7 +37,7 @@ import org.gbif.registry.persistence.mapper.collections.CollectionContactMapper;
 import org.gbif.registry.persistence.mapper.collections.InstitutionMapper;
 import org.gbif.registry.persistence.mapper.collections.MasterSourceSyncMetadataMapper;
 import org.gbif.registry.persistence.mapper.collections.params.InstitutionListParams;
-import org.gbif.registry.search.test.EsManageServer;
+import org.gbif.registry.search.test.ElasticsearchTestContainerConfiguration;
 import org.gbif.registry.ws.it.BaseItTest;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
@@ -76,9 +76,9 @@ public class InstitutionMapperIT extends BaseItTest {
       IdentifierMapper identifierMapper,
       CollectionContactMapper contactMapper,
       SimplePrincipalProvider principalProvider,
-      EsManageServer esServer,
+      ElasticsearchTestContainerConfiguration elasticsearchTestContainer,
       MasterSourceSyncMetadataMapper metadataMapper) {
-    super(principalProvider, esServer);
+    super(principalProvider, elasticsearchTestContainer);
     this.institutionMapper = institutionMapper;
     this.addressMapper = addressMapper;
     this.machineTagMapper = machineTagMapper;

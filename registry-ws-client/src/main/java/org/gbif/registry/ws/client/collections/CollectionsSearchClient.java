@@ -80,7 +80,7 @@ public interface CollectionsSearchClient {
       @SpringQueryMap List<Country> country,
       @RequestParam(value = "limit", defaultValue = "20") int limit) {
     return searchCrossEntities(
-        SearchRequest.of(query, highlight, type, displayOnNHCPortal, country, limit));
+        new SearchRequest(query, highlight, type, displayOnNHCPortal, country, limit));
   }
 
   @AllArgsConstructor(staticName = "of")

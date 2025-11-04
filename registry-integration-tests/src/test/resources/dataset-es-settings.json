@@ -1,0 +1,26 @@
+{
+  "analysis": {
+    "analyzer": {
+      "autocomplete": {
+        "tokenizer": "autocomplete",
+        "filter": [
+          "lowercase"
+        ]
+      },
+      "autocomplete_search": {
+        "tokenizer": "lowercase"
+      }
+    },
+    "tokenizer": {
+      "autocomplete": {
+        "type": "edge_ngram",
+        "min_gram": 1,
+        "max_gram": 25,
+        "token_chars": [
+          "letter",
+          "digit"
+        ]
+      }
+    }
+  }
+}

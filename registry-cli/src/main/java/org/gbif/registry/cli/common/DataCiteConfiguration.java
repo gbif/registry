@@ -16,7 +16,7 @@ package org.gbif.registry.cli.common;
 import java.net.URI;
 import java.util.StringJoiner;
 
-import javax.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotNull;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.internal.Nullable;

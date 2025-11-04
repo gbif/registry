@@ -13,12 +13,16 @@
  */
 package org.gbif.registry.search.dataset.indexing.es;
 
+import co.elastic.clients.elasticsearch.indices.IndexSettings;
+
 import java.io.BufferedInputStream;
+import java.io.ByteArrayInputStream;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.net.MalformedURLException;
+import java.nio.charset.StandardCharsets;
 import java.net.URL;
 import java.util.List;
 import java.util.Map;
@@ -27,25 +31,18 @@ import java.util.Set;
 
 import org.apache.http.HttpHost;
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
-import co.elastic.clients.elasticsearch._types.ElasticsearchException;
-import co.elastic.clients.elasticsearch._types.Refresh;
+import co.elastic.clients.elasticsearch.ElasticsearchAsyncClient;
 import co.elastic.clients.elasticsearch.core.BulkRequest;
 import co.elastic.clients.elasticsearch.core.BulkResponse;
-import co.elastic.clients.elasticsearch.core.DeleteRequest;
-import co.elastic.clients.elasticsearch.core.DeleteResponse;
-import co.elastic.clients.elasticsearch.core.IndexRequest;
-import co.elastic.clients.elasticsearch.core.IndexResponse;
 import co.elastic.clients.elasticsearch.indices.CreateIndexRequest;
 import co.elastic.clients.elasticsearch.indices.DeleteIndexRequest;
-import co.elastic.clients.elasticsearch.indices.ExistsRequest;
 import co.elastic.clients.elasticsearch.indices.GetAliasRequest;
 import co.elastic.clients.elasticsearch.indices.GetAliasResponse;
 import co.elastic.clients.elasticsearch.indices.UpdateAliasesRequest;
-import co.elastic.clients.elasticsearch.indices.UpdateSettingsRequest;
+import co.elastic.clients.elasticsearch.indices.PutIndicesSettingsRequest;
 import co.elastic.clients.json.JsonData;
 import co.elastic.clients.transport.ElasticsearchTransport;
 import co.elastic.clients.transport.rest_client.RestClientTransport;
-import org.apache.http.HttpHost;
 import org.elasticsearch.client.RestClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -61,9 +58,9 @@ public class EsClient implements Closeable {
   @Data
   public static class EsClientConfiguration {
     private String hosts;
-    private int connectionTimeOut;
-    private int socketTimeOut;
-    private int connectionRequestTimeOut;
+    private int connectionTimeout;
+    private int socketTimeout;
+    private int connectionRequestTimeout;
   }
 
   private final ElasticsearchClient elasticsearchClient;
@@ -82,14 +79,15 @@ public class EsClient implements Closeable {
           .name(alias)
           .build();
       GetAliasResponse getAliasesResponse = elasticsearchClient.indices().getAlias(getAliasesRequest);
-      Set<String> idxsToDelete = getAliasesResponse.result().keySet();
+      Set<String> idxsToDelete = getAliasesResponse.aliases().keySet();
+
 
       UpdateAliasesRequest.Builder updateAliasesRequestBuilder = new UpdateAliasesRequest.Builder();
-      updateAliasesRequestBuilder.actions(a -> a.addAlias(alias, indexName));
+      updateAliasesRequestBuilder.actions(a -> a.add(addF -> addF.alias(alias)));
 
       if (!idxsToDelete.isEmpty()) {
         for (String idx : idxsToDelete) {
-          updateAliasesRequestBuilder.actions(a -> a.removeAlias(idx, alias));
+          updateAliasesRequestBuilder.actions(a -> a.remove(r -> r.index(idx).alias(alias)));
         }
         elasticsearchClient.indices().updateAliases(updateAliasesRequestBuilder.build());
 
@@ -151,8 +149,8 @@ public class EsClient implements Closeable {
 
       CreateIndexRequest createIndexRequest = new CreateIndexRequest.Builder()
           .index(indexName)
-          .settings(s -> s.withJson(settingsJson))
-          .mappings(m -> m.withJson(mappingJson))
+          .settings(s -> s.withJson(new ByteArrayInputStream(settingsJson.getBytes(StandardCharsets.UTF_8))))
+          .mappings(m -> m.withJson(new ByteArrayInputStream(mappingJson.getBytes(StandardCharsets.UTF_8))))
           .build();
 
       elasticsearchClient.indices().create(createIndexRequest);
@@ -164,15 +162,14 @@ public class EsClient implements Closeable {
   /** Updates the settings of an existing index. */
   public void updateSettings(String indexName, Map<String, ?> settings) {
     try {
-      Map<String, JsonData> settingsMap = new java.util.HashMap<>();
-      settings.forEach((k, v) -> settingsMap.put(k, JsonData.of(v)));
-
-      UpdateSettingsRequest updateSettingsRequest = new UpdateSettingsRequest.Builder()
+      PutIndicesSettingsRequest request = PutIndicesSettingsRequest.of(r -> r
           .index(indexName)
-          .settings(s -> s.withJson(settingsMap))
-          .build();
+          .settings(s -> {
+            settings.forEach((k, v) -> s.settings((IndexSettings) v));
+            return s;
+          }));
 
-      elasticsearchClient.indices().putSettings(updateSettingsRequest);
+      elasticsearchClient.indices().putSettings(request);
     } catch (IOException ex) {
       throw new RuntimeException(ex);
     }
@@ -202,25 +199,50 @@ public class EsClient implements Closeable {
         .setRequestConfigCallback(
             requestConfigBuilder ->
                 requestConfigBuilder
-                    .setConnectTimeout(esClientConfiguration.getConnectionTimeOut())
-                    .setSocketTimeout(esClientConfiguration.getSocketTimeOut())
-                    .setConnectionRequestTimeout(
-                        esClientConfiguration.getConnectionRequestTimeOut()))
+                            .setConnectTimeout(esClientConfiguration.getConnectionTimeout())
+        .setSocketTimeout(esClientConfiguration.getSocketTimeout())
+        .setConnectionRequestTimeout(
+            esClientConfiguration.getConnectionRequestTimeout()))
         .build();
 
     ElasticsearchTransport transport = new RestClientTransport(restClient, new co.elastic.clients.json.jackson.JacksonJsonpMapper());
     return new ElasticsearchClient(transport);
   }
 
+  /** Creates ElasticsearchAsyncClient using the provided configuration. */
+  public static ElasticsearchAsyncClient provideElasticsearchAsyncClient(EsClientConfiguration esClientConfiguration) {
+    String[] hostsUrl = esClientConfiguration.hosts.split(",");
+    HttpHost[] hosts = new HttpHost[hostsUrl.length];
+    int i = 0;
+    for (String host : hostsUrl) {
+      try {
+        URL url = new URL(host);
+        hosts[i] = new HttpHost(url.getHost(), url.getPort(), url.getProtocol());
+        i++;
+      } catch (MalformedURLException e) {
+        throw new IllegalArgumentException(e.getMessage(), e);
+      }
+    }
+
+    RestClient restClient = RestClient.builder(hosts)
+        .setRequestConfigCallback(
+            requestConfigBuilder ->
+                requestConfigBuilder
+                            .setConnectTimeout(esClientConfiguration.getConnectionTimeout())
+        .setSocketTimeout(esClientConfiguration.getSocketTimeout())
+        .setConnectionRequestTimeout(
+            esClientConfiguration.getConnectionRequestTimeout()))
+        .build();
+
+    ElasticsearchTransport transport = new RestClientTransport(restClient, new co.elastic.clients.json.jackson.JacksonJsonpMapper());
+    return new ElasticsearchAsyncClient(transport);
+  }
+
   @Override
   public void close() {
     // shuts down the ES client
     if (Objects.nonNull(elasticsearchClient)) {
-      try {
-        elasticsearchClient.shutdown();
-      } catch (IOException ex) {
-        throw new RuntimeException(ex);
-      }
+      elasticsearchClient.shutdown();
     }
   }
 }

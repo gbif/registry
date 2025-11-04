@@ -35,9 +35,10 @@ import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.api.parallel.ExecutionMode;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.boot.web.server.LocalServerPort;
+import org.springframework.boot.test.web.server.LocalServerPort;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 @Execution(ExecutionMode.CONCURRENT)
@@ -99,7 +100,7 @@ public class LookupResourceTest extends BaseResourceIT {
     alternativeMatches.setCollectionMatches(Collections.singletonList(result.getCollectionMatch()));
     result.setAlternativeMatches(alternativeMatches);
 
-    when(lookupService.lookup(params)).thenReturn(result);
+    when(lookupService.lookup(any(LookupParams.class))).thenReturn(result);
 
     LookupResult resultReturned =
         lookupClient.lookup(

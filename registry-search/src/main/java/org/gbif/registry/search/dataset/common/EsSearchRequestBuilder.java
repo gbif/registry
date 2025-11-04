@@ -13,6 +13,19 @@
  */
 package org.gbif.registry.search.dataset.common;
 
+import co.elastic.clients.elasticsearch._types.FieldValue;
+import co.elastic.clients.elasticsearch._types.query_dsl.Query;
+import co.elastic.clients.elasticsearch._types.SortOptions;
+import co.elastic.clients.elasticsearch._types.SortOrder;
+import co.elastic.clients.elasticsearch._types.aggregations.Aggregation;
+import co.elastic.clients.elasticsearch._types.aggregations.TermsAggregation;
+import co.elastic.clients.elasticsearch.core.SearchRequest;
+
+import co.elastic.clients.elasticsearch.core.search.Highlight;
+import co.elastic.clients.elasticsearch.core.search.HighlightField;
+import co.elastic.clients.elasticsearch.core.search.HighlighterEncoder;
+import co.elastic.clients.json.JsonData;
+
 import org.gbif.api.model.common.search.FacetedSearchRequest;
 import org.gbif.api.model.common.search.SearchConstants;
 import org.gbif.api.model.common.search.SearchParameter;
@@ -20,7 +33,6 @@ import org.gbif.api.model.occurrence.search.OccurrenceSearchParameter;
 import org.gbif.api.util.VocabularyUtils;
 import org.gbif.api.vocabulary.Country;
 
-import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -33,26 +45,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.IntUnaryOperator;
 import java.util.stream.Collectors;
-
-import org.elasticsearch.action.search.SearchRequest;
-import org.elasticsearch.common.Strings;
-import org.elasticsearch.common.geo.ShapeRelation;
-import org.elasticsearch.index.query.BoolQueryBuilder;
-import org.elasticsearch.index.query.GeoShapeQueryBuilder;
-import org.elasticsearch.index.query.Operator;
-import org.elasticsearch.index.query.QueryBuilder;
-import org.elasticsearch.index.query.QueryBuilders;
-import org.elasticsearch.index.query.RangeQueryBuilder;
-import org.elasticsearch.search.aggregations.AggregationBuilder;
-import org.elasticsearch.search.aggregations.AggregationBuilders;
-import org.elasticsearch.search.aggregations.bucket.filter.FilterAggregationBuilder;
-import org.elasticsearch.search.aggregations.bucket.terms.TermsAggregationBuilder;
-import org.elasticsearch.search.builder.SearchSourceBuilder;
-import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
-import org.elasticsearch.search.sort.SortBuilder;
-import org.elasticsearch.search.sort.SortBuilders;
-import org.elasticsearch.search.suggest.SuggestBuilder;
-import org.elasticsearch.search.suggest.SuggestBuilders;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.LineString;
@@ -63,6 +55,7 @@ import org.locationtech.jts.io.ParseException;
 import org.locationtech.jts.io.WKTReader;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Strings;
 
 import static org.gbif.api.util.SearchTypeValidator.isNumericRange;
 import static org.gbif.registry.search.dataset.indexing.es.EsQueryUtils.LOWER_BOUND_RANGE_PARSER;
@@ -81,154 +74,185 @@ public class EsSearchRequestBuilder<P extends SearchParameter> {
 
   private final EsFieldMapper<P> esFieldMapper;
 
-  // this instance is created only once and reused for all searches
-  private final HighlightBuilder highlightBuilder =
-      new HighlightBuilder()
-          .forceSource(true)
-          .preTags(PRE_HL_TAG)
-          .postTags(POST_HL_TAG)
-          .encoder("html")
-          .highlighterType("unified")
-          .requireFieldMatch(false)
-          .numOfFragments(0);
-
   public EsSearchRequestBuilder(EsFieldMapper<P> esFieldMapper) {
     this.esFieldMapper = esFieldMapper;
-    Arrays.stream(esFieldMapper.highlightingFields()).forEach(highlightBuilder::field);
+  }
+
+  private Highlight buildHighlight() {
+    Map<String, HighlightField> fields = new HashMap<>();
+    Arrays.stream(esFieldMapper.highlightingFields()).forEach(field -> fields.put(field, HighlightField.of(hf -> hf
+      .numberOfFragments(0)
+    )));
+
+    return Highlight.of(h -> h
+      .preTags(PRE_HL_TAG)
+      .postTags(POST_HL_TAG)
+      .encoder(HighlighterEncoder.valueOf("html"))
+      .type("unified")
+      .requireFieldMatch(false)
+      .fields(fields)
+    );
   }
 
   public SearchRequest buildSearchRequest(
       FacetedSearchRequest<P> searchRequest, boolean facetsEnabled, String index) {
 
-    SearchRequest esRequest = new SearchRequest();
-    esRequest.indices(index);
+    SearchRequest.Builder builder = new SearchRequest.Builder();
+    builder.index(index);
+    builder.trackTotalHits(t -> t.enabled(true));
 
-    SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
-    searchSourceBuilder.trackTotalHits(true);
-    esRequest.source(searchSourceBuilder);
-    searchSourceBuilder.fetchSource(esFieldMapper.getMappedFields(), esFieldMapper.excludeFields());
+    // source filtering
+    String[] includes = esFieldMapper.getMappedFields();
+    String[] excludes = esFieldMapper.excludeFields();
+    if (includes != null || excludes != null) {
+      builder.source(s -> s.filter(f -> f.includes(Arrays.asList(includes != null ? includes : new String[0]))
+                                        .excludes(Arrays.asList(excludes != null ? excludes : new String[0]))));
+    }
 
     // size and offset
-    searchSourceBuilder.size(searchRequest.getLimit());
-    searchSourceBuilder.from((int) searchRequest.getOffset());
-
-    // sort
-    if (Strings.isNullOrEmpty(searchRequest.getQ())) {
-      for (SortBuilder sb : esFieldMapper.sorts()) {
-        searchSourceBuilder.sort(sb);
-      }
-    } else {
-      searchSourceBuilder.sort(SortBuilders.scoreSort());
-      if (searchRequest.isHighlight()) {
-        searchSourceBuilder.highlighter(highlightBuilder);
-      }
-    }
+    builder.size(searchRequest.getLimit());
+    builder.from((int) searchRequest.getOffset());
 
     // group params
     GroupedParams<P> groupedParams = groupParameters(searchRequest);
 
+    // sort and highlighting
+    if (Strings.isNullOrEmpty(searchRequest.getQ())) {
+      // Use field-based sorting for non-search queries
+      SortOptions[] sorts = esFieldMapper.sorts();
+      if (sorts != null && sorts.length > 0) {
+        builder.sort(Arrays.asList(sorts));
+      }
+    } else {
+      // Use score sorting for search queries
+      builder.sort(SortOptions.of(s -> s.score(sc -> sc.order(SortOrder.Desc))));
+      if (searchRequest.isHighlight()) {
+        builder.highlight(buildHighlight());
+      }
+    }
+
     // add query
     if (SearchConstants.QUERY_WILDCARD.equals(searchRequest.getQ())) { // Is a search all
-      searchSourceBuilder.query(QueryBuilders.matchAllQuery());
+      builder.query(Query.of(q -> q.matchAll(ma -> ma)));
     } else {
       buildQuery(groupedParams.queryParams, searchRequest.getQ())
-          .ifPresent(searchSourceBuilder::query);
+          .ifPresent(builder::query);
     }
 
     // add aggs
     buildAggs(searchRequest, groupedParams.postFilterParams, facetsEnabled)
-        .ifPresent(aggsList -> aggsList.forEach(searchSourceBuilder::aggregation));
+        .ifPresent(aggsMap -> aggsMap.forEach(builder::aggregations));
 
     // post-filter
-    buildPostFilter(groupedParams.postFilterParams).ifPresent(searchSourceBuilder::postFilter);
+    buildPostFilter(groupedParams.postFilterParams).ifPresent(builder::postFilter);
 
-    return esRequest;
+    return builder.build();
   }
 
-  public Optional<QueryBuilder> buildQueryNode(FacetedSearchRequest<P> searchRequest) {
+  public Optional<Query> buildQueryNode(FacetedSearchRequest<P> searchRequest) {
     return buildQuery(searchRequest.getParameters(), searchRequest.getQ());
   }
 
   public SearchRequest buildAutocompleteQuery(
       org.gbif.api.model.common.search.SearchRequest<P> searchRequest, P parameter, String index) {
-    Optional<QueryBuilder> filterQuery = buildQuery(searchRequest.getParameters(), null);
+    Optional<Query> filterQuery = buildQuery(searchRequest.getParameters(), null);
 
-    BoolQueryBuilder query = QueryBuilders.boolQuery();
+    List<Query> shouldClauses = new ArrayList<>();
+    List<Query> mustClauses = new ArrayList<>();
+
     if (!Strings.isNullOrEmpty(searchRequest.getQ())) {
-      query.should(
-          QueryBuilders.matchQuery(
-                  esFieldMapper.getAutocompleteField(parameter), searchRequest.getQ())
-              .operator(Operator.AND));
+      // Main autocomplete match query
+      shouldClauses.add(Query.of(q -> q.match(m -> m
+        .field(esFieldMapper.getAutocompleteField(parameter))
+        .query(searchRequest.getQ())
+        .operator(co.elastic.clients.elasticsearch._types.query_dsl.Operator.And)
+      )));
+
+      // Prefix boost for short queries
       if (searchRequest.getQ().length() > 2) {
-        query.should(
-            QueryBuilders.spanFirstQuery(
-                    QueryBuilders.spanMultiTermQueryBuilder(
-                        QueryBuilders.prefixQuery(
-                            esFieldMapper.get(parameter), searchRequest.getQ().toLowerCase())),
-                    3)
-                .boost(100));
+        shouldClauses.add(Query.of(q -> q.prefix(p -> p
+          .field(esFieldMapper.get(parameter))
+          .value(searchRequest.getQ().toLowerCase())
+          .boost(100.0f)
+        )));
       }
     } else {
-      query.must(QueryBuilders.matchAllQuery());
+      mustClauses.add(Query.of(q -> q.matchAll(ma -> ma)));
     }
-    filterQuery.ifPresent(query::must);
 
-    SearchRequest request = new SearchRequest();
-    request.indices(index);
+    filterQuery.ifPresent(mustClauses::add);
 
-    SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
-    request.source(searchSourceBuilder);
+    Query mainQuery = Query.of(q -> q.bool(b -> {
+      if (!shouldClauses.isEmpty()) {
+        b.should(shouldClauses);
+        b.minimumShouldMatch("1");
+      }
+      if (!mustClauses.isEmpty()) {
+        b.must(mustClauses);
+      }
+      return b;
+    }));
 
-    searchSourceBuilder.size(searchRequest.getLimit());
-    searchSourceBuilder.from(Math.max(0, (int) searchRequest.getOffset()));
-    searchSourceBuilder.query(query);
+    SearchRequest.Builder builder = new SearchRequest.Builder();
+    builder.index(index);
+    builder.size(searchRequest.getLimit());
+    builder.from(Math.max(0, (int) searchRequest.getOffset()));
+    builder.query(mainQuery);
 
-    // add source field
-    searchSourceBuilder.fetchSource(
-        esFieldMapper.includeSuggestFields(parameter), esFieldMapper.excludeFields());
+    // source filtering
+    String[] includes = esFieldMapper.includeSuggestFields(parameter);
+    String[] excludes = esFieldMapper.excludeFields();
+    if (includes != null || excludes != null) {
+      builder.source(s -> s.filter(f -> f.includes(Arrays.asList(includes != null ? includes : new String[0]))
+                                        .excludes(Arrays.asList(excludes != null ? excludes : new String[0]))));
+    }
 
-    return request;
+    return builder.build();
   }
 
   public SearchRequest buildSuggestQuery(String prefix, P parameter, Integer limit, String index) {
-    SearchRequest request = new SearchRequest();
-    request.indices(index);
-
-    SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
-    request.source(searchSourceBuilder);
-
     String esField = esFieldMapper.get(parameter);
+    int suggestLimit = limit != null ? limit : SearchConstants.DEFAULT_SUGGEST_LIMIT;
+
+    SearchRequest.Builder builder = new SearchRequest.Builder();
+    builder.index(index);
 
     // create suggest query
-    searchSourceBuilder.suggest(
-        new SuggestBuilder()
-            .addSuggestion(
-                esField,
-                SuggestBuilders.completionSuggestion(esField + ".suggest")
-                    .prefix(prefix)
-                    .size(limit != null ? limit : SearchConstants.DEFAULT_SUGGEST_LIMIT)
-                    .skipDuplicates(true)));
+    builder.suggest(s -> s
+      .suggesters(esField, ss -> ss
+        .prefix(prefix)
+        .completion(c -> c
+          .field(esField + ".suggest")
+          .size(suggestLimit)
+          .skipDuplicates(true)
+        )
+      )
+    );
 
-    // add source field
-    searchSourceBuilder.fetchSource(
-        esFieldMapper.includeSuggestFields(parameter), esFieldMapper.excludeFields());
+    // source filtering
+    String[] includes = esFieldMapper.includeSuggestFields(parameter);
+    String[] excludes = esFieldMapper.excludeFields();
+    if (includes != null || excludes != null) {
+      builder.source(s -> s.filter(f -> f.includes(Arrays.asList(includes != null ? includes : new String[0]))
+                                        .excludes(Arrays.asList(excludes != null ? excludes : new String[0]))));
+    }
 
-    return request;
+    return builder.build();
   }
-
+/*
   private Optional<QueryBuilder> buildQuery(Map<P, Set<String>> params, String qParam) {
     // create bool node
-    BoolQueryBuilder bool = QueryBuilders.boolQuery();
+    BoolQuery bool = co.elastic.clients.elasticsearch._types.query_dsl.QueryBuilders.bool().build();
 
     // adding full text search parameter
     if (!Strings.isNullOrEmpty(qParam)) {
-      bool.must(esFieldMapper.fullTextQuery(qParam));
+      bool.must().add(esFieldMapper.fullTextQuery(qParam));
     }
 
     if (params != null && !params.isEmpty()) {
       // adding geometry to bool
       if (params.containsKey(OccurrenceSearchParameter.GEOMETRY)) {
-        BoolQueryBuilder shouldGeometry = QueryBuilders.boolQuery();
+        BoolQuery shouldGeometry = co.elastic.clients.elasticsearch._types.query_dsl.QueryBuilders.bool().build();
         shouldGeometry
             .should()
             .addAll(
@@ -252,6 +276,47 @@ public class EsSearchRequestBuilder<P extends SearchParameter> {
 
     return bool.must().isEmpty() && bool.filter().isEmpty() ? Optional.empty() : Optional.of(bool);
   }
+*/
+  private Optional<Query> buildQuery(Map<P, Set<String>> params, String qParam) {
+    List<Query> mustClauses = new ArrayList<>();
+    List<Query> filterClauses = new ArrayList<>();
+
+  // Full-text search
+  if (!Strings.isNullOrEmpty(qParam)) {
+    mustClauses.add(esFieldMapper.fullTextQuery(qParam));
+  }
+
+  if (params != null && !params.isEmpty()) {
+    // Geometry
+    if (params.containsKey(OccurrenceSearchParameter.GEOMETRY)) {
+      List<Query> geoQueries = params.get((P) OccurrenceSearchParameter.GEOMETRY).stream()
+        .map(EsSearchRequestBuilder::buildGeoShapeQuery)
+        .collect(Collectors.toList());
+
+      Query geoBoolQuery = Query.of(q -> q.bool(b -> b.should(geoQueries)));
+      filterClauses.add(geoBoolQuery);
+    }
+
+    // Term filters
+    filterClauses.addAll(
+      (Collection<? extends Query>) params.entrySet().stream()
+        .filter(e -> Objects.nonNull(esFieldMapper.get(e.getKey())))
+        .flatMap(
+          e -> buildTermQuery(e.getValue(), e.getKey(), esFieldMapper.get(e.getKey()))
+            .stream())
+        .collect(Collectors.toList())
+    );
+  }
+
+  if (mustClauses.isEmpty() && filterClauses.isEmpty()) {
+    return Optional.empty();
+  }
+
+  return Optional.of(Query.of(q -> q.bool(b -> b
+    .must(mustClauses)
+    .filter(filterClauses)
+  )));
+}
 
   @VisibleForTesting
   GroupedParams groupParameters(FacetedSearchRequest<P> searchRequest) {
@@ -281,25 +346,24 @@ public class EsSearchRequestBuilder<P extends SearchParameter> {
     return groupedParams;
   }
 
-  private Optional<QueryBuilder> buildPostFilter(Map<P, Set<String>> postFilterParams) {
+  private Optional<Query> buildPostFilter(Map<P, Set<String>> postFilterParams) {
     if (postFilterParams == null || postFilterParams.isEmpty()) {
       return Optional.empty();
     }
 
-    BoolQueryBuilder bool = QueryBuilders.boolQuery();
-    bool.filter()
-        .addAll(
-            postFilterParams.entrySet().stream()
-                .flatMap(
-                    e ->
-                        buildTermQuery(e.getValue(), e.getKey(), esFieldMapper.get(e.getKey()))
-                            .stream())
-                .collect(Collectors.toList()));
+    List<Query> filterClauses = postFilterParams.entrySet().stream()
+      .filter(e -> Objects.nonNull(esFieldMapper.get(e.getKey())))
+      .flatMap(e -> buildTermQuery(e.getValue(), e.getKey(), esFieldMapper.get(e.getKey())).stream())
+      .collect(Collectors.toList());
 
-    return Optional.of(bool);
+    if (filterClauses.isEmpty()) {
+      return Optional.empty();
+    }
+
+    return Optional.of(Query.of(q -> q.bool(b -> b.filter(filterClauses))));
   }
 
-  private Optional<List<AggregationBuilder>> buildAggs(
+  private Optional<Map<String, Aggregation>> buildAggs(
       FacetedSearchRequest<P> searchRequest,
       Map<P, Set<String>> postFilterParams,
       boolean facetsEnabled) {
@@ -318,7 +382,7 @@ public class EsSearchRequestBuilder<P extends SearchParameter> {
     return Optional.of(buildFacets(searchRequest));
   }
 
-  private List<AggregationBuilder> buildFacetsMultiselect(
+  private Map<String, Aggregation> buildFacetsMultiselect(
       FacetedSearchRequest<P> searchRequest, Map<P, Set<String>> postFilterParams) {
 
     if (searchRequest.getFacets().size() == 1) {
@@ -326,79 +390,76 @@ public class EsSearchRequestBuilder<P extends SearchParameter> {
       return buildFacets(searchRequest);
     }
 
-    return searchRequest.getFacets().stream()
-        .filter(p -> esFieldMapper.get(p) != null)
-        .map(
-            facetParam -> {
+    Map<String, Aggregation> aggregations = new HashMap<>();
 
-              // build filter aggs
-              BoolQueryBuilder bool = QueryBuilders.boolQuery();
-              bool.filter()
-                  .addAll(
-                      postFilterParams.entrySet().stream()
-                          .filter(entry -> entry.getKey() != facetParam)
-                          .flatMap(
-                              e ->
-                                  buildTermQuery(
-                                      e.getValue(), e.getKey(), esFieldMapper.get(e.getKey()))
-                                      .stream())
-                          .collect(Collectors.toList()));
+    for (P facetParam : searchRequest.getFacets()) {
+      if (esFieldMapper.get(facetParam) == null) continue;
 
-              // add filter to the aggs
-              String esField = esFieldMapper.get(facetParam);
-              FilterAggregationBuilder filterAggs = AggregationBuilders.filter(esField, bool);
+      String esField = esFieldMapper.get(facetParam);
 
-              // build terms aggs and add it to the filter aggs
-              TermsAggregationBuilder termsAggs =
-                  buildTermsAggs(
-                      "filtered_" + esField,
-                      esField,
-                      extractFacetOffset(searchRequest, facetParam),
-                      extractFacetLimit(searchRequest, facetParam),
-                      searchRequest.getFacetMinCount());
-              filterAggs.subAggregation(termsAggs);
-
-              return filterAggs;
-            })
+      // build filter queries for other facet parameters
+      List<Query> filterQueries = postFilterParams.entrySet().stream()
+        .filter(entry -> entry.getKey() != facetParam)
+        .filter(e -> Objects.nonNull(esFieldMapper.get(e.getKey())))
+        .flatMap(e -> buildTermQuery(e.getValue(), e.getKey(), esFieldMapper.get(e.getKey())).stream())
         .collect(Collectors.toList());
+
+      Query filterQuery = filterQueries.isEmpty()
+        ? Query.of(q -> q.matchAll(ma -> ma))
+        : Query.of(q -> q.bool(b -> b.filter(filterQueries)));
+
+      // build terms aggregation
+      TermsAggregation termsAgg = buildTermsAggs(
+        "filtered_" + esField,
+        esField,
+        extractFacetOffset(searchRequest, facetParam),
+        extractFacetLimit(searchRequest, facetParam),
+        searchRequest.getFacetMinCount());
+
+      // wrap in filter aggregation
+      Aggregation filterAgg = Aggregation.of(a -> a
+        .filter(filterQuery)
+        .aggregations("filtered_" + esField, termsAgg)
+      );
+
+      aggregations.put(esField, filterAgg);
+    }
+
+    return aggregations;
   }
 
-  private List<AggregationBuilder> buildFacets(FacetedSearchRequest<P> searchRequest) {
-    return searchRequest.getFacets().stream()
-        .filter(p -> esFieldMapper.get(p) != null)
-        .map(
-            facetParam -> {
-              String esField = esFieldMapper.get(facetParam);
-              return buildTermsAggs(
-                  esField,
-                  esField,
-                  extractFacetOffset(searchRequest, facetParam),
-                  extractFacetLimit(searchRequest, facetParam),
-                  searchRequest.getFacetMinCount());
-            })
-        .collect(Collectors.toList());
+  private Map<String, Aggregation> buildFacets(FacetedSearchRequest<P> searchRequest) {
+    Map<String, Aggregation> aggregations = new HashMap<>();
+
+    for (P facetParam : searchRequest.getFacets()) {
+      if (esFieldMapper.get(facetParam) == null) continue;
+
+      String esField = esFieldMapper.get(facetParam);
+      TermsAggregation aggregation = buildTermsAggs(
+        esField,
+        esField,
+        extractFacetOffset(searchRequest, facetParam),
+        extractFacetLimit(searchRequest, facetParam),
+        searchRequest.getFacetMinCount());
+
+      aggregations.put(esField, aggregation._toAggregation());
+    }
+
+    return aggregations;
   }
 
-  private TermsAggregationBuilder buildTermsAggs(
-      String aggsName, String esField, int facetOffset, int facetLimit, Integer minCount) {
-    // build aggs for the field
-    TermsAggregationBuilder termsAggsBuilder = AggregationBuilders.terms(aggsName).field(esField);
+  private TermsAggregation buildTermsAggs(
+    String aggsName, String esField, int facetOffset, int facetLimit, Integer minCount) {
 
-    // min count
-    Optional.ofNullable(minCount).ifPresent(termsAggsBuilder::minDocCount);
-
-    // aggs size
     int size = calculateAggsSize(esField, facetOffset, facetLimit);
-    termsAggsBuilder.size(size);
 
-    // aggs shard size
-    /*
-    termsAggsBuilder.shardSize(
-        Optional.ofNullable(esFieldMapper.getCardinality(esField))
-            .orElse(DEFAULT_SHARD_SIZE.applyAsInt(size)));
-    */
-    return termsAggsBuilder;
+    return new TermsAggregation.Builder()
+      .field(esField)
+      .size(size)
+      .minDocCount(minCount != null ? minCount : 1) // veya default
+      .build();
   }
+
 
   private int calculateAggsSize(String esField, int facetOffset, int facetLimit) {
     int maxCardinality =
@@ -438,8 +499,8 @@ public class EsSearchRequestBuilder<P extends SearchParameter> {
     return value;
   }
 
-  private List<QueryBuilder> buildTermQuery(Collection<String> values, P param, String esField) {
-    List<QueryBuilder> queries = new ArrayList<>();
+  private List<Query> buildTermQuery(Collection<String> values, P param, String esField) {
+    List<Query> queries = new ArrayList<>();
 
     // collect queries for each value
     List<String> parsedValues = new ArrayList<>();
@@ -451,112 +512,172 @@ public class EsSearchRequestBuilder<P extends SearchParameter> {
 
       parsedValues.add(parseParamValue(value, param));
     }
-
-    if (parsedValues.size() == 1) {
-      // single term
-      queries.add(QueryBuilders.termQuery(esField, parsedValues.get(0)));
-    } else if (parsedValues.size() > 1) {
-      // multi term query
-      queries.add(QueryBuilders.termsQuery(esField, parsedValues));
-    }
+    queries.add(buildTermOrTermsQuery(esField, parsedValues));
 
     return queries;
   }
 
-  private RangeQueryBuilder buildRangeQuery(String esField, String value) {
-    RangeQueryBuilder builder = QueryBuilders.rangeQuery(esField);
+
+  /**
+   * Builds a term or terms query for regular fields.
+   */
+  private Query buildTermOrTermsQuery(String esField, List<String> values) {
+    if (values.size() == 1) {
+      return Query.of(q -> q.term(t -> t.field(esField).value(FieldValue.of(values.get(0)))));
+    } else {
+      List<FieldValue> fieldValues = values.stream()
+        .map(FieldValue::of)
+        .toList();
+      return Query.of(q -> q.terms(t -> t.field(esField).terms(ts -> ts.value(fieldValues))));
+    }
+  }
+  /**
+   * Builds range queries for numeric and date fields.
+   */
+  private Query buildRangeQuery(String esField, String value) {
+    String[] values = value.split(RANGE_SEPARATOR);
+
+    if (values.length != 2) {
+      throw new IllegalArgumentException("Invalid range format: " + value);
+    }
 
     if (esFieldMapper.isDateField(esField)) {
-      String[] values = value.split(RANGE_SEPARATOR);
-
-      LocalDateTime lowerBound = LOWER_BOUND_RANGE_PARSER.apply(values[0]);
-      if (lowerBound != null) {
-        builder.gte(lowerBound);
-      }
-
-      LocalDateTime upperBound = UPPER_BOUND_RANGE_PARSER.apply(values[1]);
-      if (upperBound != null) {
-        builder.lte(upperBound);
-      }
+      return buildDateRangeQuery(esField, values);
     } else {
-      String[] values = value.split(RANGE_SEPARATOR);
-      if (!RANGE_WILDCARD.equals(values[0])) {
-        builder.gte(values[0]);
-      }
-      if (!RANGE_WILDCARD.equals(values[1])) {
-        builder.lte(values[1]);
-      }
+      return buildNumericRangeQuery(esField, values);
     }
-
-    return builder;
   }
 
-  private static List<double[]> toEsCoordinates(org.locationtech.jts.geom.Coordinate[] jtsCoordinates) {
-    return Arrays.stream(jtsCoordinates)
-      .map(c -> new double[]{c.x, c.y})
-      .toList();
+  /**
+   * Builds a date range query.
+   */
+  private Query buildDateRangeQuery(String esField, String[] values) {
+    LocalDateTime lower = LOWER_BOUND_RANGE_PARSER.apply(values[0]);
+    LocalDateTime upper = UPPER_BOUND_RANGE_PARSER.apply(values[1]);
+
+    return Query.of(q -> q.range(r -> r.date(d -> {
+      d.field(esField);
+      if (lower != null) d.gte(lower.toString());
+      if (upper != null) d.lte(upper.toString());
+      return d;
+    })));
   }
 
-  // Helper method: Converts JTS Polygon to Elasticsearch Polygon format
-  private static Map<String, Object> toEsPolygon(Polygon jtsPolygon) {
-    Map<String, Object> polygon = new HashMap<>();
-    polygon.put("type", "Polygon");
+  /**
+   * Builds a numeric range query.
+   */
+  private Query buildNumericRangeQuery(String esField, String[] values) {
+    // Try to parse as numbers first
+    try {
+      Double lowerBound = RANGE_WILDCARD.equals(values[0]) ? null : Double.parseDouble(values[0]);
+      Double upperBound = RANGE_WILDCARD.equals(values[1]) ? null : Double.parseDouble(values[1]);
 
-    List<List<double[]>> coordinates = new ArrayList<>();
-
-    // Exterior Ring
-    coordinates.add(toEsCoordinates(jtsPolygon.getExteriorRing().getCoordinates()));
-
-    // Interior Rings (Holes)
-    for (int i = 0; i < jtsPolygon.getNumInteriorRing(); i++) {
-      coordinates.add(toEsCoordinates(jtsPolygon.getInteriorRingN(i).getCoordinates()));
+      return Query.of(q -> q.range(r -> r.number(n -> {
+        n.field(esField);
+        if (lowerBound != null) n.gte(lowerBound);
+        if (upperBound != null) n.lte(upperBound);
+        return n;
+      })));
+    } catch (NumberFormatException e) {
+      // Fall back to term range for non-numeric values
+      return Query.of(q -> q.range(r -> r.term(t -> {
+        t.field(esField);
+        if (!RANGE_WILDCARD.equals(values[0])) t.gte(values[0]);
+        if (!RANGE_WILDCARD.equals(values[1])) t.lte(values[1]);
+        return t;
+      })));
     }
-
-    polygon.put("coordinates", coordinates);
-    return polygon;
   }
 
-  public static GeoShapeQueryBuilder buildGeoShapeQuery(String wkt) {
-    Geometry geometry; // JTS Geometry
+  public static Query buildGeoShapeQuery(String wkt) {
+    // ES9'da en kolay yol WKT string'i direkt kullanmak
+    // Sadece normalizasyon yapalım (eski kod logic'ini korumak için)
+    Geometry geometry;
     try {
       geometry = new WKTReader().read(wkt);
     } catch (ParseException e) {
       throw new IllegalArgumentException(e.getMessage(), e);
     }
 
-    Map<String, Object> shape;
+    // Coordinate normalizasyonu yapıp WKT'yi yeniden oluşturalım
+    String normalizedWkt = normalizeGeometryWkt(geometry);
 
-    if (geometry instanceof Point point) {
-      shape = new HashMap<>();
-      shape.put("type", "Point");
-      shape.put("coordinates", new double[]{point.getX(), point.getY()});
-    } else if (geometry instanceof LineString lineString) {
-      shape = new HashMap<>();
-      shape.put("type", "LineString");
-      shape.put("coordinates", toEsCoordinates(lineString.getCoordinates()));
-    } else if (geometry instanceof Polygon polygon) {
-      shape = toEsPolygon(polygon);
-    } else if (geometry instanceof MultiPolygon multiPolygon) {
-      shape = new HashMap<>();
-      shape.put("type", "MultiPolygon");
+    return Query.of(q -> q.geoShape(geoShape -> geoShape
+      .field("coordinate")
+      .shape(s -> s.shape(JsonData.fromJson(normalizedWkt)))
+      //.relation(GeoShapeRelation.Within)
+    ));
+  }
 
-      List<List<List<double[]>>> coordinates = new ArrayList<>();
-      for (int i = 0; i < multiPolygon.getNumGeometries(); i++) {
-        Polygon polygon = (Polygon) multiPolygon.getGeometryN(i);
-        Map<String, Object> polygonShape = toEsPolygon(polygon);
-        coordinates.add((List<List<double[]>>) polygonShape.get("coordinates"));
+  private static String normalizeGeometryWkt(Geometry geometry) {
+    // Eski kodun logic'ini koruyarak normalizasyon yapalım
+    String type = "LinearRing".equals(geometry.getGeometryType())
+        ? "LINESTRING"
+        : geometry.getGeometryType().toUpperCase();
+
+    if ("POINT".equals(type)) {
+      Point point = (Point) geometry;
+      return String.format("POINT (%f %f)", point.getX(), point.getY());
+
+    } else if ("LINESTRING".equals(type)) {
+      LineString lineString = (LineString) geometry;
+      Coordinate[] coords = normalizePolygonCoordinates(lineString.getCoordinates());
+      StringBuilder wkt = new StringBuilder("LINESTRING (");
+      for (int i = 0; i < coords.length; i++) {
+        if (i > 0) wkt.append(", ");
+        wkt.append(String.format("%f %f", coords[i].x, coords[i].y));
       }
-      shape.put("coordinates", coordinates);
-    } else {
-      throw new IllegalArgumentException(geometry.getGeometryType() + " shape is not supported");
-    }
+      wkt.append(")");
+      return wkt.toString();
 
-    try {
-      return QueryBuilders.geoShapeQuery("coordinate", (org.elasticsearch.geometry.Geometry) shape).relation(ShapeRelation.WITHIN);
-    } catch (IOException e) {
-      throw new IllegalStateException(e.getMessage(), e);
+    } else if ("POLYGON".equals(type)) {
+      Polygon polygon = (Polygon) geometry;
+      return normalizePolygonWkt(polygon);
+
+    } else if ("MULTIPOLYGON".equals(type)) {
+      MultiPolygon multiPolygon = (MultiPolygon) geometry;
+      StringBuilder wkt = new StringBuilder("MULTIPOLYGON (");
+      for (int i = 0; i < multiPolygon.getNumGeometries(); i++) {
+        if (i > 0) wkt.append(", ");
+        Polygon polygon = (Polygon) multiPolygon.getGeometryN(i);
+        wkt.append("(").append(normalizePolygonWkt(polygon).substring(8)).append(")"); // Remove "POLYGON " prefix
+      }
+      wkt.append(")");
+      return wkt.toString();
+
+    } else {
+      throw new IllegalArgumentException(type + " shape is not supported");
     }
   }
+
+  private static String normalizePolygonWkt(Polygon polygon) {
+    StringBuilder wkt = new StringBuilder("POLYGON (");
+
+    // Exterior ring
+    Coordinate[] exteriorCoords = normalizePolygonCoordinates(polygon.getExteriorRing().getCoordinates());
+    wkt.append("(");
+    for (int i = 0; i < exteriorCoords.length; i++) {
+      if (i > 0) wkt.append(", ");
+      wkt.append(String.format("%f %f", exteriorCoords[i].x, exteriorCoords[i].y));
+    }
+    wkt.append(")");
+
+    // Interior rings (holes)
+    for (int i = 0; i < polygon.getNumInteriorRing(); i++) {
+      wkt.append(", (");
+      Coordinate[] holeCoords = normalizePolygonCoordinates(polygon.getInteriorRingN(i).getCoordinates());
+      for (int j = 0; j < holeCoords.length; j++) {
+        if (j > 0) wkt.append(", ");
+        wkt.append(String.format("%f %f", holeCoords[j].x, holeCoords[j].y));
+      }
+      wkt.append(")");
+    }
+
+    wkt.append(")");
+    return wkt.toString();
+  }
+
+
 
   /** Eliminates consecutive duplicates. The order is preserved. */
   @VisibleForTesting

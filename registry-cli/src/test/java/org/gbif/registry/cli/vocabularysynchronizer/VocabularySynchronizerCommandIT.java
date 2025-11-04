@@ -102,12 +102,12 @@ public class VocabularySynchronizerCommandIT extends BaseDBTest {
   }
 
   private VocabularySynchronizerConfiguration createTestConfiguration() {
-    VocabularySynchronizerConfiguration config = new VocabularySynchronizerConfiguration();
-    config.setDbConfig(toDbConfig(PG_CONTAINER));
-    config.apiRootUrl = "http://localhost:8080";
-    config.queueName = "vocabulary-released-registry";
-    config.poolSize = 1;
-    return config;
+    VocabularySynchronizerConfiguration testConfig = new VocabularySynchronizerConfiguration();
+    testConfig.setDbConfig(toDbConfig(PG_CONTAINER));
+    testConfig.apiRootUrl = "http://localhost:8080";
+    testConfig.queueName = "vocabulary-released-registry";
+    testConfig.poolSize = 1;
+    return testConfig;
   }
 
   private String getFileData(String filePath) {

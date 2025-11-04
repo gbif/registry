@@ -16,7 +16,7 @@ package org.gbif.registry.ws.it.persistence.mapper;
 import org.gbif.api.model.common.GbifUser;
 import org.gbif.api.vocabulary.UserRole;
 import org.gbif.registry.persistence.mapper.UserMapper;
-import org.gbif.registry.search.test.EsManageServer;
+import org.gbif.registry.search.test.ElasticsearchTestContainerConfiguration;
 import org.gbif.registry.ws.it.BaseItTest;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
@@ -39,8 +39,8 @@ public class UserMapperIT extends BaseItTest {
 
   @Autowired
   public UserMapperIT(
-      UserMapper mapper, SimplePrincipalProvider principalProvider, EsManageServer esServer) {
-    super(principalProvider, esServer);
+      UserMapper mapper, SimplePrincipalProvider principalProvider, ElasticsearchTestContainerConfiguration elasticsearchTestContainer) {
+    super(principalProvider, elasticsearchTestContainer);
     this.mapper = mapper;
   }
 

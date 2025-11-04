@@ -13,7 +13,7 @@
  */
 package org.gbif.registry.domain.ws;
 
-import javax.annotation.Nullable;
+import jakarta.annotation.Nullable;
 
 import com.google.common.base.Strings;
 

@@ -18,7 +18,7 @@ import org.gbif.api.model.registry.Organization;
 
 import java.net.URL;
 
-import javax.annotation.Nullable;
+import jakarta.annotation.Nullable;
 
 /**
  * Specialized model that contains data to be used by the template to generate an email related to

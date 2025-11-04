@@ -23,7 +23,7 @@ import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.registry.oaipmh.OaipmhSetRepository;
-import org.gbif.registry.search.test.EsManageServer;
+import org.gbif.registry.search.test.ElasticsearchTestContainerConfiguration;
 import org.gbif.registry.test.TestDataFactory;
 import org.gbif.registry.utils.OaipmhTestConfiguration;
 import org.gbif.utils.file.FileUtils;
@@ -63,7 +63,7 @@ public class OaipmhListRecordsIT extends AbstractOaipmhEndpointIT {
       InstallationService installationService,
       DatasetService datasetService,
       TestDataFactory testDataFactory,
-      EsManageServer esServer) {
+      ElasticsearchTestContainerConfiguration elasticsearchTestContainer) {
     super(
         principalProvider,
         environment,
@@ -72,7 +72,7 @@ public class OaipmhListRecordsIT extends AbstractOaipmhEndpointIT {
         installationService,
         datasetService,
         testDataFactory,
-        esServer);
+        elasticsearchTestContainer);
   }
 
   @Test

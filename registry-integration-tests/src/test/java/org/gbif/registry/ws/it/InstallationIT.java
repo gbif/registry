@@ -25,7 +25,7 @@ import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.api.util.Range;
 import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.api.vocabulary.InstallationType;
-import org.gbif.registry.search.test.EsManageServer;
+import org.gbif.registry.search.test.ElasticsearchTestContainerConfiguration;
 import org.gbif.registry.test.TestDataFactory;
 import org.gbif.registry.ws.client.InstallationClient;
 import org.gbif.registry.ws.client.NodeClient;
@@ -37,13 +37,13 @@ import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.UUID;
 
-import javax.annotation.Nullable;
+import jakarta.annotation.Nullable;
 
 import org.apache.commons.beanutils.BeanUtils;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.web.server.LocalServerPort;
+import org.springframework.boot.test.web.server.LocalServerPort;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -74,7 +74,7 @@ public class InstallationIT extends NetworkEntityIT<Installation> {
       NodeService nodeResource,
       @Nullable SimplePrincipalProvider principalProvider,
       TestDataFactory testDataFactory,
-      EsManageServer esServer,
+      ElasticsearchTestContainerConfiguration elasticsearchTestContainer,
       @LocalServerPort int localServerPort,
       KeyStore keyStore) {
     super(
@@ -84,7 +84,7 @@ public class InstallationIT extends NetworkEntityIT<Installation> {
         InstallationClient.class,
         principalProvider,
         testDataFactory,
-        esServer);
+        elasticsearchTestContainer);
     this.organizationResource = organizationResource;
     this.organizationClient = prepareClient(localServerPort, keyStore, OrganizationClient.class);
     this.nodeResource = nodeResource;

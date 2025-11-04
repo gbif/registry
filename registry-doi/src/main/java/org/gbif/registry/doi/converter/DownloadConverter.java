@@ -53,7 +53,7 @@ import org.gbif.occurrence.query.TitleLookupService;
 
 import java.util.List;
 
-import javax.xml.bind.JAXBException;
+import jakarta.xml.bind.JAXBException;
 
 import com.google.common.base.Preconditions;
 

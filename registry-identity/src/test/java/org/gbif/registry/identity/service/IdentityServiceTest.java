@@ -21,9 +21,9 @@ import org.gbif.registry.persistence.mapper.UserMapper;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
-import javax.validation.Validation;
-import javax.validation.Validator;
-import javax.validation.ValidatorFactory;
+import jakarta.validation.Validation;
+import jakarta.validation.Validator;
+import jakarta.validation.ValidatorFactory;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

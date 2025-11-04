@@ -35,7 +35,7 @@ import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-import javax.xml.bind.JAXBException;
+import jakarta.xml.bind.JAXBException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -174,10 +174,12 @@ public class DoiInteractionResource implements DoiInteractionService {
 
       LOG.info("DOI registered/updated {}", doi.getDoiName());
       return doi;
-    } catch (InvalidMetadataException | JAXBException ex) {
+    } catch (InvalidMetadataException ex) {
       LOG.info("Error registering/updating DOI", ex);
       throw new WebApplicationException(
           "Invalid metadata, error registering/updating DOI", HttpStatus.BAD_REQUEST);
+    } catch (JAXBException e) {
+      throw new RuntimeException(e);
     }
   }
 

@@ -21,7 +21,7 @@ import org.gbif.api.model.registry.Organization;
 
 import java.util.UUID;
 
-import javax.annotation.Nullable;
+import jakarta.annotation.Nullable;
 
 public interface EditorAuthorizationService {
 

@@ -24,20 +24,22 @@ import org.springframework.stereotype.Service;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.security.Keys;
+import javax.crypto.SecretKey;
 
 /** Class that handle all the authentication coming from JWT tokens. */
 @Service
 public class JwtAuthenticateService {
 
   private final String issuer;
-  private final String signingKey;
+  private final SecretKey signingKey;
   private final IdentityAccessService identityService;
 
   public JwtAuthenticateService(
       JwtConfiguration jwtConfiguration,
       @Qualifier("baseIdentityAccessService") IdentityAccessService identityService) {
     this.issuer = jwtConfiguration.getIssuer();
-    this.signingKey = jwtConfiguration.getSigningKey();
+    this.signingKey = Keys.hmacShaKeyFor(jwtConfiguration.getSigningKey().getBytes());
     this.identityService = identityService;
   }
 
@@ -48,9 +50,10 @@ public class JwtAuthenticateService {
       claims =
           Jwts.parser()
               .requireIssuer(issuer)
-              .setSigningKey(signingKey)
-              .parseClaimsJws(token)
-              .getBody();
+              .verifyWith(signingKey)
+              .build()
+              .parseSignedClaims(token)
+              .getPayload();
     } catch (ExpiredJwtException e) {
       throw new GbifJwtException(GbifJwtException.JwtErrorCode.EXPIRED_TOKEN);
     } catch (Exception e) {

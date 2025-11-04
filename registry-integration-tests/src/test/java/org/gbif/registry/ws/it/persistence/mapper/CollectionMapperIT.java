@@ -38,7 +38,7 @@ import org.gbif.registry.persistence.mapper.collections.MasterSourceSyncMetadata
 import org.gbif.registry.persistence.mapper.collections.dto.CollectionDto;
 import org.gbif.registry.persistence.mapper.collections.params.CollectionListParams;
 import org.gbif.registry.persistence.mapper.collections.params.RangeParam;
-import org.gbif.registry.search.test.EsManageServer;
+import org.gbif.registry.search.test.ElasticsearchTestContainerConfiguration;
 import org.gbif.registry.ws.it.BaseItTest;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
@@ -80,9 +80,9 @@ public class CollectionMapperIT extends BaseItTest {
       IdentifierMapper identifierMapper,
       CollectionContactMapper contactMapper,
       SimplePrincipalProvider principalProvider,
-      EsManageServer esServer,
+      ElasticsearchTestContainerConfiguration elasticsearchTestContainer,
       MasterSourceSyncMetadataMapper metadataMapper) {
-    super(principalProvider, esServer);
+    super(principalProvider, elasticsearchTestContainer);
     this.collectionMapper = collectionMapper;
     this.addressMapper = addressMapper;
     this.machineTagMapper = machineTagMapper;

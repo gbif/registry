@@ -35,6 +35,7 @@ public class TestMocksConfiguration {
 
   // use InMemoryEmailSender if devemail is disabled
   @Bean
+  @Primary
   @ConditionalOnProperty(value = "mail.devemail.enabled", havingValue = "false")
   public EmailSender emailSender() {
     LOG.info("ImMemoryEmailSender (stub) activated");

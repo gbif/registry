@@ -50,9 +50,8 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import javax.validation.Valid;
-import javax.validation.constraints.NotNull;
-import javax.validation.groups.Default;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
@@ -126,13 +125,15 @@ public class InstallationResource
       MapperServiceLocator mapperServiceLocator,
       EventManager eventManager,
       WithMyBatis withMyBatis,
-      @Autowired(required = false) MessagePublisher messagePublisher) {
+      @Autowired(required = false) MessagePublisher messagePublisher,
+      jakarta.validation.Validator validator) {
     super(
         mapperServiceLocator.getInstallationMapper(),
         mapperServiceLocator,
         Installation.class,
         eventManager,
-        withMyBatis);
+        withMyBatis,
+        validator);
     this.datasetMapper = mapperServiceLocator.getDatasetMapper();
     this.installationMapper = mapperServiceLocator.getInstallationMapper();
     this.organizationMapper = mapperServiceLocator.getOrganizationMapper();
@@ -180,7 +181,6 @@ public class InstallationResource
       description = "Installation created, new installation's UUID returned")
   @Docs.DefaultUnsuccessfulWriteResponses
   @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
-  @Validated({PrePersist.class, Default.class})
   @Override
   public UUID create(@RequestBody @Trim Installation installation) {
     return super.create(installation);
@@ -207,10 +207,9 @@ public class InstallationResource
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
   @PutMapping(value = "{key}", consumes = MediaType.APPLICATION_JSON_VALUE)
-  @Validated({PostPersist.class, Default.class})
   @Override
   public void update(
-      @PathVariable("key") UUID key, @Valid @RequestBody @Trim Installation installation) {
+      @PathVariable("key") UUID key, @RequestBody @Trim Installation installation) {
     super.update(key, installation);
   }
 
@@ -315,9 +314,8 @@ public class InstallationResource
       @PathVariable("key") UUID installationKey, Pageable page) {
     return new PagingResponse<>(
         page,
-        new Long(
-            datasetMapper.count(
-                DatasetListParams.builder().installationKey(installationKey).build())),
+      datasetMapper.count(
+        DatasetListParams.builder().installationKey(installationKey).build()),
         datasetMapper.list(
             DatasetListParams.builder().installationKey(installationKey).page(page).build()));
   }

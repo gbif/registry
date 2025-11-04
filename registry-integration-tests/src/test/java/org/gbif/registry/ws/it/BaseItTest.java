@@ -15,7 +15,7 @@ package org.gbif.registry.ws.it;
 
 import org.gbif.api.vocabulary.UserRole;
 import org.gbif.registry.database.BaseDBTest;
-import org.gbif.registry.search.test.EsManageServer;
+import org.gbif.registry.search.test.ElasticsearchTestContainerConfiguration;
 import org.gbif.registry.ws.it.fixtures.TestConstants;
 import org.gbif.ws.client.ClientBuilder;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
@@ -51,11 +51,11 @@ import static org.gbif.registry.ws.it.fixtures.TestConstants.IT_APP_KEY2;
 public class BaseItTest extends BaseDBTest {
   private final SimplePrincipalProvider simplePrincipalProvider;
 
-  protected static EsManageServer esServer;
+  protected static ElasticsearchTestContainerConfiguration elasticsearchTestContainer;
 
-  public BaseItTest(SimplePrincipalProvider simplePrincipalProvider, EsManageServer esServer) {
+  public BaseItTest(SimplePrincipalProvider simplePrincipalProvider, ElasticsearchTestContainerConfiguration elasticsearchTestContainer) {
     this.simplePrincipalProvider = simplePrincipalProvider;
-    BaseItTest.esServer = esServer;
+    BaseItTest.elasticsearchTestContainer = elasticsearchTestContainer;
   }
 
   @BeforeEach
@@ -136,6 +136,5 @@ public class BaseItTest extends BaseDBTest {
     registry.add("registry.datasource.url", PG_CONTAINER::getJdbcUrl);
     registry.add("registry.datasource.username", PG_CONTAINER::getUsername);
     registry.add("registry.datasource.password", PG_CONTAINER::getPassword);
-    registry.add("elasticsearch.mock", () -> "true");
   }
 }

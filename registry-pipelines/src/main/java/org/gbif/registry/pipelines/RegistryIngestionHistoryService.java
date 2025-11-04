@@ -21,7 +21,7 @@ import org.gbif.api.model.pipelines.IngestionProcess;
 import java.util.List;
 import java.util.UUID;
 
-import javax.annotation.Nullable;
+import jakarta.annotation.Nullable;
 
 public interface RegistryIngestionHistoryService {
 

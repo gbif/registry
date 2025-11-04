@@ -26,17 +26,24 @@ import com.google.common.base.Throwables;
 
 public class DatasetSearchUpdateUtils {
 
-  // how often to poll and wait for SOLR to update
+  // how often to poll and wait for ES to update
   private static final int UPDATE_TIMEOUT_SECS = 10;
   private static final int UPDATE_POLL_MSECS = 20;
+  private static final int INITIAL_WAIT_MSECS = 100; // Wait for async events to reach indexer
+  private static final int STABILITY_CHECK_MSECS = 100; // Wait to ensure no more updates coming
   private static final Logger LOG = LoggerFactory.getLogger(DatasetSearchUpdateUtils.class);
 
   /** Waits for ElasticSearch update threads to finish. */
-  public static void awaitUpdates(DatasetRealtimeIndexer indexService, EsManageServer esServer) {
+  public static void awaitUpdates(DatasetRealtimeIndexer indexService, ElasticsearchTestContainerConfiguration elasticsearchTestContainer) {
     Preconditions.checkNotNull(indexService, "Index service is required");
-    Preconditions.checkNotNull(esServer, "EsServer is required");
+    Preconditions.checkNotNull(elasticsearchTestContainer, "ElasticsearchTestContainerConfiguration is required");
     try {
       Stopwatch stopWatch = Stopwatch.createStarted();
+
+      // Initial wait for async events (like organization updates) to trigger dataset reindexing
+      Thread.sleep(INITIAL_WAIT_MSECS);
+
+      // Wait for all pending updates to complete
       while (indexService.getPendingUpdates() > 0) {
         Thread.sleep(UPDATE_POLL_MSECS);
         if (stopWatch.elapsed(TimeUnit.SECONDS) > UPDATE_TIMEOUT_SECS) {
@@ -44,7 +51,22 @@ public class DatasetSearchUpdateUtils {
               "Failing test due to unreasonable timeout on ElasticSearch update");
         }
       }
-      esServer.refresh();
+
+      // Wait a bit more to ensure no new updates are triggered
+      Thread.sleep(STABILITY_CHECK_MSECS);
+
+      // Final check - if new updates appeared, wait for them too
+      if (indexService.getPendingUpdates() > 0) {
+        while (indexService.getPendingUpdates() > 0) {
+          Thread.sleep(UPDATE_POLL_MSECS);
+          if (stopWatch.elapsed(TimeUnit.SECONDS) > UPDATE_TIMEOUT_SECS) {
+            throw new IllegalStateException(
+                "Failing test due to unreasonable timeout on ElasticSearch update");
+          }
+        }
+      }
+
+      elasticsearchTestContainer.refreshIndex();
       LOG.info(
           "Waited {} msecs for Elasticsearch update backlog to clear successfully",
           stopWatch.elapsed(TimeUnit.MILLISECONDS));

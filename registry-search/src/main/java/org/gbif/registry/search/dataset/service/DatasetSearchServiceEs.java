@@ -13,6 +13,8 @@
  */
 package org.gbif.registry.search.dataset.service;
 
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
 import org.gbif.api.model.common.search.SearchResponse;
 import org.gbif.api.model.registry.search.DatasetSearchParameter;
 import org.gbif.api.model.registry.search.DatasetSearchRequest;
@@ -65,8 +67,8 @@ public class DatasetSearchServiceEs implements DatasetSearchService {
     try {
       SearchRequest searchRequest =
           esSearchRequestBuilder.buildSearchRequest(datasetSearchRequest, true, index);
-      SearchResponse<org.gbif.registry.search.dataset.DatasetDocument> response =
-          elasticsearchClient.search(searchRequest, org.gbif.registry.search.dataset.DatasetDocument.class);
+      co.elastic.clients.elasticsearch.core.SearchResponse<ObjectNode> response =
+          elasticsearchClient.search(searchRequest, ObjectNode.class);
       return esResponseParser.buildSearchResponse(response, datasetSearchRequest);
     } catch (IOException ex) {
       throw new RuntimeException(ex);
@@ -83,11 +85,20 @@ public class DatasetSearchServiceEs implements DatasetSearchService {
         limit = MAX_SUGGEST_LIMIT;
       }
 
+      // Create a copy of the request with the validated limit
+      DatasetSuggestRequest modifiedRequest = new DatasetSuggestRequest();
+      modifiedRequest.setQ(datasetSuggestRequest.getQ());
+      modifiedRequest.setLimit(limit);
+      modifiedRequest.setOffset(datasetSuggestRequest.getOffset());
+      modifiedRequest.setParameters(datasetSuggestRequest.getParameters());
+
       SearchRequest searchRequest =
-          esSearchRequestBuilder.buildSearchRequest(datasetSuggestRequest, limit, index);
-      SearchResponse<org.gbif.registry.search.dataset.DatasetDocument> response =
-          elasticsearchClient.search(searchRequest, org.gbif.registry.search.dataset.DatasetDocument.class);
-      return esResponseParser.buildSuggestResponse(response, datasetSuggestRequest);
+          esSearchRequestBuilder.buildAutocompleteQuery(modifiedRequest, null, index);
+      co.elastic.clients.elasticsearch.core.SearchResponse<String> response =
+          elasticsearchClient.search(searchRequest, String.class);
+      org.gbif.api.model.common.search.SearchResponse<DatasetSuggestResult, org.gbif.api.model.registry.search.DatasetSearchParameter> autocompleteResponse =
+          esResponseParser.buildSearchAutocompleteResponse(response, modifiedRequest);
+      return autocompleteResponse.getResults();
     } catch (IOException ex) {
       log.error("Error executing the search operation", ex);
       throw new RuntimeException(ex);

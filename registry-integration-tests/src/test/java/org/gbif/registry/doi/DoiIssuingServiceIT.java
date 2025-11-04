@@ -14,7 +14,7 @@
 package org.gbif.registry.doi;
 
 import org.gbif.api.model.common.DOI;
-import org.gbif.registry.search.test.EsManageServer;
+import org.gbif.registry.search.test.ElasticsearchTestContainerConfiguration;
 import org.gbif.registry.ws.it.BaseItTest;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
@@ -47,8 +47,8 @@ public class DoiIssuingServiceIT extends BaseItTest {
   public DoiIssuingServiceIT(
       DoiIssuingService doiIssuingService,
       @Nullable SimplePrincipalProvider simplePrincipalProvider,
-      EsManageServer esServer) {
-    super(simplePrincipalProvider, esServer);
+      ElasticsearchTestContainerConfiguration elasticsearchTestContainer) {
+    super(simplePrincipalProvider, elasticsearchTestContainer);
     this.doiIssuingService = doiIssuingService;
   }
 

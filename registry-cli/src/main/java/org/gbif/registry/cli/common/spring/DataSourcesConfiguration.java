@@ -18,7 +18,6 @@ import org.gbif.registry.cli.common.DbConfiguration;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
-import org.springframework.boot.jdbc.DataSourceInitializationMode;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
@@ -41,7 +40,6 @@ public class DataSourcesConfiguration {
     dataSourceProperties.setPassword(dbConfiguration.password);
     dataSourceProperties.setUrl(
         "jdbc:postgresql://" + dbConfiguration.serverName + "/" + dbConfiguration.databaseName);
-    dataSourceProperties.setInitializationMode(DataSourceInitializationMode.ALWAYS);
     return dataSourceProperties;
   }
 

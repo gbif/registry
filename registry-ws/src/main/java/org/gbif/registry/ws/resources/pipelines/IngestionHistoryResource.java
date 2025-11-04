@@ -23,7 +23,7 @@ import org.gbif.registry.pipelines.RegistryIngestionHistoryService;
 import java.util.List;
 import java.util.UUID;
 
-import javax.annotation.Nullable;
+import jakarta.annotation.Nullable;
 
 import org.springframework.http.MediaType;
 import org.springframework.validation.annotation.Validated;

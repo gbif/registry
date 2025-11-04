@@ -18,8 +18,8 @@ import org.gbif.api.model.common.DoiData;
 import org.gbif.registry.doi.registration.DoiRegistration;
 import org.gbif.registry.domain.doi.DoiType;
 
-import javax.validation.Valid;
-import javax.validation.constraints.NotNull;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 
 /** Specifies the contract of a service that manages DOI registrations. */
 public interface DoiInteractionService {

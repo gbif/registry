@@ -27,8 +27,8 @@ import org.gbif.registry.security.jwt.JwtUtils;
 
 import java.util.Optional;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.validation.constraints.NotNull;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.constraints.NotNull;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

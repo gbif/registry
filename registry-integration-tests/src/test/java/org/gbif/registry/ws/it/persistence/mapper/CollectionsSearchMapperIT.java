@@ -35,7 +35,7 @@ import org.gbif.registry.persistence.mapper.collections.dto.FacetDto;
 import org.gbif.registry.persistence.mapper.collections.params.DescriptorsListParams;
 import org.gbif.registry.persistence.mapper.collections.params.InstitutionListParams;
 import org.gbif.registry.persistence.mapper.dto.GrSciCollVocabConceptDto;
-import org.gbif.registry.search.test.EsManageServer;
+import org.gbif.registry.search.test.ElasticsearchTestContainerConfiguration;
 import org.gbif.registry.ws.it.BaseItTest;
 import org.gbif.registry.ws.it.collections.ConceptTestSetup;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
@@ -79,8 +79,8 @@ public class CollectionsSearchMapperIT extends BaseItTest {
       CollectionsSearchMapper collectionsSearchMapper,
       GrScicollVocabConceptMapper grScicollVocabConceptMapper,
       SimplePrincipalProvider principalProvider,
-      EsManageServer esServer) {
-    super(principalProvider, esServer);
+      ElasticsearchTestContainerConfiguration elasticsearchTestContainer) {
+    super(principalProvider, elasticsearchTestContainer);
     this.collectionMapper = collectionMapper;
     this.institutionMapper = institutionMapper;
     this.addressMapper = addressMapper;

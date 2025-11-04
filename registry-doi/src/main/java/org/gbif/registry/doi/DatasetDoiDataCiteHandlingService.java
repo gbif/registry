@@ -21,7 +21,7 @@ import java.net.URI;
 import java.util.Date;
 import java.util.UUID;
 
-import javax.annotation.Nullable;
+import jakarta.annotation.Nullable;
 
 /**
  * Business logic for Dataset DOI handling with DataCite.

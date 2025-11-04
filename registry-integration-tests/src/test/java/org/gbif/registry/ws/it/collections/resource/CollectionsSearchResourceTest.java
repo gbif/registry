@@ -39,10 +39,13 @@ import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.boot.web.server.LocalServerPort;
+import org.springframework.boot.test.web.server.LocalServerPort;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
 public class CollectionsSearchResourceTest extends BaseResourceIT {
@@ -76,8 +79,7 @@ public class CollectionsSearchResourceTest extends BaseResourceIT {
     highlight.setSnippet("snippet");
     response.setHighlights(Collections.singleton(highlight));
 
-    when(collectionsSearchService.search(
-            q, hl, null, null, Collections.singletonList(Country.SPAIN), limit))
+    when(collectionsSearchService.search(anyString(), anyBoolean(), any(), any(), any(), anyInt()))
         .thenReturn(Collections.singletonList(response));
 
     List<CollectionsFullSearchResponse> responseReturned =

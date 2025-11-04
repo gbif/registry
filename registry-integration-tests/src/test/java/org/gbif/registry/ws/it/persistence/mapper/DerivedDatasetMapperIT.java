@@ -20,6 +20,7 @@ import org.gbif.registry.database.TestCaseDatabaseInitializer;
 import org.gbif.registry.domain.ws.DerivedDataset;
 import org.gbif.registry.domain.ws.DerivedDatasetUsage;
 import org.gbif.registry.persistence.mapper.DerivedDatasetMapper;
+import org.gbif.registry.search.test.ElasticsearchTestContainerConfiguration;
 import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.test.TestDataFactory;
 import org.gbif.registry.ws.it.BaseItTest;
@@ -53,9 +54,9 @@ public class DerivedDatasetMapperIT extends BaseItTest {
   public DerivedDatasetMapperIT(
       DerivedDatasetMapper mapper,
       SimplePrincipalProvider principalProvider,
-      EsManageServer esServer,
+      ElasticsearchTestContainerConfiguration elasticsearchTestContainer,
       TestDataFactory testDataFactory) {
-    super(principalProvider, esServer);
+    super(principalProvider, elasticsearchTestContainer);
     this.mapper = mapper;
     this.testDataFactory = testDataFactory;
   }

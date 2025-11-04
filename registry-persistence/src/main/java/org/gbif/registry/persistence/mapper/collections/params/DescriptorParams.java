@@ -19,7 +19,7 @@ import org.gbif.api.vocabulary.Country;
 import java.time.LocalDate;
 import java.util.List;
 
-import javax.annotation.Nullable;
+import jakarta.annotation.Nullable;
 
 import lombok.Builder;
 import lombok.Getter;

@@ -4,22 +4,28 @@
 
   <resultMap id="PIPELINES_PROCESS_MAP" type="org.gbif.api.model.pipelines.PipelineProcess" autoMapping="true">
     <id property="key" column="key"/>
+    <result property="created" column="created" typeHandler="org.gbif.registry.persistence.mapper.handler.LocalDateTimeTypeHandler"/>
     <collection property="executions" column="key" select="listExecutions"/>
   </resultMap>
 
   <resultMap id="RUNNING_PIPELINES_PROCESS_MAP" type="org.gbif.api.model.pipelines.PipelineProcess" autoMapping="true">
     <id property="key" column="key"/>
+    <result property="created" column="created" typeHandler="org.gbif.registry.persistence.mapper.handler.LocalDateTimeTypeHandler"/>
     <collection property="executions" column="key" select="listRunningExecutions"/>
   </resultMap>
 
   <resultMap id="EXECUTION_MAP" type="org.gbif.api.model.pipelines.PipelineExecution" autoMapping="true">
     <id property="key" column="key"/>
+    <result property="created" column="created" typeHandler="org.gbif.registry.persistence.mapper.handler.LocalDateTimeTypeHandler"/>
     <result property="stepsToRun" column="steps_to_run" typeHandler="org.gbif.registry.persistence.mapper.handler.StepTypeArrayTypeHandler"/>
     <collection property="steps" column="key" select="getPipelineStepsByExecutionKey"/>
   </resultMap>
 
   <resultMap id="STEP_MAP" type="org.gbif.api.model.pipelines.PipelineStep" autoMapping="true">
     <id property="key" column="key"/>
+    <result property="started" column="started" typeHandler="org.gbif.registry.persistence.mapper.handler.LocalDateTimeTypeHandler"/>
+    <result property="finished" column="finished" typeHandler="org.gbif.registry.persistence.mapper.handler.LocalDateTimeTypeHandler"/>
+    <result property="modified" column="modified" typeHandler="org.gbif.registry.persistence.mapper.handler.LocalDateTimeTypeHandler"/>
     <result property="metrics" column="metrics" typeHandler="org.gbif.registry.persistence.mapper.handler.MetricInfoTypeHandler"/>
   </resultMap>
 
@@ -30,8 +36,8 @@
     <result property="rerunReason" column="rerun_reason"/>
     <result property="stepState" column="state"/>
     <result property="stepType" column="type"/>
-    <result property="stepStarted" column="started"/>
-    <result property="stepFinished" column="finished"/>
+    <result property="stepStarted" column="started" typeHandler="org.gbif.registry.persistence.mapper.handler.LocalDateTimeTypeHandler"/>
+    <result property="stepFinished" column="finished" typeHandler="org.gbif.registry.persistence.mapper.handler.LocalDateTimeTypeHandler"/>
     <result property="pipelinesVersion" column="pipelines_version"/>
   </resultMap>
 
@@ -80,8 +86,8 @@
   <sql id="STEP_VALUES_CREATE">
     #{step.type,jdbcType=OTHER},
     #{step.runner,jdbcType=OTHER},
-    #{step.started,jdbcType=OTHER},
-    #{step.finished,jdbcType=OTHER},
+    #{step.started,jdbcType=TIMESTAMP,typeHandler=org.gbif.registry.persistence.mapper.handler.LocalDateTimeTypeHandler},
+    #{step.finished,jdbcType=TIMESTAMP,typeHandler=org.gbif.registry.persistence.mapper.handler.LocalDateTimeTypeHandler},
     #{step.state,jdbcType=OTHER},
     #{step.message,jdbcType=VARCHAR},
     #{step.metrics,jdbcType=OTHER,typeHandler=MetricInfoTypeHandler}::hstore,
@@ -92,8 +98,8 @@
   </sql>
 
   <sql id="STEP_UPDATE">
-    started = #{step.started,jdbcType=OTHER},
-    finished = #{step.finished,jdbcType=OTHER},
+    started = #{step.started,jdbcType=TIMESTAMP,typeHandler=org.gbif.registry.persistence.mapper.handler.LocalDateTimeTypeHandler},
+    finished = #{step.finished,jdbcType=TIMESTAMP,typeHandler=org.gbif.registry.persistence.mapper.handler.LocalDateTimeTypeHandler},
     state = #{step.state,jdbcType=OTHER},
     message = #{step.message,jdbcType=VARCHAR},
     modified = now(),

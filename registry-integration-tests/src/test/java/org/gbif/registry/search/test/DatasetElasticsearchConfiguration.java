@@ -13,72 +13,81 @@
  */
 package org.gbif.registry.search.test;
 
+import co.elastic.clients.elasticsearch.ElasticsearchClient;
+import co.elastic.clients.elasticsearch.ElasticsearchAsyncClient;
+
 import org.gbif.registry.search.dataset.indexing.es.EsClient;
 
-import org.elasticsearch.client.RestHighLevelClient;
-import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Scope;
 import org.springframework.context.annotation.Primary;
 import org.springframework.core.io.ResourceLoader;
 
+/**
+ * Test-specific Elasticsearch configuration that provides the same beans as EsConfiguration
+ * but uses ElasticsearchTestContainerConfiguration for the underlying Elasticsearch instance.
+ * This configuration overrides the production EsConfiguration beans for testing purposes.
+ */
 @Configuration
 public class DatasetElasticsearchConfiguration {
 
   @Autowired private ResourceLoader resourceLoader;
 
-  @Bean("datasetElasticCluster")
-  public EsManageServer esManageServer(
-      @Value("${elasticsearch.registry.index}") String indexName,
-      @Value("${elasticsearch.mock}") boolean mockEs) {
+  @Bean("elasticsearchTestContainerConfiguration")
+  @Scope("singleton")
+  public ElasticsearchTestContainerConfiguration elasticsearchTestContainer(
+      @Value("${elasticsearch.registry.index}") String indexName) {
     try {
-      return mockEs
-          ? Mockito.mock(EsManageServer.class)
-          : new EsManageServer(
-              resourceLoader.getResource("classpath:dataset-es-mapping.json"),
-              resourceLoader.getResource("classpath:dataset-es-settings.json"),
-              indexName);
+      return new ElasticsearchTestContainerConfiguration(
+          resourceLoader,
+          indexName,
+          "classpath:dataset-es-mapping.json",
+          "classpath:dataset-es-settings.json");
     } catch (Exception ex) {
       throw new RuntimeException(ex);
     }
   }
 
   @Bean(name = "esOccurrenceClientConfig")
-  public EsClient.EsClientConfiguration occurrenceRestHighLevelClient(
-      EsManageServer esManageServer) {
+  public EsClient.EsClientConfiguration occurrenceEsClientConfiguration(
+      @Qualifier("elasticsearchTestContainerConfiguration") ElasticsearchTestContainerConfiguration elasticsearchTestContainer) {
     EsClient.EsClientConfiguration esClientConfiguration = new EsClient.EsClientConfiguration();
-    esClientConfiguration.setSocketTimeOut(6000);
-    esClientConfiguration.setConnectionRequestTimeOut(6000);
-    esClientConfiguration.setConnectionRequestTimeOut(6000);
-    esClientConfiguration.setHosts(esManageServer.getServerAddress());
+    esClientConfiguration.setConnectionTimeout(6000);
+    esClientConfiguration.setConnectionRequestTimeout(6000);
+    esClientConfiguration.setSocketTimeout(6000);
+    // Use testcontainer address instead of production config
+    esClientConfiguration.setHosts(elasticsearchTestContainer.getServerAddress());
     return esClientConfiguration;
   }
 
   @Bean(name = "registryEsClientConfig")
   @Primary
-  public EsClient.EsClientConfiguration registryRestHighLevelClient(EsManageServer esManageServer) {
-    return occurrenceRestHighLevelClient(esManageServer);
+  public EsClient.EsClientConfiguration registryEsClientConfiguration(
+      @Qualifier("elasticsearchTestContainerConfiguration") ElasticsearchTestContainerConfiguration elasticsearchTestContainer) {
+    return occurrenceEsClientConfiguration(elasticsearchTestContainer);
   }
 
   @Bean
   @Primary
-  public RestHighLevelClient restHighLevelClient(
-      @Qualifier("registryEsClientConfig") EsClient.EsClientConfiguration esClientConfiguration,
-      @Value("${elasticsearch.mock}") boolean mockEs) {
-    return mockEs
-        ? Mockito.mock(RestHighLevelClient.class)
-        : EsClient.provideEsClient(esClientConfiguration);
+  public ElasticsearchClient elasticsearchClient(
+      @Qualifier("registryEsClientConfig") EsClient.EsClientConfiguration esClientConfiguration) {
+    return EsClient.provideElasticsearchClient(esClientConfiguration);
+  }
+
+  @Bean
+  @Primary
+  public ElasticsearchAsyncClient elasticsearchAsyncClient(
+      @Qualifier("registryEsClientConfig") EsClient.EsClientConfiguration esClientConfiguration) {
+    return EsClient.provideElasticsearchAsyncClient(esClientConfiguration);
   }
 
   @Bean(name = "occurrenceEsClient")
-  public RestHighLevelClient occurrenceRestHighLevelClient(
-      @Qualifier("esOccurrenceClientConfig") EsClient.EsClientConfiguration esClientConfiguration,
-      @Value("${elasticsearch.mock}") boolean mockEs) {
-    return mockEs
-        ? Mockito.mock(RestHighLevelClient.class)
-        : EsClient.provideEsClient(esClientConfiguration);
+  public ElasticsearchClient occurrenceElasticsearchClient(
+      @Qualifier("esOccurrenceClientConfig") EsClient.EsClientConfiguration esClientConfiguration) {
+    return EsClient.provideElasticsearchClient(esClientConfiguration);
   }
 }

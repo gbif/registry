@@ -24,7 +24,7 @@ import org.gbif.registry.mail.config.MailConfigurationProperties;
 import org.gbif.registry.mail.config.OrganizationSuretyMailConfigurationProperties;
 import org.gbif.registry.mail.organization.OrganizationEmailManager;
 import org.gbif.registry.mail.organization.OrganizationEmailTemplateProcessor;
-import org.gbif.registry.search.test.EsManageServer;
+import org.gbif.registry.search.test.ElasticsearchTestContainerConfiguration;
 import org.gbif.registry.test.TestDataFactory;
 import org.gbif.registry.ws.it.BaseItTest;
 import org.gbif.registry.ws.it.RegistryIntegrationTestsConfiguration;
@@ -75,8 +75,8 @@ public class OrganizationEmailTemplateManagerIT extends BaseItTest {
       OrganizationSuretyMailConfigurationProperties organizationSuretyMailConfigurationProperties,
       TestDataFactory testDataFactory,
       SimplePrincipalProvider simplePrincipalProvider,
-      EsManageServer esServer) {
-    super(simplePrincipalProvider, esServer);
+      ElasticsearchTestContainerConfiguration elasticsearchTestContainer) {
+    super(simplePrincipalProvider, elasticsearchTestContainer);
     this.mailConfigurationProperties = mailConfigurationProperties;
     this.organizationSuretyMailConfigurationProperties =
         organizationSuretyMailConfigurationProperties;

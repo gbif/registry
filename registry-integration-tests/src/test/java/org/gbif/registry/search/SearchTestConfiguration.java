@@ -13,45 +13,18 @@
  */
 package org.gbif.registry.search;
 
-import org.gbif.api.service.registry.DatasetService;
-import org.gbif.api.service.registry.InstallationService;
-import org.gbif.api.service.registry.NetworkService;
-import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.checklistbank.ws.client.DatasetMetricsClient;
 import org.gbif.checklistbank.ws.client.SpeciesResourceClient;
 import org.gbif.metrics.ws.client.CubeWsClient;
 import org.gbif.occurrence.ws.client.OccurrenceWsSearchClient;
-import org.gbif.registry.search.dataset.indexing.ws.GbifWsClient;
-import org.gbif.registry.search.dataset.indexing.ws.GbifWsWrapperClient;
 
 import org.mockito.Mockito;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Primary;
 
 @Configuration(proxyBeanMethods = false)
 public class SearchTestConfiguration {
 
-  @Bean
-  @Primary
-  public GbifWsClient gbifWsClient(
-      InstallationService installationService,
-      OrganizationService organizationService,
-      DatasetService datasetService,
-      NetworkService networkService,
-      OccurrenceWsSearchClient occurrenceWsSearchClient,
-      SpeciesResourceClient speciesResourceClient,
-      CubeWsClient cubeWsClient,
-      DatasetMetricsClient datasetMetricsClient) {
-      return new GbifWsWrapperClient(installationService,
-                                      organizationService,
-                                      datasetService,
-                                      networkService,
-                                      occurrenceWsSearchClient,
-                                      speciesResourceClient,
-                                      cubeWsClient,
-                                      datasetMetricsClient);
-  }
 
   @Bean
   public OccurrenceWsSearchClient occurrenceWsSearchClient() {

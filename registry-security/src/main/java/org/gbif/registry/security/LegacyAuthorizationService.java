@@ -17,7 +17,7 @@ import org.gbif.ws.security.LegacyRequestAuthorization;
 
 import java.util.UUID;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 public interface LegacyAuthorizationService {
 

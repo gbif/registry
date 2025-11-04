@@ -37,7 +37,7 @@ import org.springframework.stereotype.Service;
 
 import com.google.common.base.Strings;
 
-@Service
+@Service("institutionBatchHandler")
 public class InstitutionBatchHandler extends BaseBatchHandler<Institution> {
   private final InstitutionService institutionService;
   private final GrSciCollAuthorizationService authorizationService;

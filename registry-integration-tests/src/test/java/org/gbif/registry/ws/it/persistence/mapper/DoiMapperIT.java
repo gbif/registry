@@ -19,7 +19,7 @@ import org.gbif.api.model.common.DoiStatus;
 import org.gbif.registry.database.TestCaseDatabaseInitializer;
 import org.gbif.registry.domain.doi.DoiType;
 import org.gbif.registry.persistence.mapper.DoiMapper;
-import org.gbif.registry.search.test.EsManageServer;
+import org.gbif.registry.search.test.ElasticsearchTestContainerConfiguration;
 import org.gbif.registry.ws.it.BaseItTest;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
@@ -44,8 +44,8 @@ public class DoiMapperIT extends BaseItTest {
 
   @Autowired
   public DoiMapperIT(
-      DoiMapper doiMapper, SimplePrincipalProvider principalProvider, EsManageServer esServer) {
-    super(principalProvider, esServer);
+      DoiMapper doiMapper, SimplePrincipalProvider principalProvider, ElasticsearchTestContainerConfiguration elasticsearchTestContainer) {
+    super(principalProvider, elasticsearchTestContainer);
     this.mapper = doiMapper;
   }
 

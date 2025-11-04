@@ -14,11 +14,11 @@
 package org.gbif.registry.ws.it;
 
 import org.gbif.api.model.registry.Contact;
-import org.gbif.registry.search.test.EsManageServer;
+import org.gbif.registry.search.test.ElasticsearchTestContainerConfiguration;
 import org.gbif.registry.test.TestDataFactory;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
-import javax.annotation.Nullable;
+import jakarta.annotation.Nullable;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.parallel.Execution;
@@ -36,8 +36,8 @@ public class LenientAssertIT extends BaseItTest {
   public LenientAssertIT(
       TestDataFactory testDataFactory,
       @Nullable SimplePrincipalProvider simplePrincipalProvider,
-      EsManageServer esServer) {
-    super(simplePrincipalProvider, esServer);
+      ElasticsearchTestContainerConfiguration elasticsearchTestContainer) {
+    super(simplePrincipalProvider, elasticsearchTestContainer);
     this.testDataFactory = testDataFactory;
   }
 

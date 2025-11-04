@@ -17,7 +17,7 @@ import org.gbif.api.model.collections.Batch;
 import org.gbif.api.model.collections.CollectionEntityType;
 import org.gbif.registry.database.TestCaseDatabaseInitializer;
 import org.gbif.registry.persistence.mapper.collections.BatchMapper;
-import org.gbif.registry.search.test.EsManageServer;
+import org.gbif.registry.search.test.ElasticsearchTestContainerConfiguration;
 import org.gbif.registry.ws.it.BaseItTest;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
@@ -41,8 +41,8 @@ public class BatchMapperIT extends BaseItTest {
 
   @Autowired
   public BatchMapperIT(
-      BatchMapper batchMapper, SimplePrincipalProvider principalProvider, EsManageServer esServer) {
-    super(principalProvider, esServer);
+      BatchMapper batchMapper, SimplePrincipalProvider principalProvider, ElasticsearchTestContainerConfiguration elasticsearchTestContainer) {
+    super(principalProvider, elasticsearchTestContainer);
     this.batchMapper = batchMapper;
   }
 

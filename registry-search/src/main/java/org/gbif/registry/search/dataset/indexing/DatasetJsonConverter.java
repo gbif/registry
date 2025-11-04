@@ -35,7 +35,6 @@ import org.gbif.registry.search.dataset.indexing.ws.GbifWsClient;
 import org.gbif.registry.search.dataset.indexing.ws.JacksonObjectMapper;
 import org.gbif.vocabulary.client.ConceptClient;
 
-import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
@@ -43,6 +42,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -51,17 +51,11 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.commons.lang3.StringUtils;
-import org.elasticsearch.action.search.SearchRequest;
-import org.elasticsearch.client.RequestOptions;
-import org.elasticsearch.client.RestHighLevelClient;
-import org.elasticsearch.index.query.QueryBuilders;
-import org.elasticsearch.search.aggregations.AggregationBuilders;
-import org.elasticsearch.search.aggregations.Aggregations;
-import org.elasticsearch.search.aggregations.bucket.MultiBucketsAggregation;
-import org.elasticsearch.search.aggregations.bucket.histogram.DateHistogramInterval;
-import org.elasticsearch.search.aggregations.bucket.histogram.Histogram;
-import org.elasticsearch.search.aggregations.bucket.terms.Terms;
-import org.elasticsearch.search.builder.SearchSourceBuilder;
+import co.elastic.clients.elasticsearch.ElasticsearchClient;
+import co.elastic.clients.elasticsearch.core.SearchRequest;
+import co.elastic.clients.elasticsearch._types.aggregations.Aggregate;
+import co.elastic.clients.elasticsearch._types.aggregations.StringTermsBucket;
+import co.elastic.clients.elasticsearch._types.aggregations.HistogramBucket;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -103,7 +97,7 @@ public class DatasetJsonConverter {
 
   private final ObjectMapper mapper;
 
-  private final RestHighLevelClient occurrenceEsClient;
+  private final ElasticsearchClient occurrenceEsClient;
 
   private final String occurrenceIndex;
 
@@ -131,7 +125,7 @@ public class DatasetJsonConverter {
       ConceptClient conceptClient,
       @Autowired(required = false) ChecklistbankPersistenceService checklistbankPersistenceService,
       @Qualifier("apiMapper") ObjectMapper mapper,
-      @Qualifier("occurrenceEsClient") RestHighLevelClient occurrenceEsClient,
+      @Qualifier("occurrenceEsClient") ElasticsearchClient occurrenceEsClient,
       @Value("${elasticsearch.occurrence.index}") String occurrenceIndex) {
     this.gbifWsClient = gbifWsClient;
     this.conceptClient = conceptClient;
@@ -149,7 +143,7 @@ public class DatasetJsonConverter {
       GbifWsClient gbifWsClient,
       ConceptClient conceptClient,
       ChecklistbankPersistenceService checklistbankPersistenceService,
-      RestHighLevelClient occurrenceEsClient,
+      ElasticsearchClient occurrenceEsClient,
       String occurrenceIndex) {
     return new DatasetJsonConverter(
         gbifWsClient,
@@ -450,46 +444,45 @@ public class DatasetJsonConverter {
 
   private void addOccurrenceCoverage(Dataset dataset, ObjectNode datasetObjectNode) {
     try {
-      SearchSourceBuilder searchSourceBuilder =
-          new SearchSourceBuilder()
-              .size(0)
-              .query(
-                  QueryBuilders.boolQuery()
-                      .filter(QueryBuilders.termQuery("datasetKey", dataset.getKey().toString())))
-              .aggregation(
-                  AggregationBuilders.terms("countryCode")
-                      .field("countryCode")
-                      .size(200)
-                      .shardSize(200)
-                      .subAggregation(
-                          AggregationBuilders.terms("taxonKey")
-                              .size(120_000)
-                              .shardSize(120_000)
-                              .field("gbifClassification.taxonKey")
-                              .subAggregation(
-                                  AggregationBuilders.dateHistogram("eventDateSingle")
-                                      .field("eventDateSingle")
-                                      .dateHistogramInterval(new DateHistogramInterval("3650d")))));
+      SearchRequest searchRequest = SearchRequest.of(s -> s
+          .index(occurrenceIndex)
+          .size(0)
+          .query(q -> q
+              .bool(b -> b
+                  .filter(f -> f
+                      .term(t -> t
+                          .field("datasetKey")
+                          .value(dataset.getKey().toString())))))
+          .aggregations("countryCode", a -> a
+              .terms(t -> t
+                  .field("countryCode")
+                  .size(200))
+              .aggregations("taxonKey", ta -> ta
+                  .terms(tt -> tt
+                      .field("gbifClassification.taxonKey")
+                      .size(120_000))
+                  .aggregations("eventDateSingle", ha -> ha
+                      .dateHistogram(dh -> dh
+                          .field("eventDateSingle")
+                          .fixedInterval(interval -> interval.time("3650d")))))));
 
-      org.elasticsearch.action.search.SearchResponse searchResponse =
-          occurrenceEsClient.search(
-              new SearchRequest().source(searchSourceBuilder).indices(occurrenceIndex),
-              RequestOptions.DEFAULT);
+      co.elastic.clients.elasticsearch.core.SearchResponse<Void> searchResponse =
+          occurrenceEsClient.search(searchRequest, Void.class);
 
       List<JsonNode> coverages = new ArrayList<>();
 
-      List<? extends Terms.Bucket> countryBuckets =
-          getTermsBuckets(searchResponse.getAggregations(), "countryCode");
+      List<StringTermsBucket> countryBuckets =
+          getStringTermsBuckets(searchResponse.aggregations(), "countryCode");
       if (!countryBuckets.isEmpty()) {
         countryBuckets.forEach(
             countryBucket -> {
-              List<? extends Terms.Bucket> taxonBuckets =
-                  getTermsBuckets(countryBucket.getAggregations(), "taxonKey");
+              List<StringTermsBucket> taxonBuckets =
+                  getStringTermsBuckets(countryBucket.aggregations(), "taxonKey");
               if (!taxonBuckets.isEmpty()) {
                 taxonBuckets.forEach(
                     taxonKeyBucket -> {
-                      List<? extends Histogram.Bucket> decadesBuckets =
-                          getHistogramBuckets(taxonKeyBucket.getAggregations(), "eventDateSingle");
+                      List<HistogramBucket> decadesBuckets =
+                          getHistogramBuckets(taxonKeyBucket.aggregations(), "eventDateSingle");
                       if (!decadesBuckets.isEmpty()) {
                         decadesBuckets.forEach(
                             decadeBucket -> {
@@ -515,29 +508,38 @@ public class DatasetJsonConverter {
       }
       datasetObjectNode.putArray("occurrenceCoverage").addAll(coverages);
 
-    } catch (IOException ex) {
+    } catch (Exception ex) {
       log.error("Error retrieving occurrence coverage data", ex);
     }
   }
 
-  private ObjectNode toJson(MultiBucketsAggregation.Bucket bucket) {
+  private ObjectNode toJson(StringTermsBucket bucket) {
     return mapper
         .createObjectNode()
-        .put("value", bucket.getKeyAsString())
-        .put("count", bucket.getDocCount());
+        .put("value", bucket.key().stringValue())
+        .put("count", bucket.docCount());
   }
 
-  private List<? extends Terms.Bucket> getTermsBuckets(Aggregations aggs, String aggName) {
+  private ObjectNode toJson(HistogramBucket bucket) {
+    return mapper
+        .createObjectNode()
+        .put("value", bucket.keyAsString())
+        .put("count", bucket.docCount());
+  }
+
+  private List<StringTermsBucket> getStringTermsBuckets(Map<String, Aggregate> aggs, String aggName) {
     return Optional.ofNullable(aggs)
-        .map(aggregations -> aggregations.getAsMap().get(aggName))
-        .map(agg -> ((Terms) agg).getBuckets())
+        .map(aggregations -> aggregations.get(aggName))
+        .filter(Aggregate::isSterms)
+        .map(agg -> agg.sterms().buckets().array())
         .orElse(Collections.emptyList());
   }
 
-  private List<? extends Histogram.Bucket> getHistogramBuckets(Aggregations aggs, String aggName) {
+  private List<HistogramBucket> getHistogramBuckets(Map<String, Aggregate> aggs, String aggName) {
     return Optional.ofNullable(aggs)
-        .map(aggregations -> aggregations.getAsMap().get(aggName))
-        .map(agg -> ((Histogram) agg).getBuckets())
+        .map(aggregations -> aggregations.get(aggName))
+        .filter(Aggregate::isHistogram)
+        .map(agg -> agg.histogram().buckets().array())
         .orElse(Collections.emptyList());
   }
 }

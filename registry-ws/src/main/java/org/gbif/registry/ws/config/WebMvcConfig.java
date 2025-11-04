@@ -38,6 +38,8 @@ import org.gbif.ws.server.provider.PageableHandlerMethodArgumentResolver;
 
 import java.util.*;
 
+import jakarta.validation.Validator;
+
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.BeanPostProcessor;
@@ -45,11 +47,13 @@ import org.springframework.boot.autoconfigure.jackson.Jackson2ObjectMapperBuilde
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
+import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.converter.xml.MarshallingHttpMessageConverter;
 import org.springframework.oxm.jaxb.Jaxb2Marshaller;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
+import org.springframework.web.servlet.config.annotation.PathMatchConfigurer;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter;
 
@@ -58,7 +62,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.fasterxml.jackson.module.jaxb.JaxbAnnotationModule;
+import com.fasterxml.jackson.module.jakarta.xmlbind.JakartaXmlBindAnnotationModule;
 
 @Configuration
 public class WebMvcConfig implements WebMvcConfigurer {
@@ -66,6 +70,14 @@ public class WebMvcConfig implements WebMvcConfigurer {
   @Override
   public void addInterceptors(InterceptorRegistry registry) {
     registry.addInterceptor(new AuthPreCheckInterceptor());
+  }
+
+  @Override
+  public void configurePathMatch(PathMatchConfigurer configurer) {
+    configurer.setUseTrailingSlashMatch(true);
+    org.springframework.web.util.UrlPathHelper urlPathHelper = new org.springframework.web.util.UrlPathHelper();
+    urlPathHelper.setUrlDecode(true);
+    configurer.setUrlPathHelper(urlPathHelper);
   }
 
   @Override
@@ -99,17 +111,18 @@ public class WebMvcConfig implements WebMvcConfigurer {
    * @return ParamNameProcessor
    */
   @Bean
-  protected ParamNameProcessor paramNameProcessor() {
+  public ParamNameProcessor paramNameProcessor() {
     return new ParamNameProcessor();
   }
 
   /**
    * Custom {@link BeanPostProcessor} for adding {@link ParamNameProcessor}.
    *
+   * @param paramNameProcessor injected ParamNameProcessor
    * @return BeanPostProcessor
    */
   @Bean
-  public BeanPostProcessor beanPostProcessor() {
+  public BeanPostProcessor beanPostProcessor(ParamNameProcessor paramNameProcessor) {
     return new BeanPostProcessor() {
 
       @Override
@@ -125,7 +138,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
               Optional.ofNullable(adapter.getArgumentResolvers()).orElse(Collections.emptyList());
           List<HandlerMethodArgumentResolver> argumentResolvers =
               new ArrayList<>(nullSafeArgumentResolvers);
-          argumentResolvers.add(0, paramNameProcessor());
+          argumentResolvers.add(0, paramNameProcessor);
           adapter.setArgumentResolvers(argumentResolvers);
         }
         return bean;
@@ -143,13 +156,13 @@ public class WebMvcConfig implements WebMvcConfigurer {
   public XmlMapper xmlMapper() {
     XmlMapper xmlMapper = new XmlMapper();
     xmlMapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
-    xmlMapper.registerModules(Arrays.asList(new SimpleModule(), new JaxbAnnotationModule()));
+    xmlMapper.registerModules(Arrays.asList(new SimpleModule(), new JakartaXmlBindAnnotationModule()));
     return xmlMapper;
   }
 
   @Bean
   public Jackson2ObjectMapperBuilderCustomizer customJson() {
-    return builder -> builder.modulesToInstall(new JaxbAnnotationModule());
+    return builder -> builder.modulesToInstall(new JakartaXmlBindAnnotationModule());
   }
 
   @Bean
@@ -199,5 +212,11 @@ public class WebMvcConfig implements WebMvcConfigurer {
   @Bean
   public CountryMessageConverter countryMessageConverter() {
     return new CountryMessageConverter();
+  }
+
+  @Bean
+  @Primary
+  public Validator validator() {
+    return new LocalValidatorFactoryBean();
   }
 }

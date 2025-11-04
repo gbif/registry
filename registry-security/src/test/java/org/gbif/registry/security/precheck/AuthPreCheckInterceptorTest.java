@@ -15,7 +15,7 @@ package org.gbif.registry.security.precheck;
 
 import org.gbif.ws.server.GbifHttpServletRequestWrapper;
 
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletResponse;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

@@ -31,7 +31,7 @@ import org.gbif.api.vocabulary.ParticipationStatus;
 import org.gbif.api.vocabulary.UserRole;
 import org.gbif.registry.database.DatabaseCleaner;
 import org.gbif.registry.identity.service.IdentityService;
-import org.gbif.registry.search.test.EsManageServer;
+import org.gbif.registry.search.test.ElasticsearchTestContainerConfiguration;
 import org.gbif.registry.security.UserRoles;
 import org.gbif.registry.security.precheck.AuthPreCheckInterceptor;
 import org.gbif.registry.ws.it.BaseItTest;
@@ -100,8 +100,8 @@ public class AuthPreCheckIT extends BaseItTest {
       DatasetService datasetService,
       OrganizationService organizationService,
       SimplePrincipalProvider simplePrincipalProvider,
-      EsManageServer esServer) {
-    super(simplePrincipalProvider, esServer);
+      ElasticsearchTestContainerConfiguration elasticsearchTestContainer) {
+    super(simplePrincipalProvider, elasticsearchTestContainer);
     this.mockMvc = mockMvc;
     this.identityService = identityService;
     this.collectionService = collectionService;

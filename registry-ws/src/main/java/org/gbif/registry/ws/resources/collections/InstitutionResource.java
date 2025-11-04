@@ -51,7 +51,7 @@ import java.lang.annotation.Target;
 import java.util.List;
 import java.util.UUID;
 
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletResponse;
 
 import org.geojson.FeatureCollection;
 import org.springframework.beans.factory.annotation.Value;

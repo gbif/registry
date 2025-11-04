@@ -29,7 +29,7 @@ import org.gbif.registry.domain.ws.ErrorResponse;
 import org.gbif.registry.domain.ws.IptEntityResponse;
 import org.gbif.registry.domain.ws.LegacyDatasetResponse;
 import org.gbif.registry.domain.ws.LegacyDatasetResponseListWrapper;
-import org.gbif.registry.search.test.EsManageServer;
+import org.gbif.registry.search.test.ElasticsearchTestContainerConfiguration;
 import org.gbif.registry.test.Datasets;
 import org.gbif.registry.test.Organizations;
 import org.gbif.registry.test.TestDataFactory;
@@ -86,8 +86,8 @@ public class LegacyDatasetResourceIT extends BaseItTest {
       TestDataFactory testDataFactory,
       RequestTestFixture requestTestFixture,
       SimplePrincipalProvider principalProvider,
-      EsManageServer esServer) {
-    super(principalProvider, esServer);
+      ElasticsearchTestContainerConfiguration elasticsearchTestContainer) {
+    super(principalProvider, elasticsearchTestContainer);
     this.datasetService = datasetService;
     this.testDataFactory = testDataFactory;
     this.requestTestFixture = requestTestFixture;

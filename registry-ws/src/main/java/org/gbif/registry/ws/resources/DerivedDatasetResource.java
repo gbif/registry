@@ -39,8 +39,8 @@ import java.util.Optional;
 import java.util.Scanner;
 import java.util.UUID;
 
-import javax.validation.Valid;
-import javax.validation.groups.Default;
+import jakarta.validation.Valid;
+import jakarta.validation.groups.Default;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

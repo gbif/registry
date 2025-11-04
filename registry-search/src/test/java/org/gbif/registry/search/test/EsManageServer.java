@@ -13,6 +13,9 @@
  */
 package org.gbif.registry.search.test;
 
+import co.elastic.clients.elasticsearch.indices.RefreshRequest;
+
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
@@ -24,14 +27,13 @@ import java.util.Optional;
 import java.util.Properties;
 
 import org.apache.http.HttpHost;
-import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
-import org.elasticsearch.action.admin.indices.refresh.RefreshRequest;
-import org.elasticsearch.client.RequestOptions;
+import co.elastic.clients.elasticsearch.ElasticsearchClient;
+import co.elastic.clients.elasticsearch.indices.CreateIndexRequest;
+import co.elastic.clients.elasticsearch.indices.DeleteIndexRequest;
+import co.elastic.clients.elasticsearch.indices.ExistsRequest;
+import co.elastic.clients.transport.ElasticsearchTransport;
+import co.elastic.clients.transport.rest_client.RestClientTransport;
 import org.elasticsearch.client.RestClient;
-import org.elasticsearch.client.RestHighLevelClient;
-import org.elasticsearch.client.indices.CreateIndexRequest;
-import org.elasticsearch.client.indices.GetIndexRequest;
-import org.elasticsearch.common.xcontent.XContentType;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.core.io.Resource;
@@ -53,7 +55,7 @@ public class EsManageServer implements InitializingBean, DisposableBean {
     embeddedElastic.setWaitStrategy(
         Wait.defaultWaitStrategy().withStartupTimeout(Duration.ofSeconds(60)));
     embeddedElastic.start();
-    restClient = buildRestClient();
+    elasticsearchClient = buildElasticsearchClient();
   }
 
   private final Resource mappingFile;
@@ -63,7 +65,7 @@ public class EsManageServer implements InitializingBean, DisposableBean {
   private final String indexName;
 
   // needed to assert results against ES server directly
-  private static RestHighLevelClient restClient;
+  private static ElasticsearchClient elasticsearchClient;
 
   public EsManageServer(Resource mappingFile, Resource settingsFile, String indexName) {
     this.mappingFile = mappingFile;
@@ -120,26 +122,27 @@ public class EsManageServer implements InitializingBean, DisposableBean {
   }
 
   public boolean indexExists() throws IOException {
-    return restClient.indices().exists(new GetIndexRequest(indexName), RequestOptions.DEFAULT);
+    return elasticsearchClient.indices().exists(ExistsRequest.of(e -> e.index(indexName))).value();
   }
 
   public void createIndex() throws IOException {
     if (!indexExists()) {
-      CreateIndexRequest createIndexRequest = new CreateIndexRequest(indexName);
-      createIndexRequest.settings(asString(settingsFile), XContentType.JSON);
-      createIndexRequest.mapping(asString(mappingFile), XContentType.JSON);
-      restClient.indices().create(createIndexRequest, RequestOptions.DEFAULT);
+      String settingsJson = asString(settingsFile);
+      String mappingsJson = asString(mappingFile);
+
+      elasticsearchClient.indices().create(CreateIndexRequest.of(c -> c
+          .index(indexName)
+          .settings(s -> s.withJson(new ByteArrayInputStream(settingsJson.getBytes(StandardCharsets.UTF_8))))
+          .mappings(m -> m.withJson(new ByteArrayInputStream(mappingsJson.getBytes(StandardCharsets.UTF_8))))));
     }
   }
 
   public void deleteIndex() throws IOException {
-    DeleteIndexRequest deleteIndexRequest = new DeleteIndexRequest();
-    deleteIndexRequest.indices(indexName);
-    restClient.indices().delete(deleteIndexRequest, RequestOptions.DEFAULT);
+    elasticsearchClient.indices().delete(DeleteIndexRequest.of(d -> d.index(indexName)));
   }
 
-  public RestHighLevelClient getRestClient() {
-    return restClient;
+  public ElasticsearchClient getElasticsearchClient() {
+    return elasticsearchClient;
   }
 
   public String getServerAddress() {
@@ -148,17 +151,17 @@ public class EsManageServer implements InitializingBean, DisposableBean {
 
   public void refresh() {
     try {
-      RefreshRequest refreshRequest = new RefreshRequest();
-      refreshRequest.indices(indexName);
-      restClient.indices().refresh(refreshRequest, RequestOptions.DEFAULT);
+      elasticsearchClient.indices().refresh(RefreshRequest.of(r -> r.index(indexName)));
     } catch (IOException ex) {
       throw new IllegalStateException(ex);
     }
   }
 
-  private static RestHighLevelClient buildRestClient() {
+  private static ElasticsearchClient buildElasticsearchClient() {
     HttpHost host = new HttpHost("localhost", embeddedElastic.getMappedPort(9200));
-    return new RestHighLevelClient(RestClient.builder(host));
+    RestClient restClient = RestClient.builder(host).build();
+    ElasticsearchTransport transport = new RestClientTransport(restClient, new co.elastic.clients.json.jackson.JacksonJsonpMapper());
+    return new ElasticsearchClient(transport);
   }
 
   private static Optional<Integer> getEnvIntVariable(String name) {

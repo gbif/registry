@@ -13,17 +13,20 @@
  */
 package org.gbif.registry.ws.jwt;
 
+import io.jsonwebtoken.io.Decoders;
+
 import org.gbif.registry.security.jwt.JwtConfiguration;
 
 import java.util.Date;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.core.HttpHeaders;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.ws.rs.core.HttpHeaders;
 
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.security.Keys;
 
 public class JwtUtils {
 
@@ -47,12 +50,15 @@ public class JwtUtils {
    * </ul>
    */
   public static String generateJwt(String username, JwtConfiguration config) {
+    if (config.getSigningKey() == null || config.getSigningKey().isEmpty()) {
+      throw new IllegalArgumentException("JWT signingKey must be provided");
+    }
     return Jwts.builder()
         .setExpiration(new Date(System.currentTimeMillis() + config.getExpiryTimeInMs()))
         .setIssuedAt(new Date(System.currentTimeMillis()))
         .setIssuer(config.getIssuer())
         .claim("userName", username)
-        .signWith(SignatureAlgorithm.HS256, config.getSigningKey())
+        .signWith(Keys.hmacShaKeyFor(Decoders.BASE64.decode(config.getSigningKey())), SignatureAlgorithm.HS256)
         .compact();
   }
 

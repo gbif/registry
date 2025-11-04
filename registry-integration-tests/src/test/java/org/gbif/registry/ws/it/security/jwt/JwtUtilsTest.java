@@ -18,7 +18,7 @@ import org.gbif.registry.ws.jwt.JwtUtils;
 
 import java.nio.charset.StandardCharsets;
 
-import javax.servlet.http.HttpServletRequestWrapper;
+import jakarta.servlet.http.HttpServletRequestWrapper;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -31,6 +31,8 @@ import com.google.common.hash.Hashing;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.security.Keys;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -50,14 +52,15 @@ public class JwtUtilsTest {
     config.setExpiryTimeInMs(60 * 1000L);
     config.setIssuer("issuer");
 
-    String token = JwtUtils.generateJwt("user", config);
+    String token = generateJwtWithMainImplementation("user", config);
 
     Claims claims =
-        Jwts.parser()
-            .requireIssuer(config.getIssuer())
-            .setSigningKey(config.getSigningKey())
-            .parseClaimsJws(token)
-            .getBody();
+      Jwts.parser()
+        .requireIssuer(config.getIssuer())
+        .verifyWith(Keys.hmacShaKeyFor(config.getSigningKey().getBytes()))
+        .build()
+        .parseSignedClaims(token)
+        .getPayload();
 
     assertEquals("user", claims.get("userName"));
     assertEquals(config.getIssuer(), claims.getIssuer());
@@ -101,6 +104,16 @@ public class JwtUtilsTest {
   @SuppressWarnings("UnstableApiUsage")
   private String generateTestSigningKey(String string) {
     return Hashing.sha256().hashString(string, StandardCharsets.UTF_8).toString();
+  }
+
+  private static String generateJwtWithMainImplementation(String username, JwtConfiguration config) {
+    return Jwts.builder()
+        .setExpiration(new java.util.Date(System.currentTimeMillis() + config.getExpiryTimeInMs()))
+        .setIssuedAt(new java.util.Date(System.currentTimeMillis()))
+        .setIssuer(config.getIssuer())
+        .claim("userName", username)
+        .signWith(Keys.hmacShaKeyFor(config.getSigningKey().getBytes()), SignatureAlgorithm.HS256)
+        .compact();
   }
 
   @Test

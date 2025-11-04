@@ -25,8 +25,6 @@ import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Installation;
 import org.gbif.api.model.registry.Node;
 import org.gbif.api.model.registry.Organization;
-import org.gbif.api.model.registry.PostPersist;
-import org.gbif.api.model.registry.PrePersist;
 import org.gbif.api.model.registry.search.KeyTitleResult;
 import org.gbif.api.model.registry.search.NodeRequestSearchParams;
 import org.gbif.api.service.registry.NodeService;
@@ -48,13 +46,10 @@ import org.gbif.registry.service.WithMyBatis;
 import java.util.List;
 import java.util.UUID;
 
-import javax.annotation.Nullable;
-import javax.validation.Valid;
-import javax.validation.groups.Default;
+import jakarta.annotation.Nullable;
 
 import org.springframework.context.annotation.Primary;
 import org.springframework.http.MediaType;
-import org.springframework.security.access.annotation.Secured;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -71,9 +66,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.extensions.Extension;
 import io.swagger.v3.oas.annotations.extensions.ExtensionProperty;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
-
-import static org.gbif.registry.security.UserRoles.ADMIN_ROLE;
-import static org.gbif.registry.security.UserRoles.EDITOR_ROLE;
 
 @io.swagger.v3.oas.annotations.tags.Tag(
     name = "Participant nodes",
@@ -108,13 +100,15 @@ public class NodeResource extends BaseNetworkEntityResource<Node, NodeListParams
       MapperServiceLocator mapperServiceLocator,
       EventManager eventManager,
       Augmenter nodeAugmenter,
-      WithMyBatis withMyBatis) {
+      WithMyBatis withMyBatis,
+      jakarta.validation.Validator validator) {
     super(
         mapperServiceLocator.getNodeMapper(),
         mapperServiceLocator,
         Node.class,
         eventManager,
-        withMyBatis);
+        withMyBatis,
+        validator);
     this.nodeMapper = mapperServiceLocator.getNodeMapper();
     this.organizationMapper = mapperServiceLocator.getOrganizationMapper();
     this.nodeAugmenter = nodeAugmenter;
@@ -161,7 +155,6 @@ public class NodeResource extends BaseNetworkEntityResource<Node, NodeListParams
   @ApiResponse(responseCode = "201", description = "Node created, new node's UUID returned")
   @Docs.DefaultUnsuccessfulWriteResponses
   @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
-  @Validated({PrePersist.class, Default.class})
   @Override
   public UUID create(@RequestBody @Trim Node node) {
     return super.create(node);
@@ -189,9 +182,8 @@ public class NodeResource extends BaseNetworkEntityResource<Node, NodeListParams
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
   @PutMapping(value = "{key}", consumes = MediaType.APPLICATION_JSON_VALUE)
-  @Validated({PostPersist.class, Default.class})
   @Override
-  public void update(@PathVariable("key") UUID key, @Valid @RequestBody @Trim Node node) {
+  public void update(@PathVariable("key") UUID key, @RequestBody @Trim Node node) {
     super.update(key, node);
   }
 
@@ -457,7 +449,6 @@ public class NodeResource extends BaseNetworkEntityResource<Node, NodeListParams
 
   @Hidden
   @DeleteMapping("{key}/contact/{contactKey}")
-  @Secured({ADMIN_ROLE, EDITOR_ROLE})
   @Override
   public void deleteContact(
       @PathVariable("key") UUID targetEntityKey, @PathVariable int contactKey) {
@@ -466,7 +457,6 @@ public class NodeResource extends BaseNetworkEntityResource<Node, NodeListParams
 
   @Hidden
   @PostMapping(value = "{key}/contact", consumes = MediaType.APPLICATION_JSON_VALUE)
-  @Secured({ADMIN_ROLE, EDITOR_ROLE})
   @Override
   public int addContact(@PathVariable("key") UUID targetEntityKey, @RequestBody Contact contact) {
     throw new UnsupportedOperationException("Contacts are manually managed in the Directory");

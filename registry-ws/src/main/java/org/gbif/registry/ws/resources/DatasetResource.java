@@ -32,8 +32,6 @@ import org.gbif.api.model.registry.Identifier;
 import org.gbif.api.model.registry.LenientEquals;
 import org.gbif.api.model.registry.Metadata;
 import org.gbif.api.model.registry.Network;
-import org.gbif.api.model.registry.PostPersist;
-import org.gbif.api.model.registry.PrePersist;
 import org.gbif.api.model.registry.Tag;
 import org.gbif.api.model.registry.search.DatasetRequestSearchParams;
 import org.gbif.api.model.registry.search.DatasetSearchParameter;
@@ -97,11 +95,10 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
-import javax.annotation.Nullable;
-import javax.servlet.http.HttpServletResponse;
-import javax.validation.Valid;
-import javax.validation.constraints.NotNull;
-import javax.validation.groups.Default;
+import jakarta.annotation.Nullable;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -144,7 +141,6 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.gbif.registry.security.UserRoles.ADMIN_ROLE;
 import static org.gbif.registry.security.UserRoles.EDITOR_ROLE;
-import static org.gbif.registry.security.UserRoles.IPT_ROLE;
 
 @SuppressWarnings("UnstableApiUsage")
 @io.swagger.v3.oas.annotations.tags.Tag(
@@ -211,13 +207,15 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset, DatasetL
       PipelineProcessMapper pipelineProcessMapper,
       WithMyBatis withMyBatis,
       @Autowired(required = false) MessagePublisher messagePublisher,
-      ConceptClient conceptClient) {
+      ConceptClient conceptClient,
+      jakarta.validation.Validator validator) {
     super(
         mapperServiceLocator.getDatasetMapper(),
         mapperServiceLocator,
         Dataset.class,
         eventManager,
-        withMyBatis);
+        withMyBatis,
+        validator);
     this.registryDatasetService = registryDatasetService;
     this.searchService = searchService;
     this.metadataMapper = mapperServiceLocator.getMetadataMapper();
@@ -624,7 +622,6 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset, DatasetL
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
   @DeleteMapping("{key}")
-  @Secured({ADMIN_ROLE, EDITOR_ROLE, IPT_ROLE})
   @Transactional
   @Override
   public void delete(@PathVariable UUID key) {
@@ -906,10 +903,8 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset, DatasetL
   @ApiResponse(responseCode = "201", description = "Dataset created, new dataset's UUID returned")
   @Docs.DefaultUnsuccessfulWriteResponses
   @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
-  @Validated({PrePersist.class, Default.class})
   @Trim
   @Transactional
-  @Secured({ADMIN_ROLE, EDITOR_ROLE, IPT_ROLE})
   @Override
   public UUID create(@RequestBody @Trim Dataset dataset) {
     // Validate vocabulary values
@@ -958,9 +953,9 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset, DatasetL
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
   @PutMapping(value = "{key}", consumes = MediaType.APPLICATION_JSON_VALUE)
-  @Validated({PostPersist.class, Default.class})
+  @Transactional
   @Override
-  public void update(@PathVariable("key") UUID key, @Valid @RequestBody @Trim Dataset dataset) {
+  public void update(@PathVariable("key") UUID key, @RequestBody @Trim Dataset dataset) {
     super.update(key, dataset);
   }
 

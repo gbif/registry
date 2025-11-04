@@ -29,7 +29,7 @@ import org.gbif.api.service.collections.InstitutionService;
 import java.util.Collections;
 import java.util.UUID;
 
-import javax.annotation.Nullable;
+import jakarta.annotation.Nullable;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.annotation.Secured;

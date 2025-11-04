@@ -13,11 +13,13 @@
  */
 package org.gbif.registry.search.dataset.common;
 
-import org.elasticsearch.search.SearchHit;
+import co.elastic.clients.elasticsearch.core.search.Hit;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
 
 public interface SearchResultConverter<T, S> {
 
-  T toSearchResult(SearchHit searchHit);
+  T toSearchResult(Hit<String> searchHit) throws JsonProcessingException;
 
-  S toSearchSuggestResult(SearchHit searchHit);
+  S toSearchSuggestResult(Hit<String> searchHit) throws JsonProcessingException;
 }

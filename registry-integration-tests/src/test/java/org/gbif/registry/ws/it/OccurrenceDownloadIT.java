@@ -43,13 +43,12 @@ import org.gbif.api.vocabulary.OrganizationUsageSortField;
 import org.gbif.api.vocabulary.SortOrder;
 import org.gbif.api.vocabulary.UserRole;
 import org.gbif.registry.database.TestCaseDatabaseInitializer;
-import org.gbif.registry.search.test.EsManageServer;
+import org.gbif.registry.search.test.ElasticsearchTestContainerConfiguration;
 import org.gbif.registry.test.TestDataFactory;
 import org.gbif.registry.ws.client.OccurrenceDownloadClient;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 import org.gbif.ws.security.KeyStore;
 
-import java.security.AccessControlException;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
@@ -60,14 +59,15 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.UUID;
 
-import javax.validation.ValidationException;
+import jakarta.validation.ValidationException;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.web.server.LocalServerPort;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.test.web.server.LocalServerPort;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -99,7 +99,12 @@ public class OccurrenceDownloadIT extends BaseItTest {
   protected TestCaseDatabaseInitializer databaseRule = new TestCaseDatabaseInitializer();
 
   private TestDataFactory testDataFactory;
-  private final OccurrenceDownloadService occurrenceDownloadResource;
+  private OccurrenceDownloadService occurrenceDownloadResource;
+
+  @Autowired
+  public void setOccurrenceDownloadResource(@Qualifier("occurrenceDownloadResource") OccurrenceDownloadService occurrenceDownloadResource) {
+    this.occurrenceDownloadResource = occurrenceDownloadResource;
+  }
   private final OccurrenceDownloadClient occurrenceDownloadClient;
 
   // The following services are required to create dataset instances
@@ -112,18 +117,17 @@ public class OccurrenceDownloadIT extends BaseItTest {
 
   @Autowired
   public OccurrenceDownloadIT(
-      OccurrenceDownloadService occurrenceDownloadResource,
+      @Qualifier("occurrenceDownloadResource") OccurrenceDownloadService occurrenceDownloadResource,
       OrganizationService organizationService,
       DatasetService datasetService,
       NodeService nodeService,
       InstallationService installationService,
       SimplePrincipalProvider simplePrincipalProvider,
-      EsManageServer esServer,
+      ElasticsearchTestContainerConfiguration elasticsearchTestContainer,
       @LocalServerPort int localServerPort,
       TestDataFactory testDataFactory,
       KeyStore keyStore) {
-    super(simplePrincipalProvider, esServer);
-    this.occurrenceDownloadResource = occurrenceDownloadResource;
+    super(simplePrincipalProvider, elasticsearchTestContainer);
     this.organizationService = organizationService;
     this.datasetService = datasetService;
     this.nodeService = nodeService;
@@ -353,7 +357,7 @@ public class OccurrenceDownloadIT extends BaseItTest {
 
     } else {
       // Just to make the test pass for the webservice version
-      throw new AccessControlException("Fake exception");
+      throw new SecurityException("Fake exception");
     }
   }
 

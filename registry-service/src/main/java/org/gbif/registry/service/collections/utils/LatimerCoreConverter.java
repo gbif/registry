@@ -46,7 +46,7 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import org.elasticsearch.common.Strings;
+import com.google.common.base.Strings;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;

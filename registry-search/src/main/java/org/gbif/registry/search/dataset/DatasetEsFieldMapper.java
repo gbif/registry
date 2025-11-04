@@ -26,17 +26,11 @@ import org.gbif.registry.search.dataset.common.EsFieldMapper;
 import java.util.List;
 import java.util.Map;
 
-import org.elasticsearch.common.lucene.search.function.CombineFunction;
-import org.elasticsearch.common.lucene.search.function.FieldValueFactorFunction;
-import org.elasticsearch.index.query.QueryBuilder;
-import org.elasticsearch.index.query.QueryBuilders;
-import org.elasticsearch.index.query.functionscore.FieldValueFactorFunctionBuilder;
-import org.elasticsearch.index.query.functionscore.FunctionScoreQueryBuilder;
-import org.elasticsearch.index.query.functionscore.ScoreFunctionBuilders;
-import org.elasticsearch.search.sort.FieldSortBuilder;
-import org.elasticsearch.search.sort.SortBuilder;
-import org.elasticsearch.search.sort.SortBuilders;
-import org.elasticsearch.search.sort.SortOrder;
+import co.elastic.clients.elasticsearch._types.SortOptions;
+import co.elastic.clients.elasticsearch._types.SortOrder;
+import co.elastic.clients.elasticsearch._types.query_dsl.Query;
+import co.elastic.clients.elasticsearch._types.query_dsl.FieldValueFactorModifier;
+import co.elastic.clients.elasticsearch._types.query_dsl.FunctionBoostMode;
 
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
@@ -94,15 +88,10 @@ public class DatasetEsFieldMapper implements EsFieldMapper<DatasetSearchParamete
 
   private static final String[] DATASET_HIGHLIGHT_FIELDS = new String[] {"title", "description"};
 
-  private static final FieldValueFactorFunctionBuilder FULLTEXT_SCORE_FUNCTION =
-      ScoreFunctionBuilders.fieldValueFactorFunction("dataScore")
-          .modifier(FieldValueFactorFunction.Modifier.LN2P)
-          .missing(0d);
-
-  private static final FieldSortBuilder[] SORT =
-      new FieldSortBuilder[] {
-        SortBuilders.fieldSort("dataScore").order(SortOrder.ASC),
-        SortBuilders.fieldSort("created").order(SortOrder.DESC)
+  private static final SortOptions[] SORT =
+      new SortOptions[] {
+        SortOptions.of(sort -> sort.field(field -> field.field("dataScore").order(SortOrder.Asc))),
+        SortOptions.of(sort -> sort.field(field -> field.field("created").order(SortOrder.Desc)))
       };
 
   public static final List<String> DATE_FIELDS = ImmutableList.of("modified", "created", "pubDate");
@@ -133,7 +122,7 @@ public class DatasetEsFieldMapper implements EsFieldMapper<DatasetSearchParamete
   }
 
   @Override
-  public SortBuilder<? extends SortBuilder>[] sorts() {
+  public SortOptions[] sorts() {
     return SORT;
   }
 
@@ -182,25 +171,39 @@ public class DatasetEsFieldMapper implements EsFieldMapper<DatasetSearchParamete
   }
 
   @Override
-  public QueryBuilder fullTextQuery(String q) {
-
-    return new FunctionScoreQueryBuilder(
-            QueryBuilders.multiMatchQuery(q)
-                .field("doi", 25.0f)
-                .field("title", 20.0f)
-                .field("keyword", 10.0f)
-                .field("description", 8.0f)
-                .field("publishingOrganizationTitle", 5.0f)
-                .field("hostingOrganizationTitle", 5.0f)
-                .field("networkTitle", 4.0f)
-                .field("metadata", 3.0f)
-                .field("projectId", 2.0f)
-                .field("category.lineage", 5.0f)
-                .field("all", 1.0f)
-                .tieBreaker(0.2f)
-                .minimumShouldMatch("25%")
-                .slop(100),
-            FULLTEXT_SCORE_FUNCTION)
-        .boostMode(CombineFunction.MULTIPLY);
+  public Query fullTextQuery(String q) {
+    return Query.of(
+        qu ->
+            qu.functionScore(
+                fs ->
+                    fs.query(
+                            inner ->
+                                inner.multiMatch(
+                                    mm ->
+                                        mm.query(q)
+                                            .fields(
+                                                List.of(
+                                                    "doi^25",
+                                                    "title^20",
+                                                    "keyword^10",
+                                                    "description^8",
+                                                    "publishingOrganizationTitle^5",
+                                                    "hostingOrganizationTitle^5",
+                                                    "networkTitle^4",
+                                                    "metadata^3",
+                                                    "projectId^2",
+                                                    "category.lineage^5",
+                                                    "all^1"))
+                                            .tieBreaker(0.2)
+                                            .minimumShouldMatch("25%")
+                                            .slop(100)))
+                        .functions(
+                            fns ->
+                                fns.fieldValueFactor(
+                                    fvf ->
+                                        fvf.field("dataScore")
+                                            .modifier(FieldValueFactorModifier.Ln2p)
+                                            .missing(0.0)))
+                        .boostMode(FunctionBoostMode.Multiply)));
   }
 }

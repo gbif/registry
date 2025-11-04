@@ -19,7 +19,7 @@ import org.gbif.registry.database.TestCaseDatabaseInitializer;
 import org.gbif.registry.domain.collections.AuditLog;
 import org.gbif.registry.persistence.mapper.collections.AuditLogMapper;
 import org.gbif.registry.persistence.mapper.collections.params.AuditLogListParams;
-import org.gbif.registry.search.test.EsManageServer;
+import org.gbif.registry.search.test.ElasticsearchTestContainerConfiguration;
 import org.gbif.registry.ws.it.BaseItTest;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
@@ -45,8 +45,8 @@ public class AuditLogMapperIT extends BaseItTest {
   public AuditLogMapperIT(
       AuditLogMapper auditLogMapper,
       SimplePrincipalProvider principalProvider,
-      EsManageServer esServer) {
-    super(principalProvider, esServer);
+      ElasticsearchTestContainerConfiguration elasticsearchTestContainer) {
+    super(principalProvider, elasticsearchTestContainer);
     this.auditLogMapper = auditLogMapper;
   }
 

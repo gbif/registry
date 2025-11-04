@@ -33,7 +33,7 @@ import org.gbif.registry.persistence.mapper.collections.external.IDigBioCollecti
 import org.gbif.registry.persistence.mapper.collections.external.IDigBioMapper;
 import org.gbif.registry.persistence.mapper.collections.external.IdentifierDto;
 import org.gbif.registry.persistence.mapper.collections.external.MachineTagDto;
-import org.gbif.registry.search.test.EsManageServer;
+import org.gbif.registry.search.test.ElasticsearchTestContainerConfiguration;
 import org.gbif.registry.ws.it.BaseItTest;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
@@ -77,8 +77,8 @@ public class IDigBioMapperIT extends BaseItTest {
       AddressMapper addressMapper,
       CollectionContactMapper contactMapper,
       SimplePrincipalProvider principalProvider,
-      EsManageServer esServer) {
-    super(principalProvider, esServer);
+      ElasticsearchTestContainerConfiguration elasticsearchTestContainer) {
+    super(principalProvider, elasticsearchTestContainer);
     this.iDigBioMapper = iDigBioMapper;
     this.machineTagMapper = machineTagMapper;
     this.collectionMapper = collectionMapper;
