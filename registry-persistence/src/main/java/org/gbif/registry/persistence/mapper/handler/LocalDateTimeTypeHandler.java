@@ -19,6 +19,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 
 import org.apache.ibatis.type.BaseTypeHandler;
 import org.apache.ibatis.type.JdbcType;
@@ -27,6 +28,7 @@ import org.apache.ibatis.type.MappedTypes;
 /**
  * MyBatis TypeHandler to convert between PostgreSQL TIMESTAMPTZ and Java LocalDateTime.
  * This handler converts TIMESTAMPTZ to LocalDateTime by using the system's default timezone.
+ * Truncates to microseconds to match PostgreSQL timestamp precision.
  */
 @MappedTypes(LocalDateTime.class)
 public class LocalDateTimeTypeHandler extends BaseTypeHandler<LocalDateTime> {
@@ -34,7 +36,9 @@ public class LocalDateTimeTypeHandler extends BaseTypeHandler<LocalDateTime> {
   @Override
   public void setNonNullParameter(PreparedStatement ps, int i, LocalDateTime parameter, JdbcType jdbcType)
       throws SQLException {
-    ps.setTimestamp(i, Timestamp.valueOf(parameter));
+    // Truncate to microseconds to match PostgreSQL precision
+    LocalDateTime truncated = parameter.truncatedTo(ChronoUnit.MICROS);
+    ps.setTimestamp(i, Timestamp.valueOf(truncated));
   }
 
   @Override
@@ -57,7 +61,9 @@ public class LocalDateTimeTypeHandler extends BaseTypeHandler<LocalDateTime> {
 
   private static LocalDateTime getLocalDateTime(Timestamp timestamp) {
     if (timestamp != null) {
-      return timestamp.toLocalDateTime();
+      LocalDateTime localDateTime = timestamp.toLocalDateTime();
+      // Truncate to microseconds to match PostgreSQL precision
+      return localDateTime.truncatedTo(ChronoUnit.MICROS);
     }
     return null;
   }
