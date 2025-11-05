@@ -156,6 +156,25 @@ spring:
       - "optional:zookeeper:"
   main:
     allow-bean-definition-overriding: true
+  cloud:
+    compatibility-verifier:
+      enabled: false
+    zookeeper:
+      enabled: false
+      discovery:
+        enabled: false
+      config:
+        enabled: false
+  mvc:
+    view:
+      prefix: ""
+      suffix: ""
+  web:
+    resources:
+      add-mappings: false
+  servlet:
+    jsp:
+      enabled: false
   #RabbitMQ
   rabbitmq:
     enabled: false
