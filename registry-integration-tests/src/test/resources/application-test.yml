@@ -150,6 +150,10 @@ oaipmh:
 #      minimumIdle: 1
 
 spring:
+  config:
+    import:
+      - "optional:classpath:application.yml"
+      - "optional:zookeeper:"
   main:
     allow-bean-definition-overriding: true
   #RabbitMQ
