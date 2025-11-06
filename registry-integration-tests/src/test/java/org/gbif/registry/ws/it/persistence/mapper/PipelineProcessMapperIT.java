@@ -47,6 +47,8 @@ import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import static org.gbif.api.model.pipelines.PipelineStep.MetricInfo;
@@ -59,6 +61,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class PipelineProcessMapperIT extends BaseItTest {
 
+  private static final Logger log = LoggerFactory.getLogger(PipelineProcessMapperIT.class);
   @RegisterExtension
   protected TestCaseDatabaseInitializer databaseRule =
       new TestCaseDatabaseInitializer(
@@ -340,7 +343,7 @@ public class PipelineProcessMapperIT extends BaseItTest {
     step.setMetrics(Collections.singleton(new MetricInfo("name", "val")));
 
     pipelineProcessMapper.updatePipelineStep(step);
-    System.out.println("Step finished: " + step.getFinished() + " dbStep finished: " + pipelineProcessMapper.getPipelineStep(step.getKey()).getFinished());
+    PipelineProcessMapperIT.log.info("Step finished: " + step.getFinished() + " dbStep finished: " + pipelineProcessMapper.getPipelineStep(step.getKey()).getFinished());
     assertTrue(pipelineProcessMapper.getPipelineStep(step.getKey()).lenientEquals(step));
   }
 
