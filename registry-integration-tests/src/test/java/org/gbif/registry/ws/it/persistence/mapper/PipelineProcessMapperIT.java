@@ -340,6 +340,7 @@ public class PipelineProcessMapperIT extends BaseItTest {
     step.setMetrics(Collections.singleton(new MetricInfo("name", "val")));
 
     pipelineProcessMapper.updatePipelineStep(step);
+    System.out.println("Step finished: " + step.getFinished() + " dbStep finished: " + pipelineProcessMapper.getPipelineStep(step.getKey()).getFinished());
     assertTrue(pipelineProcessMapper.getPipelineStep(step.getKey()).lenientEquals(step));
   }
 
