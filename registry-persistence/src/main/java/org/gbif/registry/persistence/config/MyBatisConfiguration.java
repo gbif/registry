@@ -13,8 +13,6 @@
  */
 package org.gbif.registry.persistence.config;
 
-import org.apache.ibatis.type.LocalDateTimeTypeHandler;
-
 import org.gbif.api.model.collections.Address;
 import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.Institution;
@@ -80,7 +78,6 @@ public class MyBatisConfiguration {
       configuration.getTypeHandlerRegistry().register(LocaleTypeHandler.class);
       configuration.getTypeHandlerRegistry().register(ExtensionArrayTypeHandler.class);
       configuration.getTypeHandlerRegistry().register(SetArrayTypeHandler.class);
-      configuration.getTypeHandlerRegistry().register(java.time.LocalDateTime.class, LocalDateTimeTypeHandler.class);
 
       configuration.getTypeAliasRegistry().registerAlias("Node", Node.class);
       configuration.getTypeAliasRegistry().registerAlias("Organization", Organization.class);
