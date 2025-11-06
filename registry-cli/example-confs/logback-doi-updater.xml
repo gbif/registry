@@ -19,7 +19,9 @@
     <filter class="ch.qos.logback.core.filter.EvaluatorFilter">
       <evaluator class="ch.qos.logback.classic.boolex.JaninoEventEvaluator">
         <expression>
-          marker != null &amp;&amp; marker.contains("DOI_SMTP") &amp;&amp; level > INFO
+          return event.getMarker() != null
+          &amp;&amp; event.getMarker().contains("DOI_SMTP")
+          &amp;&amp; event.getLevel().isGreaterOrEqual(ch.qos.logback.classic.Level.INFO);
         </expression>
       </evaluator>
       <OnMatch>ACCEPT</OnMatch>
