@@ -58,7 +58,7 @@ import org.gbif.registry.ws.it.fixtures.RequestTestFixture;
 import org.gbif.registry.ws.it.fixtures.TestConstants;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
@@ -473,7 +473,7 @@ abstract class BaseCollectionEntityResourceIT<
     duplicate.setInstitutionKey(UUID.randomUUID());
     duplicate.setMailingCountry(Country.DENMARK);
     result.setDuplicates(Collections.singletonList(Collections.singleton(duplicate)));
-    result.setGenerationDate(LocalDateTime.now());
+    result.setGenerationDate(OffsetDateTime.now());
 
     when(getMockDuplicatesService().findPossibleDuplicates(any(DuplicatesSearchParams.class)))
         .thenReturn(result);

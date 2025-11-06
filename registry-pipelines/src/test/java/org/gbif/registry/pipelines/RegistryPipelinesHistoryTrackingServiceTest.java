@@ -18,7 +18,7 @@ import org.gbif.api.model.pipelines.PipelineProcess;
 import org.gbif.api.model.pipelines.PipelineStep;
 import org.gbif.api.model.pipelines.StepType;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.Set;
 
 import org.junit.jupiter.api.Test;
@@ -38,23 +38,23 @@ class RegistryPipelinesHistoryTrackingServiceTest {
   @Test
   void getLatestSuccesfulStepTest() {
 
-    PipelineExecution execution = new PipelineExecution().setCreated(LocalDateTime.now());
+    PipelineExecution execution = new PipelineExecution().setCreated(OffsetDateTime.now());
 
     PipelineStep s1 =
         new PipelineStep()
             .setType(StepType.ABCD_TO_VERBATIM)
-            .setStarted(LocalDateTime.now().minusMinutes(100))
+            .setStarted(OffsetDateTime.now().minusMinutes(100))
             .setMessage("adwadawd");
 
     PipelineStep s2 =
         new PipelineStep()
             .setType(StepType.ABCD_TO_VERBATIM)
-            .setStarted(LocalDateTime.now().minusMinutes(80));
+            .setStarted(OffsetDateTime.now().minusMinutes(80));
 
     PipelineStep s3 =
         new PipelineStep()
             .setType(StepType.ABCD_TO_VERBATIM)
-            .setStarted(LocalDateTime.now().minusMinutes(60));
+            .setStarted(OffsetDateTime.now().minusMinutes(60));
 
     execution.addStep(s1);
     execution.addStep(s2);

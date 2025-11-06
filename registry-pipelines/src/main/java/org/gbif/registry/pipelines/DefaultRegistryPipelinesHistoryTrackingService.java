@@ -47,7 +47,8 @@ import org.gbif.registry.pipelines.issues.IssueCreator;
 import org.gbif.registry.pipelines.util.PredicateUtils;
 
 import java.io.IOException;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 import java.util.Comparator;
@@ -190,7 +191,7 @@ public class DefaultRegistryPipelinesHistoryTrackingService
       boolean useLastSuccessful,
       boolean markPreviousAttemptAsFailed,
       Set<String> interpretTypes) {
-    String prefix = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmm"));
+    String prefix = OffsetDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ofPattern("yyyyMMddHHmm"));
     CompletableFuture.runAsync(
         () ->
             doOnAllDatasets(
@@ -632,7 +633,7 @@ public class DefaultRegistryPipelinesHistoryTrackingService
                   new PipelineStep()
                       .setType(st)
                       .setState(Status.SUBMITTED)
-                      .setStarted(LocalDateTime.now())
+                      .setStarted(OffsetDateTime.now(ZoneOffset.UTC))
                       .setCreatedBy(creator);
 
               mapper.addPipelineStep(pipelineExecution.getKey(), step);
@@ -656,7 +657,7 @@ public class DefaultRegistryPipelinesHistoryTrackingService
     Objects.requireNonNull(pipelineStep, "PipelineStep can't be null");
     Preconditions.checkArgument(StringUtils.isNotEmpty(user), "user can't be null");
 
-    pipelineStep.setModified(LocalDateTime.now());
+    pipelineStep.setModified(OffsetDateTime.now(ZoneOffset.UTC));
     pipelineStep.setModifiedBy(user);
 
     LOG.info(
@@ -699,10 +700,10 @@ public class DefaultRegistryPipelinesHistoryTrackingService
       @Nullable UUID datasetKey,
       @Nullable Status state,
       @Nullable StepType stepType,
-      @Nullable LocalDateTime startedMin,
-      @Nullable LocalDateTime startedMax,
-      @Nullable LocalDateTime finishedMin,
-      @Nullable LocalDateTime finishedMax,
+      @Nullable OffsetDateTime startedMin,
+      @Nullable OffsetDateTime startedMax,
+      @Nullable OffsetDateTime finishedMin,
+      @Nullable OffsetDateTime finishedMax,
       @Nullable String rerunReason,
       @Nullable String pipelinesVersion,
       @Nullable Pageable page) {

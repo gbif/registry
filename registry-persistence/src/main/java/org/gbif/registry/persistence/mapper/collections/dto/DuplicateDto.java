@@ -15,7 +15,7 @@ package org.gbif.registry.persistence.mapper.collections.dto;
 
 import org.gbif.api.vocabulary.Country;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.StringJoiner;
 import java.util.UUID;
 
@@ -33,8 +33,8 @@ public class DuplicateDto {
   private String physicalCity1;
   private Country mailingCountry1;
   private String mailingCity1;
-  private LocalDateTime created1;
-  private LocalDateTime modified1;
+  private OffsetDateTime created1;
+  private OffsetDateTime modified1;
   private UUID key2;
   private String code2;
   private String name2;
@@ -42,9 +42,9 @@ public class DuplicateDto {
   private String physicalCity2;
   private Country mailingCountry2;
   private String mailingCity2;
-  private LocalDateTime created2;
-  private LocalDateTime modified2;
-  private LocalDateTime generatedDate;
+  private OffsetDateTime created2;
+  private OffsetDateTime modified2;
+  private OffsetDateTime generatedDate;
   private boolean codeMatch;
   private boolean nameMatch;
   private boolean cityMatch;

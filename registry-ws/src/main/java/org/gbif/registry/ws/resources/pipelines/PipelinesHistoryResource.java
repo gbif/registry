@@ -28,7 +28,7 @@ import org.gbif.api.service.pipelines.PipelinesHistoryService;
 import org.gbif.registry.pipelines.RegistryPipelinesHistoryTrackingService;
 import org.gbif.registry.ws.util.DateUtils;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -293,10 +293,10 @@ public class PipelinesHistoryResource implements PipelinesHistoryService {
       @Nullable @RequestParam(value = "pipelinesVersion", required = false) String pipelinesVersion,
       Pageable page) {
 
-    LocalDateTime startedMin = DateUtils.LOWER_BOUND_RANGE_PARSER.apply(startedMinAsString);
-    LocalDateTime startedMax = DateUtils.UPPER_BOUND_RANGE_PARSER.apply(startedMaxAsString);
-    LocalDateTime finishedMin = DateUtils.LOWER_BOUND_RANGE_PARSER.apply(finishedMinAsString);
-    LocalDateTime finishedMax = DateUtils.UPPER_BOUND_RANGE_PARSER.apply(finishedMaxAsString);
+    OffsetDateTime startedMin = DateUtils.LOWER_BOUND_RANGE_PARSER_OFFSET.apply(startedMinAsString);
+    OffsetDateTime startedMax = DateUtils.UPPER_BOUND_RANGE_PARSER_OFFSET.apply(startedMaxAsString);
+    OffsetDateTime finishedMin = DateUtils.LOWER_BOUND_RANGE_PARSER_OFFSET.apply(finishedMinAsString);
+    OffsetDateTime finishedMax = DateUtils.UPPER_BOUND_RANGE_PARSER_OFFSET.apply(finishedMaxAsString);
 
     return historyTrackingService.search(
         datasetKey,

@@ -40,7 +40,8 @@ import org.gbif.registry.search.test.ElasticsearchTestContainerConfiguration;
 import org.gbif.registry.ws.it.BaseItTest;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.Collections;
 import java.util.UUID;
 
@@ -195,8 +196,8 @@ public class PipelineProcessMapperIT extends BaseItTest {
             .setType(StepType.ABCD_TO_VERBATIM)
             .setRunner(StepRunner.STANDALONE)
             .setState(Status.COMPLETED)
-            .setStarted(LocalDateTime.now().minusMinutes(1))
-            .setFinished(LocalDateTime.now())
+            .setStarted(OffsetDateTime.now(ZoneOffset.UTC).minusMinutes(1))
+            .setFinished(OffsetDateTime.now(ZoneOffset.UTC))
             .setMessage("message")
             .setMetrics(Collections.singleton(new MetricInfo("key", "value")))
             .setCreatedBy(TEST_USER)
@@ -238,7 +239,7 @@ public class PipelineProcessMapperIT extends BaseItTest {
             .setState(Status.COMPLETED)
             .setMetrics(Collections.singleton(new MetricInfo("a", "")))
             .setCreatedBy(TEST_USER)
-            .setStarted(LocalDateTime.now());
+            .setStarted(OffsetDateTime.now(ZoneOffset.UTC));
     pipelineProcessMapper.addPipelineStep(execution.getKey(), step);
     assertTrue(step.getKey() > 0);
 
@@ -299,7 +300,7 @@ public class PipelineProcessMapperIT extends BaseItTest {
             .setType(StepType.ABCD_TO_VERBATIM)
             .setState(Status.RUNNING)
             .setCreatedBy(TEST_USER)
-            .setStarted(LocalDateTime.now());
+            .setStarted(OffsetDateTime.now(ZoneOffset.UTC));
     pipelineProcessMapper.addPipelineStep(execution.getKey(), step);
 
     // get step
@@ -326,14 +327,14 @@ public class PipelineProcessMapperIT extends BaseItTest {
     PipelineStep step =
         new PipelineStep()
             .setType(StepType.ABCD_TO_VERBATIM)
-            .setStarted(LocalDateTime.now())
+            .setStarted(OffsetDateTime.now(ZoneOffset.UTC))
             .setState(Status.RUNNING)
             .setCreatedBy(TEST_USER);
     pipelineProcessMapper.addPipelineStep(execution.getKey(), step);
     assertEquals(Status.RUNNING, pipelineProcessMapper.getPipelineStep(step.getKey()).getState());
 
     // change step state
-    step.setFinished(LocalDateTime.now().plusHours(1));
+    step.setFinished(OffsetDateTime.now(ZoneOffset.UTC).plusHours(1));
     step.setState(Status.COMPLETED);
     step.setModifiedBy(UPDATER_USER);
     step.setMetrics(Collections.singleton(new MetricInfo("name", "val")));
@@ -399,14 +400,14 @@ public class PipelineProcessMapperIT extends BaseItTest {
         new PipelineStep()
             .setType(StepType.VERBATIM_TO_INTERPRETED)
             .setState(Status.COMPLETED)
-            .setStarted(LocalDateTime.now())
+            .setStarted(OffsetDateTime.now(ZoneOffset.UTC))
             .setCreatedBy(TEST_USER);
     pipelineProcessMapper.addPipelineStep(pe1.getKey(), s1);
     PipelineStep s2 =
         new PipelineStep()
             .setType(StepType.VERBATIM_TO_INTERPRETED)
             .setState(Status.FAILED)
-            .setStarted(LocalDateTime.now())
+            .setStarted(OffsetDateTime.now(ZoneOffset.UTC))
             .setCreatedBy(TEST_USER);
     pipelineProcessMapper.addPipelineStep(pe2.getKey(), s2);
 
@@ -423,7 +424,7 @@ public class PipelineProcessMapperIT extends BaseItTest {
         new PipelineStep()
             .setType(StepType.VERBATIM_TO_INTERPRETED)
             .setState(Status.COMPLETED)
-            .setStarted(LocalDateTime.now())
+            .setStarted(OffsetDateTime.now(ZoneOffset.UTC))
             .setCreatedBy(TEST_USER);
     pipelineProcessMapper.addPipelineStep(pe2.getKey(), s22);
     assertEquals(

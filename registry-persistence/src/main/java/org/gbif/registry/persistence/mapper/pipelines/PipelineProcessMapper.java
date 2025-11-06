@@ -21,7 +21,7 @@ import org.gbif.api.model.pipelines.StepRunner;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.api.model.pipelines.ws.SearchResult;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -151,10 +151,10 @@ public interface PipelineProcessMapper {
       @Nullable @Param("datasetKey") UUID datasetKey,
       @Nullable @Param("state") PipelineStep.Status state,
       @Nullable @Param("stepType") StepType stepType,
-      @Nullable @Param("startedMin") LocalDateTime startedMin,
-      @Nullable @Param("startedMax") LocalDateTime startedMax,
-      @Nullable @Param("finishedMin") LocalDateTime finishedMin,
-      @Nullable @Param("finishedMax") LocalDateTime finishedMax,
+      @Nullable @Param("startedMin") OffsetDateTime startedMin,
+      @Nullable @Param("startedMax") OffsetDateTime startedMax,
+      @Nullable @Param("finishedMin") OffsetDateTime finishedMin,
+      @Nullable @Param("finishedMax") OffsetDateTime finishedMax,
       @Nullable @Param("rerunReason") String rerunReason,
       @Nullable @Param("pipelinesVersion") String pipelinesVersion,
       @Nullable @Param("page") Pageable page);
@@ -163,10 +163,10 @@ public interface PipelineProcessMapper {
       @Nullable @Param("datasetKey") UUID datasetKey,
       @Nullable @Param("state") PipelineStep.Status state,
       @Nullable @Param("stepType") StepType stepType,
-      @Nullable @Param("startedMin") LocalDateTime startedMin,
-      @Nullable @Param("startedMax") LocalDateTime startedMax,
-      @Nullable @Param("finishedMin") LocalDateTime finishedMin,
-      @Nullable @Param("finishedMax") LocalDateTime finishedMax,
+      @Nullable @Param("startedMin") OffsetDateTime startedMin,
+      @Nullable @Param("startedMax") OffsetDateTime startedMax,
+      @Nullable @Param("finishedMin") OffsetDateTime finishedMin,
+      @Nullable @Param("finishedMax") OffsetDateTime finishedMax,
       @Nullable @Param("rerunReason") String rerunReason,
       @Nullable @Param("pipelinesVersion") String pipelinesVersion);
 
