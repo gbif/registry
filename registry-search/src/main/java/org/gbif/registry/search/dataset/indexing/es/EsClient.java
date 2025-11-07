@@ -180,8 +180,8 @@ public class EsClient implements Closeable {
     return elasticsearchClient.bulk(bulkRequest);
   }
 
-  /** Creates ElasticSearch client using default connection settings. */
-  public static ElasticsearchClient provideElasticsearchClient(EsClientConfiguration esClientConfiguration) {
+  /** Creates RestClient from the provided configuration. */
+  public static RestClient provideRestClient(EsClientConfiguration esClientConfiguration) {
     String[] hostsUrl = esClientConfiguration.hosts.split(",");
     HttpHost[] hosts = new HttpHost[hostsUrl.length];
     int i = 0;
@@ -195,7 +195,7 @@ public class EsClient implements Closeable {
       }
     }
 
-    RestClient restClient = RestClient.builder(hosts)
+    return RestClient.builder(hosts)
         .setRequestConfigCallback(
             requestConfigBuilder ->
                 requestConfigBuilder
@@ -204,37 +204,31 @@ public class EsClient implements Closeable {
         .setConnectionRequestTimeout(
             esClientConfiguration.getConnectionRequestTimeout()))
         .build();
+  }
 
-    ElasticsearchTransport transport = new RestClientTransport(restClient, new co.elastic.clients.json.jackson.JacksonJsonpMapper());
+  /** Creates ElasticSearch client using default connection settings. */
+  public static ElasticsearchClient provideElasticsearchClient(EsClientConfiguration esClientConfiguration) {
+    return provideElasticsearchClient(esClientConfiguration, null);
+  }
+
+  /** Creates ElasticSearch client using the provided configuration and optional RestClient. */
+  public static ElasticsearchClient provideElasticsearchClient(EsClientConfiguration esClientConfiguration, RestClient restClient) {
+    RestClient clientToUse = restClient != null ? restClient : provideRestClient(esClientConfiguration);
+
+    ElasticsearchTransport transport = new RestClientTransport(clientToUse, new co.elastic.clients.json.jackson.JacksonJsonpMapper());
     return new ElasticsearchClient(transport);
   }
 
   /** Creates ElasticsearchAsyncClient using the provided configuration. */
   public static ElasticsearchAsyncClient provideElasticsearchAsyncClient(EsClientConfiguration esClientConfiguration) {
-    String[] hostsUrl = esClientConfiguration.hosts.split(",");
-    HttpHost[] hosts = new HttpHost[hostsUrl.length];
-    int i = 0;
-    for (String host : hostsUrl) {
-      try {
-        URL url = new URL(host);
-        hosts[i] = new HttpHost(url.getHost(), url.getPort(), url.getProtocol());
-        i++;
-      } catch (MalformedURLException e) {
-        throw new IllegalArgumentException(e.getMessage(), e);
-      }
-    }
+    return provideElasticsearchAsyncClient(esClientConfiguration, null);
+  }
 
-    RestClient restClient = RestClient.builder(hosts)
-        .setRequestConfigCallback(
-            requestConfigBuilder ->
-                requestConfigBuilder
-                            .setConnectTimeout(esClientConfiguration.getConnectionTimeout())
-        .setSocketTimeout(esClientConfiguration.getSocketTimeout())
-        .setConnectionRequestTimeout(
-            esClientConfiguration.getConnectionRequestTimeout()))
-        .build();
+  /** Creates ElasticsearchAsyncClient using the provided configuration and optional RestClient. */
+  public static ElasticsearchAsyncClient provideElasticsearchAsyncClient(EsClientConfiguration esClientConfiguration, RestClient restClient) {
+    RestClient clientToUse = restClient != null ? restClient : provideRestClient(esClientConfiguration);
 
-    ElasticsearchTransport transport = new RestClientTransport(restClient, new co.elastic.clients.json.jackson.JacksonJsonpMapper());
+    ElasticsearchTransport transport = new RestClientTransport(clientToUse, new co.elastic.clients.json.jackson.JacksonJsonpMapper());
     return new ElasticsearchAsyncClient(transport);
   }
 
