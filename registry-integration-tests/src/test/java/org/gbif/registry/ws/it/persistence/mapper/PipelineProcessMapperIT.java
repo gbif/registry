@@ -42,13 +42,12 @@ import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
+import java.time.temporal.ChronoUnit;
 import java.util.Collections;
 import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import static org.gbif.api.model.pipelines.PipelineStep.MetricInfo;
@@ -61,7 +60,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class PipelineProcessMapperIT extends BaseItTest {
 
-  private static final Logger log = LoggerFactory.getLogger(PipelineProcessMapperIT.class);
   @RegisterExtension
   protected TestCaseDatabaseInitializer databaseRule =
       new TestCaseDatabaseInitializer(
@@ -199,8 +197,8 @@ public class PipelineProcessMapperIT extends BaseItTest {
             .setType(StepType.ABCD_TO_VERBATIM)
             .setRunner(StepRunner.STANDALONE)
             .setState(Status.COMPLETED)
-            .setStarted(OffsetDateTime.now(ZoneOffset.UTC).minusMinutes(1))
-            .setFinished(OffsetDateTime.now(ZoneOffset.UTC))
+            .setStarted(OffsetDateTime.now(ZoneOffset.UTC).minusMinutes(1).truncatedTo(ChronoUnit.MICROS))
+            .setFinished(OffsetDateTime.now(ZoneOffset.UTC).truncatedTo(ChronoUnit.MICROS))
             .setMessage("message")
             .setMetrics(Collections.singleton(new MetricInfo("key", "value")))
             .setCreatedBy(TEST_USER)
@@ -330,20 +328,19 @@ public class PipelineProcessMapperIT extends BaseItTest {
     PipelineStep step =
         new PipelineStep()
             .setType(StepType.ABCD_TO_VERBATIM)
-            .setStarted(OffsetDateTime.now(ZoneOffset.UTC))
+            .setStarted(OffsetDateTime.now(ZoneOffset.systemDefault()).truncatedTo(ChronoUnit.MICROS))
             .setState(Status.RUNNING)
             .setCreatedBy(TEST_USER);
     pipelineProcessMapper.addPipelineStep(execution.getKey(), step);
     assertEquals(Status.RUNNING, pipelineProcessMapper.getPipelineStep(step.getKey()).getState());
 
     // change step state
-    step.setFinished(OffsetDateTime.now(ZoneOffset.UTC).plusHours(1));
+    step.setFinished(OffsetDateTime.now(ZoneOffset.systemDefault()).plusHours(1).truncatedTo(ChronoUnit.MICROS));
     step.setState(Status.COMPLETED);
     step.setModifiedBy(UPDATER_USER);
     step.setMetrics(Collections.singleton(new MetricInfo("name", "val")));
 
     pipelineProcessMapper.updatePipelineStep(step);
-    PipelineProcessMapperIT.log.error("Step finished: " + step.getFinished() + " dbStep finished: " + pipelineProcessMapper.getPipelineStep(step.getKey()).getFinished());
     assertTrue(pipelineProcessMapper.getPipelineStep(step.getKey()).lenientEquals(step));
   }
 
