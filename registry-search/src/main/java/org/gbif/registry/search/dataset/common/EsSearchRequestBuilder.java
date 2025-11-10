@@ -162,19 +162,25 @@ public class EsSearchRequestBuilder<P extends SearchParameter> {
 
     if (!Strings.isNullOrEmpty(searchRequest.getQ())) {
       // Main autocomplete match query
-      shouldClauses.add(Query.of(q -> q.match(m -> m
-        .field(esFieldMapper.getAutocompleteField(parameter))
-        .query(searchRequest.getQ())
-        .operator(co.elastic.clients.elasticsearch._types.query_dsl.Operator.And)
-      )));
+      String autocompleteField = esFieldMapper.getAutocompleteField(parameter);
+      if (autocompleteField != null) {
+        shouldClauses.add(Query.of(q -> q.match(m -> m
+          .field(autocompleteField)
+          .query(searchRequest.getQ())
+          .operator(co.elastic.clients.elasticsearch._types.query_dsl.Operator.And)
+        )));
+      }
 
       // Prefix boost for short queries
       if (searchRequest.getQ().length() > 2) {
-        shouldClauses.add(Query.of(q -> q.prefix(p -> p
-          .field(esFieldMapper.get(parameter))
-          .value(searchRequest.getQ().toLowerCase())
-          .boost(100.0f)
-        )));
+        String field = esFieldMapper.get(parameter);
+        if (field != null) {
+          shouldClauses.add(Query.of(q -> q.prefix(p -> p
+            .field(field)
+            .value(searchRequest.getQ().toLowerCase())
+            .boost(100.0f)
+          )));
+        }
       }
     } else {
       mustClauses.add(Query.of(q -> q.matchAll(ma -> ma)));
