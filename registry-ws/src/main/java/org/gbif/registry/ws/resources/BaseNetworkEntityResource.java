@@ -235,7 +235,6 @@ public abstract class BaseNetworkEntityResource<T extends NetworkEntity, P exten
   @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
   @Trim
   @Transactional
-  @Secured({ADMIN_ROLE, EDITOR_ROLE, IPT_ROLE})
   @Override
   public UUID create(@RequestBody @Trim T entity) {
     validateEntity(entity, PrePersist.class, Default.class);
@@ -258,7 +257,6 @@ public abstract class BaseNetworkEntityResource<T extends NetworkEntity, P exten
    */
   // OpenAPI documentation is on the subclasses.
   @DeleteMapping("{key}")
-  @Secured({ADMIN_ROLE, EDITOR_ROLE, IPT_ROLE})
   @Transactional
   @Override
   public void delete(@PathVariable UUID key) {
@@ -329,7 +327,6 @@ public abstract class BaseNetworkEntityResource<T extends NetworkEntity, P exten
    */
   // OpenAPI documentation on subclass methods.
   @PutMapping(value = "{key}", consumes = MediaType.APPLICATION_JSON_VALUE)
-  @Secured({ADMIN_ROLE, EDITOR_ROLE, IPT_ROLE})
   @Trim
   @Transactional
   public void update(@PathVariable("key") UUID key, @RequestBody @Trim T entity) {
