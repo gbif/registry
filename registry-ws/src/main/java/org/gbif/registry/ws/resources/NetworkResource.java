@@ -154,6 +154,7 @@ public class NetworkResource extends BaseNetworkEntityResource<Network, NetworkL
   @ApiResponse(responseCode = "201", description = "Network created, new network's UUID returned")
   @Docs.DefaultUnsuccessfulWriteResponses
   @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
+  @Secured({ADMIN_ROLE, EDITOR_ROLE, IPT_ROLE})
   @Override
   public UUID create(@RequestBody @Trim Network network) {
     return super.create(network);
@@ -180,6 +181,7 @@ public class NetworkResource extends BaseNetworkEntityResource<Network, NetworkL
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
   @PutMapping(value = "{key}", consumes = MediaType.APPLICATION_JSON_VALUE)
+  @Secured({ADMIN_ROLE, EDITOR_ROLE, IPT_ROLE})
   @Override
   public void update(@PathVariable("key") UUID key, @RequestBody @Trim Network network) {
     super.update(key, network);
@@ -211,6 +213,7 @@ public class NetworkResource extends BaseNetworkEntityResource<Network, NetworkL
   @ApiResponse(responseCode = "204", description = "Network deleted")
   @Docs.DefaultUnsuccessfulWriteResponses
   @DeleteMapping("{key}")
+  @Secured({ADMIN_ROLE, EDITOR_ROLE, IPT_ROLE})
   @Override
   public void delete(@PathVariable UUID key) {
     super.delete(key);

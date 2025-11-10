@@ -90,6 +90,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static org.gbif.registry.security.UserRoles.ADMIN_ROLE;
 import static org.gbif.registry.security.UserRoles.APP_ROLE;
 import static org.gbif.registry.security.UserRoles.EDITOR_ROLE;
+import static org.gbif.registry.security.UserRoles.IPT_ROLE;
 
 @SuppressWarnings("UnstableApiUsage")
 @io.swagger.v3.oas.annotations.tags.Tag(
@@ -186,6 +187,7 @@ public class OrganizationResource
       description = "Publishing organization created, new publishing organization's UUID returned")
   @Docs.DefaultUnsuccessfulWriteResponses
   @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
+  @Secured({ADMIN_ROLE, EDITOR_ROLE, APP_ROLE})
   @Trim
   @Override
   public UUID create(@RequestBody @Trim Organization organization) {
@@ -231,6 +233,7 @@ public class OrganizationResource
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
   @PutMapping(value = "{key}", consumes = MediaType.APPLICATION_JSON_VALUE)
+  @Secured({ADMIN_ROLE, EDITOR_ROLE, IPT_ROLE})
   @Override
   public void update(
       @PathVariable("key") UUID key, @RequestBody @Trim Organization organization) {
@@ -264,6 +267,7 @@ public class OrganizationResource
   @ApiResponse(responseCode = "204", description = "Publishing organization deleted")
   @Docs.DefaultUnsuccessfulWriteResponses
   @DeleteMapping("{key}")
+  @Secured({ADMIN_ROLE, EDITOR_ROLE, IPT_ROLE})
   @Override
   public void delete(@PathVariable UUID key) {
     super.delete(key);

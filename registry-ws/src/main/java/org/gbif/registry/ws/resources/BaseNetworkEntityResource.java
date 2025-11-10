@@ -235,7 +235,7 @@ public abstract class BaseNetworkEntityResource<T extends NetworkEntity, P exten
   @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
   @Trim
   @Transactional
-  @Secured({ADMIN_ROLE, EDITOR_ROLE, IPT_ROLE, APP_ROLE})
+  @Secured({ADMIN_ROLE, EDITOR_ROLE, IPT_ROLE})
   @Override
   public UUID create(@RequestBody @Trim T entity) {
     validateEntity(entity, PrePersist.class, Default.class);

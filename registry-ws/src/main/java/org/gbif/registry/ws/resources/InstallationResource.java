@@ -89,6 +89,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static org.gbif.registry.security.UserRoles.ADMIN_ROLE;
+import static org.gbif.registry.security.UserRoles.EDITOR_ROLE;
+import static org.gbif.registry.security.UserRoles.IPT_ROLE;
 
 @io.swagger.v3.oas.annotations.tags.Tag(
     name = "Technical installations",
@@ -181,6 +183,7 @@ public class InstallationResource
       description = "Installation created, new installation's UUID returned")
   @Docs.DefaultUnsuccessfulWriteResponses
   @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
+  @Secured({ADMIN_ROLE, EDITOR_ROLE, IPT_ROLE})
   @Override
   public UUID create(@RequestBody @Trim Installation installation) {
     return super.create(installation);
@@ -207,6 +210,7 @@ public class InstallationResource
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
   @PutMapping(value = "{key}", consumes = MediaType.APPLICATION_JSON_VALUE)
+  @Secured({ADMIN_ROLE, EDITOR_ROLE, IPT_ROLE})
   @Override
   public void update(
       @PathVariable("key") UUID key, @RequestBody @Trim Installation installation) {
@@ -240,6 +244,7 @@ public class InstallationResource
   @ApiResponse(responseCode = "204", description = "Installation deleted")
   @Docs.DefaultUnsuccessfulWriteResponses
   @DeleteMapping("{key}")
+  @Secured({ADMIN_ROLE, EDITOR_ROLE, IPT_ROLE})
   @Override
   public void delete(@PathVariable UUID key) {
     super.delete(key);

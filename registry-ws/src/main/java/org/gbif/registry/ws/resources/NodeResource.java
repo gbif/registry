@@ -15,6 +15,10 @@ package org.gbif.registry.ws.resources;
 
 
 
+import static org.gbif.registry.security.UserRoles.ADMIN_ROLE;
+import static org.gbif.registry.security.UserRoles.EDITOR_ROLE;
+import static org.gbif.registry.security.UserRoles.IPT_ROLE;
+
 import org.gbif.api.annotation.NullToNotFound;
 import org.gbif.api.annotation.Trim;
 import org.gbif.api.documentation.CommonParameters;
@@ -50,6 +54,7 @@ import jakarta.annotation.Nullable;
 
 import org.springframework.context.annotation.Primary;
 import org.springframework.http.MediaType;
+import org.springframework.security.access.annotation.Secured;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -155,6 +160,7 @@ public class NodeResource extends BaseNetworkEntityResource<Node, NodeListParams
   @ApiResponse(responseCode = "201", description = "Node created, new node's UUID returned")
   @Docs.DefaultUnsuccessfulWriteResponses
   @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
+  @Secured({ADMIN_ROLE, EDITOR_ROLE, IPT_ROLE})
   @Override
   public UUID create(@RequestBody @Trim Node node) {
     return super.create(node);
@@ -182,6 +188,7 @@ public class NodeResource extends BaseNetworkEntityResource<Node, NodeListParams
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
   @PutMapping(value = "{key}", consumes = MediaType.APPLICATION_JSON_VALUE)
+  @Secured({ADMIN_ROLE, EDITOR_ROLE, IPT_ROLE})
   @Override
   public void update(@PathVariable("key") UUID key, @RequestBody @Trim Node node) {
     super.update(key, node);
@@ -208,6 +215,7 @@ public class NodeResource extends BaseNetworkEntityResource<Node, NodeListParams
   @ApiResponse(responseCode = "204", description = "Node deleted")
   @Docs.DefaultUnsuccessfulWriteResponses
   @DeleteMapping("{key}")
+  @Secured({ADMIN_ROLE, EDITOR_ROLE, IPT_ROLE})
   @Override
   public void delete(@PathVariable UUID key) {
     super.delete(key);
@@ -449,6 +457,7 @@ public class NodeResource extends BaseNetworkEntityResource<Node, NodeListParams
 
   @Hidden
   @DeleteMapping("{key}/contact/{contactKey}")
+  @Secured({ADMIN_ROLE, EDITOR_ROLE})
   @Override
   public void deleteContact(
       @PathVariable("key") UUID targetEntityKey, @PathVariable int contactKey) {
@@ -457,6 +466,7 @@ public class NodeResource extends BaseNetworkEntityResource<Node, NodeListParams
 
   @Hidden
   @PostMapping(value = "{key}/contact", consumes = MediaType.APPLICATION_JSON_VALUE)
+  @Secured({ADMIN_ROLE, EDITOR_ROLE})
   @Override
   public int addContact(@PathVariable("key") UUID targetEntityKey, @RequestBody Contact contact) {
     throw new UnsupportedOperationException("Contacts are manually managed in the Directory");
