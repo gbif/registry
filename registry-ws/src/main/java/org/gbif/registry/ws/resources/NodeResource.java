@@ -457,7 +457,6 @@ public class NodeResource extends BaseNetworkEntityResource<Node, NodeListParams
 
   @Hidden
   @DeleteMapping("{key}/contact/{contactKey}")
-  @Secured({ADMIN_ROLE, EDITOR_ROLE})
   @Override
   public void deleteContact(
       @PathVariable("key") UUID targetEntityKey, @PathVariable int contactKey) {
@@ -466,7 +465,6 @@ public class NodeResource extends BaseNetworkEntityResource<Node, NodeListParams
 
   @Hidden
   @PostMapping(value = "{key}/contact", consumes = MediaType.APPLICATION_JSON_VALUE)
-  @Secured({ADMIN_ROLE, EDITOR_ROLE})
   @Override
   public int addContact(@PathVariable("key") UUID targetEntityKey, @RequestBody Contact contact) {
     throw new UnsupportedOperationException("Contacts are manually managed in the Directory");
