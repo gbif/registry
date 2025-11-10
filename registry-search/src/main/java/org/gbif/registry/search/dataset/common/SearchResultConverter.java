@@ -19,7 +19,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 
 public interface SearchResultConverter<T, S> {
 
-  T toSearchResult(Hit<String> searchHit) throws JsonProcessingException;
+  T toSearchResult(Hit<com.fasterxml.jackson.databind.node.ObjectNode> searchHit) throws JsonProcessingException;
 
-  S toSearchSuggestResult(Hit<String> searchHit) throws JsonProcessingException;
+  S toSearchSuggestResult(Hit<com.fasterxml.jackson.databind.node.ObjectNode> searchHit) throws JsonProcessingException;
 }

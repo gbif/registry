@@ -93,9 +93,9 @@ public class DatasetSearchServiceEs implements DatasetSearchService {
       modifiedRequest.setParameters(datasetSuggestRequest.getParameters());
 
       SearchRequest searchRequest =
-          esSearchRequestBuilder.buildAutocompleteQuery(modifiedRequest, null, index);
-      co.elastic.clients.elasticsearch.core.SearchResponse<String> response =
-          elasticsearchClient.search(searchRequest, String.class);
+          esSearchRequestBuilder.buildAutocompleteQuery(modifiedRequest, DatasetSearchParameter.DATASET_TITLE, index);
+      co.elastic.clients.elasticsearch.core.SearchResponse<ObjectNode> response =
+          elasticsearchClient.search(searchRequest, ObjectNode.class);
       org.gbif.api.model.common.search.SearchResponse<DatasetSuggestResult, org.gbif.api.model.registry.search.DatasetSearchParameter> autocompleteResponse =
           esResponseParser.buildSearchAutocompleteResponse(response, modifiedRequest);
       return autocompleteResponse.getResults();

@@ -77,7 +77,7 @@ public class EsResponseParser<T, S, P extends SearchParameter> {
    */
   @SneakyThrows
   public org.gbif.api.model.common.search.SearchResponse<T, P> buildSearchResponse(
-      co.elastic.clients.elasticsearch.core.SearchResponse esResponse, SearchRequest<P> request) {
+      co.elastic.clients.elasticsearch.core.SearchResponse<com.fasterxml.jackson.databind.node.ObjectNode> esResponse, SearchRequest<P> request) {
     return buildSearchResponse(esResponse, request, hit -> {
       try {
         return searchResultConverter.toSearchResult(hit);
@@ -94,7 +94,7 @@ public class EsResponseParser<T, S, P extends SearchParameter> {
    */
   @SneakyThrows
   public org.gbif.api.model.common.search.SearchResponse<S, P> buildSearchAutocompleteResponse(
-      co.elastic.clients.elasticsearch.core.SearchResponse<String> esResponse, SearchRequest<P> request) {
+      co.elastic.clients.elasticsearch.core.SearchResponse<com.fasterxml.jackson.databind.node.ObjectNode> esResponse, SearchRequest<P> request) {
     return buildSearchResponse(esResponse, request, hit -> {
       try {
         return searchResultConverter.toSearchSuggestResult(hit);
@@ -110,9 +110,9 @@ public class EsResponseParser<T, S, P extends SearchParameter> {
    * @return a new instance of a SearchResponse.
    */
   public <R> org.gbif.api.model.common.search.SearchResponse<R, P> buildSearchResponse(
-      co.elastic.clients.elasticsearch.core.SearchResponse<String> esResponse,
+      co.elastic.clients.elasticsearch.core.SearchResponse<com.fasterxml.jackson.databind.node.ObjectNode> esResponse,
       SearchRequest<P> request,
-      Function<Hit<String>, R> mapper) {
+      Function<Hit<com.fasterxml.jackson.databind.node.ObjectNode>, R> mapper) {
 
     org.gbif.api.model.common.search.SearchResponse<R, P> response = new org.gbif.api.model.common.search.SearchResponse<>(request);
     response.setCount(esResponse.hits().total().value());
@@ -125,11 +125,11 @@ public class EsResponseParser<T, S, P extends SearchParameter> {
   }
 
   public List<S> buildSuggestResponse(
-      co.elastic.clients.elasticsearch.core.SearchResponse<String> esResponse, P parameter) {
+      co.elastic.clients.elasticsearch.core.SearchResponse<com.fasterxml.jackson.databind.node.ObjectNode> esResponse, P parameter) {
 
     String fieldName = fieldParameterMapper.get(parameter);
 
-    List<Suggestion<String>> suggesters = esResponse.suggest().get(fieldName);
+    List<Suggestion<com.fasterxml.jackson.databind.node.ObjectNode>> suggesters = esResponse.suggest().get(fieldName);
 
     if (suggesters == null || suggesters.isEmpty()) {
       return Collections.emptyList();
@@ -141,7 +141,7 @@ public class EsResponseParser<T, S, P extends SearchParameter> {
       .map(CompletionSuggestOption::source)
       .filter(Objects::nonNull)
       .map(source -> {
-        Hit<String> hit = Hit.of(h -> h.source(source));
+        Hit<com.fasterxml.jackson.databind.node.ObjectNode> hit = Hit.of(h -> h.source(source));
         try {
           return searchResultConverter.toSearchSuggestResult(hit);
         } catch (JsonProcessingException e) {
@@ -169,7 +169,7 @@ public class EsResponseParser<T, S, P extends SearchParameter> {
   }
 
   private Optional<List<Facet<P>>> parseFacets(
-      co.elastic.clients.elasticsearch.core.SearchResponse<String> esResponse, FacetedSearchRequest<P> request) {
+      co.elastic.clients.elasticsearch.core.SearchResponse<com.fasterxml.jackson.databind.node.ObjectNode> esResponse, FacetedSearchRequest<P> request) {
     return Optional.ofNullable(esResponse.aggregations())
         .map(
             aggregations ->
@@ -202,7 +202,7 @@ public class EsResponseParser<T, S, P extends SearchParameter> {
   }
 
   private <R> Optional<List<R>> parseHits(
-      co.elastic.clients.elasticsearch.core.SearchResponse<String> esResponse, Function<Hit<String>, R> mapper) {
+      co.elastic.clients.elasticsearch.core.SearchResponse<com.fasterxml.jackson.databind.node.ObjectNode> esResponse, Function<Hit<com.fasterxml.jackson.databind.node.ObjectNode>, R> mapper) {
     if (esResponse.hits() == null
         || esResponse.hits().hits() == null
         || esResponse.hits().hits().isEmpty()) {
@@ -213,37 +213,37 @@ public class EsResponseParser<T, S, P extends SearchParameter> {
         esResponse.hits().hits().stream().map(mapper).collect(Collectors.toList()));
   }
 
-  private static Optional<String> getStringValue(Hit<String> hit, String esField) {
+  private static Optional<String> getStringValue(Hit<com.fasterxml.jackson.databind.node.ObjectNode> hit, String esField) {
     return getValue(hit, esField, Function.identity());
   }
 
-  private static Optional<Integer> getIntValue(Hit<String> hit, String esField) {
+  private static Optional<Integer> getIntValue(Hit<com.fasterxml.jackson.databind.node.ObjectNode> hit, String esField) {
     return getValue(hit, esField, Integer::valueOf);
   }
 
-  private static Optional<Double> getDoubleValue(Hit<String> hit, String esField) {
+  private static Optional<Double> getDoubleValue(Hit<com.fasterxml.jackson.databind.node.ObjectNode> hit, String esField) {
     return getValue(hit, esField, Double::valueOf);
   }
 
-  private static Optional<Date> getDateValue(Hit<String> hit, String esField) {
+  private static Optional<Date> getDateValue(Hit<com.fasterxml.jackson.databind.node.ObjectNode> hit, String esField) {
     return getValue(hit, esField, STRING_TO_DATE);
   }
 
-  private static Optional<List<String>> getListValue(Hit<String> hit, String esField) {
+  private static Optional<List<String>> getListValue(Hit<com.fasterxml.jackson.databind.node.ObjectNode> hit, String esField) {
     return Optional.ofNullable(getSourceAsMap(hit).get(esField))
         .map(v -> (List<String>) v)
         .filter(v -> !v.isEmpty());
   }
 
   private static Optional<List<Map<String, Object>>> getObjectsListValue(
-      Hit<String> hit, String esField) {
+      Hit<com.fasterxml.jackson.databind.node.ObjectNode> hit, String esField) {
     return Optional.ofNullable(getSourceAsMap(hit).get(esField))
         .map(v -> (List<Map<String, Object>>) v)
         .filter(v -> !v.isEmpty());
   }
 
   private static <T> Optional<T> getValue(
-      Hit<String> hit, String esField, Function<String, T> mapper) {
+      Hit<com.fasterxml.jackson.databind.node.ObjectNode> hit, String esField, Function<String, T> mapper) {
     String fieldName = esField;
     Map<String, Object> fields = getSourceAsMap(hit);
     if (IS_NESTED.test(esField)) {
@@ -260,16 +260,16 @@ public class EsResponseParser<T, S, P extends SearchParameter> {
     return extractValue(fields, fieldName, mapper);
   }
 
-  private static Map<String, Object> getSourceAsMap(Hit<String> hit) {
+  private static Map<String, Object> getSourceAsMap(Hit<com.fasterxml.jackson.databind.node.ObjectNode> hit) {
     try {
-      String source = hit.source();
-      if (source == null || source.isEmpty()) {
+      com.fasterxml.jackson.databind.node.ObjectNode source = hit.source();
+      if (source == null) {
         return new java.util.HashMap<>();
       }
 
       ObjectMapper mapper = JacksonObjectMapper.get();
       TypeReference<Map<String, Object>> typeRef = new TypeReference<Map<String, Object>>() {};
-      return mapper.readValue(source, typeRef);
+      return mapper.convertValue(source, typeRef);
     } catch (Exception e) {
       LOG.error("Error parsing hit source as JSON: {}", e.getMessage(), e);
       return new java.util.HashMap<>();

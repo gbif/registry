@@ -55,10 +55,10 @@ public class DatasetSearchResultConverter
   private final ObjectMapper mapper = new ObjectMapper();
 
   @Override
-  public DatasetSearchResult toSearchResult(Hit<String> hit) throws JsonProcessingException {
+  public DatasetSearchResult toSearchResult(Hit<com.fasterxml.jackson.databind.node.ObjectNode> hit) throws JsonProcessingException {
 
     DatasetSearchResult d = new DatasetSearchResult();
-    String source = String.valueOf(hit.source());
+    String source = mapper.writeValueAsString(hit.source());
     Map<String, Object> fields = mapper.readValue(source, new TypeReference<>() {});
 
     d.setKey(UUID.fromString(hit.id()));
@@ -100,12 +100,12 @@ public class DatasetSearchResultConverter
   }
 
   @Override
-  public DatasetSuggestResult toSearchSuggestResult(Hit<String> hit)
+  public DatasetSuggestResult toSearchSuggestResult(Hit<com.fasterxml.jackson.databind.node.ObjectNode> hit)
     throws JsonProcessingException {
     DatasetSuggestResult d = new DatasetSuggestResult();
     d.setKey(UUID.fromString(hit.id()));
 
-    String source = String.valueOf(hit.source());
+    String source = mapper.writeValueAsString(hit.source());
     Map<String,Object> fields = mapper.readValue(source, new TypeReference<>() {});
 
     getStringValue(fields, "title").ifPresent(d::setTitle);
