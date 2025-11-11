@@ -33,7 +33,7 @@ import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.web.context.RequestAttributeSecurityContextRepository;
+import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -53,14 +53,17 @@ public class JwtRequestFilter extends OncePerRequestFilter {
   private final UserDetailsService userDetailsService;
   private final JwtAuthenticateService jwtAuthenticateService;
   private final JwtIssuanceService jwtIssuanceService;
+  private final SecurityContextRepository securityContextRepository;
 
   public JwtRequestFilter(
       @Qualifier("registryUserDetailsService") UserDetailsService userDetailsService,
       JwtAuthenticateService jwtAuthenticateService,
-      JwtIssuanceService jwtIssuanceService) {
+      JwtIssuanceService jwtIssuanceService,
+      SecurityContextRepository securityContextRepository) {
     this.userDetailsService = userDetailsService;
     this.jwtAuthenticateService = jwtAuthenticateService;
     this.jwtIssuanceService = jwtIssuanceService;
+    this.securityContextRepository = securityContextRepository;
   }
 
   @Override
@@ -87,10 +90,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
         SecurityContext context = SecurityContextHolder.createEmptyContext();
         context.setAuthentication(gbifAuthentication);
         SecurityContextHolder.setContext(context);
-        request.setAttribute(
-            RequestAttributeSecurityContextRepository.DEFAULT_REQUEST_ATTR_NAME,
-            context
-        );
+        securityContextRepository.saveContext(context, request, response);
 
         // refresh the token and add it to the headers
         final String newToken = jwtIssuanceService.generateJwt(gbifUser.getUserName());

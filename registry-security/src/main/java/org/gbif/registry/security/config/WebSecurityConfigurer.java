@@ -80,14 +80,19 @@ public class WebSecurityConfigurer {
   }
 
   @Bean
+  public RequestAttributeSecurityContextRepository securityContextRepository() {
+    return new RequestAttributeSecurityContextRepository();
+  }
+
+  @Bean
   public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
     http
         .httpBasic(basic -> basic.disable())
         .csrf(csrf -> csrf.disable())
         .cors(cors -> cors.configurationSource(corsConfigurationSource()))
         .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-        .securityContext(context -> context
-            .securityContextRepository(new RequestAttributeSecurityContextRepository()))
+        .securityContext(ctx -> ctx
+            .securityContextRepository(securityContextRepository()))
         .authorizeHttpRequests(authz -> authz
             .anyRequest().authenticated()
         )
