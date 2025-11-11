@@ -29,9 +29,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.web.context.RequestAttributeSecurityContextRepository;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -81,7 +83,14 @@ public class JwtRequestFilter extends OncePerRequestFilter {
 
         final GbifAuthentication gbifAuthentication =
             new GbifAuthenticationToken(userDetails, userDetails.getAuthorities());
-        SecurityContextHolder.getContext().setAuthentication(gbifAuthentication);
+
+        SecurityContext context = SecurityContextHolder.createEmptyContext();
+        context.setAuthentication(gbifAuthentication);
+        SecurityContextHolder.setContext(context);
+        request.setAttribute(
+            RequestAttributeSecurityContextRepository.DEFAULT_REQUEST_ATTR_NAME,
+            context
+        );
 
         // refresh the token and add it to the headers
         final String newToken = jwtIssuanceService.generateJwt(gbifUser.getUserName());
