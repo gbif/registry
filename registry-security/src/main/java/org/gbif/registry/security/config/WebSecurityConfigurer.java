@@ -86,6 +86,8 @@ public class WebSecurityConfigurer {
         .csrf(csrf -> csrf.disable())
         .cors(cors -> cors.configurationSource(corsConfigurationSource()))
         .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+        .securityContext(context -> context
+            .securityContextRepository(new RequestAttributeSecurityContextRepository()))
         .authorizeHttpRequests(authz -> authz
             .anyRequest().authenticated()
         )
