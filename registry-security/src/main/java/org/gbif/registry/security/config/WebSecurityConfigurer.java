@@ -89,11 +89,11 @@ public class WebSecurityConfigurer {
         .authorizeHttpRequests(authz -> authz
             .anyRequest().authenticated()
         )
-      .addFilterBefore(context.getBean("identityFilter", IdentityFilter.class), CsrfFilter.class)
-      .addFilterAfter(context.getBean("httpServletRequestWrapperFilter", HttpServletRequestWrapperFilter.class), CsrfFilter.class)
+        .addFilterAfter(context.getBean("httpServletRequestWrapperFilter", HttpServletRequestWrapperFilter.class), CsrfFilter.class)
         .addFilterAfter(
             context.getBean("requestHeaderParamUpdateFilter", RequestHeaderParamUpdateFilter.class),
             HttpServletRequestWrapperFilter.class)
+        .addFilterAfter(context.getBean(IdentityFilter.class), RequestHeaderParamUpdateFilter.class)
         .addFilterAfter(context.getBean("legacyAuthorizationFilter", LegacyAuthorizationFilter.class), IdentityFilter.class)
         .addFilterAfter(context.getBean("appIdentityFilter", AppIdentityFilter.class), LegacyAuthorizationFilter.class)
         .addFilterAfter(context.getBean("jwtRequestFilter", JwtRequestFilter.class), AppIdentityFilter.class)
