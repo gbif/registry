@@ -51,6 +51,8 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.context.RequestAttributeSecurityContextRepository;
+import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.security.web.csrf.CsrfFilter;
 import org.springframework.security.web.firewall.HttpFirewall;
 import org.springframework.security.web.firewall.StrictHttpFirewall;
@@ -90,12 +92,18 @@ public class WebSecurityConfigurer {
   }
 
   @Bean
+  public SecurityContextRepository securityContextRepository() {
+    return new RequestAttributeSecurityContextRepository();
+  }
+
+  @Bean
   public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
     http
       .httpBasic(AbstractHttpConfigurer::disable)
       .csrf(AbstractHttpConfigurer::disable)
       .cors(cors -> cors.configurationSource(corsConfigurationSource()))
       .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+      .securityContext(securityContext -> securityContext.securityContextRepository(securityContextRepository()))
       .authorizeHttpRequests(authz -> authz
         .anyRequest().authenticated()
       );
