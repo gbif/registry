@@ -13,12 +13,10 @@
  */
 package org.gbif.registry.ws.resources;
 
-import io.swagger.v3.oas.annotations.Hidden;
 import org.gbif.api.model.occurrence.DownloadType;
 import org.gbif.api.service.common.IdentityAccessService;
 import org.gbif.registry.doi.DownloadDoiDataCiteHandlingService;
 import org.gbif.registry.persistence.mapper.DatasetEventDownloadMapper;
-import org.gbif.registry.persistence.mapper.DatasetOccurrenceDownloadMapper;
 import org.gbif.registry.persistence.mapper.DownloadStatisticsMapper;
 import org.gbif.registry.persistence.mapper.EventDownloadMapper;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -29,7 +27,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /** Event download resource/web service. */
-@Hidden
 @Validated
 @RestController("eventDownloadResource")
 @RequestMapping(value = "event/download", produces = MediaType.APPLICATION_JSON_VALUE)
