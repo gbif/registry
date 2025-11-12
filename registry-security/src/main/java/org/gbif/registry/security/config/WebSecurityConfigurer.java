@@ -91,10 +91,11 @@ public class WebSecurityConfigurer {
     return firewall;
   }
 
+  /*
   @Bean
   public SecurityContextRepository securityContextRepository() {
     return new RequestAttributeSecurityContextRepository();
-  }
+  }*/
 
   @Bean
   public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -103,7 +104,7 @@ public class WebSecurityConfigurer {
       .csrf(AbstractHttpConfigurer::disable)
       .cors(cors -> cors.configurationSource(corsConfigurationSource()))
       .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-      .securityContext(securityContext -> securityContext.securityContextRepository(securityContextRepository()))
+      //.securityContext(securityContext -> securityContext.securityContextRepository(securityContextRepository()))
       .authorizeHttpRequests(authz -> authz
         .anyRequest().authenticated()
       );
