@@ -29,11 +29,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -53,17 +51,14 @@ public class JwtRequestFilter extends OncePerRequestFilter {
   private final UserDetailsService userDetailsService;
   private final JwtAuthenticateService jwtAuthenticateService;
   private final JwtIssuanceService jwtIssuanceService;
-  private final SecurityContextRepository securityContextRepository;
 
   public JwtRequestFilter(
       @Qualifier("registryUserDetailsService") UserDetailsService userDetailsService,
       JwtAuthenticateService jwtAuthenticateService,
-      JwtIssuanceService jwtIssuanceService,
-      SecurityContextRepository securityContextRepository) {
+      JwtIssuanceService jwtIssuanceService) {
     this.userDetailsService = userDetailsService;
     this.jwtAuthenticateService = jwtAuthenticateService;
     this.jwtIssuanceService = jwtIssuanceService;
-    this.securityContextRepository = securityContextRepository;
   }
 
   @Override
@@ -86,11 +81,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
 
         final GbifAuthentication gbifAuthentication =
             new GbifAuthenticationToken(userDetails, userDetails.getAuthorities());
-
-        SecurityContext context = SecurityContextHolder.createEmptyContext();
-        context.setAuthentication(gbifAuthentication);
-        SecurityContextHolder.setContext(context);
-        securityContextRepository.saveContext(context, request, response);
+        SecurityContextHolder.getContext().setAuthentication(gbifAuthentication);
 
         // refresh the token and add it to the headers
         final String newToken = jwtIssuanceService.generateJwt(gbifUser.getUserName());
