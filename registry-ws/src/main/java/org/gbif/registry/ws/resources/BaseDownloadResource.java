@@ -666,7 +666,7 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
     return getCitationInternal(download);
   }
 
-  public String getCitationByDoi(String prefix, String suffix) {
+  public String getCitationByDoi(@NotNull String prefix, @NotNull String suffix) {
     Download download = getByDoi(prefix, suffix);
     return getCitationInternal(download);
   }
