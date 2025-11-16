@@ -342,7 +342,7 @@ public abstract class BaseCollectionEntityResource<
   @Docs.DefaultUnsuccessfulWriteResponses
   @DeleteMapping("{key}/contactPerson/{contactKey}")
   public void removeContactPerson(
-      @PathVariable("key") UUID entityKey, @PathVariable int contactKey) {
+      @PathVariable("key") UUID entityKey, @PathVariable("contactKey") int contactKey) {
     collectionEntityService.removeContactPerson(entityKey, contactKey);
   }
 
@@ -358,7 +358,7 @@ public abstract class BaseCollectionEntityResource<
   @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("{key}/contactPerson")
   @Nullable
-  public List<Contact> listContactPersons(@PathVariable UUID key) {
+  public List<Contact> listContactPersons(@PathVariable("key") UUID key) {
     return collectionEntityService.listContactPersons(key);
   }
 
@@ -411,7 +411,7 @@ public abstract class BaseCollectionEntityResource<
   @Docs.DefaultUnsuccessfulWriteResponses
   @DeleteMapping("{key}/occurrenceMapping/{occurrenceMappingKey}")
   public void deleteOccurrenceMapping(
-      @PathVariable("key") UUID entityKey, @PathVariable int occurrenceMappingKey) {
+      @PathVariable("key") UUID entityKey, @PathVariable("occurrenceMappingKey") int occurrenceMappingKey) {
     collectionEntityService.deleteOccurrenceMapping(entityKey, occurrenceMappingKey);
   }
 
@@ -616,7 +616,7 @@ public abstract class BaseCollectionEntityResource<
 
   // OpenAPI documentation on subclasses
   @DeleteMapping("{key}")
-  public void delete(@PathVariable UUID key) {
+  public void delete(@PathVariable("key") UUID key) {
     collectionEntityService.delete(key);
   }
 
@@ -652,7 +652,7 @@ public abstract class BaseCollectionEntityResource<
   @DeleteMapping("{key}/identifier/{identifierKey}")
   @Transactional
   public void deleteIdentifier(
-      @PathVariable("key") UUID entityKey, @PathVariable int identifierKey) {
+      @PathVariable("key") UUID entityKey, @PathVariable("identifierKey") int identifierKey) {
     collectionEntityService.deleteIdentifier(entityKey, identifierKey);
   }
 
@@ -669,7 +669,7 @@ public abstract class BaseCollectionEntityResource<
   @Docs.DefaultUnsuccessfulWriteResponses
   @GetMapping("{key}/identifier")
   @Nullable
-  public List<Identifier> listIdentifiers(@PathVariable UUID key) {
+  public List<Identifier> listIdentifiers(@PathVariable("key") UUID key) {
     return collectionEntityService.listIdentifiers(key);
   }
 
@@ -737,7 +737,7 @@ public abstract class BaseCollectionEntityResource<
   @Docs.DefaultUnsuccessfulWriteResponses
   @DeleteMapping("{key}/tag/{tagKey}")
   @Transactional
-  public void deleteTag(@PathVariable("key") UUID entityKey, @PathVariable int tagKey) {
+  public void deleteTag(@PathVariable("key") UUID entityKey, @PathVariable("tagKey") int tagKey) {
     collectionEntityService.deleteTag(entityKey, tagKey);
   }
 

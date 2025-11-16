@@ -237,7 +237,7 @@ public class UserResource {
   @GetMapping("{username}/token")
   @Secured({ADMIN_ROLE, APP_ROLE})
   public ResponseEntity<?> generateJwtToken(
-      @PathVariable String username, Authentication authentication) {
+      @PathVariable("username") String username, Authentication authentication) {
     // the user shall be authenticated
     ensureUserSetInSecurityContext(authentication);
 

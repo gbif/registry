@@ -187,7 +187,7 @@ public interface DatasetClient extends NetworkEntityClient<Dataset>, DatasetServ
 
   @RequestMapping(
       method = RequestMethod.GET,
-      value = "doi/{prefix}/{suffix}",
+      value = "doi/{prefix:^(?!dataset$).+}/{suffix}",
       produces = MediaType.APPLICATION_JSON_VALUE)
   @ResponseBody
   PagingResponse<Dataset> listByDOI(

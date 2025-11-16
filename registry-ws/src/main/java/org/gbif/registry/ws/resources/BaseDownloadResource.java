@@ -42,7 +42,6 @@ import org.gbif.api.vocabulary.OrganizationUsageSortField;
 import org.gbif.api.vocabulary.SortOrder;
 import org.gbif.registry.doi.DownloadDoiDataCiteHandlingService;
 import org.gbif.registry.persistence.mapper.DatasetDownloadMapper;
-import org.gbif.registry.persistence.mapper.DatasetOccurrenceDownloadMapper;
 import org.gbif.registry.persistence.mapper.DownloadMapper;
 import org.gbif.registry.persistence.mapper.DownloadStatisticsMapper;
 import org.gbif.registry.ws.export.CsvWriter;
@@ -274,7 +273,7 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
   @DownloadKeyParameter
   @ApiResponse(responseCode = "200", description = "Occurrence download information.")
   @Docs.DefaultUnsuccessfulReadResponses
-  @GetMapping("{key}")
+  @GetMapping("{key:^(?!dataset$).+}")
   @NullToNotFound(useUrlMapping = true)
   public Download getByKey(
       @NotNull @PathVariable("key") String key,
@@ -312,10 +311,10 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
   @DoiParameters
   @ApiResponse(responseCode = "200", description = "Occurrence download information.")
   @Docs.DefaultUnsuccessfulReadResponses
-  @GetMapping("{prefix}/{suffix}")
+  @GetMapping("{prefix:^(?!dataset$).+}/{suffix}")
   @NullToNotFound(useUrlMapping = true)
   public Download getByDoi(
-      @NotNull @PathVariable String prefix, @NotNull @PathVariable String suffix) {
+      @NotNull @PathVariable("prefix") String prefix, @NotNull @PathVariable("suffix") String suffix) {
     Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
     Download download = downloadMapper.getByDOI(new DOI(prefix, suffix));
@@ -394,7 +393,7 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
   @GetMapping("user/{user}")
   @Override
   public PagingResponse<Download> listByUser(
-      @PathVariable String user,
+      @PathVariable("user") String user,
       Pageable page,
       @RequestParam(value = "status", required = false) Set<Download.Status> status,
       @RequestParam(value = "from", required = false)
@@ -461,7 +460,7 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
   @GetMapping("user/{user}/count")
   @Override
   public long countByUser(
-      @PathVariable String user,
+      @PathVariable("user") String user,
       @RequestParam(value = "status", required = false) Set<Download.Status> status,
       @RequestParam(value = "from", required = false)
           @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
@@ -552,7 +551,7 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
       responseCode = "200",
       description = "Dataset usage within an occurrence download information.")
   @Docs.DefaultUnsuccessfulReadResponses
-  @GetMapping("{prefix}/{suffix}/datasets")
+  @GetMapping("{prefix:^(?!dataset$).+}/{suffix}/datasets")
   public PagingResponse<DatasetOccurrenceDownloadUsage> listDatasetUsagesByDoi(
       @PathVariable("prefix") String prefix, @PathVariable("suffix") String suffix, Pageable page) {
     Download download = getByDoi(prefix, suffix);
@@ -592,7 +591,7 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
       responseCode = "200",
       description = "Dataset usage within an occurrence download information.")
   @Docs.DefaultUnsuccessfulReadResponses
-  @GetMapping("{key}/datasets")
+  @GetMapping("{key:^(?!dataset$).+}/datasets")
   @Override
   public PagingResponse<DatasetOccurrenceDownloadUsage> listDatasetUsages(
       @PathVariable("key") String key,
@@ -624,7 +623,7 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
       responseCode = "200",
       description = "Dataset usage within an occurrence download information.")
   @Docs.DefaultUnsuccessfulReadResponses
-  @GetMapping("{key}/datasets/export")
+  @GetMapping("{key:^(?!dataset$).+}/datasets/export")
   public void exportListDatasetUsagesByKey(
       HttpServletResponse response,
       @PathVariable("key") String key,
@@ -699,7 +698,7 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
       responseCode = "200",
       description = "Organization usage within an occurrence download information.")
   @Docs.DefaultUnsuccessfulReadResponses
-  @GetMapping("{key}/organizations")
+  @GetMapping("{key:^(?!dataset$).+}/organizations")
   @Override
   public PagingResponse<OrganizationOccurrenceDownloadUsage> listOrganizationUsages(
       @PathVariable("key") String downloadKey,
@@ -753,7 +752,7 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
       responseCode = "200",
       description = "Country usage within an occurrence download information.")
   @Docs.DefaultUnsuccessfulReadResponses
-  @GetMapping("{key}/countries")
+  @GetMapping("{key:^(?!dataset$).+}/countries")
   @Override
   public PagingResponse<CountryOccurrenceDownloadUsage> listCountryUsages(
       @PathVariable("key") String downloadKey,
@@ -775,7 +774,7 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
   }
 
   @Hidden
-  @PostMapping(value = "{key}/datasets", consumes = MediaType.APPLICATION_JSON_VALUE)
+  @PostMapping(value = "{key:^(?!dataset$).+}/datasets", consumes = MediaType.APPLICATION_JSON_VALUE)
   @Transactional
   @Secured(ADMIN_ROLE)
   @Override
@@ -810,7 +809,7 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
   @DownloadKeyParameter
   @ApiResponse(responseCode = "200", description = "Download citation.")
   @Docs.DefaultUnsuccessfulReadResponses
-  @GetMapping("{key}/citation")
+  @GetMapping("{key:^(?!dataset$).+}/citation")
   @NullToNotFound(useUrlMapping = true)
   public String getCitationByKey(@NotNull @PathVariable("key") String key) {
     Download download = getByKey(key, false);
@@ -828,7 +827,7 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
   @DoiParameters
   @ApiResponse(responseCode = "200", description = "Download citation.")
   @Docs.DefaultUnsuccessfulReadResponses
-  @GetMapping("{prefix}/{suffix}/citation")
+  @GetMapping("{prefix:^(?!dataset$).+}/{suffix}/citation")
   @NullToNotFound(useUrlMapping = true)
   public String getCitationByDoi(
       @NotNull @PathVariable("prefix") String prefix,

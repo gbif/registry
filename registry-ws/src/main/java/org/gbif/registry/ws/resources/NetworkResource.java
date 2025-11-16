@@ -130,7 +130,7 @@ public class NetworkResource extends BaseNetworkEntityResource<Network, NetworkL
   @GetMapping("{key}")
   @NullToNotFound("/network/{key}")
   @Override
-  public Network get(@PathVariable UUID key) {
+  public Network get(@PathVariable("key") UUID key) {
     return super.get(key);
   }
 
@@ -215,7 +215,7 @@ public class NetworkResource extends BaseNetworkEntityResource<Network, NetworkL
   @DeleteMapping("{key}")
   @Secured({ADMIN_ROLE, EDITOR_ROLE, IPT_ROLE})
   @Override
-  public void delete(@PathVariable UUID key) {
+  public void delete(@PathVariable("key") UUID key) {
     super.delete(key);
   }
 
@@ -311,7 +311,7 @@ public class NetworkResource extends BaseNetworkEntityResource<Network, NetworkL
   @PostMapping("{key}/constituents/{datasetKey}")
   @Secured({ADMIN_ROLE, EDITOR_ROLE, IPT_ROLE})
   @Override
-  public void addConstituent(@PathVariable("key") UUID networkKey, @PathVariable UUID datasetKey) {
+  public void addConstituent(@PathVariable("key") UUID networkKey, @PathVariable("datasetKey") UUID datasetKey) {
     if (networkMapper.constituentExists(networkKey, datasetKey)) {
       throw new WebApplicationException(
           "Dataset " + datasetKey + " is already connected to the network " + networkKey,
@@ -343,7 +343,7 @@ public class NetworkResource extends BaseNetworkEntityResource<Network, NetworkL
   @Secured({ADMIN_ROLE, EDITOR_ROLE, IPT_ROLE})
   @Override
   public void removeConstituent(
-      @PathVariable("key") UUID networkKey, @PathVariable UUID datasetKey) {
+      @PathVariable("key") UUID networkKey, @PathVariable("datasetKey") UUID datasetKey) {
     if (!networkMapper.constituentExists(networkKey, datasetKey)) {
       throw new WebApplicationException(
           "Dataset " + datasetKey + " is not connected to the network " + networkKey,

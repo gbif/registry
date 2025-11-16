@@ -13,7 +13,6 @@
  */
 package org.gbif.registry.ws.resources;
 
-import org.gbif.api.model.occurrence.DownloadType;
 import org.gbif.registry.persistence.mapper.DatasetOccurrenceDownloadMapper;
 
 import org.springframework.http.MediaType;

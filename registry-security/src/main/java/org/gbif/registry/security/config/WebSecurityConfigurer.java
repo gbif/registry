@@ -13,17 +13,9 @@
  */
 package org.gbif.registry.security.config;
 
+import static org.springframework.security.core.context.SecurityContextHolder.MODE_INHERITABLETHREADLOCAL;
+
 import org.gbif.registry.identity.util.RegistryPasswordEncoder;
-import org.gbif.registry.security.AfterAppIdentityFilterLogger;
-import org.gbif.registry.security.AfterAuthPreCheckCreationRequestFilterLogger;
-import org.gbif.registry.security.AfterEditorAuthorizationFilterLogger;
-import org.gbif.registry.security.AfterGrSciCollEditorAuthorizationFilterLogger;
-import org.gbif.registry.security.AfterHttpServletRequestWrapperFilterLogger;
-import org.gbif.registry.security.AfterIdentityFilterLogger;
-import org.gbif.registry.security.AfterJwtRequestFilterLogger;
-import org.gbif.registry.security.AfterLegacyAuthorizationFilterLogger;
-import org.gbif.registry.security.AfterRequestHeaderParamUpdateFilterLogger;
-import org.gbif.registry.security.AfterResourceNotFoundRequestFilterLogger;
 import org.gbif.registry.security.EditorAuthorizationFilter;
 import org.gbif.registry.security.LegacyAuthorizationFilter;
 import org.gbif.registry.security.ResourceNotFoundRequestFilter;
@@ -42,27 +34,30 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.access.expression.method.DefaultMethodSecurityExpressionHandler;
+import org.springframework.security.access.expression.method.MethodSecurityExpressionHandler;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.context.SecurityContextHolderStrategy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.context.RequestAttributeSecurityContextRepository;
-import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.security.web.csrf.CsrfFilter;
 import org.springframework.security.web.firewall.HttpFirewall;
 import org.springframework.security.web.firewall.StrictHttpFirewall;
+import org.springframework.validation.beanvalidation.MethodValidationPostProcessor;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity(prePostEnabled = true, securedEnabled = true)
+@EnableMethodSecurity(securedEnabled = true, jsr250Enabled = true, prePostEnabled = true)
 public class WebSecurityConfigurer {
 
   private final ApplicationContext context;
@@ -75,6 +70,29 @@ public class WebSecurityConfigurer {
     this.userDetailsService = userDetailsService;
     this.context = context;
   }
+
+  @Bean
+  static MethodSecurityExpressionHandler methodSecurityExpressionHandler() {
+    // Use the default handler provided by Spring Security 6+
+    DefaultMethodSecurityExpressionHandler expressionHandler =
+      new DefaultMethodSecurityExpressionHandler();
+
+    expressionHandler.setDefaultRolePrefix("");
+
+    return expressionHandler;
+  }
+
+  @Bean
+  static SecurityContextHolderStrategy securityContextHolderStrategy() {
+    SecurityContextHolder.setStrategyName(MODE_INHERITABLETHREADLOCAL);
+    return SecurityContextHolder.getContextHolderStrategy();
+  }
+
+  @Bean
+  public MethodValidationPostProcessor methodValidationPostProcessor() {
+    return new MethodValidationPostProcessor();
+  }
+
 
   @Bean
   public DaoAuthenticationProvider dbAuthenticationProvider() {
@@ -91,12 +109,6 @@ public class WebSecurityConfigurer {
     return firewall;
   }
 
-  /*
-  @Bean
-  public SecurityContextRepository securityContextRepository() {
-    return new RequestAttributeSecurityContextRepository();
-  }*/
-
   @Bean
   public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
     http
@@ -104,33 +116,21 @@ public class WebSecurityConfigurer {
       .csrf(AbstractHttpConfigurer::disable)
       .cors(cors -> cors.configurationSource(corsConfigurationSource()))
       .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-      //.securityContext(securityContext -> securityContext.securityContextRepository(securityContextRepository()))
       .authorizeHttpRequests(authz -> authz
         .anyRequest().authenticated()
       );
 
-    // Add filters with logging after each one - chain them sequentially
+    // Add filters
     http.addFilterAfter(context.getBean("httpServletRequestWrapperFilter", HttpServletRequestWrapperFilter.class), CsrfFilter.class)
-        .addFilterAfter(new AfterHttpServletRequestWrapperFilterLogger(), HttpServletRequestWrapperFilter.class)
-        .addFilterAfter(context.getBean("requestHeaderParamUpdateFilter", RequestHeaderParamUpdateFilter.class), AfterHttpServletRequestWrapperFilterLogger.class)
-        .addFilterAfter(new AfterRequestHeaderParamUpdateFilterLogger(), RequestHeaderParamUpdateFilter.class)
-        .addFilterAfter(context.getBean(IdentityFilter.class), AfterRequestHeaderParamUpdateFilterLogger.class)
-        .addFilterAfter(new AfterIdentityFilterLogger(), IdentityFilter.class)
-        .addFilterAfter(context.getBean("legacyAuthorizationFilter", LegacyAuthorizationFilter.class), AfterIdentityFilterLogger.class)
-        .addFilterAfter(new AfterLegacyAuthorizationFilterLogger(), LegacyAuthorizationFilter.class)
-        .addFilterAfter(context.getBean("appIdentityFilter", AppIdentityFilter.class), AfterLegacyAuthorizationFilterLogger.class)
-        .addFilterAfter(new AfterAppIdentityFilterLogger(), AppIdentityFilter.class)
-        .addFilterAfter(context.getBean("jwtRequestFilter", JwtRequestFilter.class), AfterAppIdentityFilterLogger.class)
-        .addFilterAfter(new AfterJwtRequestFilterLogger(), JwtRequestFilter.class)
-        .addFilterAfter(context.getBean("authPreCheckCreationRequestFilter", AuthPreCheckCreationRequestFilter.class), AfterJwtRequestFilterLogger.class)
-        .addFilterAfter(new AfterAuthPreCheckCreationRequestFilterLogger(), AuthPreCheckCreationRequestFilter.class)
-        .addFilterAfter(context.getBean("editorAuthorizationFilter", EditorAuthorizationFilter.class), AfterAuthPreCheckCreationRequestFilterLogger.class)
-        .addFilterAfter(new AfterEditorAuthorizationFilterLogger(), EditorAuthorizationFilter.class)
-        .addFilterAfter(context.getBean("grSciCollEditorAuthorizationFilter", GrSciCollEditorAuthorizationFilter.class), AfterEditorAuthorizationFilterLogger.class)
-        .addFilterAfter(new AfterGrSciCollEditorAuthorizationFilterLogger(), GrSciCollEditorAuthorizationFilter.class)
-        .addFilterAfter(context.getBean("resourceNotFoundRequestFilter", ResourceNotFoundRequestFilter.class), AfterGrSciCollEditorAuthorizationFilterLogger.class)
-        .addFilterAfter(new AfterResourceNotFoundRequestFilterLogger(), ResourceNotFoundRequestFilter.class);
-
+        .addFilterAfter(context.getBean("requestHeaderParamUpdateFilter", RequestHeaderParamUpdateFilter.class), HttpServletRequestWrapperFilter.class)
+        .addFilterAfter(context.getBean("identityFilter", IdentityFilter.class), RequestHeaderParamUpdateFilter.class)
+        .addFilterAfter(context.getBean("legacyAuthorizationFilter", LegacyAuthorizationFilter.class), IdentityFilter.class)
+        .addFilterAfter(context.getBean("appIdentityFilter", AppIdentityFilter.class), LegacyAuthorizationFilter.class)
+        .addFilterAfter(context.getBean("jwtRequestFilter", JwtRequestFilter.class), AppIdentityFilter.class)
+        .addFilterAfter(context.getBean("authPreCheckCreationRequestFilter", AuthPreCheckCreationRequestFilter.class), JwtRequestFilter.class)
+        .addFilterAfter(context.getBean("editorAuthorizationFilter", EditorAuthorizationFilter.class), AuthPreCheckCreationRequestFilter.class)
+        .addFilterAfter(context.getBean("grSciCollEditorAuthorizationFilter", GrSciCollEditorAuthorizationFilter.class), EditorAuthorizationFilter.class)
+        .addFilterAfter(context.getBean("resourceNotFoundRequestFilter", ResourceNotFoundRequestFilter.class), GrSciCollEditorAuthorizationFilter.class);
     return http.build();
   }
 

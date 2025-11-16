@@ -64,6 +64,8 @@ import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.module.jakarta.xmlbind.JakartaXmlBindAnnotationModule;
 
+import org.springframework.web.util.pattern.PathPatternParser;
+
 @Configuration
 public class WebMvcConfig implements WebMvcConfigurer {
 
@@ -78,6 +80,9 @@ public class WebMvcConfig implements WebMvcConfigurer {
     org.springframework.web.util.UrlPathHelper urlPathHelper = new org.springframework.web.util.UrlPathHelper();
     urlPathHelper.setUrlDecode(true);
     configurer.setUrlPathHelper(urlPathHelper);
+    PathPatternParser patternParser = new PathPatternParser();
+    patternParser.setMatchOptionalTrailingSeparator(true);
+
   }
 
   @Override

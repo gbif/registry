@@ -161,7 +161,7 @@ public class OrganizationResource
   @GetMapping("{key}")
   @NullToNotFound("/organization/{key}") // TODO TODO TODO
   @Override
-  public Organization get(@PathVariable UUID key) {
+  public Organization get(@PathVariable("key") UUID key) {
     return super.get(key);
   }
 
@@ -269,7 +269,7 @@ public class OrganizationResource
   @DeleteMapping("{key}")
   @Secured({ADMIN_ROLE, EDITOR_ROLE, IPT_ROLE})
   @Override
-  public void delete(@PathVariable UUID key) {
+  public void delete(@PathVariable("key") UUID key) {
     super.delete(key);
   }
 
