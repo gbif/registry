@@ -1242,7 +1242,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset, DatasetL
   @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping(value = "metadata/{metadataKey}/document", produces = MediaType.APPLICATION_XML_VALUE)
   @NullToNotFound("/dataset/metadata/{metadataKey}/document")
-  public byte[] getMetadataDocumentAsBytes(@PathVariable("metdataKey") int metadataKey) {
+  public byte[] getMetadataDocumentAsBytes(@PathVariable("metadataKey") int metadataKey) {
     return registryDatasetService.getMetadataDocument(metadataKey);
   }
 
@@ -1502,7 +1502,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset, DatasetL
   @NullToNotFound("/dataset/{key}/process/{attempt}")
   @Override
   public DatasetProcessStatus getDatasetProcessStatus(
-      @PathVariable("datasetKey") UUID key, @PathVariable("attempt") int attempt) {
+      @PathVariable("key") UUID key, @PathVariable("attempt") int attempt) {
     return datasetProcessStatusMapper.get(key, attempt);
   }
 
