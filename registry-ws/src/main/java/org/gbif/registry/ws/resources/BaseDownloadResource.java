@@ -311,7 +311,7 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
   @DoiParameters
   @ApiResponse(responseCode = "200", description = "Occurrence download information.")
   @Docs.DefaultUnsuccessfulReadResponses
-  @GetMapping("{prefix:^(?!dataset$).+}/{suffix}")
+  @GetMapping("{prefix}/{suffix}")
   @NullToNotFound(useUrlMapping = true)
   public Download getByDoi(
       @NotNull @PathVariable("prefix") String prefix, @NotNull @PathVariable("suffix") String suffix) {
@@ -551,7 +551,7 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
       responseCode = "200",
       description = "Dataset usage within an occurrence download information.")
   @Docs.DefaultUnsuccessfulReadResponses
-  @GetMapping("{prefix:^(?!dataset$).+}/{suffix}/datasets")
+  @GetMapping("{prefix}/{suffix}/datasets")
   public PagingResponse<DatasetOccurrenceDownloadUsage> listDatasetUsagesByDoi(
       @PathVariable("prefix") String prefix, @PathVariable("suffix") String suffix, Pageable page) {
     Download download = getByDoi(prefix, suffix);
@@ -827,7 +827,7 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
   @DoiParameters
   @ApiResponse(responseCode = "200", description = "Download citation.")
   @Docs.DefaultUnsuccessfulReadResponses
-  @GetMapping("{prefix:^(?!dataset$).+}/{suffix}/citation")
+  @GetMapping("{prefix}/{suffix}/citation")
   @NullToNotFound(useUrlMapping = true)
   public String getCitationByDoi(
       @NotNull @PathVariable("prefix") String prefix,
