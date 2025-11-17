@@ -68,7 +68,6 @@ import static org.gbif.registry.security.UserRoles.EDITOR_ROLE;
 /** Pipelines History service. */
 @Hidden // TODO: Document?
 @RestController
-@Validated
 @RequestMapping(value = "pipelines/history", produces = MediaType.APPLICATION_JSON_VALUE)
 public class PipelinesHistoryResource implements PipelinesHistoryService {
 
@@ -180,6 +179,7 @@ public class PipelinesHistoryResource implements PipelinesHistoryService {
   }
 
   @Override
+  @Validated
   public long updatePipelineStep(@NotNull PipelineStep pipelineStep) {
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     return historyTrackingService.updatePipelineStep(pipelineStep, authentication.getName());
