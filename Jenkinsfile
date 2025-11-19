@@ -24,8 +24,6 @@ pipeline {
   }
   environment {
     JETTY_PORT = utils.getPort()
-    DOCKER_HOST = 'unix:///var/run/docker.sock'
-    TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE = '/var/run/docker.sock'
   }
   stages {
 
@@ -36,6 +34,15 @@ pipeline {
         }
       }
       steps {
+       // DEBUG: does the agent actually see docker?
+          sh '''
+            echo "--- Checking docker inside pipeline ---"
+            which docker || echo "NO DOCKER CLI"
+            ls -l /var/run/docker.sock || echo "NO SOCKET"
+            docker info || echo "NO DOCKER ACCESS"
+            id
+            groups
+          '''
         withMaven(
             globalMavenSettingsConfig: 'org.jenkinsci.plugins.configfiles.maven.GlobalMavenSettingsConfig1387378707709',
             mavenOpts: '-Xms2048m -Xmx8192m',
