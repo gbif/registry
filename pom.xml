@@ -154,8 +154,8 @@
     <junit.version>5.10.1</junit.version>
     <mockito.version>5.8.0</mockito.version>
     <xmlunit.version>2.9.1</xmlunit.version>
-    <postgresql-testcontainers.version>2.0.2</postgresql-testcontainers.version>
-    <testcontainers-elasticsearch.version>2.0.2</testcontainers-elasticsearch.version>
+    <postgresql-testcontainers.version>1.21.3</postgresql-testcontainers.version>
+    <testcontainers-elasticsearch.version>1.21.3</testcontainers-elasticsearch.version>
     <mock-javamail.version>1.9</mock-javamail.version>
     <mybatis-spring-boot-starter-test.version>3.0.3</mybatis-spring-boot-starter-test.version>
     <reflections.version>0.10.2</reflections.version>

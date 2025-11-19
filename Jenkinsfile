@@ -24,7 +24,6 @@ pipeline {
   }
   environment {
     JETTY_PORT = utils.getPort()
-    TESTCONTAINERS_DEBUG = 'true'
   }
   stages {
 
