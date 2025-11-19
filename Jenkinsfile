@@ -24,6 +24,8 @@ pipeline {
   }
   environment {
     JETTY_PORT = utils.getPort()
+    DOCKER_HOST = 'unix:///var/run/docker.sock'
+    TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE = '/var/run/docker.sock'
   }
   stages {
 
