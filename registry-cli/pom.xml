@@ -412,6 +412,11 @@
       <scope>test</scope>
     </dependency>
     <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-lang3</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
       <groupId>org.gbif.registry</groupId>
       <artifactId>registry-search</artifactId>
       <classifier>tests</classifier>

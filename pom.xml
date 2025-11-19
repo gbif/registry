@@ -113,7 +113,9 @@
     <!-- Third party -->
     <commons-digester.version>3.2</commons-digester.version>
     <commons-validator.version>1.7</commons-validator.version>
-    <commons-io.version>2.15.1</commons-io.version>
+    <commons-lang3.version>3.17.0</commons-lang3.version>
+    <commons-io.version>2.17.0</commons-io.version>
+    <commons-compress.version>1.27.1</commons-compress.version>
     <commons-logging.version>1.2</commons-logging.version>
     <cache2k.version>2.0.0.Final</cache2k.version>
     <feign.version>13.5</feign.version>
@@ -484,6 +486,16 @@
         <groupId>org.mybatis</groupId>
         <artifactId>mybatis</artifactId>
         <version>${mybatis.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.commons</groupId>
+        <artifactId>commons-lang3</artifactId>
+        <version>${commons-lang3.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.commons</groupId>
+        <artifactId>commons-compress</artifactId>
+        <version>${commons-compress.version}</version>
       </dependency>
       <dependency>
         <groupId>org.apache.commons</groupId>
