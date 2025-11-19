@@ -154,8 +154,7 @@
     <junit.version>5.11.2</junit.version>
     <mockito.version>5.8.0</mockito.version>
     <xmlunit.version>2.9.1</xmlunit.version>
-    <postgresql-testcontainers.version>2.0.2</postgresql-testcontainers.version>
-    <testcontainers-elasticsearch.version>2.0.2</testcontainers-elasticsearch.version>
+    <testcontainers.version>2.0.2</testcontainers.version>
     <mock-javamail.version>1.9</mock-javamail.version>
     <mybatis-spring-boot-starter-test.version>3.0.3</mybatis-spring-boot-starter-test.version>
     <reflections.version>0.10.2</reflections.version>
@@ -829,14 +828,20 @@
       </dependency>
       <dependency>
         <groupId>org.testcontainers</groupId>
+        <artifactId>testcontainers</artifactId>
+        <version>${testcontainers.version}</version>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.testcontainers</groupId>
         <artifactId>testcontainers-elasticsearch</artifactId>
-        <version>${testcontainers-elasticsearch.version}</version>
+        <version>${testcontainers.version}</version>
         <scope>test</scope>
       </dependency>
       <dependency>
         <groupId>org.testcontainers</groupId>
         <artifactId>testcontainers-postgresql</artifactId>
-        <version>${postgresql-testcontainers.version}</version>
+        <version>${testcontainers.version}</version>
         <scope>test</scope>
       </dependency>
 
