@@ -31,8 +31,8 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import com.beust.jcommander.internal.Nullable;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @ExtendWith(SpringExtension.class)
 @Import({

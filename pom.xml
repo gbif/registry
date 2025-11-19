@@ -111,7 +111,9 @@
     <!-- Third party -->
     <commons-digester.version>3.2</commons-digester.version>
     <commons-validator.version>1.7</commons-validator.version>
-    <commons-io.version>2.11.0</commons-io.version>
+    <commons-lang3.version>3.17.0</commons-lang3.version>
+    <commons-io.version>2.17.0</commons-io.version>
+    <commons-compress.version>1.27.1</commons-compress.version>
     <commons-logging.version>1.2</commons-logging.version>
     <cache2k.version>2.0.0.Final</cache2k.version>
     <elasticsearch.version>7.9.1</elasticsearch.version>
@@ -147,14 +149,13 @@
     <hadoop-core.version>2.6.0-mr1-cdh5.16.2</hadoop-core.version>
 
     <!-- Test -->
-    <junit.version>5.9.1</junit.version>
-    <mockito.version>3.3.3</mockito.version>
-    <xmlunit.version>2.6.3</xmlunit.version>
-    <postgresql-testcontainers.version>1.20.2</postgresql-testcontainers.version>
-    <testcontainers-elasticsearch.version>1.20.2</testcontainers-elasticsearch.version>
+    <junit.version>5.11.2</junit.version>
+    <mockito.version>5.8.0</mockito.version>
+    <xmlunit.version>2.9.1</xmlunit.version>
+    <testcontainers.version>2.0.2</testcontainers.version>
     <mock-javamail.version>1.9</mock-javamail.version>
-    <mybatis-spring-boot-starter-test.version>2.0.0</mybatis-spring-boot-starter-test.version>
-    <reflections.version>0.9.12</reflections.version>
+    <mybatis-spring-boot-starter-test.version>3.0.3</mybatis-spring-boot-starter-test.version>
+    <reflections.version>0.10.2</reflections.version>
 
     <!-- Configurable -->
     <datacite.api.base.url />
@@ -504,6 +505,16 @@
       </dependency>
       <dependency>
         <groupId>org.apache.commons</groupId>
+        <artifactId>commons-lang3</artifactId>
+        <version>${commons-lang3.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.commons</groupId>
+        <artifactId>commons-compress</artifactId>
+        <version>${commons-compress.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.commons</groupId>
         <artifactId>commons-digester3</artifactId>
         <version>${commons-digester.version}</version>
         <exclusions>
@@ -750,6 +761,12 @@
 
       <!-- Test dependencies -->
       <dependency>
+        <groupId>org.junit.jupiter</groupId>
+        <artifactId>junit-jupiter-api</artifactId>
+        <version>${junit.version}</version>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
         <groupId>org.mybatis.spring.boot</groupId>
         <artifactId>mybatis-spring-boot-starter-test</artifactId>
         <version>${mybatis-spring-boot-starter-test.version}</version>
@@ -787,14 +804,20 @@
       </dependency>
       <dependency>
         <groupId>org.testcontainers</groupId>
-        <artifactId>elasticsearch</artifactId>
-        <version>${testcontainers-elasticsearch.version}</version>
+        <artifactId>testcontainers</artifactId>
+        <version>${testcontainers.version}</version>
         <scope>test</scope>
       </dependency>
       <dependency>
         <groupId>org.testcontainers</groupId>
-        <artifactId>postgresql</artifactId>
-        <version>${postgresql-testcontainers.version}</version>
+        <artifactId>testcontainers-elasticsearch</artifactId>
+        <version>${testcontainers.version}</version>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.testcontainers</groupId>
+        <artifactId>testcontainers-postgresql</artifactId>
+        <version>${testcontainers.version}</version>
         <scope>test</scope>
       </dependency>
 
