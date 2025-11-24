@@ -195,7 +195,7 @@ public class DatasetEsFieldMapper implements EsFieldMapper<DatasetSearchParamete
                                                     "category.lineage^5",
                                                     "all^1"))
                                             .tieBreaker(0.2)
-                                            .minimumShouldMatch("25%")
+                                            .minimumShouldMatch("2<100% 3<75% 5<50%")
                                             .fuzziness("AUTO")
                                             .slop(100)))
                         .functions(
