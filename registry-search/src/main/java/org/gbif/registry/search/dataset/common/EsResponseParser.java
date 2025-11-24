@@ -45,7 +45,8 @@ import co.elastic.clients.elasticsearch.core.search.Hit;
 import co.elastic.clients.elasticsearch._types.aggregations.Aggregate;
 import co.elastic.clients.elasticsearch._types.aggregations.Aggregation;
 import co.elastic.clients.elasticsearch._types.aggregations.StringTermsAggregate;
-import co.elastic.clients.elasticsearch._types.aggregations.StringTermsBucket;
+import co.elastic.clients.elasticsearch._types.aggregations.LongTermsAggregate;
+import co.elastic.clients.elasticsearch._types.aggregations.DoubleTermsAggregate;
 import co.elastic.clients.elasticsearch._types.aggregations.FilterAggregate;
 
 import static org.gbif.registry.search.dataset.indexing.es.EsQueryUtils.STRING_TO_DATE;
@@ -151,18 +152,53 @@ public class EsResponseParser<T, S, P extends SearchParameter> {
       .collect(Collectors.toList());
   }
 
+  /** Simple data structure to hold bucket key and count. */
+  private static class BucketData {
+    final String key;
+    final long docCount;
+
+    BucketData(String key, long docCount) {
+      this.key = key;
+      this.docCount = docCount;
+    }
+  }
+
   /** Extract the buckets of an {@link Aggregation}. */
-  private List<StringTermsBucket> getBuckets(co.elastic.clients.elasticsearch._types.aggregations.Aggregate aggregate) {
+  private List<BucketData> getBuckets(co.elastic.clients.elasticsearch._types.aggregations.Aggregate aggregate) {
     if (aggregate.isSterms()) {
       StringTermsAggregate terms = aggregate.sterms();
-      return terms.buckets().array();
+      return terms.buckets().array().stream()
+          .map(b -> new BucketData(b.key().stringValue(), b.docCount()))
+          .collect(Collectors.toList());
+    } else if (aggregate.isLterms()) {
+      LongTermsAggregate terms = aggregate.lterms();
+      return terms.buckets().array().stream()
+          .map(b -> new BucketData(String.valueOf(b.key()), b.docCount()))
+          .collect(Collectors.toList());
+    } else if (aggregate.isDterms()) {
+      DoubleTermsAggregate terms = aggregate.dterms();
+      return terms.buckets().array().stream()
+          .map(b -> new BucketData(String.valueOf(b.key()), b.docCount()))
+          .collect(Collectors.toList());
     } else if (aggregate.isFilter()) {
       FilterAggregate filter = aggregate.filter();
       return filter.aggregations().entrySet().stream()
               .map(Entry::getValue)
-              .filter(co.elastic.clients.elasticsearch._types.aggregations.Aggregate::isSterms)
-              .flatMap(agg -> agg.sterms().buckets().array().stream())
-              .toList();
+              .flatMap(agg -> {
+                if (agg.isSterms()) {
+                  return agg.sterms().buckets().array().stream()
+                      .map(b -> new BucketData(b.key().stringValue(), b.docCount()));
+                } else if (agg.isLterms()) {
+                  return agg.lterms().buckets().array().stream()
+                      .map(b -> new BucketData(String.valueOf(b.key()), b.docCount()));
+                } else if (agg.isDterms()) {
+                  return agg.dterms().buckets().array().stream()
+                      .map(b -> new BucketData(String.valueOf(b.key()), b.docCount()));
+                } else {
+                  return java.util.stream.Stream.<BucketData>empty();
+                }
+              })
+              .collect(Collectors.toList());
     } else {
       throw new IllegalArgumentException(aggregate.getClass() + " aggregation not supported");
     }
@@ -180,7 +216,7 @@ public class EsResponseParser<T, S, P extends SearchParameter> {
                           Aggregate agg = entry.getValue();
 
                           // get buckets
-                          List<StringTermsBucket> buckets = getBuckets(agg);
+                          List<BucketData> buckets = getBuckets(agg);
 
                           // get facet of the agg
                           P facet = fieldParameterMapper.get(aggName);
@@ -193,7 +229,7 @@ public class EsResponseParser<T, S, P extends SearchParameter> {
                               buckets.stream()
                                   .skip(facetOffset)
                                   .limit(facetOffset + facetLimit)
-                                  .map(b -> new Facet.Count(b.key().stringValue(), b.docCount()))
+                                  .map(b -> new Facet.Count(b.key, b.docCount))
                                   .collect(Collectors.toList());
 
                           return new Facet<>(facet, counts);
