@@ -43,18 +43,9 @@ import lombok.SneakyThrows;
 
 public class EsManageServer implements InitializingBean, DisposableBean {
 
-  public static final ElasticsearchContainer embeddedElastic;
-
-  static {
-    embeddedElastic =
-        new ElasticsearchContainer(
-            "docker.elastic.co/elasticsearch/elasticsearch:" + getEsVersion());
-    embeddedElastic.withReuse(true).withLabel("reuse.UUID", "registry_ITs_ES_container");
-    embeddedElastic.setWaitStrategy(
-        Wait.defaultWaitStrategy().withStartupTimeout(Duration.ofSeconds(60)));
-    embeddedElastic.start();
-    restClient = buildRestClient();
-  }
+  private static volatile ElasticsearchContainer embeddedElastic;
+  private static volatile RestHighLevelClient restClient;
+  private static final Object lock = new Object();
 
   private final Resource mappingFile;
 
@@ -62,13 +53,36 @@ public class EsManageServer implements InitializingBean, DisposableBean {
 
   private final String indexName;
 
-  // needed to assert results against ES server directly
-  private static RestHighLevelClient restClient;
-
   public EsManageServer(Resource mappingFile, Resource settingsFile, String indexName) {
     this.mappingFile = mappingFile;
     this.settingsFile = settingsFile;
     this.indexName = indexName;
+  }
+
+  // Lazy initialization - only starts when actually needed (not when class is loaded)
+  private static ElasticsearchContainer getEmbeddedElastic() {
+    if (embeddedElastic == null) {
+      synchronized (lock) {
+        if (embeddedElastic == null) {
+          embeddedElastic =
+              new ElasticsearchContainer(
+                  "docker.elastic.co/elasticsearch/elasticsearch:" + getEsVersion());
+          embeddedElastic.withReuse(true).withLabel("reuse.UUID", "registry_ITs_ES_container");
+          embeddedElastic.setWaitStrategy(
+              Wait.defaultWaitStrategy().withStartupTimeout(Duration.ofSeconds(60)));
+          embeddedElastic.start();
+          restClient = buildRestClient();
+        }
+      }
+    }
+    return embeddedElastic;
+  }
+
+  private static RestHighLevelClient getRestClientInternal() {
+    if (restClient == null) {
+      getEmbeddedElastic(); // This will initialize restClient
+    }
+    return restClient;
   }
 
   @Override
@@ -84,11 +98,11 @@ public class EsManageServer implements InitializingBean, DisposableBean {
   }
 
   public String getHttpHostAddress() {
-    return embeddedElastic.getHttpHostAddress();
+    return getEmbeddedElastic().getHttpHostAddress();
   }
 
   public InetSocketAddress getTcpPort() {
-    return embeddedElastic.getTcpHost();
+    return getEmbeddedElastic().getTcpHost();
   }
 
   @SneakyThrows
@@ -99,15 +113,6 @@ public class EsManageServer implements InitializingBean, DisposableBean {
   }
 
   public void start() throws Exception {
-    //    embeddedElastic =
-    //        new ElasticsearchContainer(
-    //            "docker.elastic.co/elasticsearch/elasticsearch:" + getEsVersion());
-    //    embeddedElastic.withReuse(true).withLabel("reuse.UUID", "registry_ITs_ES_container");
-    //    embeddedElastic.setWaitStrategy(
-    //        Wait.defaultWaitStrategy().withStartupTimeout(Duration.ofSeconds(60)));
-    //    embeddedElastic.start();
-    //    restClient = buildRestClient();
-
     createIndex();
   }
 
@@ -120,7 +125,7 @@ public class EsManageServer implements InitializingBean, DisposableBean {
   }
 
   public boolean indexExists() throws IOException {
-    return restClient.indices().exists(new GetIndexRequest(indexName), RequestOptions.DEFAULT);
+    return getRestClientInternal().indices().exists(new GetIndexRequest(indexName), RequestOptions.DEFAULT);
   }
 
   public void createIndex() throws IOException {
@@ -128,36 +133,36 @@ public class EsManageServer implements InitializingBean, DisposableBean {
       CreateIndexRequest createIndexRequest = new CreateIndexRequest(indexName);
       createIndexRequest.settings(asString(settingsFile), XContentType.JSON);
       createIndexRequest.mapping(asString(mappingFile), XContentType.JSON);
-      restClient.indices().create(createIndexRequest, RequestOptions.DEFAULT);
+      getRestClientInternal().indices().create(createIndexRequest, RequestOptions.DEFAULT);
     }
   }
 
   public void deleteIndex() throws IOException {
     DeleteIndexRequest deleteIndexRequest = new DeleteIndexRequest();
     deleteIndexRequest.indices(indexName);
-    restClient.indices().delete(deleteIndexRequest, RequestOptions.DEFAULT);
+    getRestClientInternal().indices().delete(deleteIndexRequest, RequestOptions.DEFAULT);
   }
 
   public RestHighLevelClient getRestClient() {
-    return restClient;
+    return getRestClientInternal();
   }
 
   public String getServerAddress() {
-    return "http://localhost:" + embeddedElastic.getMappedPort(9200);
+    return "http://localhost:" + getEmbeddedElastic().getMappedPort(9200);
   }
 
   public void refresh() {
     try {
       RefreshRequest refreshRequest = new RefreshRequest();
       refreshRequest.indices(indexName);
-      restClient.indices().refresh(refreshRequest, RequestOptions.DEFAULT);
+      getRestClientInternal().indices().refresh(refreshRequest, RequestOptions.DEFAULT);
     } catch (IOException ex) {
       throw new IllegalStateException(ex);
     }
   }
 
   private static RestHighLevelClient buildRestClient() {
-    HttpHost host = new HttpHost("localhost", embeddedElastic.getMappedPort(9200));
+    HttpHost host = new HttpHost("localhost", getEmbeddedElastic().getMappedPort(9200));
     return new RestHighLevelClient(RestClient.builder(host));
   }
 
