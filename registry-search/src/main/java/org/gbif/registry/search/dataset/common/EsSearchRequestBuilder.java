@@ -87,7 +87,7 @@ public class EsSearchRequestBuilder<P extends SearchParameter> {
     return Highlight.of(h -> h
       .preTags(PRE_HL_TAG)
       .postTags(POST_HL_TAG)
-      .encoder(HighlighterEncoder.valueOf("html"))
+      .encoder(HighlighterEncoder.Html)
       .type("unified")
       .requireFieldMatch(false)
       .fields(fields)
