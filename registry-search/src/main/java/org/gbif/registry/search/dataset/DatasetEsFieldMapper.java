@@ -196,6 +196,7 @@ public class DatasetEsFieldMapper implements EsFieldMapper<DatasetSearchParamete
                                                     "all^1"))
                                             .tieBreaker(0.2)
                                             .minimumShouldMatch("25%")
+                                            .fuzziness("AUTO")
                                             .slop(100)))
                         .functions(
                             fns ->
