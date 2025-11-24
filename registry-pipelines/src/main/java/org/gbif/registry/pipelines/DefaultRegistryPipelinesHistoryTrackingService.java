@@ -13,6 +13,32 @@
  */
 package org.gbif.registry.pipelines;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Ordering;
+import freemarker.template.TemplateException;
+import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.EnumMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.function.Consumer;
+import javax.annotation.Nullable;
+import org.apache.commons.lang3.StringUtils;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.pipelines.*;
@@ -45,28 +71,6 @@ import org.gbif.registry.pipelines.issues.GithubApiClient.IssueComment;
 import org.gbif.registry.pipelines.issues.GithubApiClient.IssueResult;
 import org.gbif.registry.pipelines.issues.IssueCreator;
 import org.gbif.registry.pipelines.util.PredicateUtils;
-
-import java.io.IOException;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.EnumMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.function.Consumer;
-
-import javax.annotation.Nullable;
-
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -77,15 +81,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
-
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Ordering;
-
-import freemarker.template.TemplateException;
 
 /** Service that allows to re-run pipeline steps on a specific attempt. */
 @Service
@@ -461,7 +456,6 @@ public class DefaultRegistryPipelinesHistoryTrackingService
       case FRAGMENTER:
         return createInterpretedMessage(prefix, jsonMessage, stepName);
       case HDFS_VIEW:
-      case EVENTS_HDFS_VIEW:
         return createInterpretedMessage(prefix, jsonMessage, stepName, interpretTypes);
       case VERBATIM_TO_INTERPRETED:
         return createVerbatimMessage(prefix, jsonMessage, interpretTypes);
@@ -474,6 +468,8 @@ public class DefaultRegistryPipelinesHistoryTrackingService
       case EVENTS_VERBATIM_TO_INTERPRETED:
         return deserializeMessage(jsonMessage, PipelinesEventsMessage.class);
       case EVENTS_INTERPRETED_TO_INDEX:
+      case EVENTS_HDFS_VIEW:
+        return createEventInterpretedMessage(prefix, jsonMessage, stepName, interpretTypes);
       default:
         return Optional.empty();
     }
@@ -569,6 +565,23 @@ public class DefaultRegistryPipelinesHistoryTrackingService
   private Optional<PipelineBasedMessage> createInterpretedMessage(
       String prefix, String jsonMessage, StepType stepType) {
     return createInterpretedMessage(prefix, jsonMessage, stepType, null);
+  }
+
+  private Optional<PipelineBasedMessage> createEventInterpretedMessage(
+    String prefix, String jsonMessage, StepType stepType, Set<String> interpretTypes) {
+    PipelinesEventsInterpretedMessage message =
+      deserializeMessage(jsonMessage, PipelinesEventsInterpretedMessage.class).orElse(null);
+    if (message == null) {
+      return Optional.empty();
+    }
+    Optional.ofNullable(prefix).ifPresent(message::setResetPrefix);
+    message.setPipelineSteps(Set.of(stepType.name()));
+
+    if (interpretTypes != null && !interpretTypes.isEmpty()) {
+      message.setInterpretTypes(interpretTypes);
+    }
+
+    return Optional.of(message);
   }
 
   @Override
