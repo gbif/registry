@@ -143,6 +143,7 @@
     <jaxb-api.version>2.3.1</jaxb-api.version>
     <swagger-annotations.version>2.2.3</swagger-annotations.version>
     <resilience4j.version>1.7.0</resilience4j.version>
+    <jackson.version>2.17.1</jackson.version>
 
     <!-- Hadoop -->
     <hadoop.version>2.6.0-cdh5.16.2</hadoop.version>
@@ -751,6 +752,29 @@
         <groupId>javax.xml.bind</groupId>
         <artifactId>jaxb-api</artifactId>
         <version>${jaxb-api.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>com.fasterxml.jackson.module</groupId>
+        <artifactId>jackson-module-jakarta-xmlbind-annotations</artifactId>
+        <version>${jackson.version}</version>
+      </dependency>
+
+      <!-- Jackson dependencies - override Spring Boot's version -->
+      <dependency>
+        <groupId>com.fasterxml.jackson.core</groupId>
+        <artifactId>jackson-annotations</artifactId>
+        <version>${jackson.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.fasterxml.jackson.core</groupId>
+        <artifactId>jackson-core</artifactId>
+        <version>${jackson.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.fasterxml.jackson.core</groupId>
+        <artifactId>jackson-databind</artifactId>
+        <version>${jackson.version}</version>
       </dependency>
 
       <dependency>
