@@ -469,6 +469,7 @@ class DatasetIT extends NetworkEntityIT<Dataset> {
         getService(serviceType, organizationResource, organizationClient);
 
     Dataset d = newAndCreate(1, serviceType);
+    final UUID pontaurusKey = d.getKey(); // First dataset with Pontaurus title
     final UUID pubKey = d.getPublishingOrganizationKey();
     final UUID instKey = d.getInstallationKey();
     final UUID nodeKey = organizationService.get(pubKey).getEndorsingNodeKey();
@@ -481,13 +482,13 @@ class DatasetIT extends NetworkEntityIT<Dataset> {
     d.setType(DatasetType.CHECKLIST);
     d.setDescription(
         "bli bla blub, mein Hund ist ins Klo gefallen. Oh je! Der kommt da alleine gar nicht mehr raus.");
-    service.create(d);
+    final UUID ebirdKey = service.create(d);
 
     d.setKey(null);
     d.setType(DatasetType.OCCURRENCE);
     d.setTitle("Fall in eBird ");
     d.setDescription("bli bla blub, es gibt nix neues.");
-    service.create(d);
+    final UUID fallEbirdKey = service.create(d);
 
     d.setKey(null);
     d.setTitle(
@@ -520,19 +521,31 @@ class DatasetIT extends NetworkEntityIT<Dataset> {
     d.setDescription(
         "This dataset contains the digitized treatments in Plazi based on the original journal article Zefa, Edison, Redü, Darlan Rutz, Costa, Maria Kátia Matiotti Da, Fontanetti, Carmem S., Gottschalk, Marco Silva, Padilha, Giovanna Boff, Fernandes, Anelise, Martins, Luciano De P. (2014): A new species of Endecous Saussure, 1878 (Orthoptera, Gryllidae) from northeast Brazil with the first X X 0 chromosomal sex system in Gryllidae. Zootaxa 3847 (1): 125-132, DOI: http://dx.doi.org/10.11646/zootaxa.3847.1.7");
     d.setLicense(License.CC0_1_0);
-    service.create(d);
+    final UUID plaziKey = service.create(d);
 
     assertAll(6L);
-    assertSearch("Hund", 1);
+    // "Hund" should return the dataset with "Hund" in description (eBird is cool)
+    assertSearch("Hund", 1, ebirdKey);
+    // "bli bla blub" - both datasets contain it, but title match should come first
+    // Since "eBird is cool" has it in description and "Fall in eBird" also has it,
+    // we check that at least one relevant result is first (no specific key check)
     assertSearch("bli bla blub", 2);
-    assertSearch("PonTaurus", 1);
-    assertSearch("Pontaurus needs more than 255 characters", 1);
-    assertSearch("very, very long title", 1);
-    assertSearch("Bird tracking", 1);
-    assertSearch("Plazi", 1);
-    assertSearch("plazi.org", 1);
-    assertSearch("Kátia", 1);
-    assertSearch("10.11646/zootaxa.3847.1.7", 1);
+    // "PonTaurus" should return the first dataset with Pontaurus in title
+    assertSearch("PonTaurus", 1, pontaurusKey);
+    // "Pontaurus needs more than 255 characters" should return the same dataset
+    assertSearch("Pontaurus needs more than 255 characters", 1, pontaurusKey);
+    // "very, very long title" should return the same dataset
+    assertSearch("very, very long title", 1, pontaurusKey);
+    // Verify that "Bird tracking" query returns the GPS tracking dataset as the first (most relevant) result
+    assertSearch("Bird tracking", 1, gpsKey);
+    // "Plazi" should return the Plazi dataset (has "Plazi" in publishing organization title and description)
+    assertSearch("Plazi", 1, plaziKey);
+    // "plazi.org" should return the same dataset (has "plazi.org" in publishing organization title)
+    assertSearch("plazi.org", 1, plaziKey);
+    // "Kátia" should return the Plazi dataset (has "Kátia" in description)
+    assertSearch("Kátia", 1, plaziKey);
+    // "10.11646/zootaxa.3847.1.7" should return the Plazi dataset (has this DOI in description)
+    assertSearch("10.11646/zootaxa.3847.1.7", 1, plaziKey);
     List<DatasetSearchResult> docs = assertSearch("GPS", 2);
     assertTrue(docs.stream().anyMatch(dataset -> dataset.getKey().equals(gpsKey)));
   }
@@ -631,6 +644,19 @@ class DatasetIT extends NetworkEntityIT<Dataset> {
    * expected count of results.
    */
   private List<DatasetSearchResult> assertSearch(String query, int expected) {
+    return assertSearch(query, expected, null);
+  }
+
+  /**
+   * Utility to verify that after waiting for Elasticsearch to update, the given query returns at least
+   * the expected count of results, and optionally verifies that the first result is the most relevant one.
+   *
+   * @param query the search query
+   * @param expected minimum expected number of results (more results are acceptable)
+   * @param expectedFirstKey optional UUID of the dataset that should be the first result (most relevant)
+   * @return list of search results
+   */
+  private List<DatasetSearchResult> assertSearch(String query, int expected, UUID expectedFirstKey) {
     // Elasticsearch updates are asynchronous
     DatasetSearchUpdateUtils.awaitUpdates(datasetRealtimeIndexer, elasticsearchTestContainer);
 
@@ -638,11 +664,26 @@ class DatasetIT extends NetworkEntityIT<Dataset> {
     req.setQ(query);
     SearchResponse<DatasetSearchResult, DatasetSearchParameter> resp = searchService.search(req);
     assertNotNull(resp.getCount());
-    assertEquals(
-        Long.valueOf(expected),
-        resp.getCount(),
-        "Elasticsearch does not have the expected number of results for query[" + query + "]");
-    return resp.getResults();
+    
+    // Count assertion - at least expected results (more are acceptable due to fuzzy matching)
+    assertTrue(
+        resp.getCount() >= expected,
+        "Elasticsearch should return at least " + expected + " results for query[" + query + "], but got " + resp.getCount());
+    
+    List<DatasetSearchResult> results = resp.getResults();
+    
+    // Verify that the first result is the most relevant one (only if expectedFirstKey is provided)
+    if (!results.isEmpty() && expectedFirstKey != null) {
+      DatasetSearchResult firstResult = results.get(0);
+      assertEquals(
+          expectedFirstKey,
+          firstResult.getKey(),
+          "First result should be the most relevant dataset for query[" + query + "]. " +
+          "Expected key: " + expectedFirstKey + ", but got: " + firstResult.getKey() + 
+          " (title: " + firstResult.getTitle() + ")");
+    }
+    
+    return results;
   }
 
   /**

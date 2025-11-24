@@ -149,10 +149,6 @@ public class EsSearchRequestBuilder<P extends SearchParameter> {
     return builder.build();
   }
 
-  public Optional<Query> buildQueryNode(FacetedSearchRequest<P> searchRequest) {
-    return buildQuery(searchRequest.getParameters(), searchRequest.getQ());
-  }
-
   public SearchRequest buildAutocompleteQuery(
       org.gbif.api.model.common.search.SearchRequest<P> searchRequest, P parameter, String index) {
     Optional<Query> filterQuery = buildQuery(searchRequest.getParameters(), null);
@@ -204,36 +200,6 @@ public class EsSearchRequestBuilder<P extends SearchParameter> {
     builder.size(searchRequest.getLimit());
     builder.from(Math.max(0, (int) searchRequest.getOffset()));
     builder.query(mainQuery);
-
-    // source filtering
-    String[] includes = esFieldMapper.includeSuggestFields(parameter);
-    String[] excludes = esFieldMapper.excludeFields();
-    if (includes != null || excludes != null) {
-      builder.source(s -> s.filter(f -> f.includes(Arrays.asList(includes != null ? includes : new String[0]))
-                                        .excludes(Arrays.asList(excludes != null ? excludes : new String[0]))));
-    }
-
-    return builder.build();
-  }
-
-  public SearchRequest buildSuggestQuery(String prefix, P parameter, Integer limit, String index) {
-    String esField = esFieldMapper.get(parameter);
-    int suggestLimit = limit != null ? limit : SearchConstants.DEFAULT_SUGGEST_LIMIT;
-
-    SearchRequest.Builder builder = new SearchRequest.Builder();
-    builder.index(index);
-
-    // create suggest query
-    builder.suggest(s -> s
-      .suggesters(esField, ss -> ss
-        .prefix(prefix)
-        .completion(c -> c
-          .field(esField + ".suggest")
-          .size(suggestLimit)
-          .skipDuplicates(true)
-        )
-      )
-    );
 
     // source filtering
     String[] includes = esFieldMapper.includeSuggestFields(parameter);

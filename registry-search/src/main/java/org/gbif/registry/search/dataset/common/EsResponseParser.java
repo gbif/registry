@@ -15,9 +15,6 @@ package org.gbif.registry.search.dataset.common;
 
 
 import lombok.SneakyThrows;
-import org.gbif.registry.search.dataset.indexing.ws.JacksonObjectMapper;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.core.JsonProcessingException;
 
 import org.gbif.api.model.common.search.Facet;
@@ -25,12 +22,8 @@ import org.gbif.api.model.common.search.FacetedSearchRequest;
 import org.gbif.api.model.common.search.SearchParameter;
 import org.gbif.api.model.common.search.SearchRequest;
 
-import java.util.Collections;
-import java.util.Date;
 import java.util.List;
-import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -39,8 +32,6 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import co.elastic.clients.elasticsearch.core.search.CompletionSuggestOption;
-import co.elastic.clients.elasticsearch.core.search.Suggestion;
 import co.elastic.clients.elasticsearch.core.search.Hit;
 import co.elastic.clients.elasticsearch._types.aggregations.Aggregate;
 import co.elastic.clients.elasticsearch._types.aggregations.Aggregation;
@@ -49,7 +40,6 @@ import co.elastic.clients.elasticsearch._types.aggregations.LongTermsAggregate;
 import co.elastic.clients.elasticsearch._types.aggregations.DoubleTermsAggregate;
 import co.elastic.clients.elasticsearch._types.aggregations.FilterAggregate;
 
-import static org.gbif.registry.search.dataset.indexing.es.EsQueryUtils.STRING_TO_DATE;
 import static org.gbif.registry.search.dataset.indexing.es.EsQueryUtils.extractFacetLimit;
 import static org.gbif.registry.search.dataset.indexing.es.EsQueryUtils.extractFacetOffset;
 
@@ -123,33 +113,6 @@ public class EsResponseParser<T, S, P extends SearchParameter> {
     }
 
     return response;
-  }
-
-  public List<S> buildSuggestResponse(
-      co.elastic.clients.elasticsearch.core.SearchResponse<com.fasterxml.jackson.databind.node.ObjectNode> esResponse, P parameter) {
-
-    String fieldName = fieldParameterMapper.get(parameter);
-
-    List<Suggestion<com.fasterxml.jackson.databind.node.ObjectNode>> suggesters = esResponse.suggest().get(fieldName);
-
-    if (suggesters == null || suggesters.isEmpty()) {
-      return Collections.emptyList();
-    }
-
-    return suggesters.stream()
-      .filter(Suggestion::isCompletion)
-      .flatMap(s -> s.completion().options().stream())
-      .map(CompletionSuggestOption::source)
-      .filter(Objects::nonNull)
-      .map(source -> {
-        Hit<com.fasterxml.jackson.databind.node.ObjectNode> hit = Hit.of(h -> h.source(source));
-        try {
-          return searchResultConverter.toSearchSuggestResult(hit);
-        } catch (JsonProcessingException e) {
-          throw new RuntimeException(e);
-        }
-      })
-      .collect(Collectors.toList());
   }
 
   /** Simple data structure to hold bucket key and count. */
@@ -247,88 +210,5 @@ public class EsResponseParser<T, S, P extends SearchParameter> {
 
     return Optional.of(
         esResponse.hits().hits().stream().map(mapper).collect(Collectors.toList()));
-  }
-
-  private static Optional<String> getStringValue(Hit<com.fasterxml.jackson.databind.node.ObjectNode> hit, String esField) {
-    return getValue(hit, esField, Function.identity());
-  }
-
-  private static Optional<Integer> getIntValue(Hit<com.fasterxml.jackson.databind.node.ObjectNode> hit, String esField) {
-    return getValue(hit, esField, Integer::valueOf);
-  }
-
-  private static Optional<Double> getDoubleValue(Hit<com.fasterxml.jackson.databind.node.ObjectNode> hit, String esField) {
-    return getValue(hit, esField, Double::valueOf);
-  }
-
-  private static Optional<Date> getDateValue(Hit<com.fasterxml.jackson.databind.node.ObjectNode> hit, String esField) {
-    return getValue(hit, esField, STRING_TO_DATE);
-  }
-
-  private static Optional<List<String>> getListValue(Hit<com.fasterxml.jackson.databind.node.ObjectNode> hit, String esField) {
-    return Optional.ofNullable(getSourceAsMap(hit).get(esField))
-        .map(v -> (List<String>) v)
-        .filter(v -> !v.isEmpty());
-  }
-
-  private static Optional<List<Map<String, Object>>> getObjectsListValue(
-      Hit<com.fasterxml.jackson.databind.node.ObjectNode> hit, String esField) {
-    return Optional.ofNullable(getSourceAsMap(hit).get(esField))
-        .map(v -> (List<Map<String, Object>>) v)
-        .filter(v -> !v.isEmpty());
-  }
-
-  private static <T> Optional<T> getValue(
-      Hit<com.fasterxml.jackson.databind.node.ObjectNode> hit, String esField, Function<String, T> mapper) {
-    String fieldName = esField;
-    Map<String, Object> fields = getSourceAsMap(hit);
-    if (IS_NESTED.test(esField)) {
-      // take all paths till the field name
-      String[] paths = esField.split("\\.");
-      for (int i = 0; i < paths.length - 1 && fields.containsKey(paths[i]); i++) {
-        // update the fields with the current path
-        fields = (Map<String, Object>) fields.get(paths[i]);
-      }
-      // the last path is the field name
-      fieldName = paths[paths.length - 1];
-    }
-
-    return extractValue(fields, fieldName, mapper);
-  }
-
-  private static Map<String, Object> getSourceAsMap(Hit<com.fasterxml.jackson.databind.node.ObjectNode> hit) {
-    try {
-      com.fasterxml.jackson.databind.node.ObjectNode source = hit.source();
-      if (source == null) {
-        return new java.util.HashMap<>();
-      }
-
-      ObjectMapper mapper = JacksonObjectMapper.get();
-      TypeReference<Map<String, Object>> typeRef = new TypeReference<Map<String, Object>>() {};
-      return mapper.convertValue(source, typeRef);
-    } catch (Exception e) {
-      LOG.error("Error parsing hit source as JSON: {}", e.getMessage(), e);
-      return new java.util.HashMap<>();
-    }
-  }
-
-  private static <T> Optional<T> extractValue(
-      Map<String, Object> fields, String fieldName, Function<String, T> mapper) {
-    return Optional.ofNullable(fields.get(fieldName))
-        .map(String::valueOf)
-        .filter(v -> !v.isEmpty())
-        .map(
-            v -> {
-              try {
-                return mapper.apply(v);
-              } catch (Exception ex) {
-                LOG.error("Error extracting field {} with value {}", fieldName, v);
-                return null;
-              }
-            });
-  }
-
-  private static Optional<String> extractStringValue(Map<String, Object> fields, String fieldName) {
-    return extractValue(fields, fieldName, Function.identity());
   }
 }
