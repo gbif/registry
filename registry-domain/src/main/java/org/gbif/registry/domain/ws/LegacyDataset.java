@@ -865,6 +865,7 @@ public class LegacyDataset extends Dataset implements LegacyEntity {
     dataset.setType(getType());
     dataset.setSubtype(getSubtype());
     dataset.setDoi(datasetDoi);
+    dataset.setCategory(getCategory());
     return dataset;
   }
 
