@@ -58,6 +58,7 @@ public class TestCaseDatabaseInitializer implements BeforeEachCallback {
           "node_tag",
           "node_comment",
           "occurrence_download",
+          "event_download",
           "organization_contact",
           "organization_endpoint",
           "organization_machine_tag",

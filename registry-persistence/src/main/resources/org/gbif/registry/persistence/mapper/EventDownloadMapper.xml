@@ -2,13 +2,82 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="org.gbif.registry.persistence.mapper.EventDownloadMapper">
 
-  <resultMap id="EVENT_DOWNLOAD_MAP" type="org.gbif.api.model.occurrence.Download"
-             extends="org.gbif.registry.persistence.mapper.CommonDownload.OCCURRENCE_DOWNLOAD_MAP_BASIC">
+  <!-- Maps an event download and handles the different types of downloads -->
+  <resultMap id="EVENT_DOWNLOAD_MAP_BASIC" type="org.gbif.api.model.occurrence.Download" autoMapping="false">
+    <id property="key" column="key"/>
+    <result property="doi" column="doi" />
+    <result property="license" column="license"/>
+    <result property="status" column="status"/>
+    <result property="downloadLink" column="download_link"/>
+    <result property="size" column="size"/>
+    <result property="totalRecords" column="total_records"/>
+    <result property="created" column="created"/>
+    <result property="modified" column="modified"/>
+    <result property="eraseAfter" column="erase_after"/>
+    <result property="erasureNotification" column="erasure_notification"/>
+    <result property="source" column="source"/>
+
+    <association property="request" javaType="org.gbif.api.model.occurrence.DownloadRequest">
+      <result property="notificationAddressesAsString" column="notification_addresses"/>
+      <result property="sendNotification" column="send_notification"/>
+      <result property="creator" column="created_by" />
+      <result property="format" column="format"/>
+      <result property="type" column="type"/>
+      <result property="machineDescription" column="machine_description" typeHandler="org.gbif.registry.persistence.mapper.handler.MachineDescriptorTypeHandler"/>
+      <result property="description" column="description" />
+      <result property="checklistKey" column="checklist_key"/>
+      <discriminator javaType="string" column="format">
+        <case value="DWCA" resultType="org.gbif.api.model.occurrence.PredicateDownloadRequest">
+          <result property="predicate" column="filter" typeHandler="org.gbif.registry.persistence.mapper.handler.EventPredicateTypeHandler" />
+          <result property="verbatimExtensions" column="verbatim_extensions" typeHandler="ExtensionArrayTypeHandler"/>
+          <result property="interpretedExtensions" column="interpreted_extensions" typeHandler="ExtensionArrayTypeHandler"/>
+        </case>
+        <case value="SIMPLE_CSV" resultType="org.gbif.api.model.occurrence.PredicateDownloadRequest">
+          <result property="predicate" column="filter" typeHandler="org.gbif.registry.persistence.mapper.handler.EventPredicateTypeHandler" />
+          <result property="verbatimExtensions" column="verbatim_extensions" typeHandler="ExtensionArrayTypeHandler"/>
+          <result property="interpretedExtensions" column="interpreted_extensions" typeHandler="ExtensionArrayTypeHandler"/>
+        </case>
+        <case value="SIMPLE_AVRO" resultType="org.gbif.api.model.occurrence.PredicateDownloadRequest">
+          <result property="predicate" column="filter" typeHandler="org.gbif.registry.persistence.mapper.handler.EventPredicateTypeHandler" />
+          <result property="verbatimExtensions" column="verbatim_extensions" typeHandler="ExtensionArrayTypeHandler"/>
+          <result property="interpretedExtensions" column="interpreted_extensions" typeHandler="ExtensionArrayTypeHandler"/>
+        </case>
+        <case value="SIMPLE_PARQUET" resultType="org.gbif.api.model.occurrence.PredicateDownloadRequest">
+          <result property="predicate" column="filter" typeHandler="org.gbif.registry.persistence.mapper.handler.EventPredicateTypeHandler" />
+          <result property="verbatimExtensions" column="verbatim_extensions" typeHandler="ExtensionArrayTypeHandler"/>
+          <result property="interpretedExtensions" column="interpreted_extensions" typeHandler="ExtensionArrayTypeHandler"/>
+        </case>
+        <case value="SIMPLE_WITH_VERBATIM_AVRO" resultType="org.gbif.api.model.occurrence.PredicateDownloadRequest">
+          <result property="predicate" column="filter" typeHandler="org.gbif.registry.persistence.mapper.handler.EventPredicateTypeHandler" />
+          <result property="verbatimExtensions" column="verbatim_extensions" typeHandler="ExtensionArrayTypeHandler"/>
+          <result property="interpretedExtensions" column="interpreted_extensions" typeHandler="ExtensionArrayTypeHandler"/>
+        </case>
+        <case value="SPECIES_LIST" resultType="org.gbif.api.model.occurrence.PredicateDownloadRequest">
+          <result property="predicate" column="filter" typeHandler="org.gbif.registry.persistence.mapper.handler.EventPredicateTypeHandler" />
+          <result property="verbatimExtensions" column="verbatim_extensions" typeHandler="ExtensionArrayTypeHandler"/>
+          <result property="interpretedExtensions" column="interpreted_extensions" typeHandler="ExtensionArrayTypeHandler"/>
+        </case>
+        <case value="MAP_OF_LIFE" resultType="org.gbif.api.model.occurrence.PredicateDownloadRequest">
+          <result property="predicate" column="filter" typeHandler="org.gbif.registry.persistence.mapper.handler.EventPredicateTypeHandler" />
+          <result property="verbatimExtensions" column="verbatim_extensions" typeHandler="ExtensionArrayTypeHandler"/>
+        </case>
+        <case value="BIONOMIA" resultType="org.gbif.api.model.occurrence.PredicateDownloadRequest">
+          <result property="predicate" column="filter" typeHandler="org.gbif.registry.persistence.mapper.handler.EventPredicateTypeHandler" />
+          <result property="verbatimExtensions" column="verbatim_extensions" typeHandler="ExtensionArrayTypeHandler"/>
+          <result property="interpretedExtensions" column="interpreted_extensions" typeHandler="ExtensionArrayTypeHandler"/>
+        </case>
+        <case value="SQL_TSV_ZIP" resultType="org.gbif.api.model.occurrence.SqlDownloadRequest">
+          <result property="sql" column="filter" />
+        </case>
+      </discriminator>
+    </association>
+  </resultMap>
+
+  <resultMap id="EVENT_DOWNLOAD_MAP" type="org.gbif.api.model.occurrence.Download" extends="EVENT_DOWNLOAD_MAP_BASIC">
     <association property="numberDatasets" column="key" select="COUNT_DATASETS" fetchType="eager"/>
   </resultMap>
 
-  <resultMap id="EVENT_DOWNLOAD_WITH_COUNTS_MAP" type="org.gbif.api.model.occurrence.Download"
-             extends="org.gbif.registry.persistence.mapper.CommonDownload.OCCURRENCE_DOWNLOAD_MAP_BASIC">
+  <resultMap id="EVENT_DOWNLOAD_WITH_COUNTS_MAP" type="org.gbif.api.model.occurrence.Download" extends="EVENT_DOWNLOAD_MAP_BASIC">
     <association property="numberDatasets" column="key" select="COUNT_DATASETS" fetchType="eager"/>
     <association property="numberOrganizations" column="key" select="COUNT_ORGANIZATIONS" fetchType="eager"/>
     <association property="numberPublishingCountries" column="key" select="COUNT_PUBLISHING_COUNTRIES" fetchType="eager"/>
@@ -48,9 +117,44 @@
     WHERE doi = #{doi,jdbcType=VARCHAR}
   </select>
 
+  <sql id="EVENT_DOWNLOAD_FIELD_TYPES">
+    #{key,jdbcType=VARCHAR},
+    #{doi,jdbcType=VARCHAR},
+    #{license,jdbcType=OTHER},
+    <choose>
+      <when test="request.format.name().equals('SQL_TSV_ZIP')"> #{request.sql,jdbcType=VARCHAR},</when>
+      <otherwise>#{request.predicate,jdbcType=VARCHAR,typeHandler=org.gbif.registry.persistence.mapper.handler.EventPredicateTypeHandler},</otherwise>
+    </choose>
+    #{status,jdbcType=OTHER},
+    #{downloadLink,jdbcType=VARCHAR},
+    #{size,jdbcType=BIGINT},
+    #{totalRecords,jdbcType=INTEGER},
+    #{request.notificationAddressesAsString,jdbcType=VARCHAR},
+    #{request.creator,jdbcType=VARCHAR},
+    #{request.sendNotification,jdbcType=BOOLEAN},
+    #{request.format,jdbcType=OTHER},
+    now(), <!-- created -->
+    now(), <!-- modified -->
+    #{eraseAfter,jdbcType=TIMESTAMP},
+    #{erasureNotification,jdbcType=TIMESTAMP},
+    #{request.type,jdbcType=OTHER},
+    <choose>
+      <when test="request.format.name().equals('SQL_TSV_ZIP')">NULL,</when>
+      <otherwise>#{request.verbatimExtensions,jdbcType=ARRAY,typeHandler=ExtensionArrayTypeHandler},</otherwise>
+    </choose>
+    <choose>
+      <when test="request.format.name().equals('SQL_TSV_ZIP')">NULL,</when>
+      <otherwise>#{request.interpretedExtensions,jdbcType=ARRAY,typeHandler=ExtensionArrayTypeHandler},</otherwise>
+    </choose>
+    #{source,jdbcType=VARCHAR},
+    #{request.description, jdbcType=VARCHAR},
+    #{request.machineDescription,jdbcType=OTHER,typeHandler=org.gbif.registry.persistence.mapper.handler.MachineDescriptorTypeHandler}::jsonb,
+    #{request.checklistKey, jdbcType=VARCHAR}
+  </sql>
+
   <insert id="create" parameterType="org.gbif.api.model.occurrence.Download">
     INSERT INTO event_download(<include refid="org.gbif.registry.persistence.mapper.CommonDownload.OCCURRENCE_DOWNLOAD_FIELDS"/>)
-    VALUES(<include refid="org.gbif.registry.persistence.mapper.CommonDownload.OCCURRENCE_DOWNLOAD_FIELD_TYPES"/>)
+    VALUES(<include refid="EVENT_DOWNLOAD_FIELD_TYPES"/>)
   </insert>
 
   <update id="update" parameterType="org.gbif.api.model.occurrence.Download">
@@ -78,7 +182,7 @@
   </select>
 
   <select id="listByUserLightweight" resultType="org.gbif.api.model.occurrence.Download"
-          resultMap="org.gbif.registry.persistence.mapper.CommonDownload.OCCURRENCE_DOWNLOAD_MAP_BASIC">
+          resultMap="EVENT_DOWNLOAD_MAP_BASIC">
     <bind name="downloadTable" value="'event'"/>
     <include refid="org.gbif.registry.persistence.mapper.CommonDownload.LIST_BY_USER_LIGHTWEIGHT_QUERY"/>
   </select>

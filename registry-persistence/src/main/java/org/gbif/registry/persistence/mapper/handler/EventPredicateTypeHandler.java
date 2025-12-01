@@ -13,33 +13,41 @@
  */
 package org.gbif.registry.persistence.mapper.handler;
 
-import org.gbif.api.model.occurrence.search.OccurrenceSearchParameter;
-import org.gbif.api.model.predicate.Predicate;
-
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.module.SimpleModule;
+import com.google.common.base.Strings;
 import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
-
 import org.apache.ibatis.type.JdbcType;
 import org.apache.ibatis.type.TypeHandler;
-
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.module.SimpleModule;
-import com.google.common.base.Strings;
+import org.gbif.api.model.common.search.SearchParameter;
+import org.gbif.api.model.event.search.EventSearchParameter;
+import org.gbif.api.model.predicate.Predicate;
 
 /** Serializes/deserializes {@link Predicate} objects into/from a JSON string. */
-public class PredicateTypeHandler implements TypeHandler<Predicate> {
+public class EventPredicateTypeHandler implements TypeHandler<Predicate> {
 
   private final ObjectMapper objectMapper =
       new ObjectMapper()
-        .registerModule(new SimpleModule()
-          .addKeyDeserializer(OccurrenceSearchParameter.class, new OccurrenceSearchParameter.OccurrenceSearchParameterKeyDeserializer())
-          .addDeserializer(OccurrenceSearchParameter.class, new OccurrenceSearchParameter.OccurrenceSearchParameterDeserializer())
-        )
-        .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+          .registerModule(
+              new SimpleModule()
+                  .addKeyDeserializer(
+                      SearchParameter.class,
+                      new EventSearchParameter.EventSearchParameterKeyDeserializer())
+                  .addDeserializer(
+                      SearchParameter.class,
+                      new EventSearchParameter.EventSearchParameterDeserializer())
+                  .addKeyDeserializer(
+                      EventSearchParameter.class,
+                      new EventSearchParameter.EventSearchParameterKeyDeserializer())
+                  .addDeserializer(
+                      EventSearchParameter.class,
+                      new EventSearchParameter.EventSearchParameterDeserializer()))
+          .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
   @Override
   public Predicate getResult(CallableStatement cs, int columnIndex) throws SQLException {
