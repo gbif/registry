@@ -163,7 +163,7 @@ public class OccurrenceDownloadIT extends BaseItTest {
     Download download = getTestInstanceDownload();
     download.setRequest(
         new PredicateDownloadRequest(
-            new EqualsPredicate(OccurrenceSearchParameter.TAXON_KEY, "212", false),
+            new EqualsPredicate<>(OccurrenceSearchParameter.TAXON_KEY, "212", false),
             TEST_ADMIN,
             Collections.singleton("downloadtest@gbif.org"),
             true,
