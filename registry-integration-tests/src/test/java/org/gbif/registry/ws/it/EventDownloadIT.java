@@ -154,7 +154,7 @@ public class EventDownloadIT extends BaseItTest {
     Download download = getTestInstanceDownload();
     download.setRequest(
         new PredicateDownloadRequest(
-            new EqualsPredicate(EventSearchParameter.TAXON_KEY, "212", false),
+            new EqualsPredicate<>(EventSearchParameter.TAXON_KEY, "212", false),
             TEST_ADMIN,
             Collections.singleton("downloadtest@gbif.org"),
             true,
