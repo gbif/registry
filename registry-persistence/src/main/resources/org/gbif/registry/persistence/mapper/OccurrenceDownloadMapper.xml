@@ -28,41 +28,41 @@
       <result property="checklistKey" column="checklist_key"/>
       <discriminator javaType="string" column="format">
         <case value="DWCA" resultType="org.gbif.api.model.occurrence.PredicateDownloadRequest">
-          <result property="predicate" column="filter" typeHandler="org.gbif.registry.persistence.mapper.handler.EventPredicateTypeHandler" />
+          <result property="predicate" column="filter" typeHandler="org.gbif.registry.persistence.mapper.handler.OccurrencePredicateTypeHandler" />
           <result property="verbatimExtensions" column="verbatim_extensions" typeHandler="ExtensionArrayTypeHandler"/>
           <result property="interpretedExtensions" column="interpreted_extensions" typeHandler="ExtensionArrayTypeHandler"/>
         </case>
         <case value="SIMPLE_CSV" resultType="org.gbif.api.model.occurrence.PredicateDownloadRequest">
-          <result property="predicate" column="filter" typeHandler="org.gbif.registry.persistence.mapper.handler.EventPredicateTypeHandler" />
+          <result property="predicate" column="filter" typeHandler="org.gbif.registry.persistence.mapper.handler.OccurrencePredicateTypeHandler" />
           <result property="verbatimExtensions" column="verbatim_extensions" typeHandler="ExtensionArrayTypeHandler"/>
           <result property="interpretedExtensions" column="interpreted_extensions" typeHandler="ExtensionArrayTypeHandler"/>
         </case>
         <case value="SIMPLE_AVRO" resultType="org.gbif.api.model.occurrence.PredicateDownloadRequest">
-          <result property="predicate" column="filter" typeHandler="org.gbif.registry.persistence.mapper.handler.EventPredicateTypeHandler" />
+          <result property="predicate" column="filter" typeHandler="org.gbif.registry.persistence.mapper.handler.OccurrencePredicateTypeHandler" />
           <result property="verbatimExtensions" column="verbatim_extensions" typeHandler="ExtensionArrayTypeHandler"/>
           <result property="interpretedExtensions" column="interpreted_extensions" typeHandler="ExtensionArrayTypeHandler"/>
         </case>
         <case value="SIMPLE_PARQUET" resultType="org.gbif.api.model.occurrence.PredicateDownloadRequest">
-          <result property="predicate" column="filter" typeHandler="org.gbif.registry.persistence.mapper.handler.EventPredicateTypeHandler" />
+          <result property="predicate" column="filter" typeHandler="org.gbif.registry.persistence.mapper.handler.OccurrencePredicateTypeHandler" />
           <result property="verbatimExtensions" column="verbatim_extensions" typeHandler="ExtensionArrayTypeHandler"/>
           <result property="interpretedExtensions" column="interpreted_extensions" typeHandler="ExtensionArrayTypeHandler"/>
         </case>
         <case value="SIMPLE_WITH_VERBATIM_AVRO" resultType="org.gbif.api.model.occurrence.PredicateDownloadRequest">
-          <result property="predicate" column="filter" typeHandler="org.gbif.registry.persistence.mapper.handler.EventPredicateTypeHandler" />
+          <result property="predicate" column="filter" typeHandler="org.gbif.registry.persistence.mapper.handler.OccurrencePredicateTypeHandler" />
           <result property="verbatimExtensions" column="verbatim_extensions" typeHandler="ExtensionArrayTypeHandler"/>
           <result property="interpretedExtensions" column="interpreted_extensions" typeHandler="ExtensionArrayTypeHandler"/>
         </case>
         <case value="SPECIES_LIST" resultType="org.gbif.api.model.occurrence.PredicateDownloadRequest">
-          <result property="predicate" column="filter" typeHandler="org.gbif.registry.persistence.mapper.handler.EventPredicateTypeHandler" />
+          <result property="predicate" column="filter" typeHandler="org.gbif.registry.persistence.mapper.handler.OccurrencePredicateTypeHandler" />
           <result property="verbatimExtensions" column="verbatim_extensions" typeHandler="ExtensionArrayTypeHandler"/>
           <result property="interpretedExtensions" column="interpreted_extensions" typeHandler="ExtensionArrayTypeHandler"/>
         </case>
         <case value="MAP_OF_LIFE" resultType="org.gbif.api.model.occurrence.PredicateDownloadRequest">
-          <result property="predicate" column="filter" typeHandler="org.gbif.registry.persistence.mapper.handler.EventPredicateTypeHandler" />
+          <result property="predicate" column="filter" typeHandler="org.gbif.registry.persistence.mapper.handler.OccurrencePredicateTypeHandler" />
           <result property="verbatimExtensions" column="verbatim_extensions" typeHandler="ExtensionArrayTypeHandler"/>
         </case>
         <case value="BIONOMIA" resultType="org.gbif.api.model.occurrence.PredicateDownloadRequest">
-          <result property="predicate" column="filter" typeHandler="org.gbif.registry.persistence.mapper.handler.EventPredicateTypeHandler" />
+          <result property="predicate" column="filter" typeHandler="org.gbif.registry.persistence.mapper.handler.OccurrencePredicateTypeHandler" />
           <result property="verbatimExtensions" column="verbatim_extensions" typeHandler="ExtensionArrayTypeHandler"/>
           <result property="interpretedExtensions" column="interpreted_extensions" typeHandler="ExtensionArrayTypeHandler"/>
         </case>
