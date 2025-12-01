@@ -18,6 +18,7 @@
     SELECT <include refid="org.gbif.registry.persistence.mapper.CommonDownload.DATASET_OCCURRENCE_DOWNLOAD_FIELDS"/>,
            <include refid="org.gbif.registry.persistence.mapper.CommonDownload.OCCURRENCE_DOWNLOAD_FIELDS"/>
     FROM dataset_event_download dod
+    JOIN event_download od ON dod.download_key = od.key
     <include refid="org.gbif.registry.persistence.mapper.CommonDownload.LIST_BY_DATASET"/>
   </select>
 

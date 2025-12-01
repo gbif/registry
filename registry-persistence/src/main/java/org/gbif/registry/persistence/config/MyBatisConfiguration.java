@@ -73,7 +73,6 @@ public class MyBatisConfiguration {
           .getTypeHandlerRegistry()
           .register(Download.Status.class, OccurrenceDownloadStatusTypeHandler.class);
       configuration.getTypeHandlerRegistry().register(DOI.class, DOITypeHandler.class);
-      configuration.getTypeHandlerRegistry().register(Predicate.class, PredicateTypeHandler.class);
       configuration.getTypeHandlerRegistry().register(MetricInfoTypeHandler.class);
       configuration.getTypeHandlerRegistry().register(LocaleTypeHandler.class);
       configuration.getTypeHandlerRegistry().register(ExtensionArrayTypeHandler.class);
@@ -174,7 +173,10 @@ public class MyBatisConfiguration {
       configuration.getTypeAliasRegistry().registerAlias("DoiTypeHandler", DOITypeHandler.class);
       configuration
           .getTypeAliasRegistry()
-          .registerAlias("PredicateTypeHandler", PredicateTypeHandler.class);
+          .registerAlias("OccurrencePredicateTypeHandler", OccurrencePredicateTypeHandler.class);
+      configuration
+        .getTypeAliasRegistry()
+        .registerAlias("EventPredicateTypeHandler", EventPredicateTypeHandler.class);
       configuration
           .getTypeAliasRegistry()
           .registerAlias("StringArrayTypeHandler", StringArrayTypeHandler.class);
