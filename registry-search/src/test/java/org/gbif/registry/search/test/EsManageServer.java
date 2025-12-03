@@ -43,17 +43,19 @@ import org.testcontainers.elasticsearch.ElasticsearchContainer;
 
 import lombok.SneakyThrows;
 
+import org.testcontainers.utility.DockerImageName;
+
 public class EsManageServer implements InitializingBean, DisposableBean {
 
   public static final ElasticsearchContainer embeddedElastic;
 
   static {
     embeddedElastic =
-        new ElasticsearchContainer(
-            "docker.elastic.co/elasticsearch/elasticsearch:" + getEsVersion());
+      new ElasticsearchContainer(DockerImageName.parse(
+        "docker.elastic.co/elasticsearch/elasticsearch").withTag(getEsVersion()));
     embeddedElastic.withReuse(true).withLabel("reuse.UUID", "registry_ITs_ES_container");
     embeddedElastic.setWaitStrategy(
-        Wait.defaultWaitStrategy().withStartupTimeout(Duration.ofSeconds(60)));
+      Wait.defaultWaitStrategy().withStartupTimeout(Duration.ofSeconds(60)));
     embeddedElastic.start();
     elasticsearchClient = buildElasticsearchClient();
   }
