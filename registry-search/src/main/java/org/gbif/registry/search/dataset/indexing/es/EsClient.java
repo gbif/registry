@@ -29,6 +29,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import org.apache.http.HttpHost;
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch.ElasticsearchAsyncClient;
@@ -162,12 +164,12 @@ public class EsClient implements Closeable {
   /** Updates the settings of an existing index. */
   public void updateSettings(String indexName, Map<String, ?> settings) {
     try {
+      String settingsJson = new ObjectMapper().writeValueAsString(settings);
+
       PutIndicesSettingsRequest request = PutIndicesSettingsRequest.of(r -> r
-          .index(indexName)
-          .settings(s -> {
-            settings.forEach((k, v) -> s.settings((IndexSettings) v));
-            return s;
-          }));
+        .index(indexName)
+        .settings(s -> s.withJson(new ByteArrayInputStream(settingsJson.getBytes(StandardCharsets.UTF_8))))
+      );
 
       elasticsearchClient.indices().putSettings(request);
     } catch (IOException ex) {
