@@ -85,7 +85,7 @@ public class EsClient implements Closeable {
 
 
       UpdateAliasesRequest.Builder updateAliasesRequestBuilder = new UpdateAliasesRequest.Builder();
-      updateAliasesRequestBuilder.actions(a -> a.add(addF -> addF.alias(alias)));
+      updateAliasesRequestBuilder.actions(a -> a.add(addF -> addF.index(indexName).alias(alias)));
 
       if (!idxsToDelete.isEmpty()) {
         for (String idx : idxsToDelete) {
