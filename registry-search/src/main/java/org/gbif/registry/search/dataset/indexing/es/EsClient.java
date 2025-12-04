@@ -13,8 +13,6 @@
  */
 package org.gbif.registry.search.dataset.indexing.es;
 
-import co.elastic.clients.elasticsearch.indices.IndexSettings;
-
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.Closeable;
@@ -36,6 +34,7 @@ import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch.ElasticsearchAsyncClient;
 import co.elastic.clients.elasticsearch.core.BulkRequest;
 import co.elastic.clients.elasticsearch.core.BulkResponse;
+import co.elastic.clients.elasticsearch._types.ElasticsearchException;
 import co.elastic.clients.elasticsearch.indices.CreateIndexRequest;
 import co.elastic.clients.elasticsearch.indices.DeleteIndexRequest;
 import co.elastic.clients.elasticsearch.indices.GetAliasRequest;
@@ -77,12 +76,19 @@ public class EsClient implements Closeable {
    */
   public void swapAlias(String alias, String indexName) {
     try {
-      GetAliasRequest getAliasesRequest = new GetAliasRequest.Builder()
-          .name(alias)
-          .build();
-      GetAliasResponse getAliasesResponse = elasticsearchClient.indices().getAlias(getAliasesRequest);
-      Set<String> idxsToDelete = getAliasesResponse.aliases().keySet();
+      Set<String> idxsToDelete = new java.util.HashSet<>();
 
+      try {
+        GetAliasRequest getAliasesRequest = new GetAliasRequest.Builder()
+            .name(alias)
+            .build();
+        GetAliasResponse getAliasesResponse = elasticsearchClient.indices().getAlias(getAliasesRequest);
+        idxsToDelete = getAliasesResponse.aliases().keySet();
+      } catch (ElasticsearchException ex) {
+        if (ex.response().status() != 404) {
+          throw ex;
+        }
+      }
 
       UpdateAliasesRequest.Builder updateAliasesRequestBuilder = new UpdateAliasesRequest.Builder();
       updateAliasesRequestBuilder.actions(a -> a.add(addF -> addF.index(indexName).alias(alias)));
@@ -103,6 +109,8 @@ public class EsClient implements Closeable {
       } else {
         elasticsearchClient.indices().updateAliases(updateAliasesRequestBuilder.build());
       }
+    } catch (ElasticsearchException ex) {
+      throw new RuntimeException("Failed to swap alias", ex);
     } catch (IOException ex) {
       throw new RuntimeException(ex);
     }
