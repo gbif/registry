@@ -69,14 +69,14 @@ public class DatasetEventDownloadIT extends BaseItTest {
 
   @Autowired
   public DatasetEventDownloadIT(
-      OccurrenceDownloadService eventDownloadResource,
+      @Qualifier("eventDownloadResource") OccurrenceDownloadService eventDownloadResource,
       OrganizationService organizationService,
       DatasetService datasetService,
       NodeService nodeService,
       InstallationService installationService,
       SimplePrincipalProvider simplePrincipalProvider,
       @Qualifier("datasetEventDownloadUsageResource")
-          DatasetOccurrenceDownloadUsageService datasetEventDownloadUsageResource,
+      DatasetOccurrenceDownloadUsageService datasetEventDownloadUsageResource,
       TestDataFactory testDataFactory,
       ElasticsearchTestContainerConfiguration elasticsearchTestContainer,
       @LocalServerPort int localServerPort,
