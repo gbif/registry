@@ -147,7 +147,7 @@
   <sql id="LIST_FILTER">
     FROM network n<if test="params.query != null" >,
     to_tsquery('english', CASE WHEN regexp_replace(unaccent(trim(#{params.query})), '[^A-Za-z0-9@.\-\s]+', '', 'g') = '' THEN 'false'
-    ELSE regexp_replace(regexp_replace(unaccent(trim(#{params.query})), '[^A-Za-z0-9@.\-\s]+', '', 'g'), '\s+', ':* &amp; ', 'g') || ':*' END) AS query</if>
+    ELSE regexp_replace(regexp_replace(regexp_replace(unaccent(trim(#{params.query})), '[^A-Za-z0-9@.\-\s]+', '', 'g'), '\s+', ':* &amp; ', 'g'), ':* &amp; $', '', 'g') || ':*' END) AS query</if>
     <if test="params.identifier != null or params.identifierType != null">
       INNER JOIN network_identifier ni ON ni.network_key = n.key
       INNER JOIN identifier i ON ni.identifier_key = i.key

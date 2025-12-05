@@ -57,6 +57,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.web.server.LocalServerPort;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -454,5 +455,80 @@ public class OrganizationIT extends NetworkEntityIT<Organization> {
     searchParams.setNumPublishedDatasets(Range.closed(15, 20)); // between 15 and 20
     response = service.list(searchParams);
     assertEquals(0, response.getResults().size(), "Should find no organizations with 15-20 datasets");
+  }
+
+  /**
+   * Test fulltext search queries with trailing spaces and multiple spaces.
+   */
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  public void testFulltextSearchWithSpaces(ServiceType serviceType) {
+    OrganizationService service = (OrganizationService) getService(serviceType);
+
+    Node node = testDataFactory.newNode();
+    UUID nodeKey = nodeResource.create(node);
+
+    Organization o1 = testDataFactory.newOrganization(nodeKey);
+    o1.setTitle("Test Organization One");
+    o1.setDescription("This is a test organization for fulltext search");
+    UUID key1 = service.create(o1);
+
+    Organization o2 = testDataFactory.newOrganization(nodeKey);
+    o2.setTitle("Test Organization Two");
+    o2.setDescription("Another test organization");
+    UUID key2 = service.create(o2);
+
+    // Test normal query - should work
+    OrganizationRequestSearchParams searchParams = new OrganizationRequestSearchParams();
+    searchParams.setQ("Test");
+    PagingResponse<Organization> response = service.list(searchParams);
+    assertTrue(response.getResults().size() >= 2, "Should find at least 2 organizations");
+
+    // Test query with trailing spaces - should not throw tsquery syntax error
+    searchParams.setQ("Test   ");
+    response = service.list(searchParams);
+    assertTrue(response.getResults().size() >= 2, "Should find organizations even with trailing spaces");
+
+    // Test query with leading spaces
+    searchParams.setQ("   Test");
+    response = service.list(searchParams);
+    assertTrue(response.getResults().size() >= 2, "Should find organizations even with leading spaces");
+
+    // Test query with multiple consecutive spaces
+    searchParams.setQ("Test    Organization");
+    response = service.list(searchParams);
+    assertTrue(response.getResults().size() >= 2, "Should find organizations even with multiple spaces");
+
+    // Test query with spaces at both ends
+    searchParams.setQ("   Test Organization   ");
+    response = service.list(searchParams);
+    assertTrue(response.getResults().size() >= 2, "Should find organizations even with spaces at both ends");
+
+    // Test query with only spaces - should not throw error
+    searchParams.setQ("     ");
+    response = service.list(searchParams);
+    // Should return all organizations (empty query is treated as no filter)
+    assertTrue(response.getResults().size() >= 2, "Should return all organizations for space-only query");
+
+    // Test query with multiple words and multiple spaces
+    searchParams.setQ("Test    Organization    One");
+    response = service.list(searchParams);
+    assertFalse(response.getResults().isEmpty(),
+      "Should find organization with multiple spaces between words");
+    assertTrue(response.getResults().stream().anyMatch(o -> o.getKey().equals(key1)),
+        "Should find the correct organization");
+
+    // Test query with multiple words and multiple spaces for second organization
+    searchParams.setQ("Test    Organization    Two");
+    response = service.list(searchParams);
+    assertFalse(response.getResults().isEmpty(),
+      "Should find organization with multiple spaces between words");
+    assertTrue(response.getResults().stream().anyMatch(o -> o.getKey().equals(key2)),
+        "Should find the second organization");
+
+    // Test count with trailing spaces - should not throw tsquery syntax error
+    searchParams.setQ("Test   ");
+    response = service.list(searchParams);
+    assertTrue(response.getCount() >= 2, "Count should work with trailing spaces");
   }
 }

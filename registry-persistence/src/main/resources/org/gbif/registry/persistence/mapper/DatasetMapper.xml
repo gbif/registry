@@ -412,7 +412,7 @@
     FROM dataset d
     <if test="params.query != null" >
       JOIN to_tsquery('english', CASE WHEN regexp_replace(unaccent(trim(#{params.query})), '[^A-Za-z0-9@.\-\s]+', '', 'g') = '' THEN 'false'
-      ELSE regexp_replace(regexp_replace(unaccent(trim(#{params.query})), '[^A-Za-z0-9@.\-\s]+', '', 'g'), '\s+', ':* &amp; ', 'g') || ':*' END)  AS query ON <include refid="SIMPLE_SEARCH"/>
+      ELSE regexp_replace(regexp_replace(regexp_replace(unaccent(trim(#{params.query})), '[^A-Za-z0-9@.\-\s]+', '', 'g'), '\s+', ':* &amp; ', 'g'), ':* &amp; $', '', 'g') || ':*' END)  AS query ON <include refid="SIMPLE_SEARCH"/>
     </if>
     INNER JOIN organization o ON d.publishing_organization_key = o.key
     <if test="params.identifier != null or params.identifierType != null or params.doi != null">
