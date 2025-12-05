@@ -75,6 +75,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.web.server.LocalServerPort;
 
 /**
@@ -108,7 +109,7 @@ public class EventDownloadIT extends BaseItTest {
 
   @Autowired
   public EventDownloadIT(
-      OccurrenceDownloadService eventDownloadResource,
+      @Qualifier("eventDownloadResource") OccurrenceDownloadService eventDownloadResource,
       OrganizationService organizationService,
       DatasetService datasetService,
       NodeService nodeService,
