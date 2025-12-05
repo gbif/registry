@@ -88,7 +88,7 @@
     <tomcat.version>10.1.15</tomcat.version>
 
     <!-- Elasticsearch -->
-    <elasticsearch.version>9.0.4</elasticsearch.version>
+    <elasticsearch.version>9.0.8</elasticsearch.version>
 
     <!-- GBIF -->
     <gbif-api.version>2.2.1-SNAPSHOT</gbif-api.version>
