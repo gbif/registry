@@ -29,6 +29,7 @@ import org.gbif.api.service.registry.DatasetOccurrenceDownloadUsageService;
 import org.gbif.registry.persistence.mapper.DatasetDownloadMapper;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -61,9 +62,10 @@ public abstract class DatasetDownloadUsageResourceBase
       description = "Dataset found and download information returned")
   @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("{datasetKey}")
+  @Validated
   @Override
   public PagingResponse<DatasetOccurrenceDownloadUsage> listByDataset(
-      @PathVariable UUID datasetKey,
+      @PathVariable("datasetKey") UUID datasetKey,
       @RequestParam(value = "showDownloadDetails", required = false, defaultValue = "true")
           Boolean showDownloadDetails,
       Pageable page) {

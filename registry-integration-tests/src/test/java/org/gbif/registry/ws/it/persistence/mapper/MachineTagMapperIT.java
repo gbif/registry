@@ -16,7 +16,7 @@ package org.gbif.registry.ws.it.persistence.mapper;
 import org.gbif.api.model.registry.MachineTag;
 import org.gbif.registry.database.TestCaseDatabaseInitializer;
 import org.gbif.registry.persistence.mapper.MachineTagMapper;
-import org.gbif.registry.search.test.EsManageServer;
+import org.gbif.registry.search.test.ElasticsearchTestContainerConfiguration;
 import org.gbif.registry.ws.it.BaseItTest;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
@@ -36,8 +36,8 @@ public class MachineTagMapperIT extends BaseItTest {
 
   @Autowired
   public MachineTagMapperIT(
-      MachineTagMapper mapper, SimplePrincipalProvider principalProvider, EsManageServer esServer) {
-    super(principalProvider, esServer);
+      MachineTagMapper mapper, SimplePrincipalProvider principalProvider,   ElasticsearchTestContainerConfiguration elasticsearchTestContainer) {
+    super(principalProvider, elasticsearchTestContainer);
     this.mapper = mapper;
   }
 

@@ -18,7 +18,7 @@ import org.gbif.api.model.common.paging.Pageable;
 import java.util.Set;
 import java.util.UUID;
 
-import javax.annotation.Nullable;
+import jakarta.annotation.Nullable;
 
 import lombok.Builder;
 import lombok.Getter;

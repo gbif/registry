@@ -43,8 +43,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.UUID;
 
-import javax.validation.ConstraintViolationException;
-import javax.validation.ValidationException;
+import jakarta.validation.ConstraintViolationException;
+import jakarta.validation.ValidationException;
 
 import org.geojson.FeatureCollection;
 import org.geojson.Point;

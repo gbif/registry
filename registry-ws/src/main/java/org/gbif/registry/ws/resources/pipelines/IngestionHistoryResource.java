@@ -23,7 +23,7 @@ import org.gbif.registry.pipelines.RegistryIngestionHistoryService;
 import java.util.List;
 import java.util.UUID;
 
-import javax.annotation.Nullable;
+import jakarta.annotation.Nullable;
 
 import org.springframework.http.MediaType;
 import org.springframework.validation.annotation.Validated;
@@ -33,7 +33,6 @@ import io.swagger.v3.oas.annotations.Hidden;
 
 @Hidden // TODO: Document?
 @RestController
-@Validated
 @RequestMapping(value = "ingestion/history", produces = MediaType.APPLICATION_JSON_VALUE)
 public class IngestionHistoryResource implements IngestionHistoryService {
 
@@ -44,6 +43,7 @@ public class IngestionHistoryResource implements IngestionHistoryService {
   }
 
   @Override
+  @Validated
   @GetMapping
   public PagingResponse<IngestionProcess> history(
       @RequestParam(value = "finishReason", required = false) @Nullable
@@ -53,6 +53,7 @@ public class IngestionHistoryResource implements IngestionHistoryService {
   }
 
   @Override
+  @Validated
   @GetMapping("{datasetKey}")
   public PagingResponse<IngestionProcess> history(
       @PathVariable("datasetKey") UUID datasetKey,
@@ -62,6 +63,7 @@ public class IngestionHistoryResource implements IngestionHistoryService {
   }
 
   @Override
+  @Validated
   @GetMapping("{datasetKey}/{attempt}")
   public IngestionProcess getIngestion(
       @PathVariable("datasetKey") UUID datasetKey, @PathVariable("attempt") int attempt) {

@@ -13,6 +13,13 @@
  */
 package org.gbif.registry.cli.datasetindex.batchindexer;
 
+import co.elastic.clients.elasticsearch.core.BulkRequest;
+import co.elastic.clients.elasticsearch.core.BulkResponse;
+import co.elastic.clients.elasticsearch.core.bulk.BulkOperation;
+import co.elastic.clients.elasticsearch.core.bulk.BulkResponseItem;
+import co.elastic.clients.elasticsearch.core.bulk.IndexOperation;
+import co.elastic.clients.json.JsonData;
+
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.Dataset;
@@ -30,16 +37,9 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
-
-import org.elasticsearch.action.DocWriteRequest;
-import org.elasticsearch.action.bulk.BulkRequest;
-import org.elasticsearch.action.bulk.BulkResponse;
-import org.elasticsearch.action.index.IndexRequest;
-import org.elasticsearch.common.xcontent.XContentType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Stopwatch;
 
 import lombok.extern.slf4j.Slf4j;
@@ -104,7 +104,7 @@ public class DatasetBatchIndexer {
         stopAfter,
         pageSize);
 
-    CompletableFuture.allOf(jobs.toArray(new CompletableFuture[] {}));
+    CompletableFuture.allOf(jobs.toArray(new CompletableFuture[] {})).join();
 
     logIndexingErrors(jobs);
     executor.shutdown();
@@ -121,18 +121,16 @@ public class DatasetBatchIndexer {
       String indexName,
       EsClient esClient) {
     try {
-      BulkRequest bulkRequest = new BulkRequest();
+      BulkRequest.Builder bulkRequest = new BulkRequest.Builder();
       pagingResponse
           .getResults()
           .forEach(
               dataset -> {
-                ObjectNode jsonNode = datasetJsonConverter.convert(dataset);
-                bulkRequest.add(
-                    new IndexRequest()
-                        .index(indexName)
-                        .source(jsonNode.toString(), XContentType.JSON)
-                        .opType(DocWriteRequest.OpType.INDEX)
-                        .id(dataset.getKey().toString()));
+                String jsonString = datasetJsonConverter.convertAsJsonString(dataset);
+                bulkRequest.operations(BulkOperation.of(op -> op.index(IndexOperation.of(io -> io
+                    .index(indexName)
+                    .id(dataset.getKey().toString())
+                    .document(JsonData.fromJson(jsonString))))));
               });
       // Batching updates to Es proves quicker with batches of 100 - 1000 showing similar
       // performance
@@ -140,7 +138,7 @@ public class DatasetBatchIndexer {
           "Indexing {} datasets until at offset {}",
           pagingResponse.getLimit(),
           pagingResponse.getOffset());
-      return esClient.bulk(bulkRequest);
+      return esClient.bulk(bulkRequest.build());
     } catch (Exception ex) {
       log.error("Error indexing page", ex);
       throw new RuntimeException(ex);
@@ -167,16 +165,26 @@ public class DatasetBatchIndexer {
   }
 
   private static void logIndexingErrors(List<CompletableFuture<BulkResponse>> jobs) {
-    jobs.forEach(
-        job -> {
-          try {
-            BulkResponse bulkResponse = job.get();
-            if (bulkResponse.hasFailures()) {
-              log.error("Error in indexing job {}", bulkResponse.buildFailureMessage());
+    jobs.forEach(job -> {
+      try {
+        BulkResponse bulkResponse = job.get();
+        if (bulkResponse.errors()) {
+          for (BulkResponseItem itemResponse : bulkResponse.items()) {
+            if (itemResponse.error() != null) {
+              log.error(
+                "Indexing failure: index={}, id={}, error={}",
+                itemResponse.index(),
+                itemResponse.id(),
+                itemResponse.error()
+              );
             }
-          } catch (InterruptedException | ExecutionException ex) {
-            log.error("Error executing job", ex);
           }
-        });
+        }
+      } catch (InterruptedException | ExecutionException e) {
+        log.error("Failed to get bulk indexing response", e);
+        Thread.currentThread().interrupt(); // Best practice for InterruptedException
+      }
+    });
   }
+
 }

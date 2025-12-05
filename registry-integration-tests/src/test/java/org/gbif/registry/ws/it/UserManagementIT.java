@@ -26,7 +26,7 @@ import org.gbif.registry.domain.ws.UserCreation;
 import org.gbif.registry.identity.model.ModelMutationError;
 import org.gbif.registry.identity.model.UserModelMutationResult;
 import org.gbif.registry.identity.mybatis.IdentitySuretyTestHelper;
-import org.gbif.registry.search.test.EsManageServer;
+import org.gbif.registry.search.test.ElasticsearchTestContainerConfiguration;
 import org.gbif.registry.security.UserRoles;
 import org.gbif.registry.ws.it.fixtures.RequestTestFixture;
 import org.gbif.registry.ws.it.fixtures.UserTestFixture;
@@ -82,8 +82,8 @@ public class UserManagementIT extends BaseItTest {
       RequestTestFixture requestTestFixture,
       IdentitySuretyTestHelper identitySuretyTestHelper,
       SimplePrincipalProvider simplePrincipalProvider,
-      EsManageServer esServer) {
-    super(simplePrincipalProvider, esServer);
+      ElasticsearchTestContainerConfiguration elasticsearchTestContainer) {
+    super(simplePrincipalProvider, elasticsearchTestContainer);
     this.identitySuretyTestHelper = identitySuretyTestHelper;
     this.userTestFixture = userTestFixture;
     this.requestTestFixture = requestTestFixture;
@@ -629,7 +629,7 @@ public class UserManagementIT extends BaseItTest {
     // Create a first admin user; this can't be done through the API
     userTestFixture.prepareAdminUser();
     userTestFixture.prepareUser();
-    
+
     UUID testKey = UUID.randomUUID();
     String testNamespace = "test.namespace";
     String testCountry = Country.SPAIN.getIso2LetterCode();

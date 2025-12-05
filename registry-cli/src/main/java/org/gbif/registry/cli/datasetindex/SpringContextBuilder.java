@@ -40,15 +40,12 @@ import org.gbif.vocabulary.client.ConceptClient;
 import java.io.IOException;
 import java.util.Date;
 
-import org.springframework.boot.actuate.autoconfigure.elasticsearch.ElasticSearchRestHealthContributorAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.freemarker.FreeMarkerAutoConfiguration;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
 import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.boot.jdbc.DataSourceInitializationMode;
-import org.springframework.cloud.netflix.archaius.ArchaiusAutoConfiguration;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
@@ -70,10 +67,10 @@ public class SpringContextBuilder {
       ElasticsearchConfig elasticsearchConfig) {
     EsClient.EsClientConfiguration esClientConfiguration = new EsClient.EsClientConfiguration();
     esClientConfiguration.setHosts(elasticsearchConfig.getHosts());
-    esClientConfiguration.setConnectionRequestTimeOut(
+    esClientConfiguration.setConnectionRequestTimeout(
         elasticsearchConfig.getConnectionRequestTimeOut());
-    esClientConfiguration.setSocketTimeOut(elasticsearchConfig.getSocketTimeOut());
-    esClientConfiguration.setConnectionTimeOut(elasticsearchConfig.getConnectionTimeOut());
+    esClientConfiguration.setSocketTimeout(elasticsearchConfig.getSocketTimeOut());
+    esClientConfiguration.setConnectionTimeout(elasticsearchConfig.getConnectionTimeOut());
     return esClientConfiguration;
   }
 
@@ -141,7 +138,7 @@ public class SpringContextBuilder {
                         "indexing.datasource.checklistbank.url",
                         "jdbc:postgresql://"
                             + configuration.getClbDb().getServerName()
-                            + " /"
+                            + "/"
                             + configuration.getClbDb().getDatabaseName())
                     .put(
                         "indexing.datasource.checklistbank.username",
@@ -168,11 +165,9 @@ public class SpringContextBuilder {
   /** Class to help with the loading and injection of */
   @SpringBootApplication(
       exclude = {
-        ElasticSearchRestHealthContributorAutoConfiguration.class,
         DataSourceAutoConfiguration.class,
         LiquibaseAutoConfiguration.class,
-        FreeMarkerAutoConfiguration.class,
-        ArchaiusAutoConfiguration.class
+        FreeMarkerAutoConfiguration.class
       })
   @EnableConfigurationProperties
   static class ApplicationConfig {
@@ -188,7 +183,6 @@ public class SpringContextBuilder {
               + configuration.getClbDb().getServerName()
               + "/"
               + configuration.getClbDb().getDatabaseName());
-      dataSourceProperties.setInitializationMode(DataSourceInitializationMode.ALWAYS);
       dataSourceProperties.setGenerateUniqueName(true);
       return dataSourceProperties;
     }

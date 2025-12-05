@@ -26,7 +26,7 @@ import org.gbif.registry.persistence.mapper.collections.DuplicatesMapper;
 import org.gbif.registry.persistence.mapper.collections.InstitutionMapper;
 import org.gbif.registry.persistence.mapper.collections.MasterSourceSyncMetadataMapper;
 import org.gbif.registry.persistence.mapper.collections.dto.DuplicateMetadataDto;
-import org.gbif.registry.search.test.EsManageServer;
+import org.gbif.registry.search.test.ElasticsearchTestContainerConfiguration;
 import org.gbif.registry.ws.it.BaseItTest;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
@@ -65,8 +65,8 @@ public class DuplicatesMapperIT extends BaseItTest {
       MachineTagMapper machineTagMapper,
       MasterSourceSyncMetadataMapper masterSourceMetadataMapper,
       SimplePrincipalProvider principalProvider,
-      EsManageServer esServer) {
-    super(principalProvider, esServer);
+      ElasticsearchTestContainerConfiguration elasticsearchTestContainer) {
+    super(principalProvider, elasticsearchTestContainer);
     this.duplicatesMapper = duplicatesMapper;
     this.institutionMapper = institutionMapper;
     this.collectionMapper = collectionMapper;

@@ -30,7 +30,7 @@ import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.api.util.Range;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.IdentifierType;
-import org.gbif.registry.search.test.EsManageServer;
+import org.gbif.registry.search.test.ElasticsearchTestContainerConfiguration;
 import org.gbif.registry.test.TestDataFactory;
 import org.gbif.registry.ws.client.NodeClient;
 import org.gbif.registry.ws.client.OrganizationClient;
@@ -43,7 +43,7 @@ import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.UUID;
 
-import javax.annotation.Nullable;
+import jakarta.annotation.Nullable;
 
 import org.apache.commons.beanutils.BeanUtils;
 import org.geojson.Feature;
@@ -54,7 +54,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.locationtech.jts.util.Assert;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.web.server.LocalServerPort;
+import org.springframework.boot.test.web.server.LocalServerPort;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -85,7 +85,7 @@ public class OrganizationIT extends NetworkEntityIT<Organization> {
       OrganizationResource organizationResource,
       @Nullable SimplePrincipalProvider principalProvider,
       TestDataFactory testDataFactory,
-      EsManageServer esServer,
+      ElasticsearchTestContainerConfiguration elasticsearchTestContainer,
       @LocalServerPort int localServerPort,
       KeyStore keyStore) {
     super(
@@ -95,7 +95,7 @@ public class OrganizationIT extends NetworkEntityIT<Organization> {
         OrganizationClient.class,
         principalProvider,
         testDataFactory,
-        esServer);
+        elasticsearchTestContainer);
     this.nodeResource = nodeResource;
     this.nodeClient = prepareClient(localServerPort, keyStore, NodeClient.class);
     this.testDataFactory = testDataFactory;

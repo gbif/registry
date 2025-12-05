@@ -34,7 +34,7 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
-import javax.annotation.Nullable;
+import jakarta.annotation.Nullable;
 
 import org.jetbrains.annotations.NotNull;
 import org.springframework.http.HttpStatus;
@@ -130,7 +130,7 @@ public class IDigBioExternalResource {
 
   @NullToNotFound
   @GetMapping("{iDigBioKey}")
-  public IDigBioCollection getCollection(@PathVariable UUID iDigBioKey) {
+  public IDigBioCollection getCollection(@PathVariable("iDogBioKey") UUID iDigBioKey) {
     Set<UUID> collections = idigBioMapper.findIDigBioCollections("urn:uuid:" + iDigBioKey);
 
     if (collections == null || collections.isEmpty()) {

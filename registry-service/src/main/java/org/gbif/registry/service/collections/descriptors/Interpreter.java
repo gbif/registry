@@ -443,7 +443,7 @@ public class Interpreter {
         .orElse(Collections.emptyList());
   }
 
-   private static boolean isEmptyResponse(NameUsageMatchResponse response) {
+  private static boolean isEmptyResponse(NameUsageMatchResponse response) {
     return response == null || response.getUsage() == null || response.getDiagnostics() == null;
   }
 

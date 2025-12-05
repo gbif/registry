@@ -25,6 +25,7 @@ import org.gbif.registry.persistence.mapper.collections.DescriptorsMapper;
 import org.gbif.registry.persistence.mapper.collections.dto.DescriptorDto;
 import org.gbif.registry.persistence.mapper.collections.params.DescriptorGroupParams;
 import org.gbif.registry.persistence.mapper.collections.params.DescriptorParams;
+import org.gbif.registry.search.test.ElasticsearchTestContainerConfiguration;
 import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.ws.it.BaseItTest;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
@@ -60,8 +61,8 @@ public class DescriptorsMapperIT extends BaseItTest {
       DescriptorsMapper descriptorsMapper,
       CollectionMapper collectionMapper,
       SimplePrincipalProvider principalProvider,
-      EsManageServer esServer) {
-    super(principalProvider, esServer);
+      ElasticsearchTestContainerConfiguration elasticsearchTestContainer) {
+    super(principalProvider, elasticsearchTestContainer);
     this.descriptorsMapper = descriptorsMapper;
     this.collectionMapper = collectionMapper;
   }

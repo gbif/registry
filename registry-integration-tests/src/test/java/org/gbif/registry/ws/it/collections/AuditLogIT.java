@@ -55,7 +55,7 @@ import org.gbif.registry.events.collections.EventType;
 import org.gbif.registry.persistence.mapper.collections.AuditLogMapper;
 import org.gbif.registry.persistence.mapper.collections.dto.ChangeSuggestionDto;
 import org.gbif.registry.persistence.mapper.collections.params.AuditLogListParams;
-import org.gbif.registry.search.test.EsManageServer;
+import org.gbif.registry.search.test.ElasticsearchTestContainerConfiguration;
 import org.gbif.registry.security.UserRoles;
 import org.gbif.registry.ws.client.collections.BaseCollectionEntityClient;
 import org.gbif.registry.ws.client.collections.CollectionClient;
@@ -72,7 +72,7 @@ import java.util.UUID;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.web.server.LocalServerPort;
+import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
@@ -97,10 +97,10 @@ public class AuditLogIT extends BaseItTest {
   public AuditLogIT(
       AuditLogMapper auditLogMapper,
       SimplePrincipalProvider simplePrincipalProvider,
-      EsManageServer esServer,
+      ElasticsearchTestContainerConfiguration elasticsearchTestContainer,
       KeyStore keyStore,
       @LocalServerPort int localServerPort) {
-    super(simplePrincipalProvider, esServer);
+    super(simplePrincipalProvider, elasticsearchTestContainer);
     this.auditLogMapper = auditLogMapper;
     this.institutionClient = prepareClient(localServerPort, keyStore, InstitutionClient.class);
     this.collectionClient = prepareClient(localServerPort, keyStore, CollectionClient.class);

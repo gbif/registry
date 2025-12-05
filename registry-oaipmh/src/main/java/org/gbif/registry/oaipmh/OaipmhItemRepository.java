@@ -44,7 +44,7 @@ import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
-import javax.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotNull;
 
 import org.dspace.xoai.dataprovider.exceptions.IdDoesNotExistException;
 import org.dspace.xoai.dataprovider.filter.ScopedFilter;

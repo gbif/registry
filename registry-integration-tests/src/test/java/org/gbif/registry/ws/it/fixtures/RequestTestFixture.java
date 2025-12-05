@@ -26,11 +26,12 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
-import javax.xml.bind.JAXBElement;
+import jakarta.xml.bind.JAXBElement;
 import javax.xml.transform.stream.StreamSource;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.oxm.jaxb.Jaxb2Marshaller;
@@ -75,63 +76,84 @@ public class RequestTestFixture {
   private MockMvc mvc;
   private SigningService signingService;
   private Md5EncodeService md5EncodeService;
-  private ObjectMapper objectMapper;
+  @Qualifier("registryObjectMapper") private ObjectMapper objectMapper;
   private Jaxb2Marshaller marshaller;
 
   @Autowired
-  public RequestTestFixture(
-      MockMvc mvc,
-      SigningService signingService,
-      Md5EncodeService md5EncodeService,
-      @Qualifier("registryObjectMapper") ObjectMapper objectMapper,
-      Jaxb2Marshaller marshaller) {
+  private ApplicationContext applicationContext;
+
+  @Autowired(required = false)
+  public void setMvc(MockMvc mvc) {
     this.mvc = mvc;
+  }
+
+  private MockMvc getMvc() {
+    if (mvc == null && applicationContext != null) {
+      mvc = applicationContext.getBean(MockMvc.class);
+    }
+    return mvc;
+  }
+
+  @Autowired
+  public void setSigningService(SigningService signingService) {
     this.signingService = signingService;
+  }
+
+  @Autowired
+  public void setMd5EncodeService(Md5EncodeService md5EncodeService) {
     this.md5EncodeService = md5EncodeService;
+  }
+
+  @Autowired
+  public void setObjectMapper(@Qualifier("registryObjectMapper") ObjectMapper objectMapper) {
     this.objectMapper = objectMapper;
+  }
+
+  @Autowired
+  public void setMarshaller(Jaxb2Marshaller marshaller) {
     this.marshaller = marshaller;
   }
 
   public ResultActions getRequest(String path) throws Exception {
-    return mvc.perform(get(path));
+    return getMvc().perform(get(path));
   }
 
   public ResultActions getRequest(URI path) throws Exception {
-    return mvc.perform(get(path));
+    return getMvc().perform(get(path));
   }
 
   public ResultActions getRequest(String username, String password, String path) throws Exception {
-    return mvc.perform(get(path).with(httpBasic(username, password)));
+    return getMvc().perform(get(path).with(httpBasic(username, password)));
   }
 
   public ResultActions postRequest(String path) throws Exception {
-    return mvc.perform(post(path));
+    return getMvc().perform(post(path));
   }
 
   public ResultActions deleteRequest(String username, String path) throws Exception {
-    return mvc.perform(delete(path).with(httpBasic(username, TEST_PASSWORD)));
+    return getMvc().perform(delete(path).with(httpBasic(username, TEST_PASSWORD)));
   }
 
   public ResultActions deleteRequest(String username, String password, String path)
       throws Exception {
-    return mvc.perform(delete(path).with(httpBasic(username, password)));
+    return getMvc().perform(delete(path).with(httpBasic(username, password)));
   }
 
   public ResultActions postRequest(String username, String path) throws Exception {
-    return mvc.perform(post(path).with(httpBasic(username, TEST_PASSWORD)));
+    return getMvc().perform(post(path).with(httpBasic(username, TEST_PASSWORD)));
   }
 
   public ResultActions postRequest(String username, String password, String path) throws Exception {
-    return mvc.perform(post(path).with(httpBasic(username, password)));
+    return getMvc().perform(post(path).with(httpBasic(username, password)));
   }
 
   public ResultActions postRequest(Object entity, String path) throws Exception {
-    return mvc.perform(
+    return getMvc().perform(
         post(path).content(objectMapper.writeValueAsString(entity)).contentType(APPLICATION_JSON));
   }
 
   public ResultActions postRequest(String bearer, Object entity, String path) throws Exception {
-    return mvc.perform(
+    return getMvc().perform(
         post(path)
             .content(objectMapper.writeValueAsString(entity))
             .contentType(APPLICATION_JSON)
@@ -140,7 +162,7 @@ public class RequestTestFixture {
 
   public ResultActions postRequest(HttpHeaders headers, Object entity, String path)
       throws Exception {
-    return mvc.perform(
+    return getMvc().perform(
         post(path)
             .content(objectMapper.writeValueAsString(entity))
             .contentType(APPLICATION_JSON)
@@ -149,7 +171,7 @@ public class RequestTestFixture {
 
   public ResultActions postRequest(String username, String password, Object entity, String path)
       throws Exception {
-    return mvc.perform(
+    return getMvc().perform(
         post(path)
             .content(objectMapper.writeValueAsString(entity))
             .contentType(APPLICATION_JSON)
@@ -169,7 +191,7 @@ public class RequestTestFixture {
       String password,
       String path)
       throws Exception {
-    return mvc.perform(
+    return getMvc().perform(
         post(path)
             .params(params)
             .contentType(APPLICATION_FORM_URLENCODED)
@@ -179,7 +201,7 @@ public class RequestTestFixture {
 
   public ResultActions deleteRequestUrlEncoded(Object username, String password, String path)
       throws Exception {
-    return mvc.perform(
+    return getMvc().perform(
         delete(path)
             .contentType(APPLICATION_FORM_URLENCODED)
             .with(httpBasic(username.toString(), password)));
@@ -187,7 +209,7 @@ public class RequestTestFixture {
 
   public ResultActions putRequest(String username, String password, Object entity, String path)
       throws Exception {
-    return mvc.perform(
+    return getMvc().perform(
         put(path)
             .content(objectMapper.writeValueAsString(entity))
             .contentType(APPLICATION_JSON)
@@ -202,7 +224,7 @@ public class RequestTestFixture {
         prepareGbifAuthorizationHeadersWithContent(
             PUT, path, APPLICATION_JSON_UTF8, content, username, IT_APP_KEY);
 
-    return mvc.perform(
+    return getMvc().perform(
         put(path).content(content).contentType(APPLICATION_JSON).headers(authHeaders));
   }
 
@@ -210,7 +232,7 @@ public class RequestTestFixture {
     HttpHeaders authHeaders =
         prepareGbifAuthorizationHeadersNoContent(POST, path, username, IT_APP_KEY);
 
-    return mvc.perform(post(path).headers(authHeaders));
+    return getMvc().perform(post(path).headers(authHeaders));
   }
 
   public ResultActions postSignedRequest(String username, Object entity, String path)
@@ -221,7 +243,7 @@ public class RequestTestFixture {
         prepareGbifAuthorizationHeadersWithContent(
             POST, path, APPLICATION_JSON_UTF8, content, username, IT_APP_KEY);
 
-    return mvc.perform(
+    return getMvc().perform(
         post(path).content(content).contentType(APPLICATION_JSON).headers(authHeaders));
   }
 
@@ -231,7 +253,7 @@ public class RequestTestFixture {
         prepareGbifAuthorizationHeadersWithContentAsPlainText(
             POST, path, "text/plain;charset=UTF-8", entity, username, IT_APP_KEY);
 
-    return mvc.perform(
+    return getMvc().perform(
         post(path).content(entity.toString()).contentType(TEXT_PLAIN).headers(authHeaders));
   }
 
@@ -243,7 +265,7 @@ public class RequestTestFixture {
         prepareGbifAuthorizationHeadersWithContent(
             POST, path, APPLICATION_JSON_UTF8, content, username, appKey);
 
-    return mvc.perform(
+    return getMvc().perform(
         post(path).content(content).contentType(APPLICATION_JSON).headers(authHeaders));
   }
 
@@ -251,7 +273,7 @@ public class RequestTestFixture {
     HttpHeaders authHeaders =
         prepareGbifAuthorizationHeadersNoContent(GET, path, username, IT_APP_KEY);
 
-    return mvc.perform(get(path).headers(authHeaders));
+    return getMvc().perform(get(path).headers(authHeaders));
   }
 
   public ResultActions getSignedRequest(String username, String path, Map<String, String> params)
@@ -265,7 +287,7 @@ public class RequestTestFixture {
                 Collectors.toMap(
                     Entry::getKey, entry -> Collections.singletonList(entry.getValue())));
 
-    return mvc.perform(
+    return getMvc().perform(
         get(path).queryParams(new LinkedMultiValueMap<>(queryParams)).headers(authHeaders));
   }
 
@@ -273,7 +295,7 @@ public class RequestTestFixture {
     HttpHeaders authHeaders =
         prepareGbifAuthorizationHeadersNoContent(DELETE, path, username, IT_APP_KEY);
 
-    return mvc.perform(delete(path).headers(authHeaders));
+    return getMvc().perform(delete(path).headers(authHeaders));
   }
 
   public String extractResponse(ResultActions actions) throws Exception {

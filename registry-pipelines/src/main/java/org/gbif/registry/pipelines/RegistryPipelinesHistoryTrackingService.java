@@ -23,13 +23,13 @@ import org.gbif.api.model.pipelines.StepRunner;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.api.model.pipelines.ws.SearchResult;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
-import javax.annotation.Nullable;
-import javax.validation.constraints.NotNull;
+import jakarta.annotation.Nullable;
+import jakarta.validation.constraints.NotNull;
 
 /** Service to provide the history and re-execute previous attempts of Pipelines. */
 public interface RegistryPipelinesHistoryTrackingService {
@@ -222,10 +222,10 @@ public interface RegistryPipelinesHistoryTrackingService {
       @Nullable UUID datasetKey,
       @Nullable PipelineStep.Status state,
       @Nullable StepType stepType,
-      @Nullable LocalDateTime startedMin,
-      @Nullable LocalDateTime startedMax,
-      @Nullable LocalDateTime finishedMin,
-      @Nullable LocalDateTime finishedMax,
+      @Nullable OffsetDateTime startedMin,
+      @Nullable OffsetDateTime startedMax,
+      @Nullable OffsetDateTime finishedMin,
+      @Nullable OffsetDateTime finishedMax,
       @Nullable String rerunReason,
       @Nullable String pipelinesVersion,
       @Nullable Pageable page);

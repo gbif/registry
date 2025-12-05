@@ -18,7 +18,7 @@ import org.gbif.registry.doi.config.DoiConfigurationProperties;
 import org.gbif.registry.domain.doi.DoiType;
 import org.gbif.registry.persistence.mapper.DoiMapper;
 
-import javax.annotation.Nullable;
+import jakarta.annotation.Nullable;
 
 import org.apache.commons.lang3.RandomStringUtils;
 import org.slf4j.Logger;

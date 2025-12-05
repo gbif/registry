@@ -17,7 +17,7 @@ import org.gbif.api.model.registry.Node;
 import org.gbif.api.model.registry.Organization;
 import org.gbif.api.service.registry.NodeService;
 import org.gbif.api.service.registry.OrganizationService;
-import org.gbif.registry.search.test.EsManageServer;
+import org.gbif.registry.search.test.ElasticsearchTestContainerConfiguration;
 import org.gbif.registry.test.TestDataFactory;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
@@ -44,8 +44,8 @@ public class BootstrapIT extends BaseItTest {
       TestDataFactory testDataFactory,
       NodeService nodeService,
       OrganizationService organizationService,
-      EsManageServer esServer) {
-    super(simplePrincipalProvider, esServer);
+      ElasticsearchTestContainerConfiguration elasticsearchTestContainer) {
+    super(simplePrincipalProvider, elasticsearchTestContainer);
     this.testDataFactory = testDataFactory;
     this.nodeService = nodeService;
     this.organizationService = organizationService;

@@ -20,7 +20,7 @@ import org.gbif.registry.domain.ws.UserUpdate;
 
 import java.util.Set;
 
-import javax.annotation.Nullable;
+import jakarta.annotation.Nullable;
 
 /** Simple manager that only copies data from {@link UserUpdate} based on {@link UserRole}. */
 public class UserUpdateRulesManager {

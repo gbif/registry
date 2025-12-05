@@ -15,7 +15,7 @@ package org.gbif.registry.ws.it.legacy;
 
 import org.gbif.api.model.registry.Network;
 import org.gbif.registry.database.TestCaseDatabaseInitializer;
-import org.gbif.registry.search.test.EsManageServer;
+import org.gbif.registry.search.test.ElasticsearchTestContainerConfiguration;
 import org.gbif.registry.test.TestDataFactory;
 import org.gbif.registry.ws.it.BaseItTest;
 import org.gbif.registry.ws.it.fixtures.RequestTestFixture;
@@ -48,8 +48,8 @@ public class IptNetworkResourceIT extends BaseItTest {
       TestDataFactory testDataFactory,
       RequestTestFixture requestTestFixture,
       SimplePrincipalProvider principalProvider,
-      EsManageServer esServer) {
-    super(principalProvider, esServer);
+      ElasticsearchTestContainerConfiguration elasticsearchTestContainer) {
+    super(principalProvider, elasticsearchTestContainer);
     this.testDataFactory = testDataFactory;
     this.requestTestFixture = requestTestFixture;
   }

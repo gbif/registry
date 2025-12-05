@@ -28,7 +28,7 @@ import org.gbif.api.service.pipelines.PipelinesHistoryService;
 import org.gbif.registry.pipelines.RegistryPipelinesHistoryTrackingService;
 import org.gbif.registry.ws.util.DateUtils;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -36,9 +36,9 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import javax.annotation.Nullable;
-import javax.validation.ConstraintViolationException;
-import javax.validation.constraints.NotNull;
+import jakarta.annotation.Nullable;
+import jakarta.validation.ConstraintViolationException;
+import jakarta.validation.constraints.NotNull;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -68,7 +68,6 @@ import static org.gbif.registry.security.UserRoles.EDITOR_ROLE;
 /** Pipelines History service. */
 @Hidden // TODO: Document?
 @RestController
-@Validated
 @RequestMapping(value = "pipelines/history", produces = MediaType.APPLICATION_JSON_VALUE)
 public class PipelinesHistoryResource implements PipelinesHistoryService {
 
@@ -180,6 +179,7 @@ public class PipelinesHistoryResource implements PipelinesHistoryService {
   }
 
   @Override
+  @Validated
   public long updatePipelineStep(@NotNull PipelineStep pipelineStep) {
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     return historyTrackingService.updatePipelineStep(pipelineStep, authentication.getName());
@@ -293,10 +293,10 @@ public class PipelinesHistoryResource implements PipelinesHistoryService {
       @Nullable @RequestParam(value = "pipelinesVersion", required = false) String pipelinesVersion,
       Pageable page) {
 
-    LocalDateTime startedMin = DateUtils.LOWER_BOUND_RANGE_PARSER.apply(startedMinAsString);
-    LocalDateTime startedMax = DateUtils.UPPER_BOUND_RANGE_PARSER.apply(startedMaxAsString);
-    LocalDateTime finishedMin = DateUtils.LOWER_BOUND_RANGE_PARSER.apply(finishedMinAsString);
-    LocalDateTime finishedMax = DateUtils.UPPER_BOUND_RANGE_PARSER.apply(finishedMaxAsString);
+    OffsetDateTime startedMin = DateUtils.LOWER_BOUND_RANGE_PARSER_OFFSET.apply(startedMinAsString);
+    OffsetDateTime startedMax = DateUtils.UPPER_BOUND_RANGE_PARSER_OFFSET.apply(startedMaxAsString);
+    OffsetDateTime finishedMin = DateUtils.LOWER_BOUND_RANGE_PARSER_OFFSET.apply(finishedMinAsString);
+    OffsetDateTime finishedMax = DateUtils.UPPER_BOUND_RANGE_PARSER_OFFSET.apply(finishedMaxAsString);
 
     return historyTrackingService.search(
         datasetKey,

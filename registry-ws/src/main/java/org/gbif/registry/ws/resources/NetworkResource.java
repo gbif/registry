@@ -13,6 +13,8 @@
  */
 package org.gbif.registry.ws.resources;
 
+import jakarta.validation.Validator;
+
 import org.gbif.api.annotation.NullToNotFound;
 import org.gbif.api.annotation.Trim;
 import org.gbif.api.documentation.CommonParameters;
@@ -21,8 +23,6 @@ import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Network;
 import org.gbif.api.model.registry.Organization;
-import org.gbif.api.model.registry.PostPersist;
-import org.gbif.api.model.registry.PrePersist;
 import org.gbif.api.model.registry.search.KeyTitleResult;
 import org.gbif.api.model.registry.search.NetworkRequestSearchParams;
 import org.gbif.api.service.registry.NetworkService;
@@ -41,9 +41,6 @@ import org.gbif.ws.WebApplicationException;
 
 import java.util.List;
 import java.util.UUID;
-
-import javax.validation.Valid;
-import javax.validation.groups.Default;
 
 import org.springframework.context.annotation.Primary;
 import org.springframework.http.HttpStatus;
@@ -104,13 +101,15 @@ public class NetworkResource extends BaseNetworkEntityResource<Network, NetworkL
   public NetworkResource(
       MapperServiceLocator mapperServiceLocator,
       EventManager eventManager,
-      WithMyBatis withMyBatis) {
+      WithMyBatis withMyBatis,
+      Validator validator) {
     super(
         mapperServiceLocator.getNetworkMapper(),
         mapperServiceLocator,
         Network.class,
         eventManager,
-        withMyBatis);
+        withMyBatis,
+        validator);
     this.eventManager = eventManager;
     this.datasetMapper = mapperServiceLocator.getDatasetMapper();
     this.networkMapper = mapperServiceLocator.getNetworkMapper();
@@ -131,7 +130,7 @@ public class NetworkResource extends BaseNetworkEntityResource<Network, NetworkL
   @GetMapping("{key}")
   @NullToNotFound("/network/{key}")
   @Override
-  public Network get(@PathVariable UUID key) {
+  public Network get(@PathVariable("key") UUID key) {
     return super.get(key);
   }
 
@@ -155,7 +154,7 @@ public class NetworkResource extends BaseNetworkEntityResource<Network, NetworkL
   @ApiResponse(responseCode = "201", description = "Network created, new network's UUID returned")
   @Docs.DefaultUnsuccessfulWriteResponses
   @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
-  @Validated({PrePersist.class, Default.class})
+  @Secured({ADMIN_ROLE, EDITOR_ROLE, IPT_ROLE})
   @Override
   public UUID create(@RequestBody @Trim Network network) {
     return super.create(network);
@@ -182,9 +181,9 @@ public class NetworkResource extends BaseNetworkEntityResource<Network, NetworkL
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
   @PutMapping(value = "{key}", consumes = MediaType.APPLICATION_JSON_VALUE)
-  @Validated({PostPersist.class, Default.class})
+  @Secured({ADMIN_ROLE, EDITOR_ROLE, IPT_ROLE})
   @Override
-  public void update(@PathVariable("key") UUID key, @Valid @RequestBody @Trim Network network) {
+  public void update(@PathVariable("key") UUID key, @RequestBody @Trim Network network) {
     super.update(key, network);
   }
 
@@ -214,8 +213,9 @@ public class NetworkResource extends BaseNetworkEntityResource<Network, NetworkL
   @ApiResponse(responseCode = "204", description = "Network deleted")
   @Docs.DefaultUnsuccessfulWriteResponses
   @DeleteMapping("{key}")
+  @Secured({ADMIN_ROLE, EDITOR_ROLE, IPT_ROLE})
   @Override
-  public void delete(@PathVariable UUID key) {
+  public void delete(@PathVariable("key") UUID key) {
     super.delete(key);
   }
 
@@ -311,7 +311,7 @@ public class NetworkResource extends BaseNetworkEntityResource<Network, NetworkL
   @PostMapping("{key}/constituents/{datasetKey}")
   @Secured({ADMIN_ROLE, EDITOR_ROLE, IPT_ROLE})
   @Override
-  public void addConstituent(@PathVariable("key") UUID networkKey, @PathVariable UUID datasetKey) {
+  public void addConstituent(@PathVariable("key") UUID networkKey, @PathVariable("datasetKey") UUID datasetKey) {
     if (networkMapper.constituentExists(networkKey, datasetKey)) {
       throw new WebApplicationException(
           "Dataset " + datasetKey + " is already connected to the network " + networkKey,
@@ -343,7 +343,7 @@ public class NetworkResource extends BaseNetworkEntityResource<Network, NetworkL
   @Secured({ADMIN_ROLE, EDITOR_ROLE, IPT_ROLE})
   @Override
   public void removeConstituent(
-      @PathVariable("key") UUID networkKey, @PathVariable UUID datasetKey) {
+      @PathVariable("key") UUID networkKey, @PathVariable("datasetKey") UUID datasetKey) {
     if (!networkMapper.constituentExists(networkKey, datasetKey)) {
       throw new WebApplicationException(
           "Dataset " + datasetKey + " is not connected to the network " + networkKey,

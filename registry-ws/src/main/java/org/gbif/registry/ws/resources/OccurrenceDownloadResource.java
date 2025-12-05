@@ -28,8 +28,8 @@ import java.util.Date;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
-import javax.servlet.http.HttpServletResponse;
-import javax.validation.constraints.NotNull;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.constraints.NotNull;
 import org.gbif.api.annotation.NullToNotFound;
 import org.gbif.api.model.common.export.ExportFormat;
 import org.gbif.api.model.common.paging.Pageable;
@@ -128,7 +128,7 @@ public class OccurrenceDownloadResource extends BaseDownloadResource {
   @NullToNotFound(useUrlMapping = true)
   @Override
   public Download getByDoi(
-      @NotNull @PathVariable String prefix, @NotNull @PathVariable String suffix) {
+      @NotNull @PathVariable("prefix") String prefix, @NotNull @PathVariable("suffix") String suffix) {
     return super.getByDoi(prefix, suffix);
   }
 
@@ -146,7 +146,7 @@ public class OccurrenceDownloadResource extends BaseDownloadResource {
   @GetMapping("user/{user}")
   @Override
   public PagingResponse<Download> listByUser(
-      @PathVariable String user,
+      @PathVariable("user") String user,
       Pageable page,
       @RequestParam(value = "status", required = false) Set<Download.Status> status,
       @RequestParam(value = "from", required = false)
@@ -173,7 +173,7 @@ public class OccurrenceDownloadResource extends BaseDownloadResource {
   @GetMapping("user/{user}/count")
   @Override
   public long countByUser(
-      @PathVariable String user,
+      @PathVariable("user") String user,
       @RequestParam(value = "status", required = false) Set<Download.Status> status,
       @RequestParam(value = "from", required = false)
           @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)

@@ -37,7 +37,7 @@ import org.springframework.stereotype.Service;
 
 import com.google.common.base.Strings;
 
-@Service
+@Service("collectionBatchHandler")
 public class CollectionBatchHandler extends BaseBatchHandler<Collection> {
 
   private final CollectionService collectionService;

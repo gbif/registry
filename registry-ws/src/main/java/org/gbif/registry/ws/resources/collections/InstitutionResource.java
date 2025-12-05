@@ -51,7 +51,7 @@ import java.lang.annotation.Target;
 import java.util.List;
 import java.util.UUID;
 
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletResponse;
 
 import org.geojson.FeatureCollection;
 import org.springframework.beans.factory.annotation.Value;
@@ -167,7 +167,7 @@ public class InstitutionResource
   @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("{key}")
   @NullToNotFound("/grscicoll/institution/{key}")
-  public Institution get(@PathVariable UUID key) {
+  public Institution get(@PathVariable("key") UUID key) {
     return institutionService.get(key);
   }
 
@@ -185,7 +185,7 @@ public class InstitutionResource
   @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("latimerCore/{key}")
   @NullToNotFound("/grscicoll/institution/latimerCore/{key}")
-  public OrganisationalUnit getAsLatimerCore(@PathVariable UUID key) {
+  public OrganisationalUnit getAsLatimerCore(@PathVariable("key") UUID key) {
     return institutionService.getAsLatimerCore(key);
   }
 
@@ -278,7 +278,7 @@ public class InstitutionResource
   @Docs.DefaultUnsuccessfulWriteResponses
   @DeleteMapping("{key}")
   @Override
-  public void delete(@PathVariable UUID key) {
+  public void delete(@PathVariable("key") UUID key) {
     super.delete(key);
   }
 

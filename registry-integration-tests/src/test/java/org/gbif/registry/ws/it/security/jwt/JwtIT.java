@@ -15,7 +15,7 @@ package org.gbif.registry.ws.it.security.jwt;
 
 import org.gbif.api.model.collections.Institution;
 import org.gbif.registry.identity.model.ExtendedLoggedUser;
-import org.gbif.registry.search.test.EsManageServer;
+import org.gbif.registry.search.test.ElasticsearchTestContainerConfiguration;
 import org.gbif.registry.security.jwt.JwtConfiguration;
 import org.gbif.registry.ws.it.BaseItTest;
 import org.gbif.registry.ws.it.fixtures.RequestTestFixture;
@@ -49,8 +49,8 @@ public class JwtIT extends BaseItTest {
       JwtConfiguration jwtConfiguration,
       RequestTestFixture requestTestFixture,
       SimplePrincipalProvider principalProvider,
-      EsManageServer esServer) {
-    super(principalProvider, esServer);
+      ElasticsearchTestContainerConfiguration elasticsearchTestContainer) {
+    super(principalProvider, elasticsearchTestContainer);
     this.jwtConfiguration = jwtConfiguration;
     this.requestTestFixture = requestTestFixture;
   }
@@ -90,7 +90,7 @@ public class JwtIT extends BaseItTest {
   @Test
   public void invalidTokenTest() throws Exception {
     JwtConfiguration config = new JwtConfiguration();
-    config.setSigningKey("fake");
+    config.setSigningKey("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=");
     String token = JwtUtils.generateJwt(TestConstants.TEST_ADMIN, config);
 
     ResultActions actions =

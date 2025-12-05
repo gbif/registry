@@ -32,7 +32,7 @@ public interface BaseDatasetDownloadUsageClient extends DatasetOccurrenceDownloa
 
   @RequestMapping(
       method = RequestMethod.GET,
-      value = "{datasetKey}",
+      value = "/{datasetKey}",
       produces = MediaType.APPLICATION_JSON_VALUE)
   @ResponseBody
   @Override

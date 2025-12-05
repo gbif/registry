@@ -28,7 +28,7 @@ import org.gbif.registry.persistence.mapper.DatasetProcessStatusMapper;
 import org.gbif.registry.persistence.mapper.pipelines.PipelineProcessMapper;
 
 import java.net.URI;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.Collections;
 import java.util.UUID;
 
@@ -100,7 +100,7 @@ public class RegistryIngestionHistoryServiceTest {
 
   private PipelineProcess createPipelineProcess(UUID datasetKey, int attempt) {
     PipelineStep step =
-        new PipelineStep().setStarted(LocalDateTime.now()).setType(StepType.ABCD_TO_VERBATIM);
+        new PipelineStep().setStarted(OffsetDateTime.now()).setType(StepType.ABCD_TO_VERBATIM);
 
     PipelineExecution execution = new PipelineExecution();
     execution.setSteps(Collections.singleton(step));

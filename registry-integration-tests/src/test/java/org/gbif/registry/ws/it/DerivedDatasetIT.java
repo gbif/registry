@@ -27,7 +27,7 @@ import org.gbif.registry.domain.ws.DerivedDatasetUpdateRequest;
 import org.gbif.registry.domain.ws.DerivedDatasetUsage;
 import org.gbif.registry.identity.service.IdentityService;
 import org.gbif.registry.persistence.mapper.DerivedDatasetMapper;
-import org.gbif.registry.search.test.EsManageServer;
+import org.gbif.registry.search.test.ElasticsearchTestContainerConfiguration;
 import org.gbif.registry.test.TestDataFactory;
 import org.gbif.registry.ws.it.fixtures.RequestTestFixture;
 import org.gbif.registry.ws.resources.DerivedDatasetResource;
@@ -43,7 +43,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Stream;
 
-import javax.annotation.Nullable;
+import jakarta.annotation.Nullable;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -78,13 +78,13 @@ public class DerivedDatasetIT extends BaseItTest {
   public DerivedDatasetIT(
       DerivedDatasetResource derivedDatasetResource,
       @Nullable SimplePrincipalProvider simplePrincipalProvider,
-      EsManageServer esServer,
+      ElasticsearchTestContainerConfiguration elasticsearchTestContainer,
       RequestTestFixture requestTestFixture,
       DerivedDatasetMapper derivedDatasetMapper,
       TestDataFactory testDataFactory,
       OccurrenceDownloadResource occurrenceDownloadService,
       IdentityService identityService) {
-    super(simplePrincipalProvider, esServer);
+    super(simplePrincipalProvider, elasticsearchTestContainer);
     this.derivedDatasetResource = derivedDatasetResource;
     this.requestTestFixture = requestTestFixture;
     this.derivedDatasetMapper = derivedDatasetMapper;

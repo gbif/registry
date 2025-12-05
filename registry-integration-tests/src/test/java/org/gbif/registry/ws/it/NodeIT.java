@@ -33,7 +33,7 @@ import org.gbif.api.vocabulary.GbifRegion;
 import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.api.vocabulary.NodeType;
 import org.gbif.api.vocabulary.ParticipationStatus;
-import org.gbif.registry.search.test.EsManageServer;
+import org.gbif.registry.search.test.ElasticsearchTestContainerConfiguration;
 import org.gbif.registry.test.TestDataFactory;
 import org.gbif.registry.ws.client.DatasetClient;
 import org.gbif.registry.ws.client.InstallationClient;
@@ -47,12 +47,12 @@ import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.UUID;
 
-import javax.annotation.Nullable;
+import jakarta.annotation.Nullable;
 
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.web.server.LocalServerPort;
+import org.springframework.boot.test.web.server.LocalServerPort;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -99,7 +99,7 @@ public class NodeIT extends NetworkEntityIT<Node> {
       DatasetService datasetResource,
       @Nullable SimplePrincipalProvider principalProvider,
       TestDataFactory testDataFactory,
-      EsManageServer esServer,
+      ElasticsearchTestContainerConfiguration elasticsearchTestContainer,
       KeyStore keyStore,
       @LocalServerPort int localServerPort) {
     super(
@@ -109,7 +109,7 @@ public class NodeIT extends NetworkEntityIT<Node> {
         NodeClient.class,
         principalProvider,
         testDataFactory,
-        esServer);
+        elasticsearchTestContainer);
     this.organizationResource = organizationResource;
     this.organizationClient = prepareClient(localServerPort, keyStore, OrganizationClient.class);
     this.installationResource = installationResource;

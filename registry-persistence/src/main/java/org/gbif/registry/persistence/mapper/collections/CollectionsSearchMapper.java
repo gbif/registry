@@ -23,7 +23,7 @@ import org.gbif.registry.persistence.mapper.collections.params.InstitutionListPa
 
 import java.util.List;
 
-import javax.annotation.Nullable;
+import jakarta.annotation.Nullable;
 
 import org.apache.ibatis.annotations.Param;
 

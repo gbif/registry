@@ -23,13 +23,14 @@ import java.util.Date;
 import java.util.Properties;
 
 import org.apache.http.HttpHost;
-import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
-import org.elasticsearch.action.search.SearchRequest;
-import org.elasticsearch.action.search.SearchResponse;
-import org.elasticsearch.client.RequestOptions;
+import co.elastic.clients.elasticsearch.ElasticsearchClient;
+import co.elastic.clients.elasticsearch.core.SearchRequest;
+import co.elastic.clients.elasticsearch.core.SearchResponse;
+import co.elastic.clients.elasticsearch.indices.DeleteIndexRequest;
+import co.elastic.clients.json.jackson.JacksonJsonpMapper;
+import co.elastic.clients.transport.ElasticsearchTransport;
+import co.elastic.clients.transport.rest_client.RestClientTransport;
 import org.elasticsearch.client.RestClient;
-import org.elasticsearch.client.RestHighLevelClient;
-import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
@@ -61,9 +62,11 @@ public class DatasetBatchIndexerIT extends BaseDBTest {
     return properties.getProperty("elasticsearch.version");
   }
 
-  private RestHighLevelClient buildRestClient() {
+  private ElasticsearchClient buildRestClient() {
     HttpHost host = new HttpHost("localhost", embeddedElastic.getMappedPort(9200));
-    return new RestHighLevelClient(RestClient.builder(host));
+    RestClient restClient = RestClient.builder(host).build();
+    ElasticsearchTransport transport = new RestClientTransport(restClient, new JacksonJsonpMapper());
+    return new ElasticsearchClient(transport);
   }
 
   @BeforeAll
@@ -109,22 +112,22 @@ public class DatasetBatchIndexerIT extends BaseDBTest {
         new DatasetBatchIndexerCommand(getConfiguration());
     datasetBatchIndexerCommand.doRun();
 
-    RestHighLevelClient restHighLevelClient = buildRestClient();
+    ElasticsearchClient elasticsearchClient = buildRestClient();
 
-    SearchResponse searchResponse =
-        restHighLevelClient.search(
-            new SearchRequest().indices(INDEX_ALIAS).source(new SearchSourceBuilder().size(0)),
-            RequestOptions.DEFAULT);
+    SearchResponse<Void> searchResponse =
+        elasticsearchClient.search(SearchRequest.of(s -> s
+            .index(INDEX_ALIAS)
+            .size(0)), Void.class);
 
     Assertions.assertEquals(
         DATASETS_TO_INDEX,
-        searchResponse.getHits().getTotalHits().value,
+        searchResponse.hits().total().value(),
         "Wrong amount of indexed dataset");
   }
 
   @AfterEach
   public void deleteIndex() throws IOException {
-    buildRestClient().indices().delete(new DeleteIndexRequest(INDEX_NAME), RequestOptions.DEFAULT);
+    buildRestClient().indices().delete(DeleteIndexRequest.of(d -> d.index(INDEX_NAME)));
   }
 
   @AfterAll

@@ -50,9 +50,8 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import javax.validation.Valid;
-import javax.validation.constraints.NotNull;
-import javax.validation.groups.Default;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
@@ -90,6 +89,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static org.gbif.registry.security.UserRoles.ADMIN_ROLE;
+import static org.gbif.registry.security.UserRoles.EDITOR_ROLE;
+import static org.gbif.registry.security.UserRoles.IPT_ROLE;
 
 @io.swagger.v3.oas.annotations.tags.Tag(
     name = "Technical installations",
@@ -126,13 +127,15 @@ public class InstallationResource
       MapperServiceLocator mapperServiceLocator,
       EventManager eventManager,
       WithMyBatis withMyBatis,
-      @Autowired(required = false) MessagePublisher messagePublisher) {
+      @Autowired(required = false) MessagePublisher messagePublisher,
+      jakarta.validation.Validator validator) {
     super(
         mapperServiceLocator.getInstallationMapper(),
         mapperServiceLocator,
         Installation.class,
         eventManager,
-        withMyBatis);
+        withMyBatis,
+        validator);
     this.datasetMapper = mapperServiceLocator.getDatasetMapper();
     this.installationMapper = mapperServiceLocator.getInstallationMapper();
     this.organizationMapper = mapperServiceLocator.getOrganizationMapper();
@@ -154,7 +157,7 @@ public class InstallationResource
   @GetMapping("{key}")
   @NullToNotFound("/installation/{key}")
   @Override
-  public Installation get(@PathVariable UUID key) {
+  public Installation get(@PathVariable("key") UUID key) {
     return super.get(key);
   }
 
@@ -180,7 +183,7 @@ public class InstallationResource
       description = "Installation created, new installation's UUID returned")
   @Docs.DefaultUnsuccessfulWriteResponses
   @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
-  @Validated({PrePersist.class, Default.class})
+  @Secured({ADMIN_ROLE, EDITOR_ROLE, IPT_ROLE})
   @Override
   public UUID create(@RequestBody @Trim Installation installation) {
     return super.create(installation);
@@ -207,10 +210,10 @@ public class InstallationResource
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
   @PutMapping(value = "{key}", consumes = MediaType.APPLICATION_JSON_VALUE)
-  @Validated({PostPersist.class, Default.class})
+  @Secured({ADMIN_ROLE, EDITOR_ROLE, IPT_ROLE})
   @Override
   public void update(
-      @PathVariable("key") UUID key, @Valid @RequestBody @Trim Installation installation) {
+      @PathVariable("key") UUID key, @RequestBody @Trim Installation installation) {
     super.update(key, installation);
   }
 
@@ -241,8 +244,9 @@ public class InstallationResource
   @ApiResponse(responseCode = "204", description = "Installation deleted")
   @Docs.DefaultUnsuccessfulWriteResponses
   @DeleteMapping("{key}")
+  @Secured({ADMIN_ROLE, EDITOR_ROLE, IPT_ROLE})
   @Override
-  public void delete(@PathVariable UUID key) {
+  public void delete(@PathVariable("key") UUID key) {
     super.delete(key);
   }
 
@@ -315,9 +319,8 @@ public class InstallationResource
       @PathVariable("key") UUID installationKey, Pageable page) {
     return new PagingResponse<>(
         page,
-        new Long(
-            datasetMapper.count(
-                DatasetListParams.builder().installationKey(installationKey).build())),
+      datasetMapper.count(
+        DatasetListParams.builder().installationKey(installationKey).build()),
         datasetMapper.list(
             DatasetListParams.builder().installationKey(installationKey).page(page).build()));
   }
@@ -396,7 +399,7 @@ public class InstallationResource
    */
   @Hidden
   @GetMapping("location/{type}")
-  public String organizationsAsGeoJSON(@PathVariable InstallationType type) {
+  public String organizationsAsGeoJSON(@PathVariable("type") InstallationType type) {
     List<Organization> orgs = organizationMapper.hostingInstallationsOf(type, true);
 
     // to increment the count on duplicates
@@ -443,7 +446,7 @@ public class InstallationResource
   @Transactional
   @Secured(ADMIN_ROLE)
   public void createMetasync(
-      @PathVariable UUID installationKey,
+      @PathVariable("installationKey") UUID installationKey,
       @RequestBody @Valid @NotNull @Trim MetasyncHistory metasyncHistory) {
     checkArgument(
         installationKey.equals(metasyncHistory.getInstallationKey()),
@@ -473,7 +476,7 @@ public class InstallationResource
   @GetMapping("{installationKey}/metasync")
   @Override
   public PagingResponse<MetasyncHistory> listMetasync(
-      @PathVariable UUID installationKey, Pageable page) {
+      @PathVariable("installationKey") UUID installationKey, Pageable page) {
     return new PagingResponse<>(
         page,
         (long) metasyncHistoryMapper.countByInstallation(installationKey),

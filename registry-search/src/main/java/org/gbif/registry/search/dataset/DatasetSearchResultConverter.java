@@ -36,8 +36,11 @@ import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import org.elasticsearch.search.SearchHit;
-import org.elasticsearch.search.fetch.subphase.highlight.HighlightField;
+import co.elastic.clients.elasticsearch.core.search.Hit;
+
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -49,27 +52,30 @@ public class DatasetSearchResultConverter
 
   private static final Pattern NESTED_PATTERN = Pattern.compile("^\\w+(\\.\\w+)+$");
   private static final Predicate<String> IS_NESTED = s -> NESTED_PATTERN.matcher(s).find();
+  private final ObjectMapper mapper = new ObjectMapper();
 
   @Override
-  public DatasetSearchResult toSearchResult(SearchHit hit) {
+  public DatasetSearchResult toSearchResult(Hit<com.fasterxml.jackson.databind.node.ObjectNode> hit) throws JsonProcessingException {
 
     DatasetSearchResult d = new DatasetSearchResult();
-    Map<String, Object> fields = hit.getSourceAsMap();
-    d.setKey(UUID.fromString(hit.getId()));
-    getHighlightOrStringValue(fields, hit.getHighlightFields(), "title").ifPresent(d::setTitle);
+    String source = mapper.writeValueAsString(hit.source());
+    Map<String, Object> fields = mapper.readValue(source, new TypeReference<>() {});
+
+    d.setKey(UUID.fromString(hit.id()));
+    getHighlightOrStringValue(fields, hit.highlight(), "title").ifPresent(d::setTitle);
     getDatasetTypeValue(fields, "type").ifPresent(d::setType);
     getDatasetSubTypeValue(fields, "subtype").ifPresent(d::setSubtype);
-    getHighlightOrStringValue(fields, hit.getHighlightFields(), "description")
+    getHighlightOrStringValue(fields, hit.highlight(), "description")
         .ifPresent(d::setDescription);
 
     getUuidValue(fields, "publishingOrganizationKey").ifPresent(d::setPublishingOrganizationKey);
-    getHighlightOrStringValue(fields, hit.getHighlightFields(), "publishingOrganizationTitle")
+    getHighlightOrStringValue(fields, hit.highlight(), "publishingOrganizationTitle")
         .ifPresent(d::setPublishingOrganizationTitle);
     getCountryValue(fields, "publishingCountry").ifPresent(d::setPublishingCountry);
     getUuidValue(fields, "endorsingNodeKey").ifPresent(d::setEndorsingNodeKey);
 
     getUuidValue(fields, "hostingOrganizationKey").ifPresent(d::setHostingOrganizationKey);
-    getHighlightOrStringValue(fields, hit.getHighlightFields(), "hostingOrganizationTitle")
+    getHighlightOrStringValue(fields, hit.highlight(), "hostingOrganizationTitle")
         .ifPresent(d::setHostingOrganizationTitle);
     getCountryValue(fields, "hostingCountry").ifPresent(d::setHostingCountry);
 
@@ -94,11 +100,13 @@ public class DatasetSearchResultConverter
   }
 
   @Override
-  public DatasetSuggestResult toSearchSuggestResult(SearchHit hit) {
+  public DatasetSuggestResult toSearchSuggestResult(Hit<com.fasterxml.jackson.databind.node.ObjectNode> hit)
+    throws JsonProcessingException {
     DatasetSuggestResult d = new DatasetSuggestResult();
-    d.setKey(UUID.fromString(hit.getId()));
+    d.setKey(UUID.fromString(hit.id()));
 
-    Map<String, Object> fields = hit.getSourceAsMap();
+    String source = mapper.writeValueAsString(hit.source());
+    Map<String,Object> fields = mapper.readValue(source, new TypeReference<>() {});
 
     getStringValue(fields, "title").ifPresent(d::setTitle);
     getDatasetTypeValue(fields, "type").ifPresent(d::setType);
@@ -151,12 +159,12 @@ public class DatasetSearchResultConverter
   }
 
   private static Optional<String> getHighlightOrStringValue(
-      Map<String, Object> fields, Map<String, HighlightField> hlFields, String esField) {
+      Map<String, Object> fields, Map<String, List<String>> highlight, String esField) {
     Optional<String> fieldValue = getValue(fields, esField, Function.identity());
-    if (Objects.nonNull(hlFields)) {
-      Optional<String> hlValue =
-          Optional.ofNullable(hlFields.get(esField))
-              .map(hlField -> hlField.getFragments()[0].string());
+    if (Objects.nonNull(highlight)) {
+      Optional<String> hlValue = Optional.ofNullable(highlight.get(esField))
+              .filter(hlField -> !hlField.isEmpty())
+              .map(hlField -> hlField.get(0));
       return hlValue.isPresent() ? hlValue : fieldValue;
     }
     return fieldValue;
@@ -206,7 +214,7 @@ public class DatasetSearchResultConverter
             if (concept != null) {
               categories.add(concept);
             }
-            
+
             // Add lineage values (parent categories)
             Object lineageObj = categoryObj.get("lineage");
             if (lineageObj instanceof List) {

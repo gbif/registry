@@ -1,7 +1,7 @@
 # Organize Import Order
 0=org.gbif
 1=java
-2=javax
+2=jakarta
 3=org
 4=com
 5=

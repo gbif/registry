@@ -19,7 +19,7 @@ import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 import java.util.Date;
 
-import javax.validation.Valid;
+import jakarta.validation.Valid;
 
 import org.dspace.xoai.dataprovider.DataProvider;
 import org.dspace.xoai.dataprovider.builder.OAIRequestParametersBuilder;

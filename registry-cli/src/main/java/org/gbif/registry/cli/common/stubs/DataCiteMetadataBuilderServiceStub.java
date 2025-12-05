@@ -25,7 +25,7 @@ import org.gbif.registry.domain.ws.DerivedDatasetUsage;
 
 import java.util.List;
 
-import javax.annotation.Nullable;
+import jakarta.annotation.Nullable;
 
 public class DataCiteMetadataBuilderServiceStub implements DataCiteMetadataBuilderService {
   @Override

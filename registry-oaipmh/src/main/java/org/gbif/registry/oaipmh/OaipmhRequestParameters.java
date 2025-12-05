@@ -13,7 +13,7 @@
  */
 package org.gbif.registry.oaipmh;
 
-import javax.annotation.Nullable;
+import jakarta.annotation.Nullable;
 
 /** Wrapper for OAI-PMH request parameters. */
 public class OaipmhRequestParameters {

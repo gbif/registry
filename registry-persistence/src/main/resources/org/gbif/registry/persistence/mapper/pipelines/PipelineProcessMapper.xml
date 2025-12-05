@@ -234,14 +234,14 @@
   <update id="setSubmittedPipelineStepToQueued">
     UPDATE pipeline_step
     SET state = 'QUEUED',
-        modified = now(),
-        modified_by = #{user,jdbcType=VARCHAR}
+    modified = now(),
+    modified_by = #{user,jdbcType=VARCHAR}
     WHERE key = #{key,jdbcType=BIGINT} AND state = 'SUBMITTED'
   </update>
 
   <select id="search" resultMap="SEARCH_RESULT_MAP">
     SELECT pp.dataset_key dataset_key, pp.attempt, pe.key execution_key, pe.rerun_reason, ps.type, ps.state, ps.started,
-            ps.finished, ps.pipelines_version
+    ps.finished, ps.pipelines_version
     FROM pipeline_execution pe
     INNER JOIN pipeline_process pp on pp."key" = pe.pipeline_process_key
     INNER JOIN pipeline_step ps on ps.pipeline_execution_key = pe."key"
@@ -333,10 +333,10 @@
     WHERE key = #{pipelineExecutionKey,jdbcType=BIGINT}
     AND
     (
-      SELECT COUNT(1)
-      FROM pipeline_step
-      WHERE finished IS NULL
-      AND pipeline_execution_key = #{pipelineExecutionKey,jdbcType=BIGINT}
+    SELECT COUNT(1)
+    FROM pipeline_step
+    WHERE finished IS NULL
+    AND pipeline_execution_key = #{pipelineExecutionKey,jdbcType=BIGINT}
     ) = 0
   </update>
 

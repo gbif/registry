@@ -18,14 +18,14 @@ import org.gbif.registry.database.TestCaseDatabaseInitializer;
 import org.gbif.registry.domain.ws.AuthenticationDataParameters;
 import org.gbif.registry.domain.ws.UserCreation;
 import org.gbif.registry.identity.model.ExtendedLoggedUser;
-import org.gbif.registry.search.test.EsManageServer;
+import org.gbif.registry.search.test.ElasticsearchTestContainerConfiguration;
 import org.gbif.registry.ws.it.fixtures.RequestTestFixture;
 import org.gbif.registry.ws.it.fixtures.UserTestFixture;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
 import java.util.stream.Collectors;
 
-import javax.annotation.Nullable;
+import jakarta.annotation.Nullable;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -61,8 +61,8 @@ public class UserIT extends BaseItTest {
       UserTestFixture userTestFixture,
       RequestTestFixture requestTestFixture,
       @Nullable SimplePrincipalProvider simplePrincipalProvider,
-      EsManageServer esServer) {
-    super(simplePrincipalProvider, esServer);
+      ElasticsearchTestContainerConfiguration elasticsearchTestContainer) {
+    super(simplePrincipalProvider, elasticsearchTestContainer);
     this.userTestFixture = userTestFixture;
     this.requestTestFixture = requestTestFixture;
   }

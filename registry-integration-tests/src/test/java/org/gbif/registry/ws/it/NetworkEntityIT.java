@@ -29,14 +29,14 @@ import org.gbif.api.service.registry.NetworkEntityService;
 import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.api.vocabulary.UserRole;
 import org.gbif.registry.database.TestCaseDatabaseInitializer;
-import org.gbif.registry.search.test.EsManageServer;
+import org.gbif.registry.search.test.ElasticsearchTestContainerConfiguration;
 import org.gbif.registry.test.TestDataFactory;
 import org.gbif.registry.ws.client.NetworkEntityClient;
 import org.gbif.registry.ws.it.fixtures.TestConstants;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 import org.gbif.ws.security.KeyStore;
 
-import java.security.AccessControlException;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.util.ArrayList;
@@ -46,9 +46,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import javax.annotation.Nullable;
+import jakarta.annotation.Nullable;
 import javax.sql.DataSource;
-import javax.validation.ValidationException;
+import jakarta.validation.ValidationException;
 
 import org.apache.commons.beanutils.BeanUtils;
 import org.junit.jupiter.api.Disabled;
@@ -70,6 +70,7 @@ import com.google.common.collect.Lists;
 
 import static org.gbif.registry.ws.it.LenientAssert.assertLenientEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -102,8 +103,8 @@ public abstract class NetworkEntityIT<
       Class<? extends NetworkEntityService<T>> cls,
       @Nullable SimplePrincipalProvider simplePrincipalProvider,
       TestDataFactory testDataFactory,
-      EsManageServer esServer) {
-    super(simplePrincipalProvider, esServer);
+      ElasticsearchTestContainerConfiguration elasticsearchTestContainer) {
+    super(simplePrincipalProvider, elasticsearchTestContainer);
     this.service = service;
     this.client = prepareClient(localServerPort, keyStore, cls);
     this.testDataFactory = testDataFactory;
@@ -208,7 +209,7 @@ public abstract class NetworkEntityIT<
       try {
         create(newEntity(serviceType), serviceType, 1);
       } catch (Exception e) {
-        assertTrue(e instanceof AccessControlException);
+        assertInstanceOf(SecurityException.class, e);
       }
     }
   }
@@ -461,7 +462,7 @@ public abstract class NetworkEntityIT<
     MachineTagTests.testAddDelete(service, entity, testDataFactory);
   }
 
-  @Disabled("client should throw AccessControlException")
+  @Disabled("client should throw SecurityException")
   @ParameterizedTest
   @EnumSource(
       value = ServiceType.class,
@@ -473,14 +474,14 @@ public abstract class NetworkEntityIT<
       getSimplePrincipalProvider().setPrincipal("notExisting");
       T entity = create(newEntity(serviceType), serviceType, 1);
       assertThrows(
-          AccessControlException.class,
+        SecurityException.class,
           () -> MachineTagTests.testAddDelete(service, entity, testDataFactory));
     } else {
-      throw new AccessControlException("");
+      throw new SecurityException("");
     }
   }
 
-  @Disabled("client should throw AccessControlException")
+  @Disabled("client should throw SecurityException")
   @ParameterizedTest
   @EnumSource(
       value = ServiceType.class,
@@ -492,14 +493,14 @@ public abstract class NetworkEntityIT<
       getSimplePrincipalProvider().setPrincipal("editor");
       T entity = create(newEntity(serviceType), ServiceType.CLIENT, 1);
       assertThrows(
-          AccessControlException.class,
+        SecurityException.class,
           () -> MachineTagTests.testAddDelete(service, entity, testDataFactory));
     } else {
-      throw new AccessControlException("");
+      throw new SecurityException("");
     }
   }
 
-  @Disabled("client should throw AccessControlException")
+  @Disabled("client should throw SecurityException")
   @ParameterizedTest
   @EnumSource(
       value = ServiceType.class,
@@ -520,10 +521,10 @@ public abstract class NetworkEntityIT<
       getSimplePrincipalProvider().setPrincipal("editor");
       setSecurityPrincipal(getSimplePrincipalProvider(), UserRole.REGISTRY_EDITOR);
       assertThrows(
-          AccessControlException.class,
+        SecurityException.class,
           () -> service.deleteMachineTag(entity.getKey(), machineTags.get(0).getKey()));
     } else {
-      throw new AccessControlException("Only client calls are tested");
+      throw new SecurityException("Only client calls are tested");
     }
   }
 

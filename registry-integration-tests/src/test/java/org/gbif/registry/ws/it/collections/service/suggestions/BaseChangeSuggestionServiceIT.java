@@ -44,7 +44,7 @@ import org.gbif.ws.client.filter.SimplePrincipalProvider;
 import java.util.Collections;
 import java.util.UUID;
 
-import javax.validation.ValidationException;
+import jakarta.validation.ValidationException;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;

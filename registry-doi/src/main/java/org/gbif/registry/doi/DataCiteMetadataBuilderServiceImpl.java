@@ -37,7 +37,7 @@ import org.gbif.registry.persistence.mapper.OrganizationMapper;
 
 import java.util.List;
 
-import javax.annotation.Nullable;
+import jakarta.annotation.Nullable;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;

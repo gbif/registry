@@ -13,6 +13,8 @@
  */
 package org.gbif.registry.security.config;
 
+import static org.springframework.security.core.context.SecurityContextHolder.MODE_INHERITABLETHREADLOCAL;
+
 import org.gbif.registry.identity.util.RegistryPasswordEncoder;
 import org.gbif.registry.security.EditorAuthorizationFilter;
 import org.gbif.registry.security.LegacyAuthorizationFilter;
@@ -32,25 +34,31 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.access.expression.method.DefaultMethodSecurityExpressionHandler;
+import org.springframework.security.access.expression.method.MethodSecurityExpressionHandler;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
-import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.context.SecurityContextHolderStrategy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.csrf.CsrfFilter;
 import org.springframework.security.web.firewall.HttpFirewall;
 import org.springframework.security.web.firewall.StrictHttpFirewall;
+import org.springframework.validation.beanvalidation.MethodValidationPostProcessor;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 @Configuration
 @EnableWebSecurity
-public class WebSecurityConfigurer extends WebSecurityConfigurerAdapter {
+@EnableMethodSecurity(securedEnabled = true, jsr250Enabled = true, prePostEnabled = true)
+public class WebSecurityConfigurer {
 
   private final ApplicationContext context;
 
@@ -63,12 +71,31 @@ public class WebSecurityConfigurer extends WebSecurityConfigurerAdapter {
     this.context = context;
   }
 
-  @Override
-  protected void configure(AuthenticationManagerBuilder auth) {
-    auth.authenticationProvider(dbAuthenticationProvider());
+  @Bean
+  static MethodSecurityExpressionHandler methodSecurityExpressionHandler() {
+    // Use the default handler provided by Spring Security 6+
+    DefaultMethodSecurityExpressionHandler expressionHandler =
+      new DefaultMethodSecurityExpressionHandler();
+
+    expressionHandler.setDefaultRolePrefix("");
+
+    return expressionHandler;
   }
 
-  private DaoAuthenticationProvider dbAuthenticationProvider() {
+  @Bean
+  static SecurityContextHolderStrategy securityContextHolderStrategy() {
+    SecurityContextHolder.setStrategyName(MODE_INHERITABLETHREADLOCAL);
+    return SecurityContextHolder.getContextHolderStrategy();
+  }
+
+  @Bean
+  public MethodValidationPostProcessor methodValidationPostProcessor() {
+    return new MethodValidationPostProcessor();
+  }
+
+
+  @Bean
+  public DaoAuthenticationProvider dbAuthenticationProvider() {
     final DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
     authProvider.setUserDetailsService(userDetailsService);
     authProvider.setPasswordEncoder(passwordEncoder());
@@ -82,44 +109,29 @@ public class WebSecurityConfigurer extends WebSecurityConfigurerAdapter {
     return firewall;
   }
 
-  @Override
-  public void configure(WebSecurity web) throws Exception {
-    super.configure(web);
-    web.httpFirewall(allowUrlEncodedSlashHttpFirewall());
-  }
+  @Bean
+  public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    http
+      .httpBasic(AbstractHttpConfigurer::disable)
+      .csrf(AbstractHttpConfigurer::disable)
+      .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+      .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+      .authorizeHttpRequests(authz -> authz
+        .anyRequest().authenticated()
+      );
 
-  @Override
-  protected void configure(HttpSecurity http) throws Exception {
-    http.httpBasic()
-        .disable()
-        .addFilterAfter(context.getBean(HttpServletRequestWrapperFilter.class), CsrfFilter.class)
-        .addFilterAfter(
-            context.getBean(RequestHeaderParamUpdateFilter.class),
-            HttpServletRequestWrapperFilter.class)
-        .addFilterAfter(context.getBean(IdentityFilter.class), RequestHeaderParamUpdateFilter.class)
-        .addFilterAfter(context.getBean(LegacyAuthorizationFilter.class), IdentityFilter.class)
-        .addFilterAfter(context.getBean(AppIdentityFilter.class), LegacyAuthorizationFilter.class)
-        .addFilterAfter(context.getBean(JwtRequestFilter.class), AppIdentityFilter.class)
-        .addFilterAfter(
-            context.getBean(AuthPreCheckCreationRequestFilter.class), JwtRequestFilter.class)
-        .addFilterAfter(
-            context.getBean(EditorAuthorizationFilter.class),
-            AuthPreCheckCreationRequestFilter.class)
-        .addFilterAfter(
-            context.getBean(GrSciCollEditorAuthorizationFilter.class),
-            EditorAuthorizationFilter.class)
-        .addFilterAfter(
-            context.getBean(ResourceNotFoundRequestFilter.class),
-            GrSciCollEditorAuthorizationFilter.class)
-        .csrf()
-        .disable()
-        .cors()
-        .and()
-        .authorizeRequests()
-        .anyRequest()
-        .authenticated();
-
-    http.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
+    // Add filters
+    http.addFilterAfter(context.getBean("httpServletRequestWrapperFilter", HttpServletRequestWrapperFilter.class), CsrfFilter.class)
+        .addFilterAfter(context.getBean("requestHeaderParamUpdateFilter", RequestHeaderParamUpdateFilter.class), HttpServletRequestWrapperFilter.class)
+        .addFilterAfter(context.getBean("identityFilter", IdentityFilter.class), RequestHeaderParamUpdateFilter.class)
+        .addFilterAfter(context.getBean("legacyAuthorizationFilter", LegacyAuthorizationFilter.class), IdentityFilter.class)
+        .addFilterAfter(context.getBean("appIdentityFilter", AppIdentityFilter.class), LegacyAuthorizationFilter.class)
+        .addFilterAfter(context.getBean("jwtRequestFilter", JwtRequestFilter.class), AppIdentityFilter.class)
+        .addFilterAfter(context.getBean("authPreCheckCreationRequestFilter", AuthPreCheckCreationRequestFilter.class), JwtRequestFilter.class)
+        .addFilterAfter(context.getBean("editorAuthorizationFilter", EditorAuthorizationFilter.class), AuthPreCheckCreationRequestFilter.class)
+        .addFilterAfter(context.getBean("grSciCollEditorAuthorizationFilter", GrSciCollEditorAuthorizationFilter.class), EditorAuthorizationFilter.class)
+        .addFilterAfter(context.getBean("resourceNotFoundRequestFilter", ResourceNotFoundRequestFilter.class), GrSciCollEditorAuthorizationFilter.class);
+    return http.build();
   }
 
   @Bean

@@ -23,8 +23,6 @@ import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.EndorsementStatus;
 import org.gbif.api.model.registry.Installation;
 import org.gbif.api.model.registry.Organization;
-import org.gbif.api.model.registry.PostPersist;
-import org.gbif.api.model.registry.PrePersist;
 import org.gbif.api.model.registry.search.KeyTitleResult;
 import org.gbif.api.model.registry.search.OrganizationRequestSearchParams;
 import org.gbif.api.service.registry.OrganizationService;
@@ -49,18 +47,17 @@ import java.util.Optional;
 import java.util.Random;
 import java.util.UUID;
 
-import javax.validation.Valid;
-import javax.validation.constraints.NotNull;
-import javax.validation.groups.Default;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 
 import org.apache.ibatis.annotations.Param;
 import org.geojson.Feature;
 import org.geojson.FeatureCollection;
 import org.geojson.Point;
-import org.springframework.context.annotation.Primary;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.context.annotation.Primary;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -93,6 +90,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static org.gbif.registry.security.UserRoles.ADMIN_ROLE;
 import static org.gbif.registry.security.UserRoles.APP_ROLE;
 import static org.gbif.registry.security.UserRoles.EDITOR_ROLE;
+import static org.gbif.registry.security.UserRoles.IPT_ROLE;
 
 @SuppressWarnings("UnstableApiUsage")
 @io.swagger.v3.oas.annotations.tags.Tag(
@@ -132,13 +130,15 @@ public class OrganizationResource
       OrganizationEndorsementService<UUID> organizationEndorsementService,
       EventManager eventManager,
       EditorAuthorizationService userAuthService,
-      WithMyBatis withMyBatis) {
+      WithMyBatis withMyBatis,
+      jakarta.validation.Validator validator) {
     super(
         mapperServiceLocator.getOrganizationMapper(),
         mapperServiceLocator,
         Organization.class,
         eventManager,
-        withMyBatis);
+        withMyBatis,
+        validator);
     this.datasetMapper = mapperServiceLocator.getDatasetMapper();
     this.organizationMapper = mapperServiceLocator.getOrganizationMapper();
     this.installationMapper = mapperServiceLocator.getInstallationMapper();
@@ -161,7 +161,7 @@ public class OrganizationResource
   @GetMapping("{key}")
   @NullToNotFound("/organization/{key}") // TODO TODO TODO
   @Override
-  public Organization get(@PathVariable UUID key) {
+  public Organization get(@PathVariable("key") UUID key) {
     return super.get(key);
   }
 
@@ -187,7 +187,6 @@ public class OrganizationResource
       description = "Publishing organization created, new publishing organization's UUID returned")
   @Docs.DefaultUnsuccessfulWriteResponses
   @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
-  @Validated({PrePersist.class, Default.class})
   @Secured({ADMIN_ROLE, EDITOR_ROLE, APP_ROLE})
   @Trim
   @Override
@@ -234,10 +233,10 @@ public class OrganizationResource
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
   @PutMapping(value = "{key}", consumes = MediaType.APPLICATION_JSON_VALUE)
-  @Validated({PostPersist.class, Default.class})
+  @Secured({ADMIN_ROLE, EDITOR_ROLE, IPT_ROLE})
   @Override
   public void update(
-      @PathVariable("key") UUID key, @Valid @RequestBody @Trim Organization organization) {
+      @PathVariable("key") UUID key, @RequestBody @Trim Organization organization) {
     super.update(key, organization);
   }
 
@@ -268,8 +267,9 @@ public class OrganizationResource
   @ApiResponse(responseCode = "204", description = "Publishing organization deleted")
   @Docs.DefaultUnsuccessfulWriteResponses
   @DeleteMapping("{key}")
+  @Secured({ADMIN_ROLE, EDITOR_ROLE, IPT_ROLE})
   @Override
-  public void delete(@PathVariable UUID key) {
+  public void delete(@PathVariable("key") UUID key) {
     super.delete(key);
   }
 

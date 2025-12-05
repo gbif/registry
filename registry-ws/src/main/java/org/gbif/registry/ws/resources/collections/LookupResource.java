@@ -23,7 +23,7 @@ import org.gbif.registry.service.collections.lookup.LookupService;
 
 import java.util.UUID;
 
-import javax.annotation.Nullable;
+import jakarta.annotation.Nullable;
 
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;

@@ -20,7 +20,7 @@ import org.gbif.api.model.crawler.FinishReason;
 import java.util.List;
 import java.util.UUID;
 
-import javax.annotation.Nullable;
+import jakarta.annotation.Nullable;
 
 import org.apache.ibatis.annotations.Param;
 import org.springframework.stereotype.Repository;

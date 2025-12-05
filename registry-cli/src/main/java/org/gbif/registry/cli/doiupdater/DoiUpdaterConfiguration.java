@@ -21,8 +21,8 @@ import org.gbif.registry.cli.common.GangliaConfiguration;
 import java.util.StringJoiner;
 import java.util.concurrent.TimeUnit;
 
-import javax.validation.Valid;
-import javax.validation.constraints.NotNull;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParametersDelegate;

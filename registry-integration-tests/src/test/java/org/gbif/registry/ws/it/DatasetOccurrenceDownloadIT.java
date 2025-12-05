@@ -25,7 +25,7 @@ import org.gbif.api.service.registry.InstallationService;
 import org.gbif.api.service.registry.NodeService;
 import org.gbif.api.service.registry.OccurrenceDownloadService;
 import org.gbif.api.service.registry.OrganizationService;
-import org.gbif.registry.search.test.EsManageServer;
+import org.gbif.registry.search.test.ElasticsearchTestContainerConfiguration;
 import org.gbif.registry.test.TestDataFactory;
 import org.gbif.registry.ws.client.DatasetOccurrenceDownloadUsageClient;
 import org.gbif.registry.ws.client.OccurrenceDownloadClient;
@@ -41,7 +41,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.boot.web.server.LocalServerPort;
+import org.springframework.boot.test.web.server.LocalServerPort;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -59,7 +59,12 @@ public class DatasetOccurrenceDownloadIT extends BaseItTest {
 
   private TestDataFactory testDataFactory;
   private final OccurrenceDownloadClient occurrenceDownloadClient;
-  private final OccurrenceDownloadService occurrenceDownloadResource;
+  private OccurrenceDownloadService occurrenceDownloadResource;
+
+  @Autowired
+  public void setOccurrenceDownloadResource(@Qualifier("occurrenceDownloadResource") OccurrenceDownloadService occurrenceDownloadResource) {
+    this.occurrenceDownloadResource = occurrenceDownloadResource;
+  }
   private final DatasetOccurrenceDownloadUsageClient datasetOccurrenceDownloadUsageClient;
   private final DatasetOccurrenceDownloadUsageService datasetOccurrenceDownloadUsageResource;
 
@@ -71,7 +76,6 @@ public class DatasetOccurrenceDownloadIT extends BaseItTest {
 
   @Autowired
   public DatasetOccurrenceDownloadIT(
-      OccurrenceDownloadService occurrenceDownloadResource,
       OrganizationService organizationService,
       DatasetService datasetService,
       NodeService nodeService,
@@ -80,11 +84,10 @@ public class DatasetOccurrenceDownloadIT extends BaseItTest {
       @Qualifier("datasetOccurrenceDownloadUsageResource")
           DatasetOccurrenceDownloadUsageService datasetOccurrenceDownloadUsageResource,
       TestDataFactory testDataFactory,
-      EsManageServer esServer,
+      ElasticsearchTestContainerConfiguration elasticsearchTestContainer,
       @LocalServerPort int localServerPort,
       KeyStore keyStore) {
-    super(simplePrincipalProvider, esServer);
-    this.occurrenceDownloadResource = occurrenceDownloadResource;
+    super(simplePrincipalProvider, elasticsearchTestContainer);
     this.occurrenceDownloadClient =
         prepareClient(localServerPort, keyStore, OccurrenceDownloadClient.class);
     this.organizationService = organizationService;

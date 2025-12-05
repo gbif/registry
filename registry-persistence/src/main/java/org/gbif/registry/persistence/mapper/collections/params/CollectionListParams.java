@@ -15,7 +15,7 @@ package org.gbif.registry.persistence.mapper.collections.params;
 
 import java.util.List;
 
-import javax.annotation.Nullable;
+import jakarta.annotation.Nullable;
 
 import lombok.Getter;
 import lombok.Setter;

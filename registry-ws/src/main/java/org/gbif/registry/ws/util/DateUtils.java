@@ -17,6 +17,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.Month;
+import java.time.OffsetDateTime;
 import java.time.Year;
 import java.time.YearMonth;
 import java.time.ZoneOffset;
@@ -153,5 +154,99 @@ public class DateUtils {
         }
 
         return null;
+      };
+
+  public static final Function<String, OffsetDateTime> LOWER_BOUND_RANGE_PARSER_OFFSET =
+      lowerBound -> {
+        if (Strings.isNullOrEmpty(lowerBound)) {
+          return null;
+        }
+
+        // Try to parse as OffsetDateTime first (preserves timezone if present)
+        try {
+          TemporalAccessor temporalAccessor =
+              FORMATTER.parseBest(
+                  lowerBound,
+                  OffsetDateTime::from,
+                  ZonedDateTime::from,
+                  LocalDateTime::from,
+                  LocalDate::from,
+                  YearMonth::from,
+                  Year::from);
+
+          if (temporalAccessor instanceof OffsetDateTime offsetDateTime) {
+            return offsetDateTime;
+          } else if (temporalAccessor instanceof ZonedDateTime zonedDateTime) {
+            return  zonedDateTime.toOffsetDateTime();
+          } else if (temporalAccessor instanceof LocalDateTime localDateTime) {
+            return localDateTime.atOffset(ZoneOffset.UTC);
+          } else if (temporalAccessor instanceof LocalDate localDate) {
+            return localDate.atTime(LocalTime.MIN).atOffset(ZoneOffset.UTC);
+          } else if (temporalAccessor instanceof Year year) {
+            return Year.from(year)
+                .atMonth(Month.JANUARY)
+                .atDay(1)
+                .atTime(LocalTime.MIN)
+                .atOffset(ZoneOffset.UTC);
+          } else if (temporalAccessor instanceof YearMonth yearMonth) {
+            return YearMonth.from(yearMonth)
+                .atDay(1)
+                .atTime(LocalTime.MIN)
+                .atOffset(ZoneOffset.UTC);
+          }
+        } catch (DateTimeParseException ex) {
+          // Fall back to LocalDateTime parser if FORMATTER fails
+        }
+
+        // Fallback to existing LocalDateTime parser and convert to UTC
+        LocalDateTime localDateTime = LOWER_BOUND_RANGE_PARSER.apply(lowerBound);
+        return localDateTime != null ? localDateTime.atOffset(ZoneOffset.UTC) : null;
+      };
+
+  public static final Function<String, OffsetDateTime> UPPER_BOUND_RANGE_PARSER_OFFSET =
+      upperBound -> {
+        if (Strings.isNullOrEmpty(upperBound)) {
+          return null;
+        }
+
+        // Try to parse as OffsetDateTime first (preserves timezone if present)
+        try {
+          TemporalAccessor temporalAccessor =
+              FORMATTER.parseBest(
+                  upperBound,
+                  OffsetDateTime::from,
+                  ZonedDateTime::from,
+                  LocalDateTime::from,
+                  LocalDate::from,
+                  YearMonth::from,
+                  Year::from);
+
+          if (temporalAccessor instanceof OffsetDateTime offsetDateTime) {
+            return offsetDateTime;
+          } else if (temporalAccessor instanceof ZonedDateTime zonedDateTime) {
+            return zonedDateTime.toOffsetDateTime();
+          } else if (temporalAccessor instanceof LocalDateTime localDateTime) {
+            return localDateTime.atOffset(ZoneOffset.UTC);
+          } else if (temporalAccessor instanceof LocalDate localDate) {
+            return localDate.atTime(LocalTime.MAX).atOffset(ZoneOffset.UTC);
+          } else if (temporalAccessor instanceof Year year) {
+            return Year.from(year)
+                .atMonth(Month.DECEMBER)
+                .atEndOfMonth()
+                .atTime(LocalTime.MAX)
+                .atOffset(ZoneOffset.UTC);
+          } else if (temporalAccessor instanceof YearMonth yearMonth) {
+            return YearMonth.from(yearMonth)
+                .atEndOfMonth()
+                .atTime(LocalTime.MAX)
+                .atOffset(ZoneOffset.UTC);
+          }
+        } catch (DateTimeParseException ex) {
+          // Fall back to LocalDateTime parser if FORMATTER fails
+        }
+
+        // Fallback to existing LocalDateTime parser and convert to UTC
+        LocalDateTime localDateTime = UPPER_BOUND_RANGE_PARSER.apply(upperBound);
+        return localDateTime != null ? localDateTime.atOffset(ZoneOffset.UTC) : null;
       };
 }

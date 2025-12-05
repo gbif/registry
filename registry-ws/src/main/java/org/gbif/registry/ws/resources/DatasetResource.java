@@ -32,8 +32,6 @@ import org.gbif.api.model.registry.Identifier;
 import org.gbif.api.model.registry.LenientEquals;
 import org.gbif.api.model.registry.Metadata;
 import org.gbif.api.model.registry.Network;
-import org.gbif.api.model.registry.PostPersist;
-import org.gbif.api.model.registry.PrePersist;
 import org.gbif.api.model.registry.Tag;
 import org.gbif.api.model.registry.search.DatasetRequestSearchParams;
 import org.gbif.api.model.registry.search.DatasetSearchParameter;
@@ -97,11 +95,10 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
-import javax.annotation.Nullable;
-import javax.servlet.http.HttpServletResponse;
-import javax.validation.Valid;
-import javax.validation.constraints.NotNull;
-import javax.validation.groups.Default;
+import jakarta.annotation.Nullable;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -211,13 +208,15 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset, DatasetL
       PipelineProcessMapper pipelineProcessMapper,
       WithMyBatis withMyBatis,
       @Autowired(required = false) MessagePublisher messagePublisher,
-      ConceptClient conceptClient) {
+      ConceptClient conceptClient,
+      jakarta.validation.Validator validator) {
     super(
         mapperServiceLocator.getDatasetMapper(),
         mapperServiceLocator,
         Dataset.class,
         eventManager,
-        withMyBatis);
+        withMyBatis,
+        validator);
     this.registryDatasetService = registryDatasetService;
     this.searchService = searchService;
     this.metadataMapper = mapperServiceLocator.getMetadataMapper();
@@ -475,7 +474,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset, DatasetL
   @GetMapping("{key}")
   @NullToNotFound("/dataset/{key}")
   @Override
-  public Dataset get(@PathVariable UUID key) {
+  public Dataset get(@PathVariable("key") UUID key) {
     return registryDatasetService.get(key);
   }
 
@@ -627,7 +626,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset, DatasetL
   @Secured({ADMIN_ROLE, EDITOR_ROLE, IPT_ROLE})
   @Transactional
   @Override
-  public void delete(@PathVariable UUID key) {
+  public void delete(@PathVariable("key") UUID key) {
     Dataset dataset = get(key);
     super.delete(key);
 
@@ -906,7 +905,6 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset, DatasetL
   @ApiResponse(responseCode = "201", description = "Dataset created, new dataset's UUID returned")
   @Docs.DefaultUnsuccessfulWriteResponses
   @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
-  @Validated({PrePersist.class, Default.class})
   @Trim
   @Transactional
   @Secured({ADMIN_ROLE, EDITOR_ROLE, IPT_ROLE})
@@ -958,9 +956,10 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset, DatasetL
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
   @PutMapping(value = "{key}", consumes = MediaType.APPLICATION_JSON_VALUE)
-  @Validated({PostPersist.class, Default.class})
+  @Transactional
+  @Secured({ADMIN_ROLE, EDITOR_ROLE, IPT_ROLE})
   @Override
-  public void update(@PathVariable("key") UUID key, @Valid @RequestBody @Trim Dataset dataset) {
+  public void update(@PathVariable("key") UUID key, @RequestBody @Trim Dataset dataset) {
     super.update(key, dataset);
   }
 
@@ -1204,7 +1203,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset, DatasetL
   @GetMapping("{key}/metadata")
   @Override
   public List<Metadata> listMetadata(
-      @PathVariable UUID key, @RequestParam(value = "type", required = false) MetadataType type) {
+      @PathVariable("key") UUID key, @RequestParam(value = "type", required = false) MetadataType type) {
     return registryDatasetService.listMetadata(key, type);
   }
 
@@ -1221,7 +1220,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset, DatasetL
   @GetMapping("metadata/{metadataKey}")
   @Override
   @NullToNotFound("/dataset/metadata/{metadataKey}")
-  public Metadata getMetadata(@PathVariable int metadataKey) {
+  public Metadata getMetadata(@PathVariable("metadataKey") int metadataKey) {
     return metadataMapper.get(metadataKey);
   }
 
@@ -1243,7 +1242,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset, DatasetL
   @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping(value = "metadata/{metadataKey}/document", produces = MediaType.APPLICATION_XML_VALUE)
   @NullToNotFound("/dataset/metadata/{metadataKey}/document")
-  public byte[] getMetadataDocumentAsBytes(@PathVariable int metadataKey) {
+  public byte[] getMetadataDocumentAsBytes(@PathVariable("metadataKey") int metadataKey) {
     return registryDatasetService.getMetadataDocument(metadataKey);
   }
 
@@ -1430,7 +1429,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset, DatasetL
   @Transactional
   @Secured(ADMIN_ROLE)
   public void createDatasetProcessStatus(
-      @PathVariable UUID datasetKey,
+      @PathVariable("datasetKey") UUID datasetKey,
       @RequestBody @Valid @NotNull @Trim DatasetProcessStatus datasetProcessStatus) {
     checkArgument(
         datasetKey.equals(datasetProcessStatus.getDatasetKey()),
@@ -1466,8 +1465,8 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset, DatasetL
   @Transactional
   @Secured(ADMIN_ROLE)
   public void updateDatasetProcessStatus(
-      @PathVariable UUID datasetKey,
-      @PathVariable int attempt,
+      @PathVariable("datasetKey") UUID datasetKey,
+      @PathVariable("attempt") int attempt,
       @RequestBody @Valid @NotNull @Trim DatasetProcessStatus datasetProcessStatus) {
     checkArgument(
         datasetKey.equals(datasetProcessStatus.getDatasetKey()),
@@ -1503,7 +1502,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset, DatasetL
   @NullToNotFound("/dataset/{key}/process/{attempt}")
   @Override
   public DatasetProcessStatus getDatasetProcessStatus(
-      @PathVariable UUID key, @PathVariable int attempt) {
+      @PathVariable("key") UUID key, @PathVariable("attempt") int attempt) {
     return datasetProcessStatusMapper.get(key, attempt);
   }
 
@@ -1540,7 +1539,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset, DatasetL
   @GetMapping("{key}/process")
   @Override
   public PagingResponse<DatasetProcessStatus> listDatasetProcessStatus(
-      @PathVariable UUID key, Pageable page) {
+      @PathVariable("key") UUID key, Pageable page) {
     return new PagingResponse<>(
         page,
         (long) datasetProcessStatusMapper.countByDataset(key, null),

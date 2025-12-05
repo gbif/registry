@@ -19,7 +19,6 @@ import org.gbif.registry.security.jwt.GbifJwtException;
 import org.gbif.registry.security.jwt.GbifJwtException.JwtErrorCode;
 import org.gbif.registry.security.jwt.JwtAuthenticateService;
 import org.gbif.registry.security.jwt.JwtConfiguration;
-import org.gbif.registry.ws.jwt.JwtUtils;
 
 import java.nio.charset.StandardCharsets;
 
@@ -30,6 +29,10 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.google.common.hash.Hashing;
+
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.security.Keys;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -60,7 +63,7 @@ public class JwtAuthenticatorTest {
     config.setSigningKey(signingKey);
     config.setExpiryTimeInMs(EXPIRY_TIME);
     config.setIssuer(ISSUER);
-    String token = JwtUtils.generateJwt(user.getUserName(), config);
+    String token = generateJwtWithMainImplementation(user.getUserName(), config);
 
     JwtAuthenticateService jwtAuthenticator =
         new JwtAuthenticateService(config, identityServiceMock);
@@ -76,7 +79,7 @@ public class JwtAuthenticatorTest {
     config.setExpiryTimeInMs(1L);
     config.setIssuer(ISSUER);
 
-    String token = JwtUtils.generateJwt(user.getUserName(), config);
+    String token = generateJwtWithMainImplementation(user.getUserName(), config);
 
     JwtAuthenticateService jwtAuthenticator =
         new JwtAuthenticateService(config, identityServiceMock);
@@ -93,11 +96,11 @@ public class JwtAuthenticatorTest {
     config.setSigningKey(signingKey);
     config.setExpiryTimeInMs(EXPIRY_TIME);
     config.setIssuer(ISSUER);
-    String token = JwtUtils.generateJwt(user.getUserName(), config);
+    String token = generateJwtWithMainImplementation(user.getUserName(), config);
 
     JwtConfiguration configParsing = new JwtConfiguration();
-    config.setSigningKey(generateTestSigningKey("fake"));
-    config.setIssuer(ISSUER);
+    configParsing.setSigningKey(generateTestSigningKey("fake"));
+    configParsing.setIssuer(ISSUER);
 
     JwtAuthenticateService jwtAuthenticator =
         new JwtAuthenticateService(configParsing, identityServiceMock);
@@ -115,11 +118,11 @@ public class JwtAuthenticatorTest {
     config.setExpiryTimeInMs(EXPIRY_TIME);
     config.setIssuer(ISSUER);
 
-    String token = JwtUtils.generateJwt(user.getUserName(), config);
+    String token = generateJwtWithMainImplementation(user.getUserName(), config);
 
     JwtConfiguration configParsing = new JwtConfiguration();
-    config.setSigningKey(signingKey);
-    config.setIssuer("fake issuer");
+    configParsing.setSigningKey(signingKey);
+    configParsing.setIssuer("fake issuer");
 
     JwtAuthenticateService jwtAuthenticator =
         new JwtAuthenticateService(configParsing, identityServiceMock);
@@ -137,7 +140,7 @@ public class JwtAuthenticatorTest {
     config.setExpiryTimeInMs(EXPIRY_TIME);
     config.setIssuer(ISSUER);
 
-    String token = JwtUtils.generateJwt("fake user", config);
+    String token = generateJwtWithMainImplementation("fake user", config);
 
     JwtAuthenticateService jwtAuthenticator =
         new JwtAuthenticateService(config, identityServiceMock);
@@ -151,5 +154,15 @@ public class JwtAuthenticatorTest {
   @SuppressWarnings("UnstableApiUsage")
   private static String generateTestSigningKey(String string) {
     return Hashing.sha256().hashString(string, StandardCharsets.UTF_8).toString();
+  }
+
+  private static String generateJwtWithMainImplementation(String username, JwtConfiguration config) {
+    return Jwts.builder()
+        .setExpiration(new java.util.Date(System.currentTimeMillis() + config.getExpiryTimeInMs()))
+        .setIssuedAt(new java.util.Date(System.currentTimeMillis()))
+        .setIssuer(config.getIssuer())
+        .claim("userName", username)
+        .signWith(Keys.hmacShaKeyFor(config.getSigningKey().getBytes()), SignatureAlgorithm.HS256)
+        .compact();
   }
 }

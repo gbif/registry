@@ -353,9 +353,7 @@ public class Vocabularies {
                 handleValues.apply(f.vocabName, f.getter.apply(institutionSearchRequest));
             f.setter.accept(institutionSearchRequest, allConceptsAndChildren);
           });
-    } else if (request instanceof CollectionSearchRequest) {
-      CollectionSearchRequest r = (CollectionSearchRequest) request;
-
+    } else if (request instanceof CollectionSearchRequest r) {
       COLLECTION_SEARCH_REQ_VOCAB_FIELDS.forEach(
         f -> {
           List<String> allConceptsAndChildren =
@@ -363,8 +361,7 @@ public class Vocabularies {
           f.setter.accept(r, allConceptsAndChildren);
         });
 
-      if (r instanceof CollectionDescriptorsSearchRequest) {
-        CollectionDescriptorsSearchRequest rr = (CollectionDescriptorsSearchRequest) r;
+      if (r instanceof CollectionDescriptorsSearchRequest rr) {
         COLLECTION_DESCRIPTORS_SEARCH_REQ_VOCAB_FIELDS.forEach(
           f -> {
             List<String> allConceptsAndChildren =

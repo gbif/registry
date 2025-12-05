@@ -53,8 +53,6 @@ import org.gbif.occurrence.query.TitleLookupService;
 
 import java.util.List;
 
-import javax.xml.bind.JAXBException;
-
 import com.google.common.base.Preconditions;
 
 import static org.gbif.registry.doi.util.DataCiteConstants.API_DOWNLOAD_DATASETS_EXPORT_METADATA;
@@ -340,7 +338,7 @@ public final class DownloadConverter {
       dm.setRelatedIdentifiers(relatedIdentifiersBuilder.build());
 
       return DataCiteValidator.toXml(doi, dm);
-    } catch (JAXBException e) {
+    } catch (Exception e) {
       throw new InvalidMetadataException("Failed to deserialize DataCite XML for DOI " + doi, e);
     }
   }

@@ -27,7 +27,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.eventbus.Subscribe;
 
-import brave.Tracer;
+import io.micrometer.tracing.Tracer;
 
 @Component
 public class AuditLogger {
@@ -49,7 +49,7 @@ public class AuditLogger {
   }
 
   @Subscribe
-  public <T extends CollectionEntity> void logCreatedEvents(CreateCollectionEntityEvent<T> event) {
+  public final <T extends CollectionEntity> void logCreatedEvents(CreateCollectionEntityEvent<T> event) {
     AuditLog auditLog = collectionBaseEventToAuditLog(event);
     auditLog.setCollectionEntityKey(event.getNewObject().getKey());
     auditLog.setPostState(toJson(event.getNewObject()));
@@ -57,7 +57,7 @@ public class AuditLogger {
   }
 
   @Subscribe
-  public <T extends CollectionEntity> void logUpdatedEvents(UpdateCollectionEntityEvent<T> event) {
+  public final <T extends CollectionEntity> void logUpdatedEvents(UpdateCollectionEntityEvent<T> event) {
     AuditLog auditLog = collectionBaseEventToAuditLog(event);
     auditLog.setCollectionEntityKey(event.getNewObject().getKey());
     auditLog.setPreState(toJson(event.getOldObject()));
@@ -66,7 +66,7 @@ public class AuditLogger {
   }
 
   @Subscribe
-  public <T extends CollectionEntity> void logDeletedEvents(DeleteCollectionEntityEvent<T> event) {
+  public final <T extends CollectionEntity> void logDeletedEvents(DeleteCollectionEntityEvent<T> event) {
     AuditLog auditLog = collectionBaseEventToAuditLog(event);
     auditLog.setCollectionEntityKey(event.getOldObject().getKey());
     auditLog.setPreState(toJson(event.getOldObject()));
@@ -75,7 +75,7 @@ public class AuditLogger {
   }
 
   @Subscribe
-  public <T extends CollectionEntity> void logReplacedEvents(ReplaceEntityEvent<T> event) {
+  public final <T extends CollectionEntity> void logReplacedEvents(ReplaceEntityEvent<T> event) {
     AuditLog auditLog = collectionBaseEventToAuditLog(event);
     auditLog.setCollectionEntityKey(event.getTargetEntityKey());
     auditLog.setReplacementKey(event.getReplacementKey());
@@ -83,7 +83,7 @@ public class AuditLogger {
   }
 
   @Subscribe
-  public <T extends CollectionEntity, R> void logSubEntityEvents(
+  public final <T extends CollectionEntity, R> void logSubEntityEvents(
       SubEntityCollectionEvent<T, R> event) {
     AuditLog auditLog = subEntityEventToAuditLog(event);
     auditLogMapper.create(auditLog);
@@ -134,9 +134,15 @@ public class AuditLogger {
   }
 
   private long getTraceId() {
-    if (tracer.currentSpan() != null) {
-      return tracer.currentSpan().context().traceId();
+    if (tracer != null && tracer.currentSpan() != null) {
+      String traceId = tracer.currentSpan().context().traceId();
+
+      if (traceId.length() > 16) {
+        traceId = traceId.substring(traceId.length() - 16);
+      }
+      return Long.parseUnsignedLong(traceId, 16);
     }
-    return tracer.newTrace().context().traceId();
+    // Fallback to timestamp if no tracing context is available
+    return System.currentTimeMillis();
   }
 }

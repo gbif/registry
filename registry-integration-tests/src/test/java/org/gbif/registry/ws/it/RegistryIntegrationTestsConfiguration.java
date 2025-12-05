@@ -13,6 +13,10 @@
  */
 package org.gbif.registry.ws.it;
 
+import org.gbif.api.service.registry.DatasetService;
+import org.gbif.api.service.registry.InstallationService;
+import org.gbif.api.service.registry.NetworkService;
+import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.api.vocabulary.UserRole;
 import org.gbif.registry.doi.config.TitleLookupConfiguration;
 import org.gbif.registry.events.config.VarnishPurgeConfiguration;
@@ -20,7 +24,13 @@ import org.gbif.registry.mail.EmailSenderImpl;
 import org.gbif.registry.mail.config.OrganizationSuretyMailConfigurationProperties;
 import org.gbif.registry.search.dataset.indexing.checklistbank.ChecklistbankPersistenceServiceImpl;
 import org.gbif.registry.search.dataset.indexing.es.EsConfiguration;
+import org.gbif.checklistbank.ws.client.DatasetMetricsClient;
+import org.gbif.checklistbank.ws.client.SpeciesResourceClient;
+import org.gbif.metrics.ws.client.CubeWsClient;
+import org.gbif.occurrence.ws.client.OccurrenceWsSearchClient;
 import org.gbif.registry.search.dataset.indexing.ws.GbifWsClient;
+import org.gbif.registry.search.dataset.indexing.ws.GbifWsWrapperClient;
+import org.gbif.registry.search.test.DatasetElasticsearchConfiguration;
 import org.gbif.registry.surety.OrganizationEmailTemplateManagerIT;
 import org.gbif.registry.test.mocks.ConceptClientMock;
 import org.gbif.registry.test.mocks.NameUsageMatchingServiceMock;
@@ -28,6 +38,7 @@ import org.gbif.registry.ws.config.DataSourcesConfiguration;
 import org.gbif.rest.client.species.NameUsageMatchingService;
 import org.gbif.vocabulary.client.ConceptClient;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
+import org.gbif.ws.security.KeyStore;
 
 import java.util.Collections;
 import java.util.Date;
@@ -37,24 +48,36 @@ import org.apache.commons.beanutils.ConvertUtils;
 import org.apache.commons.beanutils.ConvertUtilsBean;
 import org.apache.commons.beanutils.converters.DateConverter;
 import org.apache.commons.beanutils.converters.DateTimeConverter;
+import org.mockito.Mockito;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.FilterType;
+import org.springframework.context.annotation.Import;
+import org.springframework.context.annotation.Primary;
+import org.springframework.context.annotation.PropertySource;
+import org.springframework.core.io.FileSystemResource;
+
+import java.util.Properties;
+import java.io.IOException;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
-import org.springframework.boot.actuate.autoconfigure.elasticsearch.ElasticSearchRestHealthContributorAutoConfiguration;
 import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.amqp.RabbitAutoConfiguration;
 import org.springframework.boot.autoconfigure.http.HttpMessageConvertersAutoConfiguration;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
 import org.springframework.boot.autoconfigure.web.servlet.WebMvcRegistrations;
-import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.cloud.netflix.ribbon.RibbonAutoConfiguration;
 import org.springframework.cloud.openfeign.FeignAutoConfiguration;
-import org.springframework.cloud.openfeign.FeignClient;
-import org.springframework.cloud.openfeign.ribbon.FeignRibbonClientAutoConfiguration;
-import org.springframework.context.annotation.*;
 import org.springframework.core.annotation.AnnotationUtils;
+import org.springframework.core.io.support.PropertiesLoaderUtils;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -67,8 +90,8 @@ import com.zaxxer.hikari.HikariDataSource;
 @SpringBootApplication(
     exclude = {
       RabbitAutoConfiguration.class,
-      ElasticSearchRestHealthContributorAutoConfiguration.class
     })
+@EnableConfigurationProperties
 @MapperScan("org.gbif.registry.persistence.mapper")
 @ComponentScan(
     basePackages = {
@@ -120,11 +143,14 @@ import com.zaxxer.hikari.HikariDataSource;
 @PropertySource(RegistryIntegrationTestsConfiguration.TEST_PROPERTIES)
 @ImportAutoConfiguration({
   HttpMessageConvertersAutoConfiguration.class,
-  RibbonAutoConfiguration.class,
-  FeignRibbonClientAutoConfiguration.class,
   FeignAutoConfiguration.class
 })
+@Import({
+  org.gbif.registry.search.SearchTestConfiguration.class,
+  DatasetElasticsearchConfiguration.class
+})
 @ActiveProfiles("test")
+@EnableMethodSecurity
 public class RegistryIntegrationTestsConfiguration {
 
   public static final String TEST_PROPERTIES = "classpath:application-test.yml";
@@ -208,6 +234,26 @@ public class RegistryIntegrationTestsConfiguration {
             Collections.singleton(new SimpleGrantedAuthority(userRole.name()))));
   }
 
+  @Bean
+  public GbifWsClient gbifWsClient(
+      InstallationService installationService,
+      OrganizationService organizationService,
+      DatasetService datasetService,
+      NetworkService networkService,
+      OccurrenceWsSearchClient occurrenceWsSearchClient,
+      SpeciesResourceClient speciesResourceClient,
+      CubeWsClient cubeWsClient,
+      DatasetMetricsClient datasetMetricsClient) {
+    return new GbifWsWrapperClient(installationService,
+                                    organizationService,
+                                    datasetService,
+                                    networkService,
+                                    occurrenceWsSearchClient,
+                                    speciesResourceClient,
+                                    cubeWsClient,
+                                    datasetMetricsClient);
+  }
+
   public static void main(String[] args) {
     SpringApplication.run(RegistryIntegrationTestsConfiguration.class, args);
   }
@@ -221,4 +267,28 @@ public class RegistryIntegrationTestsConfiguration {
   public NameUsageMatchingService nameUsageMatchingService() {
     return new NameUsageMatchingServiceMock();
   }
+
+  @Bean
+  @Primary
+  public KeyStore keyStore(@Value("${appkeys.file}") String appKeysFile) {
+    try {
+      // Load properties from the appkeys file
+      Properties properties = PropertiesLoaderUtils.loadProperties(new FileSystemResource(appKeysFile));
+
+      // Create a mock KeyStore and configure it to return the secrets
+      KeyStore keyStore = Mockito.mock(KeyStore.class);
+
+      // Configure mock to return the appropriate secret for each app key
+      properties.forEach((key, value) -> {
+        String appKey = key.toString();
+        String secret = value.toString();
+        Mockito.when(keyStore.getPrivateKey(appKey)).thenReturn(secret);
+      });
+
+      return keyStore;
+    } catch (IOException e) {
+      throw new IllegalStateException("Failed to load KeyStore from: " + appKeysFile, e);
+    }
+  }
 }
+

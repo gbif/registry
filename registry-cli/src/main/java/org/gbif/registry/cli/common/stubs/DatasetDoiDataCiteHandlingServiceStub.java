@@ -22,7 +22,7 @@ import java.net.URI;
 import java.util.Date;
 import java.util.UUID;
 
-import javax.annotation.Nullable;
+import jakarta.annotation.Nullable;
 
 /**
  * Stub class used to simplify binding, e.g. when this class must be bound but isn't actually used.

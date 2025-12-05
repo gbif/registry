@@ -13,11 +13,9 @@
  */
 package org.gbif.registry.ws.resources;
 
-import org.gbif.api.model.occurrence.DownloadType;
 import org.gbif.registry.persistence.mapper.DatasetOccurrenceDownloadMapper;
 
 import org.springframework.http.MediaType;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -34,7 +32,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
  * Occurrence OpenAPI document.
  */
 @Tag(name = "Occurrence downloads")
-@Validated
 @RestController("datasetOccurrenceDownloadUsageResource")
 @RequestMapping(value = "occurrence/download/dataset", produces = MediaType.APPLICATION_JSON_VALUE)
 public class OccurrenceDatasetDownloadUsageResource extends DatasetDownloadUsageResourceBase {

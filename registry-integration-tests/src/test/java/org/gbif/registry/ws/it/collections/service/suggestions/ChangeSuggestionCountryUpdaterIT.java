@@ -26,7 +26,7 @@ import org.gbif.api.vocabulary.Country;
 import org.gbif.registry.persistence.mapper.collections.ChangeSuggestionMapper;
 import org.gbif.registry.persistence.mapper.collections.DescriptorChangeSuggestionMapper;
 import org.gbif.registry.persistence.mapper.collections.dto.ChangeSuggestionDto;
-import org.gbif.registry.search.test.EsManageServer;
+import org.gbif.registry.search.test.ElasticsearchTestContainerConfiguration;
 import org.gbif.registry.security.UserRoles;
 import org.gbif.registry.ws.client.collections.CollectionClient;
 import org.gbif.registry.ws.client.collections.InstitutionClient;
@@ -41,7 +41,7 @@ import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.web.server.LocalServerPort;
+import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.mock.web.MockMultipartFile;
@@ -64,11 +64,11 @@ public class ChangeSuggestionCountryUpdaterIT extends BaseItTest {
   public ChangeSuggestionCountryUpdaterIT(
       ChangeSuggestionMapper changeSuggestionMapper,
       SimplePrincipalProvider simplePrincipalProvider,
-      EsManageServer esServer,
+      ElasticsearchTestContainerConfiguration elasticsearchTestContainer,
       KeyStore keyStore,
       @LocalServerPort int localServerPort,
     DescriptorChangeSuggestionMapper descriptorChangeSuggestionMapper) {
-    super(simplePrincipalProvider, esServer);
+    super(simplePrincipalProvider, elasticsearchTestContainer);
     this.changeSuggestionMapper = changeSuggestionMapper;
     this.descriptorChangeSuggestionMapper = descriptorChangeSuggestionMapper;
     this.institutionClient = prepareClient(localServerPort, keyStore, InstitutionClient.class);

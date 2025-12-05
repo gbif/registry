@@ -18,7 +18,7 @@ import org.gbif.registry.persistence.mapper.collections.dto.EntityMatchedDto;
 import java.util.List;
 import java.util.UUID;
 
-import javax.annotation.Nullable;
+import jakarta.annotation.Nullable;
 
 import org.apache.ibatis.annotations.Param;
 

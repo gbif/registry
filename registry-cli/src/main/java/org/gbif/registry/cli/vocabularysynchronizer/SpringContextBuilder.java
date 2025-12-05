@@ -21,9 +21,7 @@ import org.gbif.registry.cli.common.DbConfiguration;
 import org.gbif.registry.cli.datasetindex.ElasticsearchConfig;
 import org.gbif.registry.persistence.config.MyBatisConfiguration;
 import org.gbif.registry.service.collections.descriptors.DescriptorVocabularySynchronizer;
-
 import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
-import org.springframework.boot.jdbc.DataSourceInitializationMode;
 import com.zaxxer.hikari.HikariDataSource;
 import org.gbif.registry.search.dataset.indexing.DatasetJsonConverter;
 import org.gbif.registry.search.dataset.indexing.EsDatasetRealtimeIndexer;
@@ -47,13 +45,11 @@ import java.util.Date;
 
 import org.mybatis.spring.annotation.MapperScan;
 import org.mybatis.spring.boot.autoconfigure.MybatisAutoConfiguration;
-import org.springframework.boot.actuate.autoconfigure.elasticsearch.ElasticSearchRestHealthContributorAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.freemarker.FreeMarkerAutoConfiguration;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.cloud.netflix.archaius.ArchaiusAutoConfiguration;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
@@ -74,10 +70,10 @@ public class SpringContextBuilder {
       ElasticsearchConfig elasticsearchConfig) {
     EsClient.EsClientConfiguration esClientConfiguration = new EsClient.EsClientConfiguration();
     esClientConfiguration.setHosts(elasticsearchConfig.getHosts());
-    esClientConfiguration.setConnectionRequestTimeOut(
+    esClientConfiguration.setConnectionRequestTimeout(
         elasticsearchConfig.getConnectionRequestTimeOut());
-    esClientConfiguration.setSocketTimeOut(elasticsearchConfig.getSocketTimeOut());
-    esClientConfiguration.setConnectionTimeOut(elasticsearchConfig.getConnectionTimeOut());
+    esClientConfiguration.setSocketTimeout(elasticsearchConfig.getSocketTimeOut());
+    esClientConfiguration.setConnectionTimeout(elasticsearchConfig.getConnectionTimeOut());
     return esClientConfiguration;
   }
 
@@ -150,11 +146,9 @@ public class SpringContextBuilder {
   /** Class to help with the loading and injection of */
   @SpringBootApplication(
       exclude = {
-        ElasticSearchRestHealthContributorAutoConfiguration.class,
         DataSourceAutoConfiguration.class,
         LiquibaseAutoConfiguration.class,
-        FreeMarkerAutoConfiguration.class,
-        ArchaiusAutoConfiguration.class
+        FreeMarkerAutoConfiguration.class
       })
   @EnableConfigurationProperties
   @MapperScan("org.gbif.registry.persistence.mapper")
@@ -206,7 +200,6 @@ public class SpringContextBuilder {
               + configuration.getDbConfig().getServerName()
               + "/"
               + configuration.getDbConfig().getDatabaseName());
-      dataSourceProperties.setInitializationMode(DataSourceInitializationMode.ALWAYS);
       dataSourceProperties.setGenerateUniqueName(true);
       return dataSourceProperties;
     }

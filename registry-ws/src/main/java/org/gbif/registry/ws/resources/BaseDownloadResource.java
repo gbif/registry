@@ -42,7 +42,6 @@ import org.gbif.api.vocabulary.OrganizationUsageSortField;
 import org.gbif.api.vocabulary.SortOrder;
 import org.gbif.registry.doi.DownloadDoiDataCiteHandlingService;
 import org.gbif.registry.persistence.mapper.DatasetDownloadMapper;
-import org.gbif.registry.persistence.mapper.DatasetOccurrenceDownloadMapper;
 import org.gbif.registry.persistence.mapper.DownloadMapper;
 import org.gbif.registry.persistence.mapper.DownloadStatisticsMapper;
 import org.gbif.registry.ws.export.CsvWriter;
@@ -72,9 +71,9 @@ import java.util.TreeMap;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import javax.servlet.http.HttpServletResponse;
-import javax.validation.constraints.NotNull;
-import javax.validation.groups.Default;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.groups.Default;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

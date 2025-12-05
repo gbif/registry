@@ -26,7 +26,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
-import javax.annotation.Nullable;
+import jakarta.annotation.Nullable;
 
 /**
  * The identity (management) service provides means to create, update and delete User accounts, and

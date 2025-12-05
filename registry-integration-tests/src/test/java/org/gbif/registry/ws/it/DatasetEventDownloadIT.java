@@ -31,7 +31,7 @@ import org.gbif.api.service.registry.InstallationService;
 import org.gbif.api.service.registry.NodeService;
 import org.gbif.api.service.registry.OccurrenceDownloadService;
 import org.gbif.api.service.registry.OrganizationService;
-import org.gbif.registry.search.test.EsManageServer;
+import org.gbif.registry.search.test.ElasticsearchTestContainerConfiguration;
 import org.gbif.registry.test.TestDataFactory;
 import org.gbif.registry.ws.client.DatasetEventDownloadUsageClient;
 import org.gbif.registry.ws.client.EventDownloadClient;
@@ -41,7 +41,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.boot.web.server.LocalServerPort;
+import org.springframework.boot.test.web.server.LocalServerPort;
 
 /**
  * Runs tests for the {@link OccurrenceDownloadService} event implementations. This is parameterized
@@ -69,19 +69,19 @@ public class DatasetEventDownloadIT extends BaseItTest {
 
   @Autowired
   public DatasetEventDownloadIT(
-      OccurrenceDownloadService eventDownloadResource,
+      @Qualifier("eventDownloadResource") OccurrenceDownloadService eventDownloadResource,
       OrganizationService organizationService,
       DatasetService datasetService,
       NodeService nodeService,
       InstallationService installationService,
       SimplePrincipalProvider simplePrincipalProvider,
       @Qualifier("datasetEventDownloadUsageResource")
-          DatasetOccurrenceDownloadUsageService datasetEventDownloadUsageResource,
+      DatasetOccurrenceDownloadUsageService datasetEventDownloadUsageResource,
       TestDataFactory testDataFactory,
-      EsManageServer esServer,
+      ElasticsearchTestContainerConfiguration elasticsearchTestContainer,
       @LocalServerPort int localServerPort,
       KeyStore keyStore) {
-    super(simplePrincipalProvider, esServer);
+    super(simplePrincipalProvider, elasticsearchTestContainer);
     this.eventDownloadResource = eventDownloadResource;
     this.eventDownloadClient = prepareClient(localServerPort, keyStore, EventDownloadClient.class);
     this.organizationService = organizationService;

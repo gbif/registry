@@ -20,6 +20,7 @@ import org.springframework.stereotype.Service;
 
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.security.Keys;
 
 /** Class that handle JWT token issuance. */
 @Service
@@ -53,7 +54,7 @@ public class JwtIssuanceServiceImpl implements JwtIssuanceService {
         .setIssuedAt(new Date(System.currentTimeMillis()))
         .setIssuer(jwtConfiguration.getIssuer())
         .claim("userName", username)
-        .signWith(SignatureAlgorithm.HS256, jwtConfiguration.getSigningKey())
+        .signWith(Keys.hmacShaKeyFor(jwtConfiguration.getSigningKey().getBytes()), SignatureAlgorithm.HS256)
         .compact();
   }
 }

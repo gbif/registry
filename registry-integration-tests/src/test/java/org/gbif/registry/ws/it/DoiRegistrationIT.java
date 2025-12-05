@@ -28,6 +28,7 @@ import org.gbif.doi.service.datacite.DataCiteValidator;
 import org.gbif.registry.doi.DoiInteractionService;
 import org.gbif.registry.doi.registration.DoiRegistration;
 import org.gbif.registry.domain.doi.DoiType;
+import org.gbif.registry.search.test.ElasticsearchTestContainerConfiguration;
 import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.ws.client.DoiInteractionClient;
 import org.gbif.registry.ws.it.fixtures.TestConstants;
@@ -38,7 +39,7 @@ import org.gbif.ws.security.KeyStore;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.web.server.LocalServerPort;
+import org.springframework.boot.test.web.server.LocalServerPort;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
@@ -60,11 +61,11 @@ public class DoiRegistrationIT extends BaseItTest {
   public DoiRegistrationIT(
       DoiInteractionService doiRegistrationResource,
       SimplePrincipalProvider simplePrincipalProvider,
-      EsManageServer esServer,
+      ElasticsearchTestContainerConfiguration elasticsearchTestContainer,
       @LocalServerPort int localServerPort,
       KeyStore keyStore,
       UserTestFixture userTestFixture) {
-    super(simplePrincipalProvider, esServer);
+    super(simplePrincipalProvider, elasticsearchTestContainer);
     this.doiRegistrationResource = doiRegistrationResource;
     this.doiRegistrationClient =
         prepareClient(localServerPort, keyStore, DoiInteractionClient.class);

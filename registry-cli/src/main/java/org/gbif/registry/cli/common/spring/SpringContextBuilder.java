@@ -45,13 +45,11 @@ import java.util.Set;
 
 import org.mybatis.spring.annotation.MapperScan;
 import org.mybatis.spring.boot.autoconfigure.MybatisAutoConfiguration;
-import org.springframework.boot.actuate.autoconfigure.elasticsearch.ElasticSearchRestHealthContributorAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.freemarker.FreeMarkerAutoConfiguration;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.cloud.netflix.archaius.ArchaiusAutoConfiguration;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.FilterType;
@@ -298,11 +296,9 @@ public class SpringContextBuilder {
   /** Class to help with the loading and injection of */
   @SpringBootApplication(
       exclude = {
-        ElasticSearchRestHealthContributorAutoConfiguration.class,
         DataSourceAutoConfiguration.class,
         LiquibaseAutoConfiguration.class,
         FreeMarkerAutoConfiguration.class,
-        ArchaiusAutoConfiguration.class
       })
   @MapperScan("org.gbif.registry.persistence.mapper")
   @EnableConfigurationProperties

@@ -17,7 +17,7 @@ import org.gbif.api.annotation.Generated;
 import org.gbif.api.model.common.DOI;
 import org.gbif.registry.domain.doi.DoiType;
 
-import javax.annotation.Nullable;
+import jakarta.annotation.Nullable;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;

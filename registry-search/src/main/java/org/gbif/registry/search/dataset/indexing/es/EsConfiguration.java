@@ -13,7 +13,9 @@
  */
 package org.gbif.registry.search.dataset.indexing.es;
 
-import org.elasticsearch.client.RestHighLevelClient;
+import co.elastic.clients.elasticsearch.ElasticsearchClient;
+import co.elastic.clients.elasticsearch.ElasticsearchAsyncClient;
+import org.elasticsearch.client.RestClient;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -34,9 +36,25 @@ public class EsConfiguration {
 
   @Bean
   @Primary
-  public RestHighLevelClient restHighLevelClient(
+  public RestClient restClient(
       @Qualifier("registryEsClientConfig") EsClient.EsClientConfiguration esClientConfiguration) {
-    return EsClient.provideEsClient(esClientConfiguration);
+    return EsClient.provideRestClient(esClientConfiguration);
+  }
+
+  @Bean
+  @Primary
+  public ElasticsearchClient elasticsearchClient(
+      @Qualifier("registryEsClientConfig") EsClient.EsClientConfiguration esClientConfiguration,
+      RestClient restClient) {
+    return EsClient.provideElasticsearchClient(esClientConfiguration, restClient);
+  }
+
+  @Bean
+  @Primary
+  public ElasticsearchAsyncClient elasticsearchAsyncClient(
+      @Qualifier("registryEsClientConfig") EsClient.EsClientConfiguration esClientConfiguration,
+      RestClient restClient) {
+    return EsClient.provideElasticsearchAsyncClient(esClientConfiguration, restClient);
   }
 
   @ConfigurationProperties(prefix = "elasticsearch.occurrence")
@@ -47,8 +65,8 @@ public class EsConfiguration {
   }
 
   @Bean(name = "occurrenceEsClient")
-  public RestHighLevelClient occurrenceRestHighLevelClient(
+  public ElasticsearchClient occurrenceElasticsearchClient(
       @Qualifier("esOccurrenceClientConfig") EsClient.EsClientConfiguration esClientConfiguration) {
-    return EsClient.provideEsClient(esClientConfiguration);
+    return EsClient.provideElasticsearchClient(esClientConfiguration);
   }
 }

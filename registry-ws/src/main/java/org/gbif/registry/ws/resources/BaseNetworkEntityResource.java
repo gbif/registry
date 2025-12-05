@@ -60,10 +60,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import javax.annotation.Nullable;
-import javax.validation.Valid;
-import javax.validation.constraints.NotNull;
-import javax.validation.groups.Default;
+import jakarta.annotation.Nullable;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.ConstraintViolationException;
+import jakarta.validation.Validator;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.groups.Default;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -138,13 +140,15 @@ public abstract class BaseNetworkEntityResource<T extends NetworkEntity, P exten
   private final EventManager eventManager;
   private final WithMyBatis withMyBatis;
   private final Class<T> objectClass;
+  private final Validator validator;
 
   protected BaseNetworkEntityResource(
       BaseNetworkEntityMapper<T> mapper,
       MapperServiceLocator mapperServiceLocator,
       Class<T> objectClass,
       EventManager eventManager,
-      WithMyBatis withMyBatis) {
+      WithMyBatis withMyBatis,
+      Validator validator) {
     this.mapper = mapper;
     this.commentMapper = mapperServiceLocator.getCommentMapper();
     this.machineTagMapper = mapperServiceLocator.getMachineTagMapper();
@@ -155,6 +159,23 @@ public abstract class BaseNetworkEntityResource<T extends NetworkEntity, P exten
     this.objectClass = objectClass;
     this.eventManager = eventManager;
     this.withMyBatis = withMyBatis;
+    this.validator = validator;
+  }
+
+  /**
+   * Validates an entity with specified validation groups.
+   * @throws ConstraintViolationException if validation fails
+   */
+  protected void validateEntity(Object entity, Class<?>... groups) {
+    if (validator == null) {
+      LOG.error("Validator is null! Validation will not work.");
+      return;
+    }
+    java.util.Set<ConstraintViolation<Object>> violations = validator.validate(entity, groups);
+    if (!violations.isEmpty()) {
+      LOG.debug("Validation failed with {} violations", violations.size());
+      throw new ConstraintViolationException(violations);
+    }
   }
 
   /** Documentation for a SearchRequest. */
@@ -212,12 +233,12 @@ public abstract class BaseNetworkEntityResource<T extends NetworkEntity, P exten
    */
   // OpenAPI documentation is on the subclasses.
   @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
-  @Validated({PrePersist.class, Default.class})
   @Trim
   @Transactional
-  @Secured({ADMIN_ROLE, EDITOR_ROLE, IPT_ROLE})
   @Override
   public UUID create(@RequestBody @Trim T entity) {
+    validateEntity(entity, PrePersist.class, Default.class);
+
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     final String nameFromContext = authentication != null ? authentication.getName() : null;
     entity.setCreatedBy(nameFromContext);
@@ -236,10 +257,9 @@ public abstract class BaseNetworkEntityResource<T extends NetworkEntity, P exten
    */
   // OpenAPI documentation is on the subclasses.
   @DeleteMapping("{key}")
-  @Secured({ADMIN_ROLE, EDITOR_ROLE, IPT_ROLE})
   @Transactional
   @Override
-  public void delete(@PathVariable UUID key) {
+  public void delete(@PathVariable("key") UUID key) {
     // the following lines allow to set the "modifiedBy" to the user who actually deletes the
     // entity.
     // the api delete(UUID) should be changed eventually
@@ -307,11 +327,10 @@ public abstract class BaseNetworkEntityResource<T extends NetworkEntity, P exten
    */
   // OpenAPI documentation on subclass methods.
   @PutMapping(value = "{key}", consumes = MediaType.APPLICATION_JSON_VALUE)
-  @Secured({ADMIN_ROLE, EDITOR_ROLE, IPT_ROLE})
-  @Validated({PostPersist.class, Default.class})
   @Trim
   @Transactional
-  public void update(@PathVariable("key") UUID key, @Valid @RequestBody @Trim T entity) {
+  public void update(@PathVariable("key") UUID key, @RequestBody @Trim T entity) {
+    validateEntity(entity, PostPersist.class, Default.class);
     checkArgument(key.equals(entity.getKey()));
     update(entity);
   }
@@ -352,13 +371,13 @@ public abstract class BaseNetworkEntityResource<T extends NetworkEntity, P exten
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
   @PostMapping(value = "{key}/comment", consumes = MediaType.APPLICATION_JSON_VALUE)
-  @Validated({PrePersist.class, Default.class})
   @Trim
   @Transactional
   @Secured({ADMIN_ROLE, EDITOR_ROLE, APP_ROLE})
   @Override
   public int addComment(
       @PathVariable("key") UUID targetEntityKey, @RequestBody @Trim Comment comment) {
+    validateEntity(comment, PrePersist.class, Default.class);
     Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     comment.setCreatedBy(authentication.getName());
     comment.setModifiedBy(authentication.getName());
@@ -390,7 +409,7 @@ public abstract class BaseNetworkEntityResource<T extends NetworkEntity, P exten
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
   @Override
   public void deleteComment(
-      @PathVariable("key") UUID targetEntityKey, @PathVariable int commentKey) {
+      @PathVariable("key") UUID targetEntityKey, @PathVariable("commentKey") int commentKey) {
     mapper.deleteComment(targetEntityKey, commentKey);
     eventManager.post(
         ChangedComponentEvent.newInstance(targetEntityKey, objectClass, Comment.class));
@@ -432,13 +451,13 @@ public abstract class BaseNetworkEntityResource<T extends NetworkEntity, P exten
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
   @PostMapping(value = "{key}/machineTag", consumes = MediaType.APPLICATION_JSON_VALUE)
-  @Validated({PrePersist.class, Default.class})
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
   @Trim
   @Transactional
   @Override
   public int addMachineTag(
       @PathVariable("key") UUID targetEntityKey, @RequestBody @Trim MachineTag machineTag) {
+    validateEntity(machineTag, PrePersist.class, Default.class);
     Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     final String nameFromContext = authentication != null ? authentication.getName() : null;
 
@@ -534,8 +553,8 @@ public abstract class BaseNetworkEntityResource<T extends NetworkEntity, P exten
   @Override
   public void deleteMachineTags(
       @PathVariable("key") UUID targetEntityKey,
-      @PathVariable String namespace,
-      @PathVariable String name) {
+      @PathVariable("namespace") String namespace,
+      @PathVariable("name") String name) {
     mapper.deleteMachineTags(targetEntityKey, namespace, name);
   }
 
@@ -595,10 +614,10 @@ public abstract class BaseNetworkEntityResource<T extends NetworkEntity, P exten
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
   @PostMapping(value = "{key}/tag", consumes = MediaType.APPLICATION_JSON_VALUE)
-  @Validated({PrePersist.class, Default.class})
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
   @Override
   public int addTag(@PathVariable("key") UUID targetEntityKey, @RequestBody Tag tag) {
+    validateEntity(tag, PrePersist.class, Default.class);
     Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     tag.setCreatedBy(authentication.getName());
     int key = withMyBatis.addTag(tagMapper, mapper, targetEntityKey, tag);
@@ -635,7 +654,7 @@ public abstract class BaseNetworkEntityResource<T extends NetworkEntity, P exten
   @DeleteMapping("{key}/tag/{tagKey}")
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
   @Override
-  public void deleteTag(@PathVariable("key") UUID targetEntityKey, @PathVariable int tagKey) {
+  public void deleteTag(@PathVariable("key") UUID targetEntityKey, @PathVariable("tagKey") int tagKey) {
     mapper.deleteTag(targetEntityKey, tagKey);
     eventManager.post(ChangedComponentEvent.newInstance(targetEntityKey, objectClass, Tag.class));
   }
@@ -699,13 +718,13 @@ public abstract class BaseNetworkEntityResource<T extends NetworkEntity, P exten
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
   @PostMapping(value = "{key}/contact", consumes = MediaType.APPLICATION_JSON_VALUE)
-  @Validated({PrePersist.class, Default.class})
   @Trim
   @Transactional
   @Secured({ADMIN_ROLE, EDITOR_ROLE, APP_ROLE, IPT_ROLE})
   @Override
   public int addContact(
       @PathVariable("key") UUID targetEntityKey, @RequestBody @Trim Contact contact) {
+    validateEntity(contact, PrePersist.class, Default.class);
     Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     contact.setCreatedBy(authentication.getName());
     contact.setModifiedBy(authentication.getName());
@@ -736,13 +755,13 @@ public abstract class BaseNetworkEntityResource<T extends NetworkEntity, P exten
   @PutMapping(
       value = {"{key}/contact", "{key}/contact/{contactKey}"},
       consumes = MediaType.APPLICATION_JSON_VALUE)
-  @Validated({PostPersist.class, Default.class})
   @Trim
   @Transactional
   @Secured({ADMIN_ROLE, EDITOR_ROLE, IPT_ROLE})
   @Override
   public void updateContact(
       @PathVariable("key") UUID targetEntityKey, @RequestBody @Trim Contact contact) {
+    validateEntity(contact, PostPersist.class, Default.class);
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     contact.setModifiedBy(authentication.getName());
     withMyBatis.updateContact(contactMapper, mapper, targetEntityKey, contact);
@@ -771,7 +790,7 @@ public abstract class BaseNetworkEntityResource<T extends NetworkEntity, P exten
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
   @Override
   public void deleteContact(
-      @PathVariable("key") UUID targetEntityKey, @PathVariable int contactKey) {
+      @PathVariable("key") UUID targetEntityKey, @PathVariable("contactKey") int contactKey) {
     mapper.deleteContact(targetEntityKey, contactKey);
     eventManager.post(
         ChangedComponentEvent.newInstance(targetEntityKey, objectClass, Contact.class));
@@ -813,13 +832,13 @@ public abstract class BaseNetworkEntityResource<T extends NetworkEntity, P exten
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
   @PostMapping(value = "{key}/endpoint", consumes = MediaType.APPLICATION_JSON_VALUE)
-  @Validated({PrePersist.class, Default.class})
   @Trim
   @Transactional
   @Secured({ADMIN_ROLE, EDITOR_ROLE, IPT_ROLE})
   @Override
   public int addEndpoint(
       @PathVariable("key") UUID targetEntityKey, @RequestBody @Trim Endpoint endpoint) {
+    validateEntity(endpoint, PrePersist.class, Default.class);
     Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     endpoint.setCreatedBy(authentication.getName());
     endpoint.setModifiedBy(authentication.getName());
@@ -857,7 +876,7 @@ public abstract class BaseNetworkEntityResource<T extends NetworkEntity, P exten
   @Secured({ADMIN_ROLE, EDITOR_ROLE, IPT_ROLE})
   @Override
   public void deleteEndpoint(
-      @PathVariable("key") UUID targetEntityKey, @PathVariable int endpointKey) {
+      @PathVariable("key") UUID targetEntityKey, @PathVariable("endpointKey") int endpointKey) {
     withMyBatis.deleteEndpoint(mapper, targetEntityKey, endpointKey);
     eventManager.post(
         ChangedComponentEvent.newInstance(targetEntityKey, objectClass, Endpoint.class));
@@ -899,13 +918,13 @@ public abstract class BaseNetworkEntityResource<T extends NetworkEntity, P exten
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
   @PostMapping(value = "{key}/identifier", consumes = MediaType.APPLICATION_JSON_VALUE)
-  @Validated({PrePersist.class, Default.class})
   @Trim
   @Transactional
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
   @Override
   public int addIdentifier(
       @PathVariable("key") UUID targetEntityKey, @RequestBody @Trim Identifier identifier) {
+    validateEntity(identifier, PrePersist.class, Default.class);
     Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     identifier.setCreatedBy(authentication.getName());
     int key = withMyBatis.addIdentifier(identifierMapper, mapper, targetEntityKey, identifier);

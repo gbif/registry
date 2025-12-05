@@ -34,7 +34,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.UUID;
-import javax.validation.ValidationException;
+import jakarta.validation.ValidationException;
 import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
@@ -65,7 +65,7 @@ import org.gbif.api.vocabulary.OrganizationUsageSortField;
 import org.gbif.api.vocabulary.SortOrder;
 import org.gbif.api.vocabulary.UserRole;
 import org.gbif.registry.database.TestCaseDatabaseInitializer;
-import org.gbif.registry.search.test.EsManageServer;
+import org.gbif.registry.search.test.ElasticsearchTestContainerConfiguration;
 import org.gbif.registry.test.TestDataFactory;
 import org.gbif.registry.ws.client.EventDownloadClient;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
@@ -75,7 +75,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.web.server.LocalServerPort;
+import org.springframework.boot.test.web.server.LocalServerPort;
 
 /**
  * Runs tests for the {@link OccurrenceDownloadService} event implementations. This is parameterized
@@ -114,11 +114,11 @@ public class EventDownloadIT extends BaseItTest {
       NodeService nodeService,
       InstallationService installationService,
       SimplePrincipalProvider simplePrincipalProvider,
-      EsManageServer esServer,
+      ElasticsearchTestContainerConfiguration elasticsearchTestContainer,
       @LocalServerPort int localServerPort,
       TestDataFactory testDataFactory,
       KeyStore keyStore) {
-    super(simplePrincipalProvider, esServer);
+    super(simplePrincipalProvider, elasticsearchTestContainer);
     this.eventDownloadResource = eventDownloadResource;
     this.organizationService = organizationService;
     this.datasetService = datasetService;

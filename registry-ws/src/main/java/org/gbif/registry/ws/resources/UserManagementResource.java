@@ -48,9 +48,9 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import javax.annotation.Nullable;
-import javax.validation.Valid;
-import javax.validation.constraints.NotNull;
+import jakarta.annotation.Nullable;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 
 import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.http.HttpHeaders;
@@ -143,7 +143,7 @@ public class UserManagementResource {
    */
   @GetMapping("{username}")
   @Secured({ADMIN_ROLE, APP_ROLE})
-  public UserAdminView getUser(@PathVariable String username) {
+  public UserAdminView getUser(@PathVariable("username") String username) {
     GbifUser user = identityService.get(username);
     if (user == null) {
       return null;
@@ -193,7 +193,7 @@ public class UserManagementResource {
   @PutMapping(path = "{username}", consumes = MediaType.APPLICATION_JSON_VALUE)
   @Secured({ADMIN_ROLE, APP_ROLE})
   public ResponseEntity<UserModelMutationResult> update(
-      @PathVariable String username,
+      @PathVariable("username") String username,
       @RequestBody @NotNull @Valid UserUpdate userUpdate,
       Authentication authentication) {
     ResponseEntity<UserModelMutationResult> response = ResponseEntity.noContent().build();
@@ -259,7 +259,7 @@ public class UserManagementResource {
   /** For admin console only. */
   @Secured(ADMIN_ROLE)
   @DeleteMapping("{username}")
-  public ResponseEntity<Void> delete(@PathVariable String username) {
+  public ResponseEntity<Void> delete(@PathVariable("username") String username) {
     GbifUser user = identityService.get(username);
 
     if (user == null) {
@@ -424,7 +424,7 @@ public class UserManagementResource {
   @GetMapping("{username}/editorRight")
   @Secured({ADMIN_ROLE, USER_ROLE})
   public ResponseEntity<List<UUID>> editorRights(
-      @PathVariable String username, Authentication authentication) {
+      @PathVariable("username") String username, Authentication authentication) {
     // Non-admin users can only see their own entry.
     if (!SecurityContextCheck.checkUserInRole(authentication, ADMIN_ROLE)) {
       String usernameInContext = authentication.getName();
@@ -449,7 +449,7 @@ public class UserManagementResource {
       consumes = {MediaType.TEXT_PLAIN_VALUE, MediaType.APPLICATION_JSON_VALUE})
   @Secured({ADMIN_ROLE})
   public ResponseEntity<UUID> addEditorRight(
-      @PathVariable String username, @RequestBody @NotNull String strKey) {
+      @PathVariable("username") String username, @RequestBody @NotNull String strKey) {
 
     final UUID key = UUID.fromString(strKey);
 
@@ -471,7 +471,7 @@ public class UserManagementResource {
   @DeleteMapping("{username}/editorRight/{key}")
   @Secured(ADMIN_ROLE)
   public ResponseEntity<Void> deleteEditorRight(
-      @PathVariable String username, @PathVariable UUID key) {
+      @PathVariable("username") String username, @PathVariable("key") UUID key) {
 
     // Ensure user exists
     GbifUser currentUser = identityService.get(username);
@@ -491,7 +491,7 @@ public class UserManagementResource {
   @GetMapping("{username}/namespaceRight")
   @Secured({ADMIN_ROLE, USER_ROLE})
   public ResponseEntity<List<String>> namespaceRights(
-      @PathVariable String username, Authentication authentication) {
+      @PathVariable("username") String username, Authentication authentication) {
     // Non-admin users can only see their own entry.
     if (!SecurityContextCheck.checkUserInRole(authentication, ADMIN_ROLE)) {
       String usernameInContext = authentication.getName();
@@ -516,7 +516,7 @@ public class UserManagementResource {
       consumes = {MediaType.TEXT_PLAIN_VALUE, MediaType.APPLICATION_JSON_VALUE})
   @Secured({ADMIN_ROLE})
   public ResponseEntity<String> addNamespaceRight(
-      @PathVariable String username, @RequestBody @NotNull String namespace) {
+      @PathVariable("username") String username, @RequestBody @NotNull String namespace) {
 
     // Ensure user exists
     GbifUser currentUser = identityService.get(username);
@@ -536,7 +536,7 @@ public class UserManagementResource {
   @DeleteMapping("{username}/namespaceRight/{namespace}")
   @Secured(ADMIN_ROLE)
   public ResponseEntity<Void> deleteNamespaceRight(
-      @PathVariable String username, @PathVariable String namespace) {
+      @PathVariable("username") String username, @PathVariable("namespace") String namespace) {
 
     // Ensure user exists
     GbifUser currentUser = identityService.get(username);
@@ -556,7 +556,7 @@ public class UserManagementResource {
   @GetMapping("{username}/countryRight")
   @Secured({ADMIN_ROLE, USER_ROLE})
   public ResponseEntity<List<Country>> countryRights(
-      @PathVariable String username, Authentication authentication) {
+      @PathVariable("username") String username, Authentication authentication) {
     // Non-admin users can only see their own entry.
     if (!SecurityContextCheck.checkUserInRole(authentication, ADMIN_ROLE)) {
       String usernameInContext = authentication.getName();
@@ -581,7 +581,7 @@ public class UserManagementResource {
       consumes = {MediaType.TEXT_PLAIN_VALUE, MediaType.APPLICATION_JSON_VALUE})
   @Secured({ADMIN_ROLE})
   public ResponseEntity<String> addCountryRight(
-      @PathVariable String username, @RequestBody @NotNull String countryParam) {
+      @PathVariable("username") String username, @RequestBody @NotNull String countryParam) {
 
     final Country country = Country.fromIsoCode(countryParam);
 
@@ -607,7 +607,7 @@ public class UserManagementResource {
   @DeleteMapping("{username}/countryRight/{countryParam}")
   @Secured(ADMIN_ROLE)
   public ResponseEntity<Void> deleteCountryRight(
-      @PathVariable String username, @PathVariable String countryParam) {
+      @PathVariable("username") String username, @PathVariable("countryParam") String countryParam) {
 
     final Country country = Country.fromIsoCode(countryParam);
 

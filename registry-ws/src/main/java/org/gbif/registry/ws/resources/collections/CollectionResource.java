@@ -87,7 +87,7 @@ import java.util.Objects;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletResponse;
 
 import org.apache.commons.io.IOUtils;
 import org.springframework.beans.factory.annotation.Value;
@@ -241,7 +241,7 @@ public class CollectionResource
   @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("{key}")
   @NullToNotFound("/grscicoll/collection/{key}")
-  public CollectionView getCollectionView(@PathVariable UUID key) {
+  public CollectionView getCollectionView(@PathVariable("key") UUID key) {
     return collectionService.getCollectionView(key);
   }
 
@@ -258,7 +258,7 @@ public class CollectionResource
   @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("latimerCore/{key}")
   @NullToNotFound("/grscicoll/collection/{key}")
-  public ObjectGroup getCollectionAsLatimerCore(@PathVariable UUID key) {
+  public ObjectGroup getCollectionAsLatimerCore(@PathVariable("key") UUID key) {
     return collectionService.getAsLatimerCore(key);
   }
 
@@ -351,7 +351,7 @@ public class CollectionResource
   @Docs.DefaultUnsuccessfulWriteResponses
   @DeleteMapping("{key}")
   @Override
-  public void delete(@PathVariable UUID key) {
+  public void delete(@PathVariable("key") UUID key) {
     super.delete(key);
   }
 
@@ -656,7 +656,7 @@ public class CollectionResource
       value = "{collectionKey}/descriptorGroup",
       consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
   public long createDescriptorGroup(
-      @PathVariable UUID collectionKey,
+      @PathVariable("collectionKey") UUID collectionKey,
       @RequestParam(value = "format", defaultValue = "CSV") ExportFormat format,
       @RequestPart(value = "descriptorsFile", required = false) MultipartFile descriptorsFile,
       @RequestParam("title") @Trim String title,

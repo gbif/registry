@@ -15,9 +15,8 @@ package org.gbif.registry.search.dataset.common;
 
 import org.gbif.api.model.common.search.SearchParameter;
 
-import org.elasticsearch.index.query.QueryBuilder;
-import org.elasticsearch.index.query.QueryBuilders;
-import org.elasticsearch.search.sort.SortBuilder;
+import co.elastic.clients.elasticsearch._types.query_dsl.Query;
+import co.elastic.clients.elasticsearch._types.SortOptions;
 
 public interface EsFieldMapper<P extends SearchParameter> {
 
@@ -57,7 +56,7 @@ public interface EsFieldMapper<P extends SearchParameter> {
   String[] excludeFields();
 
   /** @return the default sorting of results */
-  SortBuilder<? extends SortBuilder>[] sorts();
+  SortOptions[] sorts();
 
   /**
    * Fields to be included in a suggest response. By default only the requested parameter field is
@@ -81,8 +80,8 @@ public interface EsFieldMapper<P extends SearchParameter> {
   }
 
   /** Builds a full text search query builder. */
-  default QueryBuilder fullTextQuery(String q) {
-    return QueryBuilders.matchQuery("all", q);
+  default Query fullTextQuery(String q) {
+    return Query.of(query -> query.match(match -> match.field("all").query(q)));
   }
 
   /**

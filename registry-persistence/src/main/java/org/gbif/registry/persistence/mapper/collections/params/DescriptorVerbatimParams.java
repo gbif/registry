@@ -15,7 +15,7 @@ package org.gbif.registry.persistence.mapper.collections.params;
 
 import org.gbif.api.model.common.paging.Pageable;
 
-import javax.annotation.Nullable;
+import jakarta.annotation.Nullable;
 
 import lombok.Builder;
 import lombok.Getter;

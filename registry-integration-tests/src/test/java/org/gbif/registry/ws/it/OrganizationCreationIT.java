@@ -25,7 +25,7 @@ import org.gbif.registry.database.TestCaseDatabaseInitializer;
 import org.gbif.registry.persistence.ChallengeCodeSupportMapper;
 import org.gbif.registry.persistence.mapper.UserMapper;
 import org.gbif.registry.persistence.mapper.surety.ChallengeCodeMapper;
-import org.gbif.registry.search.test.EsManageServer;
+import org.gbif.registry.search.test.ElasticsearchTestContainerConfiguration;
 import org.gbif.registry.test.TestDataFactory;
 import org.gbif.registry.ws.client.NodeClient;
 import org.gbif.registry.ws.client.OrganizationClient;
@@ -43,7 +43,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.web.server.LocalServerPort;
+import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
@@ -95,12 +95,12 @@ public class OrganizationCreationIT extends BaseItTest {
       ChallengeCodeSupportMapper<UUID> challengeCodeSupportMapper,
       TestDataFactory testDataFactory,
       SimplePrincipalProvider simplePrincipalProvider,
-      EsManageServer esServer,
+      ElasticsearchTestContainerConfiguration elasticsearchTestContainer,
       @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection") @LocalServerPort
           int localServerPort,
       KeyStore keyStore,
       UserMapper userMapper) {
-    super(simplePrincipalProvider, esServer);
+    super(simplePrincipalProvider, elasticsearchTestContainer);
     this.organizationResource = ((OrganizationResource) organizationResource);
     this.nodeResource = nodeResource;
     this.userMapper = userMapper;
