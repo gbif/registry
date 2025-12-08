@@ -34,7 +34,7 @@
     </dependency>
     <dependency>
       <groupId>org.springdoc</groupId>
-      <artifactId>springdoc-openapi-ui</artifactId>
+      <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
     </dependency>
 
     <!-- GBIF dependencies -->
@@ -67,6 +67,10 @@
     <dependency>
       <groupId>org.dspace</groupId>
       <artifactId>xoai-data-provider</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.dspace</groupId>
+      <artifactId>xoai-service-provider</artifactId>
     </dependency>
 
     <!-- Test dependencies -->

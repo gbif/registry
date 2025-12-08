@@ -84,7 +84,7 @@
     <spring-boot.version>3.2.8</spring-boot.version>
     <spring-boot-admin.version>3.2.3</spring-boot-admin.version>
     <mybatis-spring-boot-starter.version>3.0.3</mybatis-spring-boot-starter.version>
-    <springdoc-openapi-ui.version>1.8.0</springdoc-openapi-ui.version>
+    <springdoc-openapi-ui.version>2.3.0</springdoc-openapi-ui.version>
     <tomcat.version>10.1.15</tomcat.version>
 
     <!-- Elasticsearch -->
@@ -219,7 +219,7 @@
       </dependency>
       <dependency>
         <groupId>org.springdoc</groupId>
-        <artifactId>springdoc-openapi-ui</artifactId>
+        <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
         <version>${springdoc-openapi-ui.version}</version>
       </dependency>
 
