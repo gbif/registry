@@ -85,7 +85,7 @@
     <spring-boot-admin.version>3.2.3</spring-boot-admin.version>
     <mybatis-spring-boot-starter.version>3.0.3</mybatis-spring-boot-starter.version>
     <springdoc-openapi-ui.version>2.3.0</springdoc-openapi-ui.version>
-    <tomcat.version>10.1.15</tomcat.version>
+    <tomcat.version>10.1.47</tomcat.version>
 
     <!-- Elasticsearch -->
     <elasticsearch.version>9.0.4</elasticsearch.version>
