@@ -19,7 +19,6 @@ import org.gbif.registry.identity.util.RegistryPasswordEncoder;
 import org.gbif.registry.security.EditorAuthorizationFilter;
 import org.gbif.registry.security.LegacyAuthorizationFilter;
 import org.gbif.registry.security.ResourceNotFoundRequestFilter;
-import org.gbif.registry.security.UserRoles;
 import org.gbif.registry.security.grscicoll.GrSciCollEditorAuthorizationFilter;
 import org.gbif.registry.security.jwt.JwtRequestFilter;
 import org.gbif.registry.security.precheck.AuthPreCheckCreationRequestFilter;
@@ -32,7 +31,6 @@ import java.util.Arrays;
 import java.util.Collections;
 
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -46,16 +44,12 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.context.SecurityContextHolderStrategy;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.csrf.CsrfFilter;
 import org.springframework.security.web.firewall.HttpFirewall;
 import org.springframework.security.web.firewall.StrictHttpFirewall;
-import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
-import org.springframework.security.web.util.matcher.NegatedRequestMatcher;
 import org.springframework.validation.beanvalidation.MethodValidationPostProcessor;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
@@ -75,33 +69,6 @@ public class WebSecurityConfigurer {
       ApplicationContext context) {
     this.userDetailsService = userDetailsService;
     this.context = context;
-  }
-
-  @Bean("actuatorPasswordEncoder")
-  public PasswordEncoder actuatorPasswordEncoder() {
-    return org.springframework.security.crypto.factory.PasswordEncoderFactories.createDelegatingPasswordEncoder();
-  }
-
-  @Bean("actuatorUserDetailsService")
-  public UserDetailsService actuatorUserDetailsService(
-      @Value("${security.actuatorUser:actuatorAdmin}") String actuatorUser,
-      @Value("${security.actuatorSecret}") String actuatorSecret) {
-    return new InMemoryUserDetailsManager(
-      User.withUsername(actuatorUser)
-        .password(actuatorSecret)
-        .roles(UserRoles.ACTUATOR_ROLE)
-        .build()
-    );
-  }
-
-  @Bean("actuatorAuthenticationProvider")
-  public DaoAuthenticationProvider actuatorAuthenticationProvider(
-      @Qualifier("actuatorUserDetailsService") UserDetailsService userDetailsService,
-      @Qualifier("actuatorPasswordEncoder") PasswordEncoder passwordEncoder) {
-    DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
-    provider.setUserDetailsService(userDetailsService);
-    provider.setPasswordEncoder(passwordEncoder);
-    return provider;
   }
 
   @Bean
@@ -142,37 +109,9 @@ public class WebSecurityConfigurer {
     return firewall;
   }
 
-  /**
-   * Security filter chain for actuator endpoints.
-   * Public: health, prometheus, metrics (for monitoring).
-   * Protected: shutdown, heapdump, env, etc. (require ACTUATOR role).
-   */
   @Bean
-  @org.springframework.core.annotation.Order(1)
-  public SecurityFilterChain actuatorSecurityFilterChain(
-      HttpSecurity http,
-      @Qualifier("actuatorAuthenticationProvider") DaoAuthenticationProvider authProvider) throws Exception {
-    http
-      .securityMatcher("/actuator/**")
-      .authenticationProvider(authProvider)
-      .httpBasic(basic -> {})
-      .csrf(AbstractHttpConfigurer::disable)
-      .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-      .authorizeHttpRequests(authz -> authz
-        .requestMatchers("/actuator/health", "/actuator/health/**", "/actuator/prometheus", "/actuator/metrics/**").permitAll()
-        .requestMatchers("/actuator/**").hasRole(UserRoles.ACTUATOR_ROLE)
-      );
-    return http.build();
-  }
-
-  /**
-   * Main security filter chain for API endpoints.
-   */
-  @Bean
-  @org.springframework.core.annotation.Order(2)
   public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
     http
-      .securityMatcher(new NegatedRequestMatcher(new AntPathRequestMatcher("/actuator/**")))
       .httpBasic(AbstractHttpConfigurer::disable)
       .csrf(AbstractHttpConfigurer::disable)
       .cors(cors -> cors.configurationSource(corsConfigurationSource()))
