@@ -86,12 +86,6 @@ public class WebSecurityConfigurer {
   public UserDetailsService actuatorUserDetailsService(
       @Value("${security.actuatorUser:actuatorAdmin}") String actuatorUser,
       @Value("${security.actuatorSecret:actuatorPassword}") String actuatorSecret) {
-
-    // Add {noop} prefix if password doesn't have any encoder prefix
-    if (!actuatorSecret.startsWith("{")) {
-      actuatorSecret = "{noop}" + actuatorSecret;
-    }
-
     return new InMemoryUserDetailsManager(
       User.withUsername(actuatorUser)
         .password(actuatorSecret)
