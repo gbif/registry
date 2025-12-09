@@ -38,5 +38,7 @@ public class UserRoles {
 
   public static final String GRSCICOLL_MEDIATOR_ROLE = "GRSCICOLL_MEDIATOR";
 
+  public static final String ACTUATOR_ROLE = "ACTUATOR";
+
   @Deprecated public static final String IDIGBIO_GRSCICOLL_EDITOR_ROLE = "IDIGBIO_GRSCICOLL_EDITOR";
 }
