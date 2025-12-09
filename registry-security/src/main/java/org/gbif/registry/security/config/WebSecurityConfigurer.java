@@ -85,7 +85,7 @@ public class WebSecurityConfigurer {
   @Bean("actuatorUserDetailsService")
   public UserDetailsService actuatorUserDetailsService(
       @Value("${security.actuatorUser:actuatorAdmin}") String actuatorUser,
-      @Value("${security.actuatorSecret}") String actuatorSecret) {
+      @Value("${security.actuatorSecret:actuatorPassword}") String actuatorSecret) {
     return new InMemoryUserDetailsManager(
       User.withUsername(actuatorUser)
         .password(actuatorSecret)
