@@ -165,7 +165,7 @@ public class WebSecurityConfigurer {
       .csrf(AbstractHttpConfigurer::disable)
       .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
       .authorizeHttpRequests(authz -> authz
-        .requestMatchers("/actuator/health", "/actuator/health/**", "/actuator/prometheus", "/actuator/metrics/**").permitAll()
+        .requestMatchers("/actuator/health", "/actuator/health/**", "/actuator/prometheus", "/actuator/metrics/**", "/actuator/info").permitAll()
         .requestMatchers("/actuator/**").hasRole(UserRoles.ACTUATOR_ROLE)
       );
     return http.build();
