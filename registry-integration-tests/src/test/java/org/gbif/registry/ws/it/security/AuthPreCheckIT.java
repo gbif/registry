@@ -55,7 +55,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
-import org.springframework.util.Base64Utils;
+import java.util.Base64;
 
 import com.google.common.collect.Sets;
 
@@ -76,7 +76,7 @@ public class AuthPreCheckIT extends BaseItTest {
   private static final BiFunction<String, String, String> BASIC_AUTH_HEADER =
       (username, pass) ->
           "Basic "
-              + Base64Utils.encodeToString(
+              + Base64.getEncoder().encodeToString(
                   (username + ":" + pass).getBytes(StandardCharsets.UTF_8));
 
   private final MockMvc mockMvc;

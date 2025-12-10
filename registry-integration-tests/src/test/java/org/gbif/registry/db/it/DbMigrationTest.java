@@ -41,6 +41,8 @@ import com.zaxxer.hikari.HikariDataSource;
 
 import liquibase.integration.spring.SpringLiquibase;
 
+import org.springframework.util.StringUtils;
+
 /**
  * Runs the liquibase change logs against an external database.
  */
@@ -102,7 +104,7 @@ public class DbMigrationTest {
       SpringLiquibase liquibase = new SpringLiquibase();
       liquibase.setDataSource(dataSource);
       liquibase.setChangeLog(properties.getChangeLog());
-      liquibase.setContexts(properties.getContexts());
+      liquibase.setContexts(StringUtils.collectionToCommaDelimitedString(properties.getContexts()));
       liquibase.setDefaultSchema(properties.getDefaultSchema());
       liquibase.setDropFirst(properties.isDropFirst());
       liquibase.setShouldRun(properties.isEnabled());
