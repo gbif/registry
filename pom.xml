@@ -81,11 +81,10 @@
     <java.version>17</java.version>
 
     <!-- Spring -->
-    <spring-boot.version>3.5.7</spring-boot.version>
-    <spring-boot-admin.version>3.2.3</spring-boot-admin.version>
-    <mybatis-spring-boot-starter.version>3.0.3</mybatis-spring-boot-starter.version>
+    <spring-boot.version>3.5.8</spring-boot.version>
+    <spring-boot-admin.version>3.5.6</spring-boot-admin.version>
+    <mybatis-spring-boot-starter.version>3.0.5</mybatis-spring-boot-starter.version>
     <springdoc-openapi-ui.version>2.8.14</springdoc-openapi-ui.version>
-    <tomcat.version>10.1.49</tomcat.version>
 
     <!-- Elasticsearch -->
     <elasticsearch.version>9.0.4</elasticsearch.version>
@@ -95,7 +94,7 @@
     <gbif-common.version>0.59</gbif-common.version>
     <gbif-common-mybatis.version>2.0.0</gbif-common-mybatis.version>
     <gbif-common-ws.version>2.1.1-SNAPSHOT</gbif-common-ws.version>
-    <gbif-directory.version>1.14</gbif-directory.version>
+    <gbif-directory.version>3.3</gbif-directory.version>
     <gbif-doi.version>3.0.2-java17-SNAPSHOT</gbif-doi.version>
     <gbif-download-query-tools.version>2.0.4-SNAPSHOT</gbif-download-query-tools.version>
     <gbif-httputils.version>0.10</gbif-httputils.version>
@@ -103,60 +102,66 @@
     <gbif-parsers.version>0.67</gbif-parsers.version>
     <gbif-postal-service.version>1.8.1</gbif-postal-service.version>
     <xoai.version>4.1.0-gbif-4</xoai.version>
-    <gbif-occurrence.version>1.0.28</gbif-occurrence.version>
+    <gbif-occurrence.version>1.1.9-SNAPSHOT</gbif-occurrence.version>
     <gbif-vocabulary.version>2.0.2</gbif-vocabulary.version>
     <gbif-kvs.version>3.0</gbif-kvs.version>
     <checklistbank.version>3.0.0</checklistbank.version>
     <dwc-api.version>2.1.7-SNAPSHOT</dwc-api.version>
-    <dwca-io.version>3.0.0</dwca-io.version>
+    <dwca-io.version>3.0.1-SNAPSHOT</dwca-io.version>
 
     <!-- Third party -->
     <commons-digester.version>3.2</commons-digester.version>
-    <commons-validator.version>1.7</commons-validator.version>
-    <commons-lang3.version>3.17.0</commons-lang3.version>
-    <commons-io.version>2.17.0</commons-io.version>
-    <commons-compress.version>1.27.1</commons-compress.version>
-    <commons-logging.version>1.2</commons-logging.version>
-    <cache2k.version>2.0.0.Final</cache2k.version>
-    <feign.version>13.5</feign.version>
+    <commons-validator.version>1.10.1</commons-validator.version>
+    <commons-lang3.version>3.20.0</commons-lang3.version>
+    <commons-io.version>2.21.0</commons-io.version>
+    <commons-compress.version>1.28.0</commons-compress.version>
+    <commons-logging.version>1.3.5</commons-logging.version>
+    <cache2k.version>2.6.1.Final</cache2k.version>
+    <feign.version>13.6</feign.version>
     <findbugs-jsr305.version>3.0.1</findbugs-jsr305.version>
     <guava.version>33.5.0-jre</guava.version>
-    <hikaricp.version>5.1.0</hikaricp.version>
+    <hikaricp.version>7.0.2</hikaricp.version>
     <janino-logback.version>3.1.12</janino-logback.version>
-    <jettison.version>1.3.7</jettison.version>
-    <jjwt.version>0.12.3</jjwt.version>
-    <jsr311-api.version>1.1.1</jsr311-api.version>
+    <jettison.version>1.5.4</jettison.version>
+    <jjwt.version>0.13.0</jjwt.version>
     <logback.version>1.5.21</logback.version>
-    <logstash-logback-encoder.version>7.4</logstash-logback-encoder.version>
-    <lombok.version>1.18.30</lombok.version>
-    <mybatis.version>3.5.15</mybatis.version>
+    <slf4j.version>2.0.17</slf4j.version>
+    <logstash-logback-encoder.version>9.0</logstash-logback-encoder.version>
+    <lombok.version>1.18.42</lombok.version>
+    <mybatis.version>3.5.19</mybatis.version>
     <woodstox.version>4.4.1</woodstox.version>
     <zookeeper.version>3.8.1</zookeeper.version>
     <curator.version>5.5.0</curator.version>
     <curator-framework.version>5.5.0-disable-connectstr-updates</curator-framework.version>
-    <owasp-java-html-sanitizer.version>20211018.2</owasp-java-html-sanitizer.version>
+    <owasp-java-html-sanitizer.version>20240325.1</owasp-java-html-sanitizer.version>
     <super-csv.version>2.4.0</super-csv.version>
-    <opencsv.version>5.9</opencsv.version>
+    <opencsv.version>5.12.0</opencsv.version>
     <geojson.version>1.14</geojson.version>
     <avro.version>1.11.3</avro.version>
-    <jakarta.xml.bind-api.version>4.0.0</jakarta.xml.bind-api.version>
-    <swagger-annotations.version>2.2.3</swagger-annotations.version>
-    <resilience4j.version>2.1.0</resilience4j.version>
+    <jakarta.xml.bind-api.version>4.0.4</jakarta.xml.bind-api.version>
+    <swagger-annotations.version>2.2.41</swagger-annotations.version>
+    <resilience4j.version>2.3.0</resilience4j.version>
     <httpclient.version>4.5.14</httpclient.version>
     <httpcore.version>4.4.16</httpcore.version>
     <jackson.version>2.19.4</jackson.version>
-    <micrometer-tracing.version>1.5.6</micrometer-tracing.version>
+    <micrometer-tracing.version>1.6.1</micrometer-tracing.version>
+    <jakarta.el.version>4.0.2</jakarta.el.version>
+    <jakarta-validation.version>3.1.1</jakarta-validation.version>
+    <hibernate-validator.version>9.1.0.Final</hibernate-validator.version>
+    <jakarta-annotation.version>3.0.0</jakarta-annotation.version>
+    <jakarta.servlet-api.version>6.1.0</jakarta.servlet-api.version>
+    <spring-cloud-dependencies.version>2025.0.0</spring-cloud-dependencies.version>
+    <jaxb-runtime.version>4.0.6</jaxb-runtime.version>
 
     <!-- Hadoop -->
-    <hadoop.version>2.6.0-cdh5.16.2</hadoop.version>
-    <hadoop-core.version>2.6.0-mr1-cdh5.16.2</hadoop-core.version>
+    <hadoop.version>3.3.5</hadoop.version>
 
     <!-- Test -->
-    <mockito.version>5.8.0</mockito.version>
-    <xmlunit.version>2.9.1</xmlunit.version>
+    <mockito.version>5.20.0</mockito.version>
+    <xmlunit.version>2.11.0</xmlunit.version>
     <testcontainers.version>2.0.2</testcontainers.version>
-    <mock-javamail.version>1.9</mock-javamail.version>
-    <mybatis-spring-boot-starter-test.version>3.0.3</mybatis-spring-boot-starter-test.version>
+    <mock-javamail.version>2.2</mock-javamail.version>
+    <mybatis-spring-boot-starter-test.version>3.0.5</mybatis-spring-boot-starter-test.version>
     <reflections.version>0.10.2</reflections.version>
 
     <!-- Configurable -->
@@ -180,7 +185,7 @@
 
     <!-- Plugin versions -->
     <spring-boot-maven-plugin.version>${spring-boot.version}</spring-boot-maven-plugin.version>
-    <maven-shade-plugin.version>3.5.3</maven-shade-plugin.version>
+    <maven-shade-plugin.version>3.6.1</maven-shade-plugin.version>
   </properties>
 
   <dependencyManagement>
@@ -196,7 +201,7 @@
       <dependency>
         <groupId>org.springframework.cloud</groupId>
         <artifactId>spring-cloud-dependencies</artifactId>
-        <version>2025.0.0</version>
+        <version>${spring-cloud-dependencies.version}</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
@@ -219,22 +224,6 @@
         <groupId>org.springdoc</groupId>
         <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
         <version>${springdoc-openapi-ui.version}</version>
-      </dependency>
-
-      <dependency>
-        <groupId>org.apache.tomcat.embed</groupId>
-        <artifactId>tomcat-embed-core</artifactId>
-        <version>${tomcat.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.tomcat.embed</groupId>
-        <artifactId>tomcat-embed-el</artifactId>
-        <version>${tomcat.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.tomcat.embed</groupId>
-        <artifactId>tomcat-embed-websocket</artifactId>
-        <version>${tomcat.version}</version>
       </dependency>
 
       <!-- GBIF dependencies -->
@@ -585,6 +574,12 @@
         <artifactId>logstash-logback-encoder</artifactId>
         <version>${logstash-logback-encoder.version}</version>
       </dependency>
+      <dependency>
+        <groupId>org.slf4j</groupId>
+        <artifactId>log4j-over-slf4j</artifactId>
+        <version>${slf4j.version}</version>
+        <scope>runtime</scope>
+      </dependency>
 
       <!-- ES -->
       <dependency>
@@ -626,11 +621,6 @@
             <artifactId>xercesImpl</artifactId>
           </exclusion>
         </exclusions>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.hadoop</groupId>
-        <artifactId>hadoop-core</artifactId>
-        <version>${hadoop-core.version}</version>
       </dependency>
       <dependency>
         <groupId>org.apache.hadoop</groupId>
@@ -740,20 +730,20 @@
       <dependency>
         <groupId>org.glassfish.jaxb</groupId>
         <artifactId>jaxb-runtime</artifactId>
-        <version>4.0.5</version>
+        <version>${jaxb-runtime.version}</version>
       </dependency>
 
       <dependency>
         <groupId>jakarta.servlet</groupId>
         <artifactId>jakarta.servlet-api</artifactId>
-        <version>6.0.0</version>
+        <version>${jakarta.servlet-api.version}</version>
         <scope>provided</scope>
       </dependency>
 
       <dependency>
         <groupId>jakarta.annotation</groupId>
         <artifactId>jakarta.annotation-api</artifactId>
-        <version>2.1.1</version>
+        <version>${jakarta-annotation.version}</version>
       </dependency>
 
       <dependency>
@@ -800,19 +790,19 @@
       <dependency>
         <groupId>jakarta.validation</groupId>
         <artifactId>jakarta.validation-api</artifactId>
-        <version>3.0.2</version>
+        <version>${jakarta-validation.version}</version>
       </dependency>
 
       <dependency>
         <groupId>org.hibernate.validator</groupId>
         <artifactId>hibernate-validator</artifactId>
-        <version>8.0.1.Final</version>
+        <version>${hibernate-validator.version}</version>
       </dependency>
 
       <dependency>
         <groupId>org.glassfish</groupId>
         <artifactId>jakarta.el</artifactId>
-        <version>4.0.2</version>
+        <version>${jakarta.el.version}</version>
       </dependency>
 
       <!-- Test dependencies -->
