@@ -81,10 +81,10 @@
     <java.version>17</java.version>
 
     <!-- Spring -->
-    <spring-boot.version>3.5.8</spring-boot.version>
+    <spring-boot.version>3.5.7</spring-boot.version>
     <spring-boot-admin.version>3.2.3</spring-boot-admin.version>
     <mybatis-spring-boot-starter.version>3.0.3</mybatis-spring-boot-starter.version>
-    <springdoc-openapi-ui.version>2.3.0</springdoc-openapi-ui.version>
+    <springdoc-openapi-ui.version>2.8.14</springdoc-openapi-ui.version>
     <tomcat.version>10.1.49</tomcat.version>
 
     <!-- Elasticsearch -->
