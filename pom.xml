@@ -144,7 +144,7 @@
     <httpclient.version>4.5.14</httpclient.version>
     <httpcore.version>4.4.16</httpcore.version>
     <jackson.version>2.19.4</jackson.version>
-    <micrometer-tracing.version>1.6.1</micrometer-tracing.version>
+    <micrometer-tracing.version>1.15.6</micrometer-tracing.version>
     <jakarta.el.version>4.0.2</jakarta.el.version>
     <jakarta-validation.version>3.1.1</jakarta-validation.version>
     <hibernate-validator.version>9.1.0.Final</hibernate-validator.version>
