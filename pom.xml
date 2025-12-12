@@ -154,7 +154,7 @@
     <jaxb-runtime.version>4.0.6</jaxb-runtime.version>
 
     <!-- Hadoop -->
-    <hadoop.version>3.3.5</hadoop.version>
+    <hadoop.version>3.4.0</hadoop.version>
 
     <!-- Test -->
     <mockito.version>5.20.0</mockito.version>
