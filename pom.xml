@@ -129,7 +129,7 @@
     <logstash-logback-encoder.version>9.0</logstash-logback-encoder.version>
     <lombok.version>1.18.42</lombok.version>
     <mybatis.version>3.5.19</mybatis.version>
-    <woodstox.version>4.2.1</woodstox.version>
+    <woodstox.version>4.4.1</woodstox.version>
     <zookeeper.version>3.8.1</zookeeper.version>
     <curator.version>5.5.0</curator.version>
     <curator-framework.version>5.5.0-disable-connectstr-updates</curator-framework.version>

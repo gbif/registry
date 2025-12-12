@@ -206,6 +206,10 @@
           <artifactId>slf4j-reload4j</artifactId>
           <groupId>org.slf4j</groupId>
         </exclusion>
+        <exclusion>
+          <artifactId>woodstox-core</artifactId>
+          <groupId>com.fasterxml.woodstox</groupId>
+        </exclusion>
       </exclusions>
     </dependency>
     <dependency>
