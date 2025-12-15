@@ -11,7 +11,7 @@
 
   <groupId>org.gbif.registry</groupId>
   <artifactId>registry-parent</artifactId>
-  <version>4.1.21-SNAPSHOT</version>
+  <version>4.1.21-spark-refactor-SNAPSHOT</version>
   <name>GBIF Registry Parent</name>
   <description>GBIF Registry project</description>
 
@@ -92,7 +92,7 @@
     <gbif-api.version>2.2.0-SNAPSHOT</gbif-api.version>
     <gbif-common.version>0.59</gbif-common.version>
     <gbif-common-mybatis.version>2.0.0</gbif-common-mybatis.version>
-    <gbif-common-ws.version>2.0.10-java11</gbif-common-ws.version>
+    <gbif-common-ws.version>2.0.10-mylocal-java11</gbif-common-ws.version>
     <gbif-directory.version>1.14</gbif-directory.version>
     <gbif-doi.version>3.0.0</gbif-doi.version>
     <gbif-download-query-tools.version>2.0.4-SNAPSHOT</gbif-download-query-tools.version>
@@ -105,7 +105,7 @@
     <gbif-vocabulary.version>2.0.2</gbif-vocabulary.version>
     <gbif-kvs.version>3.0</gbif-kvs.version>
     <checklistbank.version>3.0.0</checklistbank.version>
-    <dwc-api.version>2.1.7-SNAPSHOT</dwc-api.version>
+    <dwc-api.version>2.1.7</dwc-api.version>
     <dwca-io.version>3.0.0</dwca-io.version>
 
     <!-- Third party -->
