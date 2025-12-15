@@ -3,7 +3,7 @@
     <parent>
         <artifactId>registry-parent</artifactId>
         <groupId>org.gbif.registry</groupId>
-        <version>4.1.21-SNAPSHOT</version>
+        <version>4.1.21-spark-refactor-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
