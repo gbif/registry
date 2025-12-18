@@ -42,7 +42,7 @@ clientBuilder
 DatasetServcie datasetClient = clientBuilder.build(DatasetClient.class);
 ```
 
-Make sure you are using right properties `wsUrl`, `username` and `passowrd`.
+Make sure you are using right properties `wsUrl`, `username` and `password`.
 
 ### Using GBIF app authentication
 
