@@ -183,6 +183,9 @@ public class WebSecurityConfigurer {
       .csrf(AbstractHttpConfigurer::disable)
       .cors(cors -> cors.configurationSource(corsConfigurationSource()))
       .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+      .securityContext(securityContext -> securityContext
+        .requireExplicitSave(false)
+      )
       .authorizeHttpRequests(authz -> authz
         .anyRequest().authenticated()
       );
