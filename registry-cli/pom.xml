@@ -20,13 +20,13 @@
 
   <properties>
     <main.basedir>${project.parent.basedir}</main.basedir>
-    <jcommander.version>1.48</jcommander.version>
+    <jcommander.version>1.60</jcommander.version>
     <yammer.version>2.2.0</yammer.version>
     <gbif-cli.version>3.0.1-SNAPSHOT</gbif-cli.version>
     <metainf-services.version>1.11</metainf-services.version>
     <javax.mail.version>1.4.7</javax.mail.version>
-    <ant.version>1.10.14</ant.version>
-    <kotlin.version>1.4.20</kotlin.version>
+    <ant.version>1.10.15</ant.version>
+    <kotlin.version>1.9.10</kotlin.version>
 
     <sonar.coverage.jacoco.xmlReportPaths>
       ${project.basedir}/../target/site/jacoco-it/jacoco.xml,${project.basedir}/../target/site/jacoco-ut/jacoco.xml
