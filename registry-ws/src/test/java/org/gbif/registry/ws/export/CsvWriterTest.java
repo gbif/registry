@@ -13,6 +13,8 @@
  */
 package org.gbif.registry.ws.export;
 
+import java.time.ZoneOffset;
+
 import org.gbif.api.model.collections.Address;
 import org.gbif.api.model.collections.AlternativeCode;
 import org.gbif.api.model.collections.Collection;
@@ -37,7 +39,7 @@ import java.io.StringWriter;
 import java.math.BigDecimal;
 import java.net.URI;
 import java.text.SimpleDateFormat;
-import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
@@ -98,8 +100,8 @@ public class CsvWriterTest {
     // Test data
     List<DownloadStatistics> stats =
         Arrays.asList(
-            new DownloadStatistics(UUID.randomUUID(), 10L, 10L, LocalDate.of(2020, 1, 1)),
-            new DownloadStatistics(UUID.randomUUID(), 10L, 10L, LocalDate.of(2021, 2, 1)));
+            new DownloadStatistics(UUID.randomUUID(), 10L, 10L, OffsetDateTime.of(2020, 1, 1, 0, 0, 0, 0, ZoneOffset.UTC)),
+            new DownloadStatistics(UUID.randomUUID(), 10L, 10L, OffsetDateTime.of(2021, 2, 1, 0, 0, 0, 0, ZoneOffset.UTC)));
 
     StringWriter writer = new StringWriter();
 
