@@ -12,13 +12,14 @@
  * limitations under the License.
  */
 package org.gbif.registry.ws.client;
+import feign.Body;
+import feign.Headers;
+import feign.Param;
+import feign.RequestLine;
 
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
-import org.gbif.api.model.registry.Dataset;
-import org.gbif.api.model.registry.Installation;
-import org.gbif.api.model.registry.Node;
-import org.gbif.api.model.registry.Organization;
+import org.gbif.api.model.registry.*;
 import org.gbif.api.model.registry.search.KeyTitleResult;
 import org.gbif.api.model.registry.search.NodeRequestSearchParams;
 import org.gbif.api.service.registry.NodeService;
@@ -27,99 +28,54 @@ import org.gbif.api.vocabulary.Country;
 import java.util.List;
 import java.util.UUID;
 
-import org.springframework.cloud.openfeign.SpringQueryMap;
-import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
-
-@RequestMapping("node")
+@Headers("Accept: application/json")
 public interface NodeClient extends NetworkEntityClient<Node>, NodeService {
 
-  @RequestMapping(
-      method = RequestMethod.GET,
-      value = "{key}/organization",
-      produces = MediaType.APPLICATION_JSON_VALUE)
-  @ResponseBody
-  @Override
+  @RequestLine("GET {key}/organization?page={page}&limit={limit}")
   PagingResponse<Organization> endorsedOrganizations(
-      @PathVariable("key") UUID key, @SpringQueryMap Pageable pageable);
+    @Param("key") UUID key,
+    @Param("page") int page,
+    @Param("limit") int limit);
 
-  @RequestMapping(
-      method = RequestMethod.GET,
-      value = "pendingEndorsement",
-      produces = MediaType.APPLICATION_JSON_VALUE)
-  @ResponseBody
-  @Override
-  PagingResponse<Organization> pendingEndorsements(@SpringQueryMap Pageable pageable);
-
-  @RequestMapping(
-      method = RequestMethod.GET,
-      value = "{key}/pendingEndorsement",
-      produces = MediaType.APPLICATION_JSON_VALUE)
-  @ResponseBody
-  @Override
+  @RequestLine("GET pendingEndorsement?page={page}&limit={limit}")
   PagingResponse<Organization> pendingEndorsements(
-      @PathVariable("key") UUID key, @SpringQueryMap Pageable pageable);
+    @Param("page") int page,
+    @Param("limit") int limit);
 
-  @RequestMapping(
-      method = RequestMethod.GET,
-      value = "{key}/installation",
-      produces = MediaType.APPLICATION_JSON_VALUE)
-  @ResponseBody
-  @Override
+  @RequestLine("GET {key}/pendingEndorsement?page={page}&limit={limit}")
+  PagingResponse<Organization> pendingEndorsements(
+    @Param("key") UUID key,
+    @Param("page") int page,
+    @Param("limit") int limit);
+
+  @RequestLine("GET {key}/installation?page={page}&limit={limit}")
   PagingResponse<Installation> installations(
-      @PathVariable("key") UUID key, @SpringQueryMap Pageable pageable);
+    @Param("key") UUID key,
+    @Param("page") int page,
+    @Param("limit") int limit);
 
-  @Override
   default Node getByCountry(Country country) {
     return getByCountry(country.getIso2LetterCode());
   }
 
-  @RequestMapping(
-      method = RequestMethod.GET,
-      value = "country/{key}",
-      produces = MediaType.APPLICATION_JSON_VALUE)
-  @ResponseBody
-  Node getByCountry(@PathVariable("key") String isoCode);
+  @RequestLine("GET country/{isoCode}")
+  Node getByCountry(@Param("isoCode") String isoCode);
 
-  @RequestMapping(
-      method = RequestMethod.GET,
-      value = "country",
-      produces = MediaType.APPLICATION_JSON_VALUE)
-  @ResponseBody
-  @Override
+  @RequestLine("GET country")
   List<Country> listNodeCountries();
 
-  @RequestMapping(
-      method = RequestMethod.GET,
-      value = "activeCountries",
-      produces = MediaType.APPLICATION_JSON_VALUE)
-  @ResponseBody
-  @Override
+  @RequestLine("GET activeCountries")
   List<Country> listActiveCountries();
 
-  @RequestMapping(
-      method = RequestMethod.GET,
-      value = "{key}/dataset",
-      produces = MediaType.APPLICATION_JSON_VALUE)
-  @ResponseBody
-  @Override
+  @RequestLine("GET {key}/dataset?page={page}&limit={limit}")
   PagingResponse<Dataset> endorsedDatasets(
-      @PathVariable("key") UUID key, @SpringQueryMap Pageable pageable);
+    @Param("key") UUID key,
+    @Param("page") int page,
+    @Param("limit") int limit);
 
-  @RequestMapping(
-      method = RequestMethod.GET,
-      value = "suggest",
-      produces = MediaType.APPLICATION_JSON_VALUE)
-  @ResponseBody
-  @Override
-  List<KeyTitleResult> suggest(@RequestParam(value = "q", required = false) String q);
+  @RequestLine("GET suggest?q={query}")
+  List<KeyTitleResult> suggest(@Param("query") String query);
 
-  @RequestMapping(method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
-  @ResponseBody
-  @Override
-  PagingResponse<Node> list(@SpringQueryMap NodeRequestSearchParams searchParams);
+  @RequestLine("GET")
+  PagingResponse<Node> list(NodeRequestSearchParams searchParams);
 }

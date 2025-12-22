@@ -12,16 +12,14 @@
  * limitations under the License.
  */
 package org.gbif.registry.ws.client;
+import feign.Body;
+import feign.Headers;
+import feign.Param;
+import feign.RequestLine;
 
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
-import org.gbif.api.model.registry.Comment;
-import org.gbif.api.model.registry.Contact;
-import org.gbif.api.model.registry.Endpoint;
-import org.gbif.api.model.registry.Identifier;
-import org.gbif.api.model.registry.MachineTag;
-import org.gbif.api.model.registry.NetworkEntity;
-import org.gbif.api.model.registry.Tag;
+import org.gbif.api.model.registry.*;
 import org.gbif.api.model.registry.search.RequestSearchParams;
 import org.gbif.api.service.registry.NetworkEntityService;
 import org.gbif.api.vocabulary.IdentifierType;
@@ -33,196 +31,118 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import org.springframework.cloud.openfeign.SpringQueryMap;
-import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
-
+@Headers("Accept: application/json")
 public interface NetworkEntityClient<T extends NetworkEntity> extends NetworkEntityService<T> {
 
-  @RequestMapping(method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)
-  @Override
-  UUID create(@RequestBody T entity);
+  @RequestLine("POST")
+  @Headers("Content-Type: application/json")
+  @Body("%7Bentity%7D") // Feign body placeholder
+  UUID create(T entity);
 
-  @RequestMapping(method = RequestMethod.DELETE, value = "{key}")
-  @Override
-  void delete(@PathVariable("key") UUID key);
+  @RequestLine("DELETE {key}")
+  void delete(@Param("key") UUID key);
 
-  @Override
-  default void update(@RequestBody T entity) {
+  default void update(T entity) {
     updateResource(entity.getKey(), entity);
   }
 
-  @RequestMapping(
-      method = RequestMethod.PUT,
-      value = "{key}",
-      consumes = MediaType.APPLICATION_JSON_VALUE)
-  void updateResource(@PathVariable("key") UUID key, @RequestBody T entity);
+  @RequestLine("PUT {key}")
+  @Headers("Content-Type: application/json")
+  @Body("%7Bentity%7D")
+  void updateResource(@Param("key") UUID key, T entity);
 
-  @RequestMapping(
-      method = RequestMethod.GET,
-      value = "{key}",
-      produces = MediaType.APPLICATION_JSON_VALUE)
-  @ResponseBody
-  @Override
-  T get(@PathVariable("key") UUID key);
+  @RequestLine("GET {key}")
+  T get(@Param("key") UUID key);
 
-  @RequestMapping(
-      method = RequestMethod.POST,
-      value = "titles",
-      consumes = MediaType.APPLICATION_JSON_VALUE,
-      produces = MediaType.APPLICATION_JSON_VALUE)
-  @ResponseBody
-  @Override
-  Map<UUID, String> getTitles(@RequestBody Collection<UUID> collection);
+  @RequestLine("POST titles")
+  @Headers("Content-Type: application/json")
+  Map<UUID, String> getTitles(Collection<UUID> collection);
 
-  @Override
-  default PagingResponse<T> search(@RequestParam("q") String query, @SpringQueryMap Pageable page) {
+  default PagingResponse<T> search(String query, Pageable page) {
     RequestSearchParams params = new RequestSearchParams();
     params.setQ(query);
     params.setPage(page);
     return list(params);
   }
 
-  @RequestMapping(
-      method = RequestMethod.POST,
-      value = "{key}/tag",
-      consumes = MediaType.APPLICATION_JSON_VALUE)
-  @Override
-  int addTag(@PathVariable("key") UUID key, @RequestBody Tag tag);
+  @RequestLine("POST {key}/tag")
+  @Headers("Content-Type: application/json")
+  int addTag(@Param("key") UUID key, Tag tag);
 
-  @Override
-  default int addTag(UUID targetEntityKey, String value) {
+  default int addTag(UUID key, String value) {
     Tag tag = new Tag();
     tag.setValue(value);
-    return addTag(targetEntityKey, tag);
+    return addTag(key, tag);
   }
 
-  @RequestMapping(method = RequestMethod.DELETE, value = "{key}/tag/{tagKey}")
-  @Override
-  void deleteTag(@PathVariable("key") UUID key, @PathVariable("tagKey") int tagKey);
+  @RequestLine("DELETE {key}/tag/{tagKey}")
+  void deleteTag(@Param("key") UUID key, @Param("tagKey") int tagKey);
 
-  @RequestMapping(
-      method = RequestMethod.GET,
-      value = "{key}/tag",
-      produces = MediaType.APPLICATION_JSON_VALUE)
-  @ResponseBody
-  @Override
-  List<Tag> listTags(
-      @PathVariable("key") UUID key, @RequestParam(value = "owner", required = false) String owner);
+  @RequestLine("GET {key}/tag?owner={owner}")
+  List<Tag> listTags(@Param("key") UUID key, @Param("owner") String owner);
 
-  @RequestMapping(
-      method = RequestMethod.POST,
-      value = "{key}/contact",
-      consumes = MediaType.APPLICATION_JSON_VALUE)
-  @Override
-  int addContact(@PathVariable("key") UUID key, @RequestBody Contact contact);
+  @RequestLine("POST {key}/contact")
+  @Headers("Content-Type: application/json")
+  int addContact(@Param("key") UUID key, Contact contact);
 
-  @RequestMapping(
-      method = RequestMethod.PUT,
-      value = "{key}/contact",
-      consumes = MediaType.APPLICATION_JSON_VALUE)
-  @Override
-  void updateContact(@PathVariable("key") UUID key, @RequestBody Contact contact);
+  @RequestLine("PUT {key}/contact")
+  @Headers("Content-Type: application/json")
+  void updateContact(@Param("key") UUID key, Contact contact);
 
-  @RequestMapping(method = RequestMethod.DELETE, value = "{key}/contact/{contactKey}")
-  @Override
-  void deleteContact(@PathVariable("key") UUID key, @PathVariable("contactKey") int contactKey);
+  @RequestLine("DELETE {key}/contact/{contactKey}")
+  void deleteContact(@Param("key") UUID key, @Param("contactKey") int contactKey);
 
-  @RequestMapping(
-      method = RequestMethod.GET,
-      value = "{key}/contact",
-      produces = MediaType.APPLICATION_JSON_VALUE)
-  @ResponseBody
-  @Override
-  List<Contact> listContacts(@PathVariable("key") UUID key);
+  @RequestLine("GET {key}/contact")
+  List<Contact> listContacts(@Param("key") UUID key);
 
-  @RequestMapping(
-      method = RequestMethod.POST,
-      value = "{key}/endpoint",
-      consumes = MediaType.APPLICATION_JSON_VALUE)
-  @Override
-  int addEndpoint(@PathVariable("key") UUID key, @RequestBody Endpoint endpoint);
+  @RequestLine("POST {key}/endpoint")
+  @Headers("Content-Type: application/json")
+  int addEndpoint(@Param("key") UUID key, Endpoint endpoint);
 
-  @RequestMapping(method = RequestMethod.DELETE, value = "{key}/endpoint/{endpointKey}")
-  @Override
-  void deleteEndpoint(@PathVariable("key") UUID key, @PathVariable("endpointKey") int endpointKey);
+  @RequestLine("DELETE {key}/endpoint/{endpointKey}")
+  void deleteEndpoint(@Param("key") UUID key, @Param("endpointKey") int endpointKey);
 
-  @RequestMapping(
-      method = RequestMethod.GET,
-      value = "{key}/endpoint",
-      produces = MediaType.APPLICATION_JSON_VALUE)
-  @ResponseBody
-  @Override
-  List<Endpoint> listEndpoints(@PathVariable("key") UUID key);
+  @RequestLine("GET {key}/endpoint")
+  List<Endpoint> listEndpoints(@Param("key") UUID key);
 
-  @RequestMapping(
-      method = RequestMethod.POST,
-      value = "{key}/machineTag",
-      consumes = MediaType.APPLICATION_JSON_VALUE)
-  @Override
-  int addMachineTag(@PathVariable("key") UUID key, @RequestBody MachineTag machineTag);
+  @RequestLine("POST {key}/machineTag")
+  @Headers("Content-Type: application/json")
+  int addMachineTag(@Param("key") UUID key, MachineTag machineTag);
 
-  @Override
-  default int addMachineTag(UUID targetEntityKey, TagName tagName, String value) {
-    MachineTag machineTag = MachineTag.newInstance(tagName, value);
-    return addMachineTag(targetEntityKey, machineTag);
+  default int addMachineTag(UUID key, TagName tagName, String value) {
+    MachineTag mt = MachineTag.newInstance(tagName, value);
+    return addMachineTag(key, mt);
   }
 
-  @Override
-  default int addMachineTag(UUID targetEntityKey, String namespace, String name, String value) {
-    MachineTag machineTag = new MachineTag();
-    machineTag.setNamespace(namespace);
-    machineTag.setName(name);
-    machineTag.setValue(value);
-    return addMachineTag(targetEntityKey, machineTag);
+  default int addMachineTag(UUID key, String namespace, String name, String value) {
+    MachineTag mt = new MachineTag();
+    mt.setNamespace(namespace);
+    mt.setName(name);
+    mt.setValue(value);
+    return addMachineTag(key, mt);
   }
 
-  @RequestMapping(method = RequestMethod.DELETE, value = "{key}/machineTag/{machineTagKey}")
-  @Override
-  void deleteMachineTag(
-      @PathVariable("key") UUID key, @PathVariable("machineTagKey") int machineTagKey);
+  @RequestLine("DELETE {key}/machineTag/{machineTagKey}")
+  void deleteMachineTag(@Param("key") UUID key, @Param("machineTagKey") int machineTagKey);
 
-  @RequestMapping(method = RequestMethod.DELETE, value = "{key}/machineTag/{namespace}")
-  @Override
-  void deleteMachineTags(
-      @PathVariable("key") UUID key, @PathVariable("namespace") String namespace);
+  @RequestLine("DELETE {key}/machineTag/{namespace}")
+  void deleteMachineTags(@Param("key") UUID key, @Param("namespace") String namespace);
 
-  @Override
-  default void deleteMachineTags(UUID targetEntityKey, TagNamespace tagNamespace) {
-    deleteMachineTags(targetEntityKey, tagNamespace.getNamespace());
+  default void deleteMachineTags(UUID key, TagNamespace tagNamespace) {
+    deleteMachineTags(key, tagNamespace.getNamespace());
   }
 
-  @RequestMapping(method = RequestMethod.DELETE, value = "{key}/machineTag/{namespace}/{name}")
-  @Override
-  void deleteMachineTags(
-      @PathVariable("key") UUID key,
-      @PathVariable("namespace") String namespace,
-      @PathVariable("name") String name);
+  @RequestLine("DELETE {key}/machineTag/{namespace}/{name}")
+  void deleteMachineTags(@Param("key") UUID key, @Param("namespace") String namespace, @Param("name") String name);
 
-  @Override
-  default void deleteMachineTags(UUID targetEntityKey, TagName tagName) {
-    deleteMachineTags(targetEntityKey, tagName.getNamespace().getNamespace(), tagName.getName());
+  default void deleteMachineTags(UUID key, TagName tagName) {
+    deleteMachineTags(key, tagName.getNamespace().getNamespace(), tagName.getName());
   }
 
-  @RequestMapping(
-      method = RequestMethod.GET,
-      value = "{key}/machineTag",
-      produces = MediaType.APPLICATION_JSON_VALUE)
-  @ResponseBody
-  @Override
-  List<MachineTag> listMachineTags(@PathVariable("key") UUID key);
+  @RequestLine("GET {key}/machineTag")
+  List<MachineTag> listMachineTags(@Param("key") UUID key);
 
-  @Override
-  default PagingResponse<T> listByMachineTag(
-      @RequestParam("machineTagNamespace") String namespace,
-      @RequestParam(value = "machineTagName", required = false) String name,
-      @RequestParam(value = "machineTagValue", required = false) String value,
-      @SpringQueryMap Pageable page) {
+  default PagingResponse<T> listByMachineTag(String namespace, String name, String value, Pageable page) {
     RequestSearchParams params = new RequestSearchParams();
     params.setMachineTagNamespace(namespace);
     params.setMachineTagName(name);
@@ -231,50 +151,27 @@ public interface NetworkEntityClient<T extends NetworkEntity> extends NetworkEnt
     return list(params);
   }
 
-  @RequestMapping(
-      method = RequestMethod.POST,
-      value = "{key}/comment",
-      consumes = MediaType.APPLICATION_JSON_VALUE)
-  @Override
-  int addComment(@PathVariable("key") UUID key, @RequestBody Comment comment);
+  @RequestLine("POST {key}/comment")
+  @Headers("Content-Type: application/json")
+  int addComment(@Param("key") UUID key, Comment comment);
 
-  @RequestMapping(method = RequestMethod.DELETE, value = "{key}/comment/{commentKey}")
-  @Override
-  void deleteComment(@PathVariable("key") UUID key, @PathVariable("commentKey") int commentKey);
+  @RequestLine("DELETE {key}/comment/{commentKey}")
+  void deleteComment(@Param("key") UUID key, @Param("commentKey") int commentKey);
 
-  @RequestMapping(
-      method = RequestMethod.GET,
-      value = "{key}/comment",
-      produces = MediaType.APPLICATION_JSON_VALUE)
-  @ResponseBody
-  @Override
-  List<Comment> listComments(@PathVariable("key") UUID key);
+  @RequestLine("GET {key}/comment")
+  List<Comment> listComments(@Param("key") UUID key);
 
-  @RequestMapping(
-      method = RequestMethod.POST,
-      value = "{key}/identifier",
-      consumes = MediaType.APPLICATION_JSON_VALUE)
-  @Override
-  int addIdentifier(@PathVariable("key") UUID key, @RequestBody Identifier identifier);
+  @RequestLine("POST {key}/identifier")
+  @Headers("Content-Type: application/json")
+  int addIdentifier(@Param("key") UUID key, Identifier identifier);
 
-  @RequestMapping(method = RequestMethod.DELETE, value = "{key}/identifier/{identifierKey}")
-  @Override
-  void deleteIdentifier(
-      @PathVariable("key") UUID key, @PathVariable("identifierKey") int identifierKey);
+  @RequestLine("DELETE {key}/identifier/{identifierKey}")
+  void deleteIdentifier(@Param("key") UUID key, @Param("identifierKey") int identifierKey);
 
-  @RequestMapping(
-      method = RequestMethod.GET,
-      value = "{key}/identifier",
-      produces = MediaType.APPLICATION_JSON_VALUE)
-  @ResponseBody
-  @Override
-  List<Identifier> listIdentifiers(@PathVariable("key") UUID key);
+  @RequestLine("GET {key}/identifier")
+  List<Identifier> listIdentifiers(@Param("key") UUID key);
 
-  @Override
-  default PagingResponse<T> listByIdentifier(
-      @RequestParam("identifierType") IdentifierType type,
-      @RequestParam("identifier") String identifier,
-      @SpringQueryMap Pageable page) {
+  default PagingResponse<T> listByIdentifier(IdentifierType type, String identifier, Pageable page) {
     RequestSearchParams params = new RequestSearchParams();
     params.setIdentifierType(type);
     params.setIdentifier(identifier);
@@ -282,23 +179,19 @@ public interface NetworkEntityClient<T extends NetworkEntity> extends NetworkEnt
     return list(params);
   }
 
-  @Override
-  default PagingResponse<T> listByIdentifier(
-      @RequestParam("identifier") String identifier, @SpringQueryMap Pageable page) {
+  default PagingResponse<T> listByIdentifier(String identifier, Pageable page) {
     RequestSearchParams params = new RequestSearchParams();
     params.setIdentifier(identifier);
     params.setPage(page);
     return list(params);
   }
 
-  @Override
-  default PagingResponse<T> list(@SpringQueryMap Pageable page) {
+  default PagingResponse<T> list(Pageable page) {
     RequestSearchParams params = new RequestSearchParams();
     params.setPage(page);
     return list(params);
   }
 
-  @RequestMapping(method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
-  @ResponseBody
-  PagingResponse<T> list(@SpringQueryMap RequestSearchParams searchParams);
+  @RequestLine("GET")
+  PagingResponse<T> list(RequestSearchParams searchParams);
 }

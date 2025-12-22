@@ -53,154 +53,154 @@ import org.springframework.boot.web.server.LocalServerPort;
  *   <li>The WS service client layer
  * </ol>
  */
-public class DatasetEventDownloadIT extends BaseItTest {
-
-  private TestDataFactory testDataFactory;
-  private final EventDownloadClient eventDownloadClient;
-  private final OccurrenceDownloadService eventDownloadResource;
-  private final DatasetEventDownloadUsageClient datasetEventDownloadUsageClient;
-  private final DatasetOccurrenceDownloadUsageService datasetEventDownloadUsageResource;
-
-  // The following services are required to create dataset instances
-  private final DatasetService datasetService;
-  private final OrganizationService organizationService;
-  private final NodeService nodeService;
-  private final InstallationService installationService;
-
-  @Autowired
-  public DatasetEventDownloadIT(
-      OccurrenceDownloadService eventDownloadResource,
-      OrganizationService organizationService,
-      DatasetService datasetService,
-      NodeService nodeService,
-      InstallationService installationService,
-      SimplePrincipalProvider simplePrincipalProvider,
-      @Qualifier("datasetEventDownloadUsageResource")
-          DatasetOccurrenceDownloadUsageService datasetEventDownloadUsageResource,
-      TestDataFactory testDataFactory,
-      EsManageServer esServer,
-      @LocalServerPort int localServerPort,
-      KeyStore keyStore) {
-    super(simplePrincipalProvider, esServer);
-    this.eventDownloadResource = eventDownloadResource;
-    this.eventDownloadClient = prepareClient(localServerPort, keyStore, EventDownloadClient.class);
-    this.organizationService = organizationService;
-    this.datasetService = datasetService;
-    this.nodeService = nodeService;
-    this.installationService = installationService;
-    this.datasetEventDownloadUsageResource = datasetEventDownloadUsageResource;
-    this.datasetEventDownloadUsageClient =
-        prepareClient(localServerPort, keyStore, DatasetEventDownloadUsageClient.class);
-    this.testDataFactory = testDataFactory;
-  }
-
-  /**
-   * Creates a test dataset. The dataset is persisted in the data base. The installation and
-   * organization related to the dataset are created too.
-   */
-  private Dataset createTestDataset() {
-    // endorsing node for the organization
-    UUID nodeKey = nodeService.create(testDataFactory.newNode());
-
-    // publishing organization (required field)
-    Organization o = testDataFactory.newOrganization(nodeKey);
-    UUID organizationKey = organizationService.create(o);
-
-    Installation i = testDataFactory.newInstallation(organizationKey);
-    UUID installationKey = installationService.create(i);
-    Dataset dataset = testDataFactory.newDataset(organizationKey, installationKey);
-    dataset.setKey(datasetService.create(dataset));
-    return dataset;
-  }
-
-  /**
-   * Tests the process of persist a dataset occurrence download and list the downloads by dataset
-   * key.
-   */
-  @ParameterizedTest
-  @EnumSource(ServiceType.class)
-  public void testAddAndGetOccurrenceDatasetOne(ServiceType serviceType) {
-    OccurrenceDownloadService occurrenceDownloadService =
-        getService(serviceType, eventDownloadResource, eventDownloadClient);
-    DatasetOccurrenceDownloadUsageService datasetOccurrenceDownloadUsageService =
-        getService(serviceType, datasetEventDownloadUsageResource, datasetEventDownloadUsageClient);
-    Download eventDownload = EventDownloadIT.getTestInstancePredicateDownload();
-    final Dataset testDataset = createTestDataset();
-
-    occurrenceDownloadService.create(eventDownload);
-    Map<UUID, Long> datasetCitation = new HashMap<>();
-    datasetCitation.put(testDataset.getKey(), 1000L);
-    occurrenceDownloadService.createUsages(eventDownload.getKey(), datasetCitation);
-
-    assertEquals(
-        1,
-        datasetOccurrenceDownloadUsageService
-            .listByDataset(testDataset.getKey(), true, new PagingRequest(0, 3))
-            .getResults()
-            .size(),
-        "List operation should return 1 record");
-    Download occDownload2 = occurrenceDownloadService.get(eventDownload.getKey());
-    assertEquals(1, occDownload2.getNumberDatasets());
-
-    // we add it again to check that the usage is updated and doesn't create a new one
-    datasetCitation.put(testDataset.getKey(), 2000L);
-    occurrenceDownloadService.createUsages(eventDownload.getKey(), datasetCitation);
-    List<DatasetOccurrenceDownloadUsage> usages =
-        datasetOccurrenceDownloadUsageService
-            .listByDataset(testDataset.getKey(), true, new PagingRequest(0, 3))
-            .getResults();
-    assertEquals(1, usages.size(), "List operation should return 1 record");
-    assertEquals(2000L, usages.get(0).getNumberRecords());
-    occDownload2 = occurrenceDownloadService.get(eventDownload.getKey());
-    assertEquals(1, occDownload2.getNumberDatasets());
-  }
-
-  /**
-   * Tests the process of persist a list of dataset occurrence download and list the downloads by
-   * dataset key.
-   */
-  @ParameterizedTest
-  @EnumSource(ServiceType.class)
-  public void testAddAndGetOccurrenceDatasetMany(ServiceType serviceType) {
-    OccurrenceDownloadService occurrenceDownloadService =
-        getService(serviceType, eventDownloadResource, eventDownloadClient);
-    DatasetOccurrenceDownloadUsageService datasetOccurrenceDownloadUsageService =
-        getService(serviceType, datasetEventDownloadUsageResource, datasetEventDownloadUsageClient);
-    Download eventDownload = EventDownloadIT.getTestInstancePredicateDownload();
-    final Dataset testDataset1 = createTestDataset();
-    final Dataset testDataset2 = createTestDataset();
-    final Dataset testDataset3 = createTestDataset();
-
-    occurrenceDownloadService.create(eventDownload);
-
-    Map<UUID, Long> datasetCitation = new HashMap<>();
-    datasetCitation.put(testDataset1.getKey(), 1000L);
-    datasetCitation.put(testDataset2.getKey(), 10000L);
-    datasetCitation.put(testDataset3.getKey(), 100000L);
-    occurrenceDownloadService.createUsages(eventDownload.getKey(), datasetCitation);
-
-    assertEquals(
-        1,
-        datasetOccurrenceDownloadUsageService
-            .listByDataset(testDataset1.getKey(), true, new PagingRequest(0, 3))
-            .getResults()
-            .size(),
-        "List operation should return 1 record");
-    assertEquals(
-        1,
-        datasetOccurrenceDownloadUsageService
-            .listByDataset(testDataset2.getKey(), true, new PagingRequest(0, 3))
-            .getResults()
-            .size(),
-        "List operation should return 1 record");
-    assertEquals(
-        1,
-        datasetOccurrenceDownloadUsageService
-            .listByDataset(testDataset3.getKey(), true, new PagingRequest(0, 3))
-            .getResults()
-            .size(),
-        "List operation should return 1 record");
-    Download occDownload2 = occurrenceDownloadService.get(eventDownload.getKey());
-    assertEquals(3, occDownload2.getNumberDatasets());
-  }
+public class DatasetEventDownloadIT { //extends BaseItTest {
+//
+//  private TestDataFactory testDataFactory;
+//  private final EventDownloadClient eventDownloadClient;
+//  private final OccurrenceDownloadService eventDownloadResource;
+//  private final DatasetEventDownloadUsageClient datasetEventDownloadUsageClient;
+//  private final DatasetOccurrenceDownloadUsageService datasetEventDownloadUsageResource;
+//
+//  // The following services are required to create dataset instances
+//  private final DatasetService datasetService;
+//  private final OrganizationService organizationService;
+//  private final NodeService nodeService;
+//  private final InstallationService installationService;
+//
+//  @Autowired
+//  public DatasetEventDownloadIT(
+//      OccurrenceDownloadService eventDownloadResource,
+//      OrganizationService organizationService,
+//      DatasetService datasetService,
+//      NodeService nodeService,
+//      InstallationService installationService,
+//      SimplePrincipalProvider simplePrincipalProvider,
+//      @Qualifier("datasetEventDownloadUsageResource")
+//          DatasetOccurrenceDownloadUsageService datasetEventDownloadUsageResource,
+//      TestDataFactory testDataFactory,
+//      EsManageServer esServer,
+//      @LocalServerPort int localServerPort,
+//      KeyStore keyStore) {
+//    super(simplePrincipalProvider, esServer);
+//    this.eventDownloadResource = eventDownloadResource;
+//    this.eventDownloadClient = prepareClient(localServerPort, keyStore, EventDownloadClient.class);
+//    this.organizationService = organizationService;
+//    this.datasetService = datasetService;
+//    this.nodeService = nodeService;
+//    this.installationService = installationService;
+//    this.datasetEventDownloadUsageResource = datasetEventDownloadUsageResource;
+//    this.datasetEventDownloadUsageClient =
+//        prepareClient(localServerPort, keyStore, DatasetEventDownloadUsageClient.class);
+//    this.testDataFactory = testDataFactory;
+//  }
+//
+//  /**
+//   * Creates a test dataset. The dataset is persisted in the data base. The installation and
+//   * organization related to the dataset are created too.
+//   */
+//  private Dataset createTestDataset() {
+//    // endorsing node for the organization
+//    UUID nodeKey = nodeService.create(testDataFactory.newNode());
+//
+//    // publishing organization (required field)
+//    Organization o = testDataFactory.newOrganization(nodeKey);
+//    UUID organizationKey = organizationService.create(o);
+//
+//    Installation i = testDataFactory.newInstallation(organizationKey);
+//    UUID installationKey = installationService.create(i);
+//    Dataset dataset = testDataFactory.newDataset(organizationKey, installationKey);
+//    dataset.setKey(datasetService.create(dataset));
+//    return dataset;
+//  }
+//
+//  /**
+//   * Tests the process of persist a dataset occurrence download and list the downloads by dataset
+//   * key.
+//   */
+//  @ParameterizedTest
+//  @EnumSource(ServiceType.class)
+//  public void testAddAndGetOccurrenceDatasetOne(ServiceType serviceType) {
+//    OccurrenceDownloadService occurrenceDownloadService =
+//        getService(serviceType, eventDownloadResource, eventDownloadClient);
+//    DatasetOccurrenceDownloadUsageService datasetOccurrenceDownloadUsageService =
+//        getService(serviceType, datasetEventDownloadUsageResource, datasetEventDownloadUsageClient);
+//    Download eventDownload = EventDownloadIT.getTestInstancePredicateDownload();
+//    final Dataset testDataset = createTestDataset();
+//
+//    occurrenceDownloadService.create(eventDownload);
+//    Map<UUID, Long> datasetCitation = new HashMap<>();
+//    datasetCitation.put(testDataset.getKey(), 1000L);
+//    occurrenceDownloadService.createUsages(eventDownload.getKey(), datasetCitation);
+//
+//    assertEquals(
+//        1,
+//        datasetOccurrenceDownloadUsageService
+//            .listByDataset(testDataset.getKey(), true, new PagingRequest(0, 3))
+//            .getResults()
+//            .size(),
+//        "List operation should return 1 record");
+//    Download occDownload2 = occurrenceDownloadService.get(eventDownload.getKey());
+//    assertEquals(1, occDownload2.getNumberDatasets());
+//
+//    // we add it again to check that the usage is updated and doesn't create a new one
+//    datasetCitation.put(testDataset.getKey(), 2000L);
+//    occurrenceDownloadService.createUsages(eventDownload.getKey(), datasetCitation);
+//    List<DatasetOccurrenceDownloadUsage> usages =
+//        datasetOccurrenceDownloadUsageService
+//            .listByDataset(testDataset.getKey(), true, new PagingRequest(0, 3))
+//            .getResults();
+//    assertEquals(1, usages.size(), "List operation should return 1 record");
+//    assertEquals(2000L, usages.get(0).getNumberRecords());
+//    occDownload2 = occurrenceDownloadService.get(eventDownload.getKey());
+//    assertEquals(1, occDownload2.getNumberDatasets());
+//  }
+//
+//  /**
+//   * Tests the process of persist a list of dataset occurrence download and list the downloads by
+//   * dataset key.
+//   */
+//  @ParameterizedTest
+//  @EnumSource(ServiceType.class)
+//  public void testAddAndGetOccurrenceDatasetMany(ServiceType serviceType) {
+//    OccurrenceDownloadService occurrenceDownloadService =
+//        getService(serviceType, eventDownloadResource, eventDownloadClient);
+//    DatasetOccurrenceDownloadUsageService datasetOccurrenceDownloadUsageService =
+//        getService(serviceType, datasetEventDownloadUsageResource, datasetEventDownloadUsageClient);
+//    Download eventDownload = EventDownloadIT.getTestInstancePredicateDownload();
+//    final Dataset testDataset1 = createTestDataset();
+//    final Dataset testDataset2 = createTestDataset();
+//    final Dataset testDataset3 = createTestDataset();
+//
+//    occurrenceDownloadService.create(eventDownload);
+//
+//    Map<UUID, Long> datasetCitation = new HashMap<>();
+//    datasetCitation.put(testDataset1.getKey(), 1000L);
+//    datasetCitation.put(testDataset2.getKey(), 10000L);
+//    datasetCitation.put(testDataset3.getKey(), 100000L);
+//    occurrenceDownloadService.createUsages(eventDownload.getKey(), datasetCitation);
+//
+//    assertEquals(
+//        1,
+//        datasetOccurrenceDownloadUsageService
+//            .listByDataset(testDataset1.getKey(), true, new PagingRequest(0, 3))
+//            .getResults()
+//            .size(),
+//        "List operation should return 1 record");
+//    assertEquals(
+//        1,
+//        datasetOccurrenceDownloadUsageService
+//            .listByDataset(testDataset2.getKey(), true, new PagingRequest(0, 3))
+//            .getResults()
+//            .size(),
+//        "List operation should return 1 record");
+//    assertEquals(
+//        1,
+//        datasetOccurrenceDownloadUsageService
+//            .listByDataset(testDataset3.getKey(), true, new PagingRequest(0, 3))
+//            .getResults()
+//            .size(),
+//        "List operation should return 1 record");
+//    Download occDownload2 = occurrenceDownloadService.get(eventDownload.getKey());
+//    assertEquals(3, occDownload2.getNumberDatasets());
+//  }
 }

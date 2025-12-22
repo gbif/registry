@@ -12,8 +12,23 @@
  * limitations under the License.
  */
 package org.gbif.registry.ws.client;
+import feign.Headers;
+import feign.Param;
+import feign.QueryMap;
+import feign.RequestLine;
+import org.gbif.api.model.common.paging.Pageable;
+import org.gbif.api.model.common.paging.PagingResponse;
+import org.gbif.api.model.registry.DatasetOccurrenceDownloadUsage;
 
-import org.springframework.web.bind.annotation.RequestMapping;
+import java.util.UUID;
 
-@RequestMapping("event/download/dataset")
-public interface DatasetEventDownloadUsageClient extends BaseDatasetDownloadUsageClient {}
+public interface DatasetEventDownloadUsageClient extends BaseDatasetDownloadUsageClient {
+
+  @RequestLine("GET /event/download/dataset/{datasetKey}")
+  @Headers("Accept: application/json")
+  PagingResponse<DatasetOccurrenceDownloadUsage> listByDataset(
+    @Param("datasetKey") UUID datasetKey,
+    @Param("showDownloadDetails") Boolean showDownloadDetails,
+    @QueryMap Pageable pageable
+  );
+}

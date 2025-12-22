@@ -13,39 +13,31 @@
  */
 package org.gbif.registry.ws.client.collections;
 
+import feign.Headers;
+import feign.Param;
+import feign.RequestLine;
 import org.gbif.api.model.collections.CollectionEntity;
 
 import java.util.UUID;
 
-import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.ResponseBody;
-
 public interface CrudClient<T extends CollectionEntity> {
 
-  @RequestMapping(method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)
-  UUID create(@RequestBody T entity);
+  @RequestLine("POST /")
+  @Headers("Content-Type: application/json")
+  UUID create(T entity);
 
-  @RequestMapping(method = RequestMethod.DELETE, value = "{key}")
-  void delete(@PathVariable("key") UUID key);
+  @RequestLine("DELETE /{key}")
+  void delete(@Param("key") UUID key);
 
-  @RequestMapping(
-      method = RequestMethod.GET,
-      value = "{key}",
-      produces = MediaType.APPLICATION_JSON_VALUE)
-  @ResponseBody
-  T get(@PathVariable("key") UUID key);
+  @RequestLine("GET /{key}")
+  @Headers("Accept: application/json")
+  T get(@Param("key") UUID key);
 
-  default void update(@RequestBody T entity) {
+  default void update(T entity) {
     updateResource(entity.getKey(), entity);
   }
 
-  @RequestMapping(
-      method = RequestMethod.PUT,
-      value = "{key}",
-      consumes = MediaType.APPLICATION_JSON_VALUE)
-  void updateResource(@PathVariable("key") UUID key, @RequestBody T entity);
+  @RequestLine("PUT /{key}")
+  @Headers("Content-Type: application/json")
+  void updateResource(@Param("key") UUID key, T entity);
 }

@@ -12,44 +12,51 @@
  * limitations under the License.
  */
 package org.gbif.registry.ws.client;
-
+import feign.Headers;
+import feign.RequestLine;
 import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.common.DoiData;
 import org.gbif.registry.doi.DoiInteractionService;
 import org.gbif.registry.doi.registration.DoiRegistration;
 import org.gbif.registry.domain.doi.DoiType;
 
-import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.ResponseBody;
-
-@RequestMapping("doi")
 public interface DoiInteractionClient extends DoiInteractionService {
 
-  @RequestMapping(method = RequestMethod.POST, value = "gen/{type}")
-  @Override
-  DOI generate(@PathVariable("type") DoiType type);
+  // ---------------------------------------------------------------------------
+  // GENERATE DOI
+  // ---------------------------------------------------------------------------
 
-  @RequestMapping(
-      method = RequestMethod.GET,
-      value = "{prefix}/{suffix}",
-      produces = MediaType.APPLICATION_JSON_VALUE)
-  @ResponseBody
-  @Override
-  DoiData get(@PathVariable("prefix") String prefix, @PathVariable("suffix") String suffix);
+  @RequestLine("POST /doi/gen/{type}")
+  DOI generate(DoiType type);
 
-  @RequestMapping(method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)
-  @Override
-  DOI register(@RequestBody DoiRegistration doiRegistration);
+  // ---------------------------------------------------------------------------
+  // GET DOI DATA
+  // ---------------------------------------------------------------------------
 
-  @RequestMapping(method = RequestMethod.PUT, consumes = MediaType.APPLICATION_JSON_VALUE)
-  @Override
-  DOI update(@RequestBody DoiRegistration doiRegistration);
+  @RequestLine("GET /doi/{prefix}/{suffix}")
+  @Headers("Accept: application/json")
+  DoiData get(String prefix, String suffix);
 
-  @RequestMapping(method = RequestMethod.DELETE, value = "{prefix}/{suffix}")
-  @Override
-  void delete(@PathVariable("prefix") String prefix, @PathVariable("suffix") String suffix);
+  // ---------------------------------------------------------------------------
+  // REGISTER DOI
+  // ---------------------------------------------------------------------------
+
+  @RequestLine("POST /doi")
+  @Headers("Content-Type: application/json")
+  DOI register(DoiRegistration doiRegistration);
+
+  // ---------------------------------------------------------------------------
+  // UPDATE DOI
+  // ---------------------------------------------------------------------------
+
+  @RequestLine("PUT /doi")
+  @Headers("Content-Type: application/json")
+  DOI update(DoiRegistration doiRegistration);
+
+  // ---------------------------------------------------------------------------
+  // DELETE DOI
+  // ---------------------------------------------------------------------------
+
+  @RequestLine("DELETE /doi/{prefix}/{suffix}")
+  void delete(String prefix, String suffix);
 }

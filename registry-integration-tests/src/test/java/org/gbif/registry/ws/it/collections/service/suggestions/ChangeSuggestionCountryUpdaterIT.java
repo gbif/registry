@@ -172,7 +172,7 @@ public class ChangeSuggestionCountryUpdaterIT extends BaseItTest {
     collectionClient.createChangeSuggestion(suggestion);
     collectionClient.createDescriptorSuggestion(
       collectionKey,
-      descriptorsFile,
+      descriptorsFile.getBytes(),
       descriptorChangeSuggestion.getType(),
       descriptorChangeSuggestion.getTitle(),
       descriptorChangeSuggestion.getDescription(),

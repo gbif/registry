@@ -12,7 +12,10 @@
  * limitations under the License.
  */
 package org.gbif.registry.ws.client;
-
+import feign.Headers;
+import feign.Param;
+import feign.QueryMap;
+import feign.RequestLine;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.crawler.DatasetProcessStatus;
@@ -20,77 +23,67 @@ import org.gbif.api.service.registry.DatasetProcessStatusService;
 
 import java.util.UUID;
 
-import org.springframework.cloud.openfeign.SpringQueryMap;
-import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.ResponseBody;
-
 public interface DatasetProcessStatusClient extends DatasetProcessStatusService {
 
-  @RequestMapping(
-      method = RequestMethod.POST,
-      value = "dataset/{datasetKey}/process",
-      consumes = MediaType.APPLICATION_JSON_VALUE)
+  @RequestLine("POST /dataset/{datasetKey}/process")
+  @Headers({
+    "Content-Type: application/json",
+    "Accept: application/json"
+  })
   void createDatasetProcessStatus(
-      @PathVariable("datasetKey") UUID datasetKey,
-      @RequestBody DatasetProcessStatus datasetProcessStatus);
+    @Param("datasetKey") UUID datasetKey,
+    DatasetProcessStatus datasetProcessStatus
+  );
 
-  @Override
   default void createDatasetProcessStatus(DatasetProcessStatus datasetProcessStatus) {
-    createDatasetProcessStatus(datasetProcessStatus.getDatasetKey(), datasetProcessStatus);
+    createDatasetProcessStatus(
+      datasetProcessStatus.getDatasetKey(),
+      datasetProcessStatus
+    );
   }
 
-  @RequestMapping(
-      method = RequestMethod.PUT,
-      value = "dataset/{datasetKey}/process/{attempt}",
-      consumes = MediaType.APPLICATION_JSON_VALUE)
+  @RequestLine("PUT /dataset/{datasetKey}/process/{attempt}")
+  @Headers({
+    "Content-Type: application/json",
+    "Accept: application/json"
+  })
   void updateDatasetProcessStatus(
-      @PathVariable("datasetKey") UUID datasetKey,
-      @PathVariable("attempt") int attempt,
-      @RequestBody DatasetProcessStatus datasetProcessStatus);
+    @Param("datasetKey") UUID datasetKey,
+    @Param("attempt") int attempt,
+    DatasetProcessStatus datasetProcessStatus
+  );
 
-  @Override
   default void updateDatasetProcessStatus(DatasetProcessStatus datasetProcessStatus) {
     updateDatasetProcessStatus(
-        datasetProcessStatus.getDatasetKey(),
-        datasetProcessStatus.getCrawlJob().getAttempt(),
-        datasetProcessStatus);
+      datasetProcessStatus.getDatasetKey(),
+      datasetProcessStatus.getCrawlJob().getAttempt(),
+      datasetProcessStatus
+    );
   }
 
-  @RequestMapping(
-      method = RequestMethod.GET,
-      value = "dataset/{datasetKey}/process/{attempt}",
-      produces = MediaType.APPLICATION_JSON_VALUE)
-  @ResponseBody
-  @Override
+  @RequestLine("GET /dataset/{datasetKey}/process/{attempt}")
+  @Headers("Accept: application/json")
   DatasetProcessStatus getDatasetProcessStatus(
-      @PathVariable("datasetKey") UUID datasetKey, @PathVariable("attempt") int attempt);
+    @Param("datasetKey") UUID datasetKey,
+    @Param("attempt") int attempt
+  );
 
-  @RequestMapping(
-      method = RequestMethod.GET,
-      value = "dataset/process",
-      produces = MediaType.APPLICATION_JSON_VALUE)
-  @ResponseBody
-  @Override
-  PagingResponse<DatasetProcessStatus> listDatasetProcessStatus(@SpringQueryMap Pageable page);
-
-  @RequestMapping(
-      method = RequestMethod.GET,
-      value = "dataset/process/aborted",
-      produces = MediaType.APPLICATION_JSON_VALUE)
-  @ResponseBody
-  @Override
-  PagingResponse<DatasetProcessStatus> listAbortedDatasetProcesses(@SpringQueryMap Pageable page);
-
-  @RequestMapping(
-      method = RequestMethod.GET,
-      value = "dataset/{datasetKey}/process",
-      produces = MediaType.APPLICATION_JSON_VALUE)
-  @ResponseBody
-  @Override
+  @RequestLine("GET /dataset/process")
+  @Headers("Accept: application/json")
   PagingResponse<DatasetProcessStatus> listDatasetProcessStatus(
-      @PathVariable("datasetKey") UUID datasetKey, @SpringQueryMap Pageable page);
+    @QueryMap Pageable page
+  );
+
+  @RequestLine("GET /dataset/process/aborted")
+  @Headers("Accept: application/json")
+  PagingResponse<DatasetProcessStatus> listAbortedDatasetProcesses(
+    @QueryMap Pageable page
+  );
+
+  @RequestLine("GET /dataset/{datasetKey}/process")
+  @Headers("Accept: application/json")
+  PagingResponse<DatasetProcessStatus> listDatasetProcessStatus(
+    @Param("datasetKey") UUID datasetKey,
+    @QueryMap Pageable page
+  );
 }

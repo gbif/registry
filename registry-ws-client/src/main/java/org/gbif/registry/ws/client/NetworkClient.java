@@ -12,6 +12,9 @@
  * limitations under the License.
  */
 package org.gbif.registry.ws.client;
+import feign.Headers;
+import feign.Param;
+import feign.RequestLine;
 
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
@@ -25,54 +28,29 @@ import org.gbif.api.service.registry.NetworkService;
 import java.util.List;
 import java.util.UUID;
 
-import org.springframework.cloud.openfeign.SpringQueryMap;
-import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
-
-@RequestMapping("network")
+/**
+ * Feign client for network endpoints.
+ *
+ * Base URL must include the "network" prefix when creating the Feign client.
+ */
+@Headers("Accept: application/json")
 public interface NetworkClient extends NetworkEntityClient<Network>, NetworkService {
 
-  @RequestMapping(
-      method = RequestMethod.GET,
-      value = "{key}/constituents",
-      produces = MediaType.APPLICATION_JSON_VALUE)
-  @ResponseBody
-  @Override
-  PagingResponse<Dataset> listConstituents(
-      @PathVariable("key") UUID key, @SpringQueryMap Pageable pageable);
+  @RequestLine("GET network/{key}/constituents")
+  PagingResponse<Dataset> listConstituents(@Param("key") UUID key, Pageable pageable);
 
-  @RequestMapping(method = RequestMethod.POST, value = "{key}/constituents/{datasetKey}")
-  @Override
-  void addConstituent(@PathVariable("key") UUID key, @PathVariable("datasetKey") UUID datasetKey);
+  @RequestLine("POST network/{key}/constituents/{datasetKey}")
+  void addConstituent(@Param("key") UUID key, @Param("datasetKey") UUID datasetKey);
 
-  @RequestMapping(method = RequestMethod.DELETE, value = "{key}/constituents/{datasetKey}")
-  @Override
-  void removeConstituent(
-      @PathVariable("key") UUID key, @PathVariable("datasetKey") UUID datasetKey);
+  @RequestLine("DELETE network/{key}/constituents/{datasetKey}")
+  void removeConstituent(@Param("key") UUID key, @Param("datasetKey") UUID datasetKey);
 
-  @RequestMapping(
-      method = RequestMethod.GET,
-      value = "suggest",
-      produces = MediaType.APPLICATION_JSON_VALUE)
-  @ResponseBody
-  @Override
-  List<KeyTitleResult> suggest(@RequestParam(value = "q", required = false) String q);
+  @RequestLine("GET network/suggest?q={q}")
+  List<KeyTitleResult> suggest(@Param("q") String q);
 
-  @RequestMapping(
-      method = RequestMethod.GET,
-      value = "{key}/organization",
-      produces = MediaType.APPLICATION_JSON_VALUE)
-  @ResponseBody
-  @Override
-  PagingResponse<Organization> publishingOrganizations(
-      @PathVariable("key") UUID key, @SpringQueryMap Pageable page);
+  @RequestLine("GET network/{key}/organization")
+  PagingResponse<Organization> publishingOrganizations(@Param("key") UUID key, Pageable page);
 
-  @RequestMapping(method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
-  @ResponseBody
-  @Override
-  PagingResponse<Network> list(@SpringQueryMap NetworkRequestSearchParams searchParams);
+  @RequestLine("GET network")
+  PagingResponse<Network> list(NetworkRequestSearchParams searchParams);
 }

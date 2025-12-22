@@ -12,7 +12,10 @@
  * limitations under the License.
  */
 package org.gbif.registry.ws.client.pipelines;
-
+import feign.Headers;
+import feign.Param;
+import feign.QueryMap;
+import feign.RequestLine;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.pipelines.PipelineExecution;
@@ -29,157 +32,106 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
-import org.springframework.cloud.openfeign.SpringQueryMap;
-import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
-
-@RequestMapping("pipelines/history")
 public interface PipelinesHistoryClient extends PipelinesHistoryService {
 
-  @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
-  @ResponseBody
-  @Override
-  PagingResponse<PipelineProcess> history(@SpringQueryMap Pageable pageable);
+  @RequestLine("GET /pipelines/history")
+  @Headers("Accept: application/json")
+  PagingResponse<PipelineProcess> history(@QueryMap Pageable pageable);
 
-  @GetMapping(value = "{datasetKey}", produces = MediaType.APPLICATION_JSON_VALUE)
-  @ResponseBody
-  @Override
-  PagingResponse<PipelineProcess> history(
-      @PathVariable("datasetKey") UUID datasetKey, @SpringQueryMap Pageable pageable);
+  @RequestLine("GET /pipelines/history/{datasetKey}")
+  @Headers("Accept: application/json")
+  PagingResponse<PipelineProcess> history(@Param("datasetKey") UUID datasetKey, @QueryMap Pageable pageable);
 
-  @GetMapping(value = "{datasetKey}/{attempt}", produces = MediaType.APPLICATION_JSON_VALUE)
-  @ResponseBody
-  @Override
-  PipelineProcess getPipelineProcess(
-      @PathVariable("datasetKey") UUID datasetKey, @PathVariable("attempt") int attempt);
+  @RequestLine("GET /pipelines/history/{datasetKey}/{attempt}")
+  @Headers("Accept: application/json")
+  PipelineProcess getPipelineProcess(@Param("datasetKey") UUID datasetKey, @Param("attempt") int attempt);
 
-  @PostMapping(value = "process", consumes = MediaType.APPLICATION_JSON_VALUE)
-  @Override
-  long createPipelineProcess(@RequestBody PipelineProcessParameters params);
+  @RequestLine("POST /pipelines/history/process")
+  @Headers("Content-Type: application/json")
+  long createPipelineProcess(PipelineProcessParameters params);
 
-  @PostMapping(value = "process/{processKey}", consumes = MediaType.APPLICATION_JSON_VALUE)
-  @Override
-  long addPipelineExecution(
-      @PathVariable("processKey") long processKey,
-      @RequestBody PipelineExecution pipelineExecution);
+  @RequestLine("POST /pipelines/history/process/{processKey}")
+  @Headers("Content-Type: application/json")
+  long addPipelineExecution(@Param("processKey") long processKey, PipelineExecution pipelineExecution);
 
-  @GetMapping("execution/running/{datasetKey}")
-  @Override
-  Long getRunningExecutionKey(@PathVariable("datasetKey") UUID datasetKey);
+  @RequestLine("GET /pipelines/history/execution/running/{datasetKey}")
+  Long getRunningExecutionKey(@Param("datasetKey") UUID datasetKey);
 
-  @GetMapping("execution/{executionKey}/step")
-  @Override
-  List<PipelineStep> getPipelineStepsByExecutionKey(
-      @PathVariable("executionKey") long executionKey);
+  @RequestLine("GET /pipelines/history/execution/{executionKey}/step")
+  List<PipelineStep> getPipelineStepsByExecutionKey(@Param("executionKey") long executionKey);
 
-  @GetMapping("process/running")
-  @Override
+  @RequestLine("GET /pipelines/history/process/running?stepType={stepType}&stepRunner={stepRunner}")
+  @Headers("Accept: application/json")
   PagingResponse<PipelineProcess> getRunningPipelineProcess(
-      @RequestParam(value = "stepType", required = false) StepType stepType,
-      @RequestParam(value = "stepRunner", required = false) StepRunner stepRunner,
-      @SpringQueryMap Pageable pageable);
+    @Param("stepType") StepType stepType,
+    @Param("stepRunner") StepRunner stepRunner,
+    @QueryMap Pageable pageable
+  );
 
-  @PostMapping("execution/finished")
-  @Override
+  @RequestLine("POST /pipelines/history/execution/finished")
   void markAllPipelineExecutionAsFinished();
 
-  @PostMapping("execution/{executionKey}/finished")
-  @Override
-  void markPipelineExecutionIfFinished(@PathVariable("executionKey") long executionKey);
+  @RequestLine("POST /pipelines/history/execution/{executionKey}/finished")
+  void markPipelineExecutionIfFinished(@Param("executionKey") long executionKey);
 
-  @PostMapping("execution/{executionKey}/abort")
-  @Override
-  void markPipelineStatusAsAborted(@PathVariable("executionKey") long executionKey);
+  @RequestLine("POST /pipelines/history/execution/{executionKey}/abort")
+  void markPipelineStatusAsAborted(@Param("executionKey") long executionKey);
 
-  @Override
-  default long updatePipelineStep(@RequestBody PipelineStep pipelineStep) {
-    return updatePipelineStep(pipelineStep.getKey(), pipelineStep);
-  }
+  @RequestLine("PUT /pipelines/history/step/{stepKey}")
+  @Headers("Content-Type: application/json")
+  long updatePipelineStep(@Param("stepKey") long stepKey, PipelineStep pipelineStep);
 
-  @PutMapping(value = "step/{stepKey}", consumes = MediaType.APPLICATION_JSON_VALUE)
-  long updatePipelineStep(
-      @PathVariable("stepKey") long stepKey, @RequestBody PipelineStep pipelineStep);
+  @RequestLine("GET /pipelines/history/step/{stepKey}")
+  @Headers("Accept: application/json")
+  PipelineStep getPipelineStep(@Param("stepKey") long stepKey);
 
-  @GetMapping(value = "step/{stepKey}", produces = MediaType.APPLICATION_JSON_VALUE)
-  @ResponseBody
-  @Override
-  PipelineStep getPipelineStep(@PathVariable("stepKey") long stepKey);
-
-  @PostMapping(value = "run")
-  @ResponseBody
-  @Override
+  @RequestLine("POST /pipelines/history/run?steps={steps}&reason={reason}&useLastSuccessful={useLastSuccessful}&markPreviousAttemptAsFailed={markPreviousAttemptAsFailed}&interpretTypes={interpretTypes}")
+  @Headers("Content-Type: application/json")
   RunPipelineResponse runAll(
-      @RequestParam(value = "steps", required = false) String steps,
-      @RequestParam(value = "reason", required = false) String reason,
-      @RequestParam(value = "useLastSuccessful", defaultValue = "false") boolean useLastSuccessful,
-      @RequestParam(value = "markPreviousAttemptAsFailed", defaultValue = "false")
-          boolean markPreviousAttemptAsFailed,
-      @RequestBody(required = false) RunAllParams runAllParams,
-      @RequestParam(value = "interpretTypes", defaultValue = "false") Set<String> interpretTypes);
+    @Param("steps") String steps,
+    @Param("reason") String reason,
+    @Param("useLastSuccessful") boolean useLastSuccessful,
+    @Param("markPreviousAttemptAsFailed") boolean markPreviousAttemptAsFailed,
+    RunAllParams runAllParams,
+    @Param("interpretTypes") Set<String> interpretTypes
+  );
 
-  @PostMapping(value = "run/{datasetKey}")
-  @ResponseBody
-  @Override
+  @RequestLine("POST /pipelines/history/run/{datasetKey}?steps={steps}&reason={reason}&useLastSuccessful={useLastSuccessful}&markPreviousAttemptAsFailed={markPreviousAttemptAsFailed}&interpretTypes={interpretTypes}")
   RunPipelineResponse runPipelineAttempt(
-      @PathVariable("datasetKey") UUID datasetKey,
-      @RequestParam(value = "steps", required = false) String steps,
-      @RequestParam(value = "reason", required = false) String reason,
-      @RequestParam(value = "useLastSuccessful", defaultValue = "false") boolean useLastSuccessful,
-      @RequestParam(value = "markPreviousAttemptAsFailed", defaultValue = "false")
-          boolean markPreviousAttemptAsFailed,
-      @RequestParam(value = "interpretTypes", defaultValue = "false") Set<String> interpretTypes);
+    @Param("datasetKey") UUID datasetKey,
+    @Param("steps") String steps,
+    @Param("reason") String reason,
+    @Param("useLastSuccessful") boolean useLastSuccessful,
+    @Param("markPreviousAttemptAsFailed") boolean markPreviousAttemptAsFailed,
+    @Param("interpretTypes") Set<String> interpretTypes
+  );
 
-  @PostMapping(value = "run/{datasetKey}/{attempt}")
-  @ResponseBody
-  @Override
+  @RequestLine("POST /pipelines/history/run/{datasetKey}/{attempt}?steps={steps}&reason={reason}&markPreviousAttemptAsFailed={markPreviousAttemptAsFailed}&interpretTypes={interpretTypes}")
   RunPipelineResponse runPipelineAttempt(
-      @PathVariable("datasetKey") UUID datasetKey,
-      @PathVariable("attempt") int attempt,
-      @RequestParam(value = "steps", required = false) String steps,
-      @RequestParam(value = "reason", required = false) String reason,
-      @RequestParam(value = "markPreviousAttemptAsFailed", defaultValue = "false")
-          boolean markPreviousAttemptAsFailed,
-      @RequestParam(value = "interpretTypes", defaultValue = "false") Set<String> interpretTypes);
+    @Param("datasetKey") UUID datasetKey,
+    @Param("attempt") int attempt,
+    @Param("steps") String steps,
+    @Param("reason") String reason,
+    @Param("markPreviousAttemptAsFailed") boolean markPreviousAttemptAsFailed,
+    @Param("interpretTypes") Set<String> interpretTypes
+  );
 
-  @PostMapping(
-      value = "identifier/{datasetKey}/{attempt}/email",
-      consumes = MediaType.TEXT_PLAIN_VALUE)
-  @Override
+  @RequestLine("POST /pipelines/history/identifier/{datasetKey}/{attempt}/email")
+  @Headers("Content-Type: text/plain")
   @Deprecated
-  void sendAbsentIndentifiersEmail(
-      @PathVariable("datasetKey") UUID datasetKey,
-      @PathVariable("attempt") int attempt,
-      @RequestBody String message);
+  void sendAbsentIdentifiersEmail(@Param("datasetKey") UUID datasetKey, @Param("attempt") int attempt, String message);
 
-  @PostMapping("identifier/{datasetKey}/{attempt}/allow")
-  @Override
-  void allowAbsentIndentifiers(
-      @PathVariable("datasetKey") UUID datasetKey, @PathVariable("attempt") int attempt);
+  @RequestLine("POST /pipelines/history/identifier/{datasetKey}/{attempt}/allow")
+  void allowAbsentIdentifiers(@Param("datasetKey") UUID datasetKey, @Param("attempt") int attempt);
 
-  @PostMapping("identifier/{datasetKey}/allow")
-  @Override
-  void allowAbsentIndentifiers(@PathVariable("datasetKey") UUID datasetKey);
+  @RequestLine("POST /pipelines/history/identifier/{datasetKey}/allow")
+  void allowAbsentIdentifiers(@Param("datasetKey") UUID datasetKey);
 
-  @PostMapping(
-      value = "identifier/{datasetKey}/{attempt}/{executionKey}/notify",
-      consumes = MediaType.TEXT_PLAIN_VALUE)
-  @Override
-  void notifyAbsentIdentifiers(
-      @PathVariable("datasetKey") UUID datasetKey,
-      @PathVariable("attempt") int attempt,
-      @PathVariable("executionKey") long executionKey,
-      @RequestBody String message);
+  @RequestLine("POST /pipelines/history/identifier/{datasetKey}/{attempt}/{executionKey}/notify")
+  @Headers("Content-Type: text/plain")
+  void notifyAbsentIdentifiers(@Param("datasetKey") UUID datasetKey, @Param("attempt") int attempt, @Param("executionKey") long executionKey, String message);
 
-  @PutMapping(
-      value = "step/{stepKey}/submittedToQueued",
-      consumes = MediaType.APPLICATION_JSON_VALUE)
-  @Override
-  void setSubmittedPipelineStepToQueued(@PathVariable("stepKey") long stepKey);
+  @RequestLine("PUT /pipelines/history/step/{stepKey}/submittedToQueued")
+  @Headers("Content-Type: application/json")
+  void setSubmittedPipelineStepToQueued(@Param("stepKey") long stepKey);
 }

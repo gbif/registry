@@ -12,7 +12,10 @@
  * limitations under the License.
  */
 package org.gbif.registry.ws.client;
-
+import feign.Headers;
+import feign.Param;
+import feign.QueryMap;
+import feign.RequestLine;
 import org.gbif.api.annotation.PartialDate;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
@@ -33,196 +36,177 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
-import org.springframework.cloud.openfeign.SpringQueryMap;
-import org.springframework.format.annotation.DateTimeFormat;
-import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
-
 public interface BaseDownloadClient extends OccurrenceDownloadService {
 
-  @RequestMapping(method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)
-  @Override
-  void create(@RequestBody Download download);
+  // ---------------------------------------------------------------------------
+  // CRUD
+  // ---------------------------------------------------------------------------
 
-  @RequestMapping(
-      method = RequestMethod.GET,
-      value = "{key}",
-      produces = MediaType.APPLICATION_JSON_VALUE)
-  @ResponseBody
   @Override
-  Download get(@PathVariable("key") String key);
+  @RequestLine("POST /")
+  @Headers("Content-Type: application/json")
+  void create(Download download);
 
-  @RequestMapping(method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
-  @ResponseBody
   @Override
+  @RequestLine("GET /{key}")
+  @Headers("Accept: application/json")
+  Download get(@Param("key") String key);
+
+  @Override
+  @RequestLine("PUT /")
+  @Headers("Content-Type: application/json")
+  Download update(Download download);
+
+  // ---------------------------------------------------------------------------
+  // Listing / counting
+  // ---------------------------------------------------------------------------
+
+  @Override
+  @RequestLine("GET /")
+  @Headers("Accept: application/json")
   PagingResponse<Download> list(
-      @SpringQueryMap Pageable pageable,
-      @RequestParam(value = "status", required = false) Set<Download.Status> status,
-      @RequestParam(value = "source", required = false) String source);
+    @QueryMap Pageable pageable,
+    @Param("status") Set<Download.Status> status,
+    @Param("source") String source);
 
-  @RequestMapping(
-      method = RequestMethod.GET,
-      value = "count",
-      produces = MediaType.APPLICATION_JSON_VALUE)
-  @ResponseBody
   @Override
+  @RequestLine("GET /count?status={status}&source={source}")
+  @Headers("Accept: application/json")
   long count(
-      @RequestParam(value = "status", required = false) Set<Download.Status> status,
-      @RequestParam(value = "source", required = false) String source);
+    @Param("status") Set<Download.Status> status,
+    @Param("source") String source);
 
-  @RequestMapping(
-      method = RequestMethod.GET,
-      value = "user/{user}",
-      produces = MediaType.APPLICATION_JSON_VALUE)
-  @ResponseBody
   @Override
+  @RequestLine(
+    "GET /user/{user}?status={status}&from={from}&statistics={statistics}")
+  @Headers("Accept: application/json")
   PagingResponse<Download> listByUser(
-      @PathVariable("user") String user,
-      @SpringQueryMap Pageable pageable,
-      @RequestParam(value = "status", required = false) Set<Download.Status> status,
-      @RequestParam(value = "from", required = false)
-          @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-          LocalDateTime from,
-      @RequestParam(
-              value = "statistics",
-              required = false,
-              defaultValue = "true") // true by default to keep backwards compatibility
-          Boolean statistics);
+    @Param("user") String user,
+    @QueryMap Pageable pageable,
+    @Param("status") Set<Download.Status> status,
+    @Param("from") LocalDateTime from,
+    @Param("statistics") Boolean statistics);
 
-  @RequestMapping(
-      method = RequestMethod.GET,
-      value = "user/{user}/count",
-      produces = MediaType.APPLICATION_JSON_VALUE)
-  @ResponseBody
   @Override
+  @RequestLine("GET /user/{user}/count?status={status}&from={from}")
+  @Headers("Accept: application/json")
   long countByUser(
-      @PathVariable("user") String user,
-      @RequestParam(value = "status", required = false) Set<Download.Status> status,
-      @RequestParam(value = "from", required = false)
-          @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-          LocalDateTime from);
+    @Param("user") String user,
+    @Param("status") Set<Download.Status> status,
+    @Param("from") LocalDateTime from);
 
-  @RequestMapping(
-      method = RequestMethod.GET,
-      value = "internal/eraseAfter",
-      produces = MediaType.APPLICATION_JSON_VALUE)
-  @ResponseBody
   @Override
+  @RequestLine(
+    "GET /internal/eraseAfter?eraseAfter={eraseAfter}&size={size}&erasureNotification={erasureNotification}")
+  @Headers("Accept: application/json")
   PagingResponse<Download> listByEraseAfter(
-      @SpringQueryMap Pageable page,
-      @RequestParam(value = "eraseAfter", required = false) String eraseAfterAsString,
-      @RequestParam(value = "size", required = false) Long size,
-      @RequestParam(value = "erasureNotification", required = false)
-          String erasureNotificationAsString);
+    @QueryMap Pageable page,
+    @Param("eraseAfter") String eraseAfterAsString,
+    @Param("size") Long size,
+    @Param("erasureNotification") String erasureNotificationAsString);
 
-  @RequestMapping(method = RequestMethod.PUT, consumes = MediaType.APPLICATION_JSON_VALUE)
-  @Override
-  Download update(@RequestBody Download download);
+  // ---------------------------------------------------------------------------
+  // Usage breakdowns
+  // ---------------------------------------------------------------------------
 
   @Override
-  default PagingResponse<DatasetOccurrenceDownloadUsage> listDatasetUsages(@PathVariable("key") String key, @SpringQueryMap Pageable page) {
+  default PagingResponse<DatasetOccurrenceDownloadUsage> listDatasetUsages(
+    String key, Pageable page) {
     return listDatasetUsages(key, null, null, null, page);
   }
 
-  @RequestMapping(
-      method = RequestMethod.GET,
-      value = "{key}/datasets",
-      produces = MediaType.APPLICATION_JSON_VALUE)
-  @ResponseBody
   @Override
+  @RequestLine(
+    "GET /{key}/datasets?datasetTitle={datasetTitle}&sortBy={sortBy}&sortOrder={sortOrder}")
+  @Headers("Accept: application/json")
   PagingResponse<DatasetOccurrenceDownloadUsage> listDatasetUsages(
-      @PathVariable("key") String key,
-      @RequestParam(value = "datasetTitle", required = false) String datasetTitle,
-      @RequestParam(value = "sortBy", required = false) DatasetUsageSortField sortBy,
-      @RequestParam(value = "sortOrder", required = false) SortOrder sortOrder,
-      @SpringQueryMap Pageable page);
+    @Param("key") String key,
+    @Param("datasetTitle") String datasetTitle,
+    @Param("sortBy") DatasetUsageSortField sortBy,
+    @Param("sortOrder") SortOrder sortOrder,
+    @QueryMap Pageable page);
 
-  @RequestMapping(
-      method = RequestMethod.GET,
-      value = "{key}/organizations",
-      produces = MediaType.APPLICATION_JSON_VALUE)
-  @ResponseBody
   @Override
+  @RequestLine(
+    "GET /{key}/organizations?organizationTitle={organizationTitle}&sortBy={sortBy}&sortOrder={sortOrder}")
+  @Headers("Accept: application/json")
   PagingResponse<OrganizationOccurrenceDownloadUsage> listOrganizationUsages(
-      @PathVariable("key") String key,
-      @RequestParam(value = "organizationTitle", required = false) String organizationTitle,
-      @RequestParam(value = "sortBy", required = false) OrganizationUsageSortField sortBy,
-      @RequestParam(value = "sortOrder", required = false) SortOrder sortOrder,
-      @SpringQueryMap Pageable page);
+    @Param("key") String key,
+    @Param("organizationTitle") String organizationTitle,
+    @Param("sortBy") OrganizationUsageSortField sortBy,
+    @Param("sortOrder") SortOrder sortOrder,
+    @QueryMap Pageable page);
 
-  @RequestMapping(
-      method = RequestMethod.GET,
-      value = "{key}/countries",
-      produces = MediaType.APPLICATION_JSON_VALUE)
-  @ResponseBody
   @Override
+  @RequestLine(
+    "GET /{key}/countries?sortBy={sortBy}&sortOrder={sortOrder}")
+  @Headers("Accept: application/json")
   PagingResponse<CountryOccurrenceDownloadUsage> listCountryUsages(
-      @PathVariable("key") String key,
-      @RequestParam(value = "sortBy", required = false) CountryUsageSortField sortBy,
-      @RequestParam(value = "sortOrder", required = false) SortOrder sortOrder,
-      @SpringQueryMap Pageable page);
+    @Param("key") String key,
+    @Param("sortBy") CountryUsageSortField sortBy,
+    @Param("sortOrder") SortOrder sortOrder,
+    @QueryMap Pageable page);
 
-  @RequestMapping(method = RequestMethod.GET, value = "{key}/citation")
-  @Override
-  String getCitation(@PathVariable("key") String keyOrDoi);
+  // ---------------------------------------------------------------------------
+  // Citation
+  // ---------------------------------------------------------------------------
 
-  @RequestMapping(
-      method = RequestMethod.GET,
-      value = "statistics/downloadsByUserCountry",
-      produces = MediaType.APPLICATION_JSON_VALUE)
-  @ResponseBody
   @Override
+  @RequestLine("GET /{key}/citation")
+  String getCitation(@Param("key") String keyOrDoi);
+
+  // ---------------------------------------------------------------------------
+  // Statistics
+  // ---------------------------------------------------------------------------
+
+  @Override
+  @RequestLine(
+    "GET /statistics/downloadsByUserCountry?fromDate={fromDate}&toDate={toDate}&userCountry={userCountry}")
+  @Headers("Accept: application/json")
   Map<Integer, Map<Integer, Long>> getDownloadsByUserCountry(
-      @PartialDate("fromDate") Date fromDate,
-      @PartialDate("toDate") Date toDate,
-      @RequestParam(value = "userCountry", required = false) Country userCountry);
+    @Param("fromDate") @PartialDate("fromDate") Date fromDate,
+    @Param("toDate") @PartialDate("toDate") Date toDate,
+    @Param("userCountry") Country userCountry);
 
-  @RequestMapping(
-      method = RequestMethod.GET,
-      value = "statistics/downloadsBySource",
-      produces = MediaType.APPLICATION_JSON_VALUE)
-  @ResponseBody
   @Override
+  @RequestLine(
+    "GET /statistics/downloadsBySource?fromDate={fromDate}&toDate={toDate}&source={source}")
+  @Headers("Accept: application/json")
   Map<Integer, Map<Integer, Long>> getDownloadsBySource(
-      @PartialDate("fromDate") Date fromDate,
-      @PartialDate("toDate") Date toDate,
-      @RequestParam(value = "source", required = false) String source);
+    @Param("fromDate") @PartialDate("fromDate") Date fromDate,
+    @Param("toDate") @PartialDate("toDate") Date toDate,
+    @Param("source") String source);
 
-  @RequestMapping(
-      method = RequestMethod.GET,
-      value = "statistics/downloadedRecordsByDataset",
-      produces = MediaType.APPLICATION_JSON_VALUE)
-  @ResponseBody
   @Override
+  @RequestLine(
+    "GET /statistics/downloadedRecordsByDataset?fromDate={fromDate}&toDate={toDate}&publishingCountry={publishingCountry}&datasetKey={datasetKey}&publishingOrgKey={publishingOrgKey}")
+  @Headers("Accept: application/json")
   Map<Integer, Map<Integer, Long>> getDownloadedRecordsByDataset(
-      @PartialDate("fromDate") Date fromDate,
-      @PartialDate("toDate") Date toDate,
-      @RequestParam(value = "publishingCountry", required = false) Country publishingCountry,
-      @RequestParam(value = "datasetKey", required = false) UUID datasetKey,
-      @RequestParam(value = "publishingOrgKey", required = false) UUID publishingOrgKey);
+    @Param("fromDate") @PartialDate("fromDate") Date fromDate,
+    @Param("toDate") @PartialDate("toDate") Date toDate,
+    @Param("publishingCountry") Country publishingCountry,
+    @Param("datasetKey") UUID datasetKey,
+    @Param("publishingOrgKey") UUID publishingOrgKey);
 
-  @RequestMapping(
-      method = RequestMethod.GET,
-      value = "statistics/downloadsByDataset",
-      produces = MediaType.APPLICATION_JSON_VALUE)
-  @ResponseBody
   @Override
+  @RequestLine(
+    "GET /statistics/downloadsByDataset?fromDate={fromDate}&toDate={toDate}&publishingCountry={publishingCountry}&datasetKey={datasetKey}&publishingOrgKey={publishingOrgKey}")
+  @Headers("Accept: application/json")
   Map<Integer, Map<Integer, Long>> getDownloadsByDataset(
-      @PartialDate("fromDate") Date fromDate,
-      @PartialDate("toDate") Date toDate,
-      @RequestParam(value = "publishingCountry", required = false) Country publishingCountry,
-      @RequestParam(value = "datasetKey", required = false) UUID datasetKey,
-      @RequestParam(value = "publishingOrgKey", required = false) UUID publishingOrgKey);
+    @Param("fromDate") @PartialDate("fromDate") Date fromDate,
+    @Param("toDate") @PartialDate("toDate") Date toDate,
+    @Param("publishingCountry") Country publishingCountry,
+    @Param("datasetKey") UUID datasetKey,
+    @Param("publishingOrgKey") UUID publishingOrgKey);
 
-  @RequestMapping(
-      method = RequestMethod.POST,
-      value = "{key}/datasets",
-      consumes = MediaType.APPLICATION_JSON_VALUE)
+  // ---------------------------------------------------------------------------
+  // Usage creation
+  // ---------------------------------------------------------------------------
+
   @Override
-  void createUsages(@PathVariable("key") String key, @RequestBody Map<UUID, Long> datasetCitations);
+  @RequestLine("POST /{key}/datasets")
+  @Headers("Content-Type: application/json")
+  void createUsages(
+    @Param("key") String key,
+    Map<UUID, Long> datasetCitations);
 }

@@ -13,7 +13,23 @@
  */
 package org.gbif.registry.ws.client;
 
-import org.springframework.web.bind.annotation.RequestMapping;
+import feign.Headers;
+import feign.Param;
+import feign.QueryMap;
+import feign.RequestLine;
+import org.gbif.api.model.common.paging.Pageable;
+import org.gbif.api.model.common.paging.PagingResponse;
+import org.gbif.api.model.registry.DatasetOccurrenceDownloadUsage;
 
-@RequestMapping("occurrence/download/dataset")
-public interface DatasetOccurrenceDownloadUsageClient extends BaseDatasetDownloadUsageClient {}
+import java.util.UUID;
+
+public interface DatasetOccurrenceDownloadUsageClient extends BaseDatasetDownloadUsageClient {
+
+  @RequestLine("GET /occurrence/download/dataset/{datasetKey}")
+  @Headers("Accept: application/json")
+  PagingResponse<DatasetOccurrenceDownloadUsage> listByDataset(
+    @Param("datasetKey") UUID datasetKey,
+    @Param("showDownloadDetails") Boolean showDownloadDetails,
+    @QueryMap Pageable pageable
+  );
+}

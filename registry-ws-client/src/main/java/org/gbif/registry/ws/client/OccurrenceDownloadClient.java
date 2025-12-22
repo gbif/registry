@@ -13,7 +13,11 @@
  */
 package org.gbif.registry.ws.client;
 
-import org.springframework.web.bind.annotation.RequestMapping;
+import feign.Headers;
 
-@RequestMapping("occurrence/download")
-public interface OccurrenceDownloadClient extends BaseDownloadClient {}
+@Headers("Accept: application/json")
+public interface OccurrenceDownloadClient extends BaseDownloadClient {
+  // This interface inherits all methods from BaseDownloadClient
+  // No additional methods are defined here, but Feign will use
+  // the base URL path "occurrence/download" if configured in the Feign client
+}

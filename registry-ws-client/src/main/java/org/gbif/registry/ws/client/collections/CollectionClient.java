@@ -12,94 +12,64 @@
  * limitations under the License.
  */
 package org.gbif.registry.ws.client.collections;
-
+import feign.Headers;
+import feign.Param;
+import feign.QueryMap;
+import feign.RequestLine;
 import org.gbif.api.annotation.Trim;
-import org.gbif.api.model.collections.Collection;
-import org.gbif.api.model.collections.CollectionImportParams;
-import org.gbif.api.model.collections.descriptors.Descriptor;
-import org.gbif.api.model.collections.descriptors.DescriptorChangeSuggestion;
-import org.gbif.api.model.collections.descriptors.DescriptorGroup;
+import org.gbif.api.model.collections.*;
+import org.gbif.api.model.collections.descriptors.*;
 import org.gbif.api.model.collections.latimercore.ObjectGroup;
-import org.gbif.api.model.collections.request.CollectionSearchRequest;
-import org.gbif.api.model.collections.request.DescriptorGroupSearchRequest;
-import org.gbif.api.model.collections.request.DescriptorSearchRequest;
-import org.gbif.api.model.collections.request.InstitutionSearchRequest;
-import org.gbif.api.model.collections.suggestions.CollectionChangeSuggestion;
-import org.gbif.api.model.collections.suggestions.Status;
-import org.gbif.api.model.collections.suggestions.Type;
+import org.gbif.api.model.collections.request.*;
+import org.gbif.api.model.collections.suggestions.*;
 import org.gbif.api.model.collections.view.CollectionView;
 import org.gbif.api.model.common.export.ExportFormat;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.search.collections.KeyCodeNameResult;
 
+import java.io.File;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
-import org.springframework.cloud.openfeign.SpringQueryMap;
-import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
+public interface CollectionClient extends BaseCollectionEntityClient<Collection, CollectionChangeSuggestion> {
 
-@RequestMapping("grscicoll/collection")
-public interface CollectionClient
-    extends BaseCollectionEntityClient<Collection, CollectionChangeSuggestion> {
+  @RequestLine("GET /grscicoll/collection")
+  @Headers("Accept: application/json")
+  PagingResponse<CollectionView> list(@QueryMap CollectionSearchRequest searchRequest);
 
-  @RequestMapping(method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
-  @ResponseBody
-  PagingResponse<CollectionView> list(@SpringQueryMap CollectionSearchRequest searchRequest);
+  @RequestLine("GET /grscicoll/collection/listForInstitution")
+  @Headers("Accept: application/json")
+  PagingResponse<CollectionView> listForInstitutions(@QueryMap InstitutionSearchRequest searchRequest);
 
-  @GetMapping(value = "listForInstitution", produces = MediaType.APPLICATION_JSON_VALUE)
-  PagingResponse<CollectionView> listForInstitutions(@SpringQueryMap InstitutionSearchRequest searchRequest);
+  @RequestLine("GET /grscicoll/collection/latimerCore")
+  @Headers("Accept: application/json")
+  PagingResponse<ObjectGroup> listAsLatimerCore(@QueryMap CollectionSearchRequest searchRequest);
 
-  @RequestMapping(
-      method = RequestMethod.GET,
-      value = "latimerCore",
-      produces = MediaType.APPLICATION_JSON_VALUE)
-  @ResponseBody
-  PagingResponse<ObjectGroup> listAsLatimerCore(
-      @SpringQueryMap CollectionSearchRequest searchRequest);
+  @RequestLine("GET /grscicoll/collection/latimerCore/{key}")
+  @Headers("Accept: application/json")
+  ObjectGroup getAsLatimerCore(@Param("key") UUID key);
 
-  @RequestMapping(
-      method = RequestMethod.GET,
-      value = "latimerCore/{key}",
-      produces = MediaType.APPLICATION_JSON_VALUE)
-  @ResponseBody
-  ObjectGroup getAsLatimerCore(@PathVariable("key") UUID key);
+  @RequestLine("POST /grscicoll/collection/latimerCore")
+  @Headers("Content-Type: application/json")
+  UUID createFromLatimerCore(ObjectGroup objectGroup);
 
-  @RequestMapping(
-      method = RequestMethod.POST,
-      value = "latimerCore",
-      consumes = MediaType.APPLICATION_JSON_VALUE)
-  UUID createFromLatimerCore(@RequestBody ObjectGroup objectGroup);
+  @RequestLine("PUT /grscicoll/collection/latimerCore/{key}")
+  @Headers("Content-Type: application/json")
+  void updateFromLatimerCore(@Param("key") UUID key, ObjectGroup objectGroup);
 
-  @RequestMapping(
-      method = RequestMethod.PUT,
-      value = "latimerCore/{key}",
-      consumes = MediaType.APPLICATION_JSON_VALUE)
-  void updateFromLatimerCore(@PathVariable("key") UUID key, @RequestBody ObjectGroup objectGroup);
+  @RequestLine("GET /grscicoll/collection/deleted")
+  @Headers("Accept: application/json")
+  PagingResponse<CollectionView> listDeleted(@QueryMap CollectionSearchRequest searchRequest);
 
-  @RequestMapping(
-      method = RequestMethod.GET,
-      value = "deleted",
-      produces = MediaType.APPLICATION_JSON_VALUE)
-  @ResponseBody
-  PagingResponse<CollectionView> listDeleted(@SpringQueryMap CollectionSearchRequest searchRequest);
+  @RequestLine("GET /grscicoll/collection/suggest?q={q}")
+  @Headers("Accept: application/json")
+  List<KeyCodeNameResult> suggest(@Param("q") String q);
 
-  @RequestMapping(
-      method = RequestMethod.GET,
-      value = "suggest",
-      produces = MediaType.APPLICATION_JSON_VALUE)
-  @ResponseBody
-  List<KeyCodeNameResult> suggest(@RequestParam(value = "q", required = false) String q);
-
-  @RequestMapping(
-      method = RequestMethod.GET,
-      value = "{key}",
-      produces = MediaType.APPLICATION_JSON_VALUE)
-  @ResponseBody
-  CollectionView getCollectionView(@PathVariable("key") UUID key);
+  @RequestLine("GET /grscicoll/collection/{key}")
+  @Headers("Accept: application/json")
+  CollectionView getCollectionView(@Param("key") UUID key);
 
   @Override
   default Collection get(UUID key) {
@@ -107,128 +77,110 @@ public interface CollectionClient
     return view != null ? view.getCollection() : null;
   }
 
-  @RequestMapping(
-      method = RequestMethod.POST,
-      value = "import",
-      produces = MediaType.APPLICATION_JSON_VALUE,
-      consumes = MediaType.APPLICATION_JSON_VALUE)
-  UUID createFromDataset(@RequestBody CollectionImportParams importParams);
+  @RequestLine("POST /grscicoll/collection/import")
+  @Headers("Content-Type: application/json")
+  UUID createFromDataset(CollectionImportParams importParams);
 
-  @PostMapping(
-      value = "{collectionKey}/descriptorGroup",
-      consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+  // Multipart descriptor group creation
+  @RequestLine("POST /grscicoll/collection/{collectionKey}/descriptorGroup")
+  @Headers("Content-Type: multipart/form-data")
   long createDescriptorGroup(
-      @PathVariable("collectionKey") UUID collectionKey,
-      @RequestParam(value = "format", defaultValue = "CSV") ExportFormat format,
-      @RequestPart("descriptorsFile") MultipartFile descriptorsFile,
-      @RequestParam("title") @Trim String title,
-      @RequestParam(value = "description", required = false) @Trim String description,
-      @RequestParam(value = "tags", required = false) Set<String> tags);
+    @Param("collectionKey") UUID collectionKey,
+    @Param("format") ExportFormat format,
+    byte[] descriptorsFile,
+    @Param("title") @Trim String title,
+    @Param("description") @Trim String description,
+    @Param("tags") Set<String> tags
+  );
 
-  @PutMapping(
-      value = "{collectionKey}/descriptorGroup/{key}",
-      consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+  @RequestLine("PUT /grscicoll/collection/{collectionKey}/descriptorGroup/{key}")
+  @Headers("Content-Type: multipart/form-data")
   void updateDescriptorGroup(
-      @PathVariable("collectionKey") UUID collectionKey,
-      @PathVariable("key") long descriptorGroupKey,
-      @RequestParam(value = "format", defaultValue = "CSV") ExportFormat format,
-      @RequestPart("descriptorsFile") MultipartFile descriptorsFile,
-      @RequestParam("title") @Trim String title,
-      @RequestParam(value = "description", required = false) @Trim String description,
-      @RequestParam(value = "tags", required = false) Set<String> tags);
+    @Param("collectionKey") UUID collectionKey,
+    @Param("key") long descriptorGroupKey,
+    @Param("format") ExportFormat format,
+    byte[] descriptorsFile,
+    @Param("title") @Trim String title,
+    @Param("description") @Trim String description,
+    @Param("tags") Set<String> tags
+  );
 
-  @GetMapping(
-      value = "{collectionKey}/descriptorGroup/{key}",
-      produces = MediaType.APPLICATION_JSON_VALUE)
-  DescriptorGroup getCollectionDescriptorGroup(
-      @PathVariable("collectionKey") UUID collectionKey,
-      @PathVariable("key") long descriptorGroupKey);
+  @RequestLine("GET /grscicoll/collection/{collectionKey}/descriptorGroup/{key}")
+  @Headers("Accept: application/json")
+  DescriptorGroup getCollectionDescriptorGroup(@Param("collectionKey") UUID collectionKey, @Param("key") long descriptorGroupKey);
 
-  @DeleteMapping(value = "{collectionKey}/descriptorGroup/{key}")
-  void deleteCollectionDescriptorGroup(
-      @PathVariable("collectionKey") UUID collectionKey,
-      @PathVariable("key") long descriptorGroupKey);
+  @RequestLine("DELETE /grscicoll/collection/{collectionKey}/descriptorGroup/{key}")
+  void deleteCollectionDescriptorGroup(@Param("collectionKey") UUID collectionKey, @Param("key") long descriptorGroupKey);
 
-  @GetMapping(
-      value = "{collectionKey}/descriptorGroup",
-      produces = MediaType.APPLICATION_JSON_VALUE)
-  PagingResponse<DescriptorGroup> listCollectionDescriptorGroups(
-      @PathVariable("collectionKey") UUID collectionKey,
-      @SpringQueryMap DescriptorGroupSearchRequest searchRequest);
+  @RequestLine("GET /grscicoll/collection/{collectionKey}/descriptorGroup")
+  @Headers("Accept: application/json")
+  PagingResponse<DescriptorGroup> listCollectionDescriptorGroups(@Param("collectionKey") UUID collectionKey, @QueryMap DescriptorGroupSearchRequest searchRequest);
 
-  @GetMapping(
-      value = "{collectionKey}/descriptorGroup/{key}/descriptor",
-      produces = MediaType.APPLICATION_JSON_VALUE)
-  PagingResponse<Descriptor> listCollectionDescriptors(
-      @PathVariable("collectionKey") UUID collectionKey,
-      @PathVariable("key") long descriptorGroupKey,
-      @SpringQueryMap DescriptorSearchRequest searchRequest);
+  @RequestLine("GET /grscicoll/collection/{collectionKey}/descriptorGroup/{key}/descriptor")
+  @Headers("Accept: application/json")
+  PagingResponse<Descriptor> listCollectionDescriptors(@Param("collectionKey") UUID collectionKey, @Param("key") long descriptorGroupKey, @QueryMap DescriptorSearchRequest searchRequest);
 
-  @GetMapping(
-      value = "{collectionKey}/descriptorGroup/{descriptorGroupKey}/descriptor/{key}",
-      produces = MediaType.APPLICATION_JSON_VALUE)
-  Descriptor getCollectionDescriptor(
-      @PathVariable("collectionKey") UUID collectionKey,
-      @PathVariable("descriptorGroupKey") long descriptorGroupKey,
-      @PathVariable("key") long descriptorKey);
+  @RequestLine("GET /grscicoll/collection/{collectionKey}/descriptorGroup/{descriptorGroupKey}/descriptor/{key}")
+  @Headers("Accept: application/json")
+  Descriptor getCollectionDescriptor(@Param("collectionKey") UUID collectionKey, @Param("descriptorGroupKey") long descriptorGroupKey, @Param("key") long descriptorKey);
 
-  @PostMapping(value = "{collectionKey}/descriptorGroup/suggestion", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+  @RequestLine("POST /grscicoll/collection/{collectionKey}/descriptorGroup/suggestion")
+  @Headers("Content-Type: multipart/form-data")
   DescriptorChangeSuggestion createDescriptorSuggestion(
-      @PathVariable("collectionKey") UUID collectionKey,
-      @RequestPart("file") MultipartFile file,
-      @RequestParam("type") Type type,
-      @RequestParam("title") String title,
-      @RequestParam(value = "description", required = false) String description,
-      @RequestParam("format") ExportFormat format,
-      @RequestParam("comments") List<String> comments,
-      @RequestParam("proposerEmail") String proposerEmail,
-      @RequestParam(value = "tags", required = false) Set<String> tags);
+    @Param("collectionKey") UUID collectionKey,
+    byte[] file,
+    @Param("type") Type type,
+    @Param("title") String title,
+    @Param("description") String description,
+    @Param("format") ExportFormat format,
+    @Param("comments") List<String> comments,
+    @Param("proposerEmail") String proposerEmail,
+    @Param("tags") Set<String> tags
+  );
 
-  @GetMapping(value = "{collectionKey}/descriptorGroup/suggestion/{key}")
-  DescriptorChangeSuggestion getDescriptorSuggestion(
-      @PathVariable("collectionKey") UUID collectionKey,
-      @PathVariable("key") long key);
+  @RequestLine("GET /grscicoll/collection/{collectionKey}/descriptorGroup/suggestion/{key}")
+  DescriptorChangeSuggestion getDescriptorSuggestion(@Param("collectionKey") UUID collectionKey, @Param("key") long key);
 
-  @PutMapping(value = "{collectionKey}/descriptorGroup/suggestion/{key}/apply")
-  void applyDescriptorSuggestion(
-      @PathVariable("collectionKey") UUID collectionKey,
-      @PathVariable("key") long key);
+  @RequestLine("PUT /grscicoll/collection/{collectionKey}/descriptorGroup/suggestion/{key}/apply")
+  void applyDescriptorSuggestion(@Param("collectionKey") UUID collectionKey, @Param("key") long key);
 
-  @PutMapping(value = "{collectionKey}/descriptorGroup/suggestion/{key}/discard")
-  void discardDescriptorSuggestion(
-      @PathVariable("collectionKey") UUID collectionKey,
-      @PathVariable("key") long key);
+  @RequestLine("PUT /grscicoll/collection/{collectionKey}/descriptorGroup/suggestion/{key}/discard")
+  void discardDescriptorSuggestion(@Param("collectionKey") UUID collectionKey, @Param("key") long key);
 
-  @DeleteMapping(value = "{collectionKey}/descriptorGroup/suggestion/{key}")
-  void deleteDescriptorSuggestion(
-      @PathVariable("collectionKey") UUID collectionKey,
-      @PathVariable("key") long key);
+  @RequestLine("DELETE /grscicoll/collection/{collectionKey}/descriptorGroup/suggestion/{key}")
+  void deleteDescriptorSuggestion(@Param("collectionKey") UUID collectionKey, @Param("key") long key);
 
-  @PutMapping(value = "{collectionKey}/descriptorGroup/suggestion/{key}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+  @RequestLine("PUT /grscicoll/collection/{collectionKey}/descriptorGroup/suggestion/{key}")
+  @Headers("Content-Type: multipart/form-data")
   void updateDescriptorSuggestion(
-      @PathVariable("collectionKey") UUID collectionKey,
-      @PathVariable("key") long key,
-      @RequestPart(value = "file", required = false) MultipartFile file,
-      @RequestParam("type") Type type,
-      @RequestParam("title") String title,
-      @RequestParam("description") String description,
-      @RequestParam("format") ExportFormat format,
-      @RequestParam("comments") List<String> comments,
-      @RequestParam("proposerEmail") String proposerEmail,
-      @RequestParam(value = "tags", required = false) Set<String> tags);
+    @Param("collectionKey") UUID collectionKey,
+    @Param("key") long key,
+    byte[] file,
+    @Param("type") Type type,
+    @Param("title") String title,
+    @Param("description") String description,
+    @Param("format") ExportFormat format,
+    @Param("comments") List<String> comments,
+    @Param("proposerEmail") String proposerEmail,
+    @Param("tags") Set<String> tags
+  );
 
-  @GetMapping(value = "{collectionKey}/descriptorGroup/suggestion")
+  @RequestLine("GET /grscicoll/collection/{collectionKey}/descriptorGroup/suggestion")
+  @Headers("Accept: application/json")
   PagingResponse<DescriptorChangeSuggestion> listDescriptorSuggestions(
-      @PathVariable("collectionKey") UUID collectionKey,
-      @RequestParam(value = "status", required = false) Status status,
-      @RequestParam(value = "type", required = false) Type type,
-      @RequestParam(value = "proposerEmail", required = false) String proposerEmail,
-      @SpringQueryMap Pageable page);
+    @Param("collectionKey") UUID collectionKey,
+    @Param("status") Status status,
+    @Param("type") Type type,
+    @Param("proposerEmail") String proposerEmail,
+    @QueryMap Pageable page
+  );
 
-  @GetMapping(value = "descriptorGroup/suggestion")
+  @RequestLine("GET /grscicoll/collection/descriptorGroup/suggestion")
+  @Headers("Accept: application/json")
   PagingResponse<DescriptorChangeSuggestion> listAllDescriptorSuggestions(
-      @RequestParam(value = "status", required = false) Status status,
-      @RequestParam(value = "type", required = false) Type type,
-      @RequestParam(value = "proposerEmail", required = false) String proposerEmail,
-      @SpringQueryMap Pageable page);
+    @Param("status") Status status,
+    @Param("type") Type type,
+    @Param("proposerEmail") String proposerEmail,
+    @QueryMap Pageable page
+  );
 }

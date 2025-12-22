@@ -12,6 +12,9 @@
  * limitations under the License.
  */
 package org.gbif.registry.ws.client;
+import feign.Headers;
+import feign.Param;
+import feign.RequestLine;
 
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
@@ -27,84 +30,40 @@ import org.gbif.api.vocabulary.InstallationType;
 import java.util.List;
 import java.util.UUID;
 
-import org.springframework.cloud.openfeign.SpringQueryMap;
-import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
+/**
+ * Feign client for installation and metasync endpoints.
+ *
+ * Base path must be included in the target URL when building the client.
+ */
+@Headers("Accept: application/json")
+public interface InstallationClient extends
+  NetworkEntityClient<Installation>, InstallationService, MetasyncHistoryService {
 
-@RequestMapping("installation")
-public interface InstallationClient
-    extends NetworkEntityClient<Installation>, InstallationService, MetasyncHistoryService {
+  @RequestLine("GET installation/{key}/dataset")
+  PagingResponse<Dataset> getHostedDatasets(@Param("key") UUID key, Pageable pageable);
 
-  @RequestMapping(
-      method = RequestMethod.GET,
-      value = "{key}/dataset",
-      produces = MediaType.APPLICATION_JSON_VALUE)
-  @ResponseBody
-  @Override
-  PagingResponse<Dataset> getHostedDatasets(
-      @PathVariable("key") UUID key, @SpringQueryMap Pageable pageable);
+  @RequestLine("GET installation/deleted")
+  PagingResponse<Installation> listDeleted(InstallationRequestSearchParams searchParams);
 
-  @RequestMapping(
-      method = RequestMethod.GET,
-      value = "deleted",
-      produces = MediaType.APPLICATION_JSON_VALUE)
-  @ResponseBody
-  @Override
-  PagingResponse<Installation> listDeleted(@SpringQueryMap InstallationRequestSearchParams searchParams);
+  @RequestLine("GET installation/nonPublishing")
+  PagingResponse<Installation> listNonPublishing(Pageable pageable);
 
-  @RequestMapping(
-      method = RequestMethod.GET,
-      value = "nonPublishing",
-      produces = MediaType.APPLICATION_JSON_VALUE)
-  @ResponseBody
-  @Override
-  PagingResponse<Installation> listNonPublishing(@SpringQueryMap Pageable pageable);
+  @RequestLine("GET installation/suggest?q={q}")
+  List<KeyTitleResult> suggest(@Param("q") String q);
 
-  @RequestMapping(
-      method = RequestMethod.GET,
-      value = "suggest",
-      produces = MediaType.APPLICATION_JSON_VALUE)
-  @ResponseBody
-  @Override
-  List<KeyTitleResult> suggest(@RequestParam(value = "q", required = false) String q);
+  @RequestLine("GET installation?type={type}")
+  PagingResponse<Installation> listByType(@Param("type") InstallationType type, Pageable pageable);
 
-  @RequestMapping(method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
-  @ResponseBody
-  @Override
-  PagingResponse<Installation> listByType(
-      @RequestParam(value = "type") InstallationType type, @SpringQueryMap Pageable pageable);
+  @RequestLine("POST installation/metasync")
+  @Headers("Content-Type: application/json")
+  void createMetasync(MetasyncHistory metasyncHistory);
 
-  @RequestMapping(
-      method = RequestMethod.POST,
-      value = "metasync",
-      consumes = MediaType.APPLICATION_JSON_VALUE)
-  @Override
-  void createMetasync(@RequestBody MetasyncHistory metasyncHistory);
+  @RequestLine("GET installation/metasync")
+  PagingResponse<MetasyncHistory> listMetasync(Pageable pageable);
 
-  @RequestMapping(
-      method = RequestMethod.GET,
-      value = "metasync",
-      produces = MediaType.APPLICATION_JSON_VALUE)
-  @ResponseBody
-  @Override
-  PagingResponse<MetasyncHistory> listMetasync(@SpringQueryMap Pageable pageable);
+  @RequestLine("GET installation/{installationKey}/metasync")
+  PagingResponse<MetasyncHistory> listMetasync(@Param("installationKey") UUID installationKey, Pageable pageable);
 
-  @RequestMapping(
-      method = RequestMethod.GET,
-      value = "{installationKey}/metasync",
-      produces = MediaType.APPLICATION_JSON_VALUE)
-  @ResponseBody
-  @Override
-  PagingResponse<MetasyncHistory> listMetasync(
-      @PathVariable("installationKey") UUID installationKey, @SpringQueryMap Pageable pageable);
-
-  @RequestMapping(method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
-  @ResponseBody
-  @Override
-  PagingResponse<Installation> list(@SpringQueryMap InstallationRequestSearchParams searchParams);
+  @RequestLine("GET installation")
+  PagingResponse<Installation> list(InstallationRequestSearchParams searchParams);
 }

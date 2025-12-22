@@ -12,8 +12,10 @@
  * limitations under the License.
  */
 package org.gbif.registry.ws.client;
-
-import org.gbif.api.annotation.Trim;
+import feign.Headers;
+import feign.Param;
+import feign.QueryMap;
+import feign.RequestLine;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.common.paging.PageableBase;
 import org.gbif.api.model.registry.Dataset;
@@ -22,51 +24,67 @@ import org.gbif.api.service.registry.DatasetDataPackageService;
 import java.util.List;
 import java.util.UUID;
 
-import org.springframework.cloud.openfeign.SpringQueryMap;
-import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseBody;
-
-@RequestMapping("dataset")
 public interface DatasetDataPackageClient extends DatasetDataPackageService {
 
+  // ---------------------------------------------------------------------------
+  // Create / update
+  // ---------------------------------------------------------------------------
 
-  @PostMapping(value = "{datasetKey}/datapackage", consumes = MediaType.APPLICATION_JSON_VALUE)
   @Override
-  void create(@PathVariable("datasetKey") UUID datasetKey, @RequestBody @Trim Dataset.DataPackage dataPackage);
+  @RequestLine("POST /dataset/{datasetKey}/datapackage")
+  @Headers("Content-Type: application/json")
+  void create(
+    @Param("datasetKey") UUID datasetKey,
+    Dataset.DataPackage dataPackage);
 
-  @PutMapping(value = "{datasetKey}/datapackage", consumes = MediaType.APPLICATION_JSON_VALUE)
   @Override
-  void update(@PathVariable("datasetKey") UUID datasetKey, @RequestBody @Trim Dataset.DataPackage dataPackage);
+  @RequestLine("PUT /dataset/{datasetKey}/datapackage")
+  @Headers("Content-Type: application/json")
+  void update(
+    @Param("datasetKey") UUID datasetKey,
+    Dataset.DataPackage dataPackage);
 
-  @GetMapping(value = "{datasetKey}/datapackage", produces = MediaType.APPLICATION_JSON_VALUE)
-  @ResponseBody
+  // ---------------------------------------------------------------------------
+  // Retrieve datapackage
+  // ---------------------------------------------------------------------------
+
   @Override
-  Dataset.DataPackage get(@PathVariable("datasetKey") UUID datasetKey);
+  @RequestLine("GET /dataset/{datasetKey}/datapackage")
+  @Headers("Accept: application/json")
+  Dataset.DataPackage get(
+    @Param("datasetKey") UUID datasetKey);
 
-  @GetMapping(value = "{datasetKey}/datapackage/resource", produces = MediaType.APPLICATION_JSON_VALUE)
-  @ResponseBody
+  // ---------------------------------------------------------------------------
+  // Resources
+  // ---------------------------------------------------------------------------
+
   @Override
-  String getResources(@PathVariable("datasetKey") UUID datasetKey);
+  @RequestLine("GET /dataset/{datasetKey}/datapackage/resource")
+  @Headers("Accept: application/json")
+  String getResources(
+    @Param("datasetKey") UUID datasetKey);
 
-  @GetMapping(value = "{datasetKey}/datapackage/resource/{resourceName}", produces = MediaType.APPLICATION_JSON_VALUE)
-  @ResponseBody
   @Override
-  String getResource(@PathVariable("datasetKey") UUID datasetKey, @PathVariable("resourceName") String resourceName);
+  @RequestLine("GET /dataset/{datasetKey}/datapackage/resource/{resourceName}")
+  @Headers("Accept: application/json")
+  String getResource(
+    @Param("datasetKey") UUID datasetKey,
+    @Param("resourceName") String resourceName);
 
-  @GetMapping(value = "{datasetKey}/datapackage/resourceNames", produces = MediaType.APPLICATION_JSON_VALUE)
-  @ResponseBody
   @Override
-  List<String> getResourceNames(@PathVariable("datasetKey") UUID datasetKey);
+  @RequestLine("GET /dataset/{datasetKey}/datapackage/resourceNames")
+  @Headers("Accept: application/json")
+  List<String> getResourceNames(
+    @Param("datasetKey") UUID datasetKey);
 
-  @GetMapping(value = "/datapackage", produces = MediaType.APPLICATION_JSON_VALUE)
-  @ResponseBody
+  // ---------------------------------------------------------------------------
+  // Listing
+  // ---------------------------------------------------------------------------
+
   @Override
-  PagingResponse<Dataset.DataPackage> list(@SpringQueryMap PageableBase params);
-
+  @RequestLine("GET /dataset/datapackage")
+  @Headers("Accept: application/json")
+  PagingResponse<Dataset.DataPackage> list(
+    @QueryMap PageableBase params);
 }
+

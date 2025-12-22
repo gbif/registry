@@ -278,7 +278,7 @@ public class CollectionResourceIT
         1L,
         getClient()
             .createDescriptorGroup(
-                UUID.randomUUID(), ExportFormat.CSV, descriptorsFile, "title",  "desc", Set.of("test-tag")));
+                UUID.randomUUID(), ExportFormat.CSV, descriptorsFile.getBytes(), "title",  "desc", Set.of("test-tag")));
   }
 
   @SneakyThrows
@@ -302,7 +302,7 @@ public class CollectionResourceIT
         () ->
             getClient()
                 .updateDescriptorGroup(
-                    collectionKey, 1L, ExportFormat.CSV, descriptorsFile, "title", "desc", Set.of("test-tag")));
+                    collectionKey, 1L, ExportFormat.CSV, descriptorsFile.getBytes(), "title", "desc", Set.of("test-tag")));
   }
 
   @Test
@@ -521,7 +521,7 @@ public class CollectionResourceIT
     DescriptorChangeSuggestion created = getClient()
       .createDescriptorSuggestion(
         collectionKey,
-        descriptorsFile,
+        descriptorsFile.getBytes(),
         descriptorChangeSuggestion.getType(),
         descriptorChangeSuggestion.getTitle(),
         descriptorChangeSuggestion.getDescription(),
@@ -658,7 +658,7 @@ public class CollectionResourceIT
       .updateDescriptorSuggestion(
         collectionKey,
         suggestionKey,
-        descriptorsFile,
+        descriptorsFile.getBytes(),
         descriptorChangeSuggestion.getType(),
         descriptorChangeSuggestion.getTitle(),
         descriptorChangeSuggestion.getDescription(),

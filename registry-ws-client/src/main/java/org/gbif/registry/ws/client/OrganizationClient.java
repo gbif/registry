@@ -12,7 +12,10 @@
  * limitations under the License.
  */
 package org.gbif.registry.ws.client;
-
+import feign.Headers;
+import feign.Param;
+import feign.QueryMap;
+import feign.RequestLine;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.Dataset;
@@ -22,111 +25,51 @@ import org.gbif.api.model.registry.search.KeyTitleResult;
 import org.gbif.api.model.registry.search.OrganizationRequestSearchParams;
 import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.api.vocabulary.Country;
+import org.geojson.FeatureCollection;
 
 import java.util.List;
 import java.util.UUID;
 
-import org.geojson.FeatureCollection;
-import org.springframework.cloud.openfeign.SpringQueryMap;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
-
-@RequestMapping("organization")
+@Headers("Accept: application/json")
 public interface OrganizationClient extends NetworkEntityClient<Organization>, OrganizationService {
 
-  @RequestMapping(
-      method = RequestMethod.GET,
-      value = "{key}/hostedDataset",
-      produces = MediaType.APPLICATION_JSON_VALUE)
-  @ResponseBody
-  @Override
-  PagingResponse<Dataset> hostedDatasets(
-      @PathVariable("key") UUID key, @SpringQueryMap Pageable pageable);
+  @RequestLine("GET /{key}/hostedDataset")
+  PagingResponse<Dataset> hostedDatasets(@Param("key") UUID key, @QueryMap Pageable pageable);
 
-  @RequestMapping(
-      method = RequestMethod.GET,
-      value = "{key}/publishedDataset",
-      produces = MediaType.APPLICATION_JSON_VALUE)
-  @ResponseBody
-  @Override
-  PagingResponse<Dataset> publishedDatasets(
-      @PathVariable("key") UUID key, @SpringQueryMap Pageable page);
+  @RequestLine("GET /{key}/publishedDataset")
+  PagingResponse<Dataset> publishedDatasets(@Param("key") UUID key, @QueryMap Pageable page);
 
-  @RequestMapping(
-      method = RequestMethod.GET,
-      value = "{key}/installation",
-      produces = MediaType.APPLICATION_JSON_VALUE)
-  @ResponseBody
-  @Override
-  PagingResponse<Installation> installations(
-      @PathVariable("key") UUID key, @SpringQueryMap Pageable pageable);
+  @RequestLine("GET /{key}/installation")
+  PagingResponse<Installation> installations(@Param("key") UUID key, @QueryMap Pageable pageable);
 
-  @RequestMapping(method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
-  @ResponseBody
-  @Override
-  PagingResponse<Organization> listByCountry(
-      @RequestParam("country") Country country, @SpringQueryMap Pageable pageable);
+  @RequestLine("GET /?country={country}")
+  PagingResponse<Organization> listByCountry(@Param("country") Country country, @QueryMap Pageable pageable);
 
-  @RequestMapping(
-      method = RequestMethod.GET,
-      value = "deleted",
-      produces = MediaType.APPLICATION_JSON_VALUE)
-  @ResponseBody
-  @Override
-  PagingResponse<Organization> listDeleted(@SpringQueryMap OrganizationRequestSearchParams searchParams);
+  @RequestLine("GET /deleted")
+  PagingResponse<Organization> listDeleted(@QueryMap OrganizationRequestSearchParams searchParams);
 
-  @RequestMapping(
-      method = RequestMethod.GET,
-      value = "pending",
-      produces = MediaType.APPLICATION_JSON_VALUE)
-  @ResponseBody
-  @Override
-  PagingResponse<Organization> listPendingEndorsement(@SpringQueryMap Pageable pageable);
+  @RequestLine("GET /pending")
+  PagingResponse<Organization> listPendingEndorsement(@QueryMap Pageable pageable);
 
-  @RequestMapping(
-      method = RequestMethod.GET,
-      value = "nonPublishing",
-      produces = MediaType.APPLICATION_JSON_VALUE)
-  @ResponseBody
-  @Override
-  PagingResponse<Organization> listNonPublishing(@SpringQueryMap Pageable pageable);
+  @RequestLine("GET /nonPublishing")
+  PagingResponse<Organization> listNonPublishing(@QueryMap Pageable pageable);
 
-  @RequestMapping(
-      method = RequestMethod.GET,
-      value = "suggest",
-      produces = MediaType.APPLICATION_JSON_VALUE)
-  @ResponseBody
-  @Override
-  List<KeyTitleResult> suggest(@RequestParam(value = "q", required = false) String q);
+  @RequestLine("GET /suggest?q={q}")
+  List<KeyTitleResult> suggest(@Param("q") String q);
 
-  @RequestMapping(method = RequestMethod.POST, value = "{key}/endorsement/{confirmationKey}")
-  @ResponseBody
-  @Override
-  boolean confirmEndorsement(
-      @PathVariable("key") UUID organizationKey,
-      @PathVariable("confirmationKey") UUID confirmationKey);
+  @RequestLine("POST /{key}/endorsement/{confirmationKey}")
+  boolean confirmEndorsement(@Param("key") UUID organizationKey, @Param("confirmationKey") UUID confirmationKey);
 
-  @RequestMapping(method = RequestMethod.PUT, value = "{key}/endorsement")
-  @ResponseBody
-  ResponseEntity<Void> confirmEndorsementEndpoint(@PathVariable("key") UUID organizationKey);
+  @RequestLine("PUT /{key}/endorsement")
+  void confirmEndorsementEndpoint(@Param("key") UUID organizationKey);
 
-  @RequestMapping(method = RequestMethod.DELETE, value = "{key}/endorsement")
-  @ResponseBody
-  ResponseEntity<Void> revokeEndorsementEndpoint(@PathVariable("key") UUID organizationKey);
+  @RequestLine("DELETE /{key}/endorsement")
+  void revokeEndorsementEndpoint(@Param("key") UUID organizationKey);
 
-  @RequestMapping(method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
-  @ResponseBody
-  @Override
-  PagingResponse<Organization> list(@SpringQueryMap OrganizationRequestSearchParams searchParams);
+  @RequestLine("GET /")
+  PagingResponse<Organization> list(@QueryMap OrganizationRequestSearchParams searchParams);
 
-  @GetMapping(value = "geojson", produces = MediaType.APPLICATION_JSON_VALUE)
-  @ResponseBody
-  @Override
-  FeatureCollection listGeoJson(@SpringQueryMap OrganizationRequestSearchParams searchParams);
+  @RequestLine("GET /geojson")
+  FeatureCollection listGeoJson(@QueryMap OrganizationRequestSearchParams searchParams);
 }
+

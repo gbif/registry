@@ -12,8 +12,15 @@
  * limitations under the License.
  */
 package org.gbif.registry.ws.client;
+import feign.Headers;
 
-import org.springframework.web.bind.annotation.RequestMapping;
-
-@RequestMapping("event/download")
-public interface EventDownloadClient extends BaseDownloadClient {}
+/**
+ * Feign client for event download endpoints.
+ *
+ * Base path: /event/download
+ */
+@Headers("Accept: application/json")
+public interface EventDownloadClient extends BaseDownloadClient {
+  // No additional methods.
+  // In Feign, the base path is applied at client construction time.
+}

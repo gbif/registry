@@ -13,6 +13,10 @@
  */
 package org.gbif.registry.ws.client.collections;
 
+import feign.Headers;
+import feign.Param;
+import feign.QueryMap;
+import feign.RequestLine;
 import org.gbif.api.model.collections.CollectionEntity;
 import org.gbif.api.model.collections.Contact;
 import org.gbif.api.model.collections.MasterSourceMetadata;
@@ -41,49 +45,36 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import org.springframework.cloud.openfeign.SpringQueryMap;
-import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
-
 public interface BaseCollectionEntityClient<
-        T extends CollectionEntity & Taggable & Identifiable & MachineTaggable,
-        R extends ChangeSuggestion<T>>
-    extends CrudClient<T> {
+  T extends CollectionEntity & Taggable & Identifiable & MachineTaggable,
+  R extends ChangeSuggestion<T>>
+  extends CrudClient<T> {
 
-  @RequestMapping(
-      method = RequestMethod.POST,
-      value = "{key}/identifier",
-      consumes = MediaType.APPLICATION_JSON_VALUE)
-  int addIdentifier(@PathVariable("key") UUID key, @RequestBody Identifier identifier);
+  /* ---------- Identifiers ---------- */
 
-  @RequestMapping(method = RequestMethod.DELETE, value = "{key}/identifier/{identifierKey}")
-  void deleteIdentifier(
-      @PathVariable("key") UUID key, @PathVariable("identifierKey") int identifierKey);
+  @RequestLine("POST /{key}/identifier")
+  @Headers("Content-Type: application/json")
+  int addIdentifier(@Param("key") UUID key, Identifier identifier);
 
-  @RequestMapping(
-      method = RequestMethod.GET,
-      value = "{key}/identifier",
-      produces = MediaType.APPLICATION_JSON_VALUE)
-  @ResponseBody
-  List<Identifier> listIdentifiers(@PathVariable("key") UUID key);
+  @RequestLine("DELETE /{key}/identifier/{identifierKey}")
+  void deleteIdentifier(@Param("key") UUID key, @Param("identifierKey") int identifierKey);
 
-  @RequestMapping(
-    method = RequestMethod.PUT,
-    value = "{key}/identifier/{identifierKey}",
-    consumes = MediaType.APPLICATION_JSON_VALUE)
+  @RequestLine("GET /{key}/identifier")
+  @Headers("Accept: application/json")
+  List<Identifier> listIdentifiers(@Param("key") UUID key);
+
+  @RequestLine("PUT /{key}/identifier/{identifierKey}")
+  @Headers("Content-Type: application/json")
   int updateIdentifier(
-    @PathVariable("key") UUID entityKey, @PathVariable("identifierKey") Integer identifierKey, @RequestBody Map<String, Boolean> isPrimaryMap);
+    @Param("key") UUID entityKey,
+    @Param("identifierKey") Integer identifierKey,
+    Map<String, Boolean> isPrimaryMap);
 
-  @RequestMapping(
-      method = RequestMethod.POST,
-      value = "{key}/machineTag",
-      consumes = MediaType.APPLICATION_JSON_VALUE)
-  int addMachineTag(@PathVariable("key") UUID key, @RequestBody MachineTag machineTag);
+  /* ---------- Machine tags ---------- */
+
+  @RequestLine("POST /{key}/machineTag")
+  @Headers("Content-Type: application/json")
+  int addMachineTag(@Param("key") UUID key, MachineTag machineTag);
 
   default int addMachineTag(UUID key, TagName tagName, String value) {
     MachineTag machineTag = MachineTag.newInstance(tagName, value);
@@ -98,34 +89,38 @@ public interface BaseCollectionEntityClient<
     return addMachineTag(key, machineTag);
   }
 
-  @RequestMapping(method = RequestMethod.DELETE, value = "{key}/machineTag/{machineTagKey}")
-  void deleteMachineTag(
-      @PathVariable("key") UUID key, @PathVariable("machineTagKey") int machineTagKey);
+  @RequestLine("DELETE /{key}/machineTag/{machineTagKey}")
+  void deleteMachineTag(@Param("key") UUID key, @Param("machineTagKey") int machineTagKey);
 
-  default void deleteMachineTags(UUID key, TagNamespace tagNamespace) {
-    deleteMachineTags(key, tagNamespace.getNamespace());
-  }
+  @RequestLine("DELETE /{key}/machineTag/{namespace}")
+  void deleteMachineTags(@Param("key") UUID key, @Param("namespace") String namespace);
 
-  @RequestMapping(method = RequestMethod.DELETE, value = "{key}/machineTag/{namespace}")
+  @RequestLine("DELETE /{key}/machineTag/{namespace}/{name}")
   void deleteMachineTags(
-      @PathVariable("key") UUID key, @PathVariable("namespace") String namespace);
+    @Param("key") UUID key,
+    @Param("namespace") String namespace,
+    @Param("name") String name);
+
+  default void deleteMachineTags(UUID key, TagNamespace namespace) {
+    deleteMachineTags(key, namespace.getNamespace());
+  }
 
   default void deleteMachineTags(UUID key, TagName tagName) {
-    deleteMachineTags(key, tagName.getNamespace().getNamespace(), tagName.getName());
+    deleteMachineTags(
+      key,
+      tagName.getNamespace().getNamespace(),
+      tagName.getName());
   }
 
-  @RequestMapping(method = RequestMethod.DELETE, value = "{key}/machineTag/{namespace}/{name}")
-  void deleteMachineTags(
-      @PathVariable("key") UUID key,
-      @PathVariable("namespace") String namespace,
-      @PathVariable("name") String name);
+  @RequestLine("GET /{key}/machineTag")
+  @Headers("Accept: application/json")
+  List<MachineTag> listMachineTags(@Param("key") UUID key);
 
-  @RequestMapping(
-      method = RequestMethod.GET,
-      value = "{key}/machineTag",
-      produces = MediaType.APPLICATION_JSON_VALUE)
-  @ResponseBody
-  List<MachineTag> listMachineTags(@PathVariable("key") UUID key);
+  /* ---------- Tags ---------- */
+
+  @RequestLine("POST /{key}/tag")
+  @Headers("Content-Type: application/json")
+  int addTag(@Param("key") UUID key, Tag tag);
 
   default int addTag(UUID key, String value) {
     Tag tag = new Tag();
@@ -133,175 +128,139 @@ public interface BaseCollectionEntityClient<
     return addTag(key, tag);
   }
 
-  @RequestMapping(
-      method = RequestMethod.POST,
-      value = "{key}/tag",
-      consumes = MediaType.APPLICATION_JSON_VALUE)
-  int addTag(@PathVariable("key") UUID key, @RequestBody Tag tag);
+  @RequestLine("DELETE /{key}/tag/{tagKey}")
+  void deleteTag(@Param("key") UUID key, @Param("tagKey") int tagKey);
 
-  @RequestMapping(method = RequestMethod.DELETE, value = "{key}/tag/{tagKey}")
-  void deleteTag(@PathVariable("key") UUID key, @PathVariable("tagKey") int tagKey);
+  @RequestLine("GET /{key}/tag?owner={owner}")
+  @Headers("Accept: application/json")
+  List<Tag> listTags(@Param("key") UUID key, @Param("owner") String owner);
 
-  @RequestMapping(
-      method = RequestMethod.GET,
-      value = "{key}/tag",
-      produces = MediaType.APPLICATION_JSON_VALUE)
-  @ResponseBody
-  List<Tag> listTags(
-      @PathVariable("key") UUID key, @RequestParam(value = "owner", required = false) String owner);
+  /* ---------- Comments ---------- */
 
-  @RequestMapping(
-      method = RequestMethod.POST,
-      value = "{key}/comment",
-      consumes = MediaType.APPLICATION_JSON_VALUE)
-  int addComment(@PathVariable("key") UUID key, @RequestBody Comment comment);
+  @RequestLine("POST /{key}/comment")
+  @Headers("Content-Type: application/json")
+  int addComment(@Param("key") UUID key, Comment comment);
 
-  @RequestMapping(method = RequestMethod.DELETE, value = "{key}/comment/{commentKey}")
-  void deleteComment(@PathVariable("key") UUID key, @PathVariable("commentKey") int commentKey);
+  @RequestLine("DELETE /{key}/comment/{commentKey}")
+  void deleteComment(@Param("key") UUID key, @Param("commentKey") int commentKey);
 
-  @RequestMapping(
-      method = RequestMethod.GET,
-      value = "{key}/comment",
-      produces = MediaType.APPLICATION_JSON_VALUE)
-  @ResponseBody
-  List<Comment> listComments(@PathVariable("key") UUID key);
+  @RequestLine("GET /{key}/comment")
+  @Headers("Accept: application/json")
+  List<Comment> listComments(@Param("key") UUID key);
 
-  @RequestMapping(
-      method = RequestMethod.POST,
-      value = "{key}/contact",
-      consumes = MediaType.APPLICATION_JSON_VALUE)
-  void addContact(@PathVariable("key") UUID key, @RequestBody UUID personKey);
+  /* ---------- Contacts ---------- */
 
-  @RequestMapping(method = RequestMethod.DELETE, value = "{key}/contact/{personKey}")
-  void removeContact(@PathVariable("key") UUID key, @PathVariable("personKey") UUID personKey);
+  @RequestLine("POST /{key}/contact")
+  @Headers("Content-Type: application/json")
+  void addContact(@Param("key") UUID key, UUID personKey);
 
-  @RequestMapping(
-      method = RequestMethod.POST,
-      value = "{key}/contactPerson",
-      consumes = MediaType.APPLICATION_JSON_VALUE)
-  int addContactPerson(@PathVariable("key") UUID entityKey, @RequestBody Contact contact);
+  @RequestLine("DELETE /{key}/contact/{personKey}")
+  void removeContact(@Param("key") UUID key, @Param("personKey") UUID personKey);
 
-  @RequestMapping(
-      method = RequestMethod.PUT,
-      value = "{key}/contactPerson/{contactKey}",
-      consumes = MediaType.APPLICATION_JSON_VALUE)
+  @RequestLine("POST /{key}/contactPerson")
+  @Headers("Content-Type: application/json")
+  int addContactPerson(@Param("key") UUID entityKey, Contact contact);
+
+  @RequestLine("PUT /{key}/contactPerson/{contactKey}")
+  @Headers("Content-Type: application/json")
   void updateContactPersonResource(
-      @PathVariable("key") UUID entityKey,
-      @PathVariable("contactKey") int contactKey,
-      @RequestBody Contact contact);
+    @Param("key") UUID entityKey,
+    @Param("contactKey") int contactKey,
+    Contact contact);
 
   default void updateContactPerson(UUID entityKey, Contact contact) {
     updateContactPersonResource(entityKey, contact.getKey(), contact);
   }
 
-  @RequestMapping(method = RequestMethod.DELETE, value = "{key}/contactPerson/{contactKey}")
-  void removeContactPerson(
-      @PathVariable("key") UUID entityKey, @PathVariable("contactKey") int contactKey);
+  @RequestLine("DELETE /{key}/contactPerson/{contactKey}")
+  void removeContactPerson(@Param("key") UUID entityKey, @Param("contactKey") int contactKey);
 
-  @RequestMapping(
-      method = RequestMethod.GET,
-      value = "{key}/contactPerson",
-      produces = MediaType.APPLICATION_JSON_VALUE)
-  @ResponseBody
-  List<Contact> listContactPersons(@PathVariable("key") UUID key);
+  @RequestLine("GET /{key}/contactPerson")
+  @Headers("Accept: application/json")
+  List<Contact> listContactPersons(@Param("key") UUID key);
 
-  @RequestMapping(
-      method = RequestMethod.POST,
-      value = "{key}/occurrenceMapping",
-      consumes = MediaType.APPLICATION_JSON_VALUE)
-  int addOccurrenceMapping(
-      @PathVariable("key") UUID key, @RequestBody OccurrenceMapping occurrenceMapping);
+  /* ---------- Occurrence mappings ---------- */
 
-  @RequestMapping(
-      method = RequestMethod.DELETE,
-      value = "{key}/occurrenceMapping/{occurrenceMappingKey}")
+  @RequestLine("POST /{key}/occurrenceMapping")
+  @Headers("Content-Type: application/json")
+  int addOccurrenceMapping(@Param("key") UUID key, OccurrenceMapping occurrenceMapping);
+
+  @RequestLine("DELETE /{key}/occurrenceMapping/{occurrenceMappingKey}")
   void deleteOccurrenceMapping(
-      @PathVariable("key") UUID key,
-      @PathVariable("occurrenceMappingKey") int occurrenceMappingKey);
+    @Param("key") UUID key,
+    @Param("occurrenceMappingKey") int occurrenceMappingKey);
 
-  @RequestMapping(
-      method = RequestMethod.GET,
-      value = "{key}/occurrenceMapping",
-      produces = MediaType.APPLICATION_JSON_VALUE)
-  @ResponseBody
-  List<OccurrenceMapping> listOccurrenceMappings(@PathVariable("key") UUID key);
+  @RequestLine("GET /{key}/occurrenceMapping")
+  @Headers("Accept: application/json")
+  List<OccurrenceMapping> listOccurrenceMappings(@Param("key") UUID key);
 
-  @RequestMapping(
-      method = RequestMethod.GET,
-      value = "possibleDuplicates",
-      produces = MediaType.APPLICATION_JSON_VALUE)
-  @ResponseBody
-  DuplicatesResult findPossibleDuplicates(@SpringQueryMap DuplicatesRequest request);
+  /* ---------- Duplicates ---------- */
 
-  @RequestMapping(
-      method = RequestMethod.POST,
-      value = "{key}/merge",
-      consumes = MediaType.APPLICATION_JSON_VALUE)
-  void merge(@PathVariable("key") UUID entityKey, @RequestBody MergeParams params);
+  @RequestLine("GET /possibleDuplicates")
+  @Headers("Accept: application/json")
+  DuplicatesResult findPossibleDuplicates(@QueryMap DuplicatesRequest request);
 
-  @RequestMapping(
-      method = RequestMethod.POST,
-      value = "changeSuggestion",
-      consumes = MediaType.APPLICATION_JSON_VALUE)
-  int createChangeSuggestion(@RequestBody R createSuggestion);
+  /* ---------- Merge ---------- */
 
-  @RequestMapping(
-      method = RequestMethod.PUT,
-      value = "changeSuggestion/{key}",
-      consumes = MediaType.APPLICATION_JSON_VALUE)
-  void updateChangeSuggestion(@PathVariable("key") int key, @RequestBody R suggestion);
+  @RequestLine("POST /{key}/merge")
+  @Headers("Content-Type: application/json")
+  void merge(@Param("key") UUID entityKey, MergeParams params);
 
-  @RequestMapping(
-      method = RequestMethod.GET,
-      value = "changeSuggestion/{key}",
-      produces = MediaType.APPLICATION_JSON_VALUE)
-  @ResponseBody
-  R getChangeSuggestion(@PathVariable("key") int key);
+  /* ---------- Change suggestions ---------- */
 
-  @RequestMapping(
-      method = RequestMethod.GET,
-      value = "changeSuggestion",
-      produces = MediaType.APPLICATION_JSON_VALUE)
-  @ResponseBody
+  @RequestLine("POST /changeSuggestion")
+  @Headers("Content-Type: application/json")
+  int createChangeSuggestion(R createSuggestion);
+
+  @RequestLine("PUT /changeSuggestion/{key}")
+  @Headers("Content-Type: application/json")
+  void updateChangeSuggestion(@Param("key") int key, R suggestion);
+
+  @RequestLine("GET /changeSuggestion/{key}")
+  @Headers("Accept: application/json")
+  R getChangeSuggestion(@Param("key") int key);
+
+  @RequestLine(
+    "GET /changeSuggestion"
+      + "?status={status}"
+      + "&type={type}"
+      + "&proposerEmail={proposerEmail}"
+      + "&entityKey={entityKey}"
+      + "&ihIdentifier={ihIdentifier}"
+      + "&country={country}")
+  @Headers("Accept: application/json")
   PagingResponse<R> listChangeSuggestion(
-      @RequestParam(value = "status", required = false) Status status,
-      @RequestParam(value = "type", required = false) Type type,
-      @RequestParam(value = "proposerEmail", required = false) String proposerEmail,
-      @RequestParam(value = "entityKey", required = false) UUID entityKey,
-      @RequestParam(value = "ihIdentifier", required = false) String ihIdentifier,
-      @RequestParam(value = "country", required = false) String country,
-      @SpringQueryMap Pageable page);
+    @Param("status") Status status,
+    @Param("type") Type type,
+    @Param("proposerEmail") String proposerEmail,
+    @Param("entityKey") UUID entityKey,
+    @Param("ihIdentifier") String ihIdentifier,
+    @Param("country") String country,
+    @QueryMap Pageable page);
 
-  @RequestMapping(method = RequestMethod.PUT, value = "changeSuggestion/{key}/discard")
-  void discardChangeSuggestion(@PathVariable("key") int key);
+  @RequestLine("PUT /changeSuggestion/{key}/discard")
+  void discardChangeSuggestion(@Param("key") int key);
 
-  @RequestMapping(
-      method = RequestMethod.PUT,
-      value = "changeSuggestion/{key}/apply",
-      produces = MediaType.APPLICATION_JSON_VALUE)
-  @ResponseBody
-  ApplySuggestionResult applyChangeSuggestion(@PathVariable("key") int key);
+  @RequestLine("PUT /changeSuggestion/{key}/apply")
+  @Headers("Accept: application/json")
+  ApplySuggestionResult applyChangeSuggestion(@Param("key") int key);
 
-  @RequestMapping(
-      method = RequestMethod.GET,
-      value = "sourceableFields",
-      produces = MediaType.APPLICATION_JSON_VALUE)
+  /* ---------- Source metadata ---------- */
+
+  @RequestLine("GET /sourceableFields")
+  @Headers("Accept: application/json")
   List<SourceableField> getSourceableFields();
 
-  @RequestMapping(
-      method = RequestMethod.POST,
-      value = "{key}/masterSourceMetadata",
-      consumes = MediaType.APPLICATION_JSON_VALUE)
+  @RequestLine("POST /{key}/masterSourceMetadata")
+  @Headers("Content-Type: application/json")
   int addMasterSourceMetadata(
-      @PathVariable("key") UUID entityKey, @RequestBody MasterSourceMetadata masterSourceMetadata);
+    @Param("key") UUID entityKey,
+    MasterSourceMetadata masterSourceMetadata);
 
-  @RequestMapping(
-      method = RequestMethod.GET,
-      value = "{key}/masterSourceMetadata",
-      produces = MediaType.APPLICATION_JSON_VALUE)
-  @ResponseBody
-  MasterSourceMetadata getMasterSourceMetadata(@PathVariable("key") UUID entityKey);
+  @RequestLine("GET /{key}/masterSourceMetadata")
+  @Headers("Accept: application/json")
+  MasterSourceMetadata getMasterSourceMetadata(@Param("key") UUID entityKey);
 
-  @RequestMapping(method = RequestMethod.DELETE, value = "{key}/masterSourceMetadata")
-  void deleteMasterSourceMetadata(@PathVariable("key") UUID entityKey);
+  @RequestLine("DELETE /{key}/masterSourceMetadata")
+  void deleteMasterSourceMetadata(@Param("key") UUID entityKey);
 }

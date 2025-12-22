@@ -12,6 +12,11 @@
  * limitations under the License.
  */
 package org.gbif.registry.ws.client.collections;
+import feign.Headers;
+import feign.Param;
+import feign.QueryMap;
+import feign.RequestLine;
+import lombok.AllArgsConstructor;
 
 import org.gbif.api.model.collections.request.CollectionDescriptorsSearchRequest;
 import org.gbif.api.model.collections.request.InstitutionFacetedSearchRequest;
@@ -27,60 +32,48 @@ import org.gbif.registry.domain.collections.TypeParam;
 import java.util.List;
 import java.util.Set;
 
-import org.springframework.cloud.openfeign.SpringQueryMap;
-import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
 
-import lombok.AllArgsConstructor;
-
-@RequestMapping("grscicoll")
 public interface CollectionsSearchClient {
 
-  @RequestMapping(
-      value = "search",
-      method = RequestMethod.GET,
-      produces = MediaType.APPLICATION_JSON_VALUE)
-  List<CollectionsFullSearchResponse> searchCrossEntities(
-      @SpringQueryMap SearchRequest searchRequest);
+  @RequestLine("GET /grscicoll/search")
+  @Headers("Accept: application/json")
+  List<CollectionsFullSearchResponse> searchCrossEntities(@QueryMap SearchRequest searchRequest);
 
-  @RequestMapping(
-      value = "institution/search",
-      method = RequestMethod.GET,
-      produces = MediaType.APPLICATION_JSON_VALUE)
+  @RequestLine("GET /grscicoll/institution/search")
+  @Headers("Accept: application/json")
   FacetedSearchResponse<InstitutionSearchResponse, InstitutionFacetParameter> searchInstitutions(
-      @SpringQueryMap InstitutionFacetedSearchRequest searchRequest,
-      @RequestParam(value = "facet", required = false) Set<InstitutionFacetParameter> facets);
+    @QueryMap InstitutionFacetedSearchRequest searchRequest,
+    @Param("facet") Set<InstitutionFacetParameter> facets
+  );
 
-  default FacetedSearchResponse<InstitutionSearchResponse, InstitutionFacetParameter>
-      searchInstitutions(InstitutionFacetedSearchRequest searchRequest) {
+  default FacetedSearchResponse<InstitutionSearchResponse, InstitutionFacetParameter> searchInstitutions(
+    InstitutionFacetedSearchRequest searchRequest
+  ) {
     return searchInstitutions(searchRequest, searchRequest.getFacets());
   }
 
-  @RequestMapping(
-      value = "collection/search",
-      method = RequestMethod.GET,
-      produces = MediaType.APPLICATION_JSON_VALUE)
+  @RequestLine("GET /grscicoll/collection/search")
+  @Headers("Accept: application/json")
   FacetedSearchResponse<CollectionSearchResponse, CollectionFacetParameter> searchCollections(
-      @SpringQueryMap CollectionDescriptorsSearchRequest searchRequest,
-      @RequestParam(value = "facet", required = false) Set<CollectionFacetParameter> facets);
+    @QueryMap CollectionDescriptorsSearchRequest searchRequest,
+    @Param("facet") Set<CollectionFacetParameter> facets
+  );
 
-  default FacetedSearchResponse<CollectionSearchResponse, CollectionFacetParameter>
-      searchCollections(@SpringQueryMap CollectionDescriptorsSearchRequest searchRequest) {
+  default FacetedSearchResponse<CollectionSearchResponse, CollectionFacetParameter> searchCollections(
+    CollectionDescriptorsSearchRequest searchRequest
+  ) {
     return searchCollections(searchRequest, searchRequest.getFacets());
   }
 
   default List<CollectionsFullSearchResponse> searchCrossEntities(
-      @RequestParam(value = "q", required = false) String query,
-      @RequestParam(value = "hl", defaultValue = "false") boolean highlight,
-      @RequestParam(value = "entityType", required = false) TypeParam type,
-      @RequestParam(value = "displayOnNHCPortal", required = false)
-          List<Boolean> displayOnNHCPortal,
-      @SpringQueryMap List<Country> country,
-      @RequestParam(value = "limit", defaultValue = "20") int limit) {
-    return searchCrossEntities(
-        SearchRequest.of(query, highlight, type, displayOnNHCPortal, country, limit));
+    String query,
+    boolean highlight,
+    TypeParam type,
+    List<Boolean> displayOnNHCPortal,
+    List<Country> country,
+    int limit
+  ) {
+    return searchCrossEntities(SearchRequest.of(query, highlight, type, displayOnNHCPortal, country, limit));
   }
 
   @AllArgsConstructor(staticName = "of")
@@ -93,3 +86,4 @@ public interface CollectionsSearchClient {
     int limit;
   }
 }
+

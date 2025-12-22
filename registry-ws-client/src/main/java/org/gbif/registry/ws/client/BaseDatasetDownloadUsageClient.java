@@ -17,28 +17,20 @@ import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.DatasetOccurrenceDownloadUsage;
 import org.gbif.api.service.registry.DatasetOccurrenceDownloadUsageService;
+import feign.Headers;
+import feign.Param;
+import feign.QueryMap;
+import feign.RequestLine;
 
 import java.util.UUID;
 
-import org.springframework.cloud.openfeign.SpringQueryMap;
-import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
-
 public interface BaseDatasetDownloadUsageClient extends DatasetOccurrenceDownloadUsageService {
 
-  @RequestMapping(
-      method = RequestMethod.GET,
-      value = "{datasetKey}",
-      produces = MediaType.APPLICATION_JSON_VALUE)
-  @ResponseBody
   @Override
+  @RequestLine("GET /{datasetKey}?showDownloadDetails={showDownloadDetails}")
+  @Headers("Accept: application/json")
   PagingResponse<DatasetOccurrenceDownloadUsage> listByDataset(
-      @PathVariable("datasetKey") UUID datasetKey,
-      @RequestParam(value = "showDownloadDetails", required = false, defaultValue = "true")
-          Boolean showDownloadDetails,
-      @SpringQueryMap Pageable pageable);
+    @Param("datasetKey") UUID datasetKey,
+    @Param("showDownloadDetails") Boolean showDownloadDetails,
+    @QueryMap Pageable pageable);
 }

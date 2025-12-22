@@ -13,27 +13,27 @@
  */
 package org.gbif.registry.ws.client;
 
+import feign.Headers;
+import feign.Param;
+import feign.RequestLine;
+
 import org.gbif.api.model.common.GbifUser;
 import org.gbif.api.service.common.IdentityAccessService;
 
-import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.ResponseBody;
-
+/**
+ * Feign client for identity and access endpoints.
+ *
+ * Base path must be supplied when creating the client, e.g.:
+ *   https://api.gbif.org/v1/
+ */
+@Headers("Accept: application/json")
 public interface IdentityAccessClient extends IdentityAccessService {
 
-  @RequestMapping(
-      method = RequestMethod.GET,
-      value = "admin/user/{username}",
-      produces = MediaType.APPLICATION_JSON_VALUE)
-  @ResponseBody
-  @Override
-  GbifUser get(@PathVariable("username") String username);
+  @RequestLine("GET admin/user/{username}")
+  GbifUser get(@Param("username") String username);
 
   @Override
   default GbifUser authenticate(String username, String password) {
-    throw new UnsupportedOperationException("Not implemented in Ws Client");
+    throw new UnsupportedOperationException("Not implemented in WS client");
   }
 }

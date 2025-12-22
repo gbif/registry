@@ -12,7 +12,10 @@
  * limitations under the License.
  */
 package org.gbif.registry.ws.client.collections;
-
+import feign.Headers;
+import feign.Param;
+import feign.QueryMap;
+import feign.RequestLine;
 import org.gbif.api.model.collections.Institution;
 import org.gbif.api.model.collections.InstitutionImportParams;
 import org.gbif.api.model.collections.latimercore.OrganisationalUnit;
@@ -21,86 +24,50 @@ import org.gbif.api.model.collections.request.InstitutionSearchRequest;
 import org.gbif.api.model.collections.suggestions.InstitutionChangeSuggestion;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.search.collections.KeyCodeNameResult;
+import org.geojson.FeatureCollection;
 
 import java.util.List;
 import java.util.UUID;
 
-import org.geojson.FeatureCollection;
-import org.springframework.cloud.openfeign.SpringQueryMap;
-import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.*;
+public interface InstitutionClient extends BaseCollectionEntityClient<Institution, InstitutionChangeSuggestion> {
 
-@RequestMapping("grscicoll/institution")
-public interface InstitutionClient
-    extends BaseCollectionEntityClient<Institution, InstitutionChangeSuggestion> {
+  @RequestLine("GET /grscicoll/institution")
+  @Headers("Accept: application/json")
+  PagingResponse<Institution> list(@QueryMap InstitutionSearchRequest searchRequest);
 
-  @RequestMapping(method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
-  @ResponseBody
-  PagingResponse<Institution> list(@SpringQueryMap InstitutionSearchRequest searchRequest);
+  @RequestLine("GET /grscicoll/institution/latimerCore")
+  @Headers("Accept: application/json")
+  PagingResponse<OrganisationalUnit> listAsLatimerCore(@QueryMap InstitutionSearchRequest searchRequest);
 
-  @RequestMapping(
-      method = RequestMethod.GET,
-      value = "latimerCore",
-      produces = MediaType.APPLICATION_JSON_VALUE)
-  @ResponseBody
-  PagingResponse<OrganisationalUnit> listAsLatimerCore(
-      @SpringQueryMap InstitutionSearchRequest searchRequest);
+  @RequestLine("GET /grscicoll/institution/geojson")
+  @Headers("Accept: application/json")
+  FeatureCollection listAsGeoJson(@QueryMap InstitutionSearchRequest searchRequest);
 
-  @RequestMapping(
-      method = RequestMethod.GET,
-      value = "geojson",
-      produces = MediaType.APPLICATION_JSON_VALUE)
-  @ResponseBody
-  FeatureCollection listAsGeoJson(@SpringQueryMap InstitutionSearchRequest searchRequest);
+  @RequestLine("GET /grscicoll/institution/latimerCore/{key}")
+  @Headers("Accept: application/json")
+  OrganisationalUnit getAsLatimerCore(@Param("key") UUID key);
 
-  @RequestMapping(
-      method = RequestMethod.GET,
-      value = "latimerCore/{key}",
-      produces = MediaType.APPLICATION_JSON_VALUE)
-  @ResponseBody
-  OrganisationalUnit getAsLatimerCore(@PathVariable("key") UUID key);
+  @RequestLine("POST /grscicoll/institution/latimerCore")
+  @Headers("Content-Type: application/json")
+  UUID createFromLatimerCore(OrganisationalUnit organisationalUnit);
 
-  @RequestMapping(
-      method = RequestMethod.POST,
-      value = "latimerCore",
-      consumes = MediaType.APPLICATION_JSON_VALUE)
-  UUID createFromLatimerCore(@RequestBody OrganisationalUnit organisationalUnit);
+  @RequestLine("PUT /grscicoll/institution/latimerCore/{key}")
+  @Headers("Content-Type: application/json")
+  void updateFromLatimerCore(@Param("key") UUID key, OrganisationalUnit organisationalUnit);
 
-  @RequestMapping(
-      method = RequestMethod.PUT,
-      value = "latimerCore/{key}",
-      consumes = MediaType.APPLICATION_JSON_VALUE)
-  void updateFromLatimerCore(
-      @PathVariable("key") UUID key, @RequestBody OrganisationalUnit organisationalUnit);
+  @RequestLine("GET /grscicoll/institution/deleted")
+  @Headers("Accept: application/json")
+  PagingResponse<Institution> listDeleted(@QueryMap InstitutionSearchRequest searchRequest);
 
-  @RequestMapping(
-      method = RequestMethod.GET,
-      value = "deleted",
-      produces = MediaType.APPLICATION_JSON_VALUE)
-  @ResponseBody
-  PagingResponse<Institution> listDeleted(@SpringQueryMap InstitutionSearchRequest searchRequest);
+  @RequestLine("GET /grscicoll/institution/suggest?q={q}")
+  @Headers("Accept: application/json")
+  List<KeyCodeNameResult> suggest(@Param("q") String q);
 
-  @RequestMapping(
-      method = RequestMethod.GET,
-      value = "suggest",
-      produces = MediaType.APPLICATION_JSON_VALUE)
-  @ResponseBody
-  List<KeyCodeNameResult> suggest(@RequestParam(value = "q", required = false) String q);
+  @RequestLine("POST /grscicoll/institution/{key}/convertToCollection")
+  @Headers({"Content-Type: application/json", "Accept: application/json"})
+  UUID convertToCollection(@Param("key") UUID entityKey, ConvertToCollectionParams params);
 
-  @RequestMapping(
-      method = RequestMethod.POST,
-      value = "{key}/convertToCollection",
-      produces = MediaType.APPLICATION_JSON_VALUE,
-      consumes = MediaType.APPLICATION_JSON_VALUE)
-  @ResponseBody
-  UUID convertToCollection(
-      @PathVariable("key") UUID entityKey, @RequestBody ConvertToCollectionParams params);
-
-  @RequestMapping(
-      method = RequestMethod.POST,
-      value = "import",
-      produces = MediaType.APPLICATION_JSON_VALUE,
-      consumes = MediaType.APPLICATION_JSON_VALUE)
-  @ResponseBody
-  UUID createFromOrganization(@RequestBody InstitutionImportParams importParams);
+  @RequestLine("POST /grscicoll/institution/import")
+  @Headers({"Content-Type: application/json", "Accept: application/json"})
+  UUID createFromOrganization(InstitutionImportParams importParams);
 }
