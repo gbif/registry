@@ -53,20 +53,6 @@ public interface CollectionsSearchClient {
     @Param("facet") Set<CollectionFacetParameter> facets
   );
 
-  @RequestLine("GET /grscicoll/search")
-  @Headers("Accept: application/json")
-  default List<CollectionsFullSearchResponse> searchCrossEntities(
-    @Param(value = "q") String query,
-    @Param(value = "hl") boolean highlight,
-    @Param(value = "entityType") TypeParam type,
-    @Param(value = "displayOnNHCPortal")
-    List<Boolean> displayOnNHCPortal,
-    @QueryMap List<Country> country,
-    @Param(value = "limit") int limit
-  ) {
-    return searchCrossEntities(SearchRequest.of(query, highlight, type, displayOnNHCPortal, country, limit));
-  }
-
   @AllArgsConstructor(staticName = "of")
   class SearchRequest {
     String q;

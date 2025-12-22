@@ -82,7 +82,7 @@ public class CollectionsSearchResourceTest extends BaseResourceIT {
 
     List<CollectionsFullSearchResponse> responseReturned =
         collectionsSearchClient.searchCrossEntities(
-            q, hl, null, null, Collections.singletonList(Country.SPAIN), limit);
+          CollectionsSearchClient.SearchRequest.of(q, hl, null, null, Collections.singletonList(Country.SPAIN), limit));
     assertEquals(1, responseReturned.size());
     assertEquals(response, responseReturned.get(0));
   }
