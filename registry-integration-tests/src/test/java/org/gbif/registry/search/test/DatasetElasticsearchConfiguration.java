@@ -56,9 +56,9 @@ public class DatasetElasticsearchConfiguration {
   public EsClient.EsClientConfiguration occurrenceEsClientConfiguration(
       @Qualifier("elasticsearchTestContainerConfiguration") ElasticsearchTestContainerConfiguration elasticsearchTestContainer) {
     EsClient.EsClientConfiguration esClientConfiguration = new EsClient.EsClientConfiguration();
-    esClientConfiguration.setConnectionTimeout(6000);
-    esClientConfiguration.setConnectionRequestTimeout(6000);
-    esClientConfiguration.setSocketTimeout(6000);
+    esClientConfiguration.setConnectionTimeOut(6000);
+    esClientConfiguration.setConnectionRequestTimeOut(6000);
+    esClientConfiguration.setSocketTimeOut(6000);
     // Use testcontainer address instead of production config
     esClientConfiguration.setHosts(elasticsearchTestContainer.getServerAddress());
     return esClientConfiguration;
