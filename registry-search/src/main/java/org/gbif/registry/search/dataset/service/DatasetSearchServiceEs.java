@@ -67,10 +67,12 @@ public class DatasetSearchServiceEs implements DatasetSearchService {
     try {
       SearchRequest searchRequest =
           esSearchRequestBuilder.buildSearchRequest(datasetSearchRequest, true, index);
+      log.debug("Search request: {}", searchRequest);
       co.elastic.clients.elasticsearch.core.SearchResponse<ObjectNode> response =
           elasticsearchClient.search(searchRequest, ObjectNode.class);
       return esResponseParser.buildSearchResponse(response, datasetSearchRequest);
-    } catch (IOException ex) {
+    } catch (Exception ex) {
+      log.error("Error while searching datasets", ex);
       throw new RuntimeException(ex);
     }
   }
@@ -94,12 +96,13 @@ public class DatasetSearchServiceEs implements DatasetSearchService {
 
       SearchRequest searchRequest =
           esSearchRequestBuilder.buildAutocompleteQuery(modifiedRequest, DatasetSearchParameter.DATASET_TITLE, index);
+      log.debug("Search suggest request: {}", searchRequest);
       co.elastic.clients.elasticsearch.core.SearchResponse<ObjectNode> response =
           elasticsearchClient.search(searchRequest, ObjectNode.class);
       org.gbif.api.model.common.search.SearchResponse<DatasetSuggestResult, org.gbif.api.model.registry.search.DatasetSearchParameter> autocompleteResponse =
           esResponseParser.buildSearchAutocompleteResponse(response, modifiedRequest);
       return autocompleteResponse.getResults();
-    } catch (IOException ex) {
+    } catch (Exception ex) {
       log.error("Error executing the search operation", ex);
       throw new RuntimeException(ex);
     }
