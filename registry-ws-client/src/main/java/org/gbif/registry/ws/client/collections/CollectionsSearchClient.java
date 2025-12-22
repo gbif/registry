@@ -59,12 +59,16 @@ public interface CollectionsSearchClient {
     @Param("facet") Set<CollectionFacetParameter> facets
   );
 
+  @RequestLine("GET /grscicoll/collection/search")
+  @Headers("Accept: application/json")
   default FacetedSearchResponse<CollectionSearchResponse, CollectionFacetParameter> searchCollections(
     @QueryMap CollectionDescriptorsSearchRequest searchRequest
   ) {
     return searchCollections(searchRequest, searchRequest.getFacets());
   }
 
+  @RequestLine("GET /grscicoll/search")
+  @Headers("Accept: application/json")
   default List<CollectionsFullSearchResponse> searchCrossEntities(
     @Param(value = "q") String query,
     @Param(value = "hl") boolean highlight,
