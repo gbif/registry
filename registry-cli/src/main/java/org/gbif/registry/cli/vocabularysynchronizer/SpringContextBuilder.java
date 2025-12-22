@@ -70,10 +70,10 @@ public class SpringContextBuilder {
       ElasticsearchConfig elasticsearchConfig) {
     EsClient.EsClientConfiguration esClientConfiguration = new EsClient.EsClientConfiguration();
     esClientConfiguration.setHosts(elasticsearchConfig.getHosts());
-    esClientConfiguration.setConnectionRequestTimeout(
+    esClientConfiguration.setConnectionRequestTimeOut(
         elasticsearchConfig.getConnectionRequestTimeOut());
-    esClientConfiguration.setSocketTimeout(elasticsearchConfig.getSocketTimeOut());
-    esClientConfiguration.setConnectionTimeout(elasticsearchConfig.getConnectionTimeOut());
+    esClientConfiguration.setSocketTimeOut(elasticsearchConfig.getSocketTimeOut());
+    esClientConfiguration.setConnectionTimeOut(elasticsearchConfig.getConnectionTimeOut());
     return esClientConfiguration;
   }
 
