@@ -46,26 +46,12 @@ public interface CollectionsSearchClient {
     @Param("facet") Set<InstitutionFacetParameter> facets
   );
 
-  default FacetedSearchResponse<InstitutionSearchResponse, InstitutionFacetParameter> searchInstitutions(
-    InstitutionFacetedSearchRequest searchRequest
-  ) {
-    return searchInstitutions(searchRequest, searchRequest.getFacets());
-  }
-
   @RequestLine("GET /grscicoll/collection/search")
   @Headers("Accept: application/json")
   FacetedSearchResponse<CollectionSearchResponse, CollectionFacetParameter> searchCollections(
     @QueryMap CollectionDescriptorsSearchRequest searchRequest,
     @Param("facet") Set<CollectionFacetParameter> facets
   );
-
-  @RequestLine("GET /grscicoll/collection/search")
-  @Headers("Accept: application/json")
-  default FacetedSearchResponse<CollectionSearchResponse, CollectionFacetParameter> searchCollections(
-    @QueryMap CollectionDescriptorsSearchRequest searchRequest
-  ) {
-    return searchCollections(searchRequest, searchRequest.getFacets());
-  }
 
   @RequestLine("GET /grscicoll/search")
   @Headers("Accept: application/json")

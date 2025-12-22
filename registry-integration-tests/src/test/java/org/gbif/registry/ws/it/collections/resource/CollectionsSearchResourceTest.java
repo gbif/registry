@@ -102,7 +102,7 @@ public class CollectionsSearchResourceTest extends BaseResourceIT {
 
     FacetedSearchResponse<InstitutionSearchResponse, InstitutionFacetParameter> responseReturned =
         collectionsSearchClient.searchInstitutions(
-            InstitutionFacetedSearchRequest.builder().build());
+            InstitutionFacetedSearchRequest.builder().build(), null);
     assertEquals(1, responseReturned.getResults().size());
     assertEquals(response, responseReturned.getResults().get(0));
   }
@@ -122,7 +122,7 @@ public class CollectionsSearchResourceTest extends BaseResourceIT {
 
     FacetedSearchResponse<CollectionSearchResponse, CollectionFacetParameter> responseReturned =
         collectionsSearchClient.searchCollections(
-            CollectionDescriptorsSearchRequest.builder().build());
+            CollectionDescriptorsSearchRequest.builder().build(), null);
     assertEquals(1, responseReturned.getResults().size());
     assertEquals(response, responseReturned.getResults().get(0));
   }
@@ -155,7 +155,7 @@ public class CollectionsSearchResourceTest extends BaseResourceIT {
     when(collectionsSearchService.searchInstitutions(searchRequest)).thenReturn(searchResponse);
 
     FacetedSearchResponse<InstitutionSearchResponse, InstitutionFacetParameter> responseReturned =
-        collectionsSearchClient.searchInstitutions(searchRequest);
+        collectionsSearchClient.searchInstitutions(searchRequest, null);
     assertEquals(1, responseReturned.getResults().size());
     assertEquals(response, responseReturned.getResults().get(0));
     assertEquals(1, responseReturned.getFacets().size());
@@ -190,7 +190,7 @@ public class CollectionsSearchResourceTest extends BaseResourceIT {
     when(collectionsSearchService.searchCollections(searchRequest)).thenReturn(searchResponse);
 
     FacetedSearchResponse<CollectionSearchResponse, CollectionFacetParameter> responseReturned =
-        collectionsSearchClient.searchCollections(searchRequest);
+        collectionsSearchClient.searchCollections(searchRequest, null);
     assertEquals(1, responseReturned.getResults().size());
     assertEquals(response, responseReturned.getResults().get(0));
     assertEquals(1, responseReturned.getFacets().size());
