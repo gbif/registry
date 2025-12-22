@@ -59,9 +59,9 @@ public class EsClient implements Closeable {
   @Data
   public static class EsClientConfiguration {
     private String hosts;
-    private int connectionTimeout;
-    private int socketTimeout;
-    private int connectionRequestTimeout;
+    private int connectionTimeOut;
+    private int socketTimeOut;
+    private int connectionRequestTimeOut;
   }
 
   private final ElasticsearchClient elasticsearchClient;
@@ -209,10 +209,10 @@ public class EsClient implements Closeable {
         .setRequestConfigCallback(
             requestConfigBuilder ->
                 requestConfigBuilder
-                            .setConnectTimeout(esClientConfiguration.getConnectionTimeout())
-        .setSocketTimeout(esClientConfiguration.getSocketTimeout())
+                            .setConnectTimeout(esClientConfiguration.getConnectionTimeOut())
+        .setSocketTimeout(esClientConfiguration.getSocketTimeOut())
         .setConnectionRequestTimeout(
-            esClientConfiguration.getConnectionRequestTimeout()))
+            esClientConfiguration.getConnectionRequestTimeOut()))
         .build();
   }
 
