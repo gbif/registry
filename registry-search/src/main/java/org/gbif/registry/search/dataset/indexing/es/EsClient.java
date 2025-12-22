@@ -29,6 +29,10 @@ import java.util.Set;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import java.util.concurrent.TimeUnit;
+
+import lombok.extern.slf4j.Slf4j;
+
 import org.apache.http.HttpHost;
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch.ElasticsearchAsyncClient;
@@ -54,6 +58,7 @@ import lombok.Data;
 
 /** Generic ElasticSearch wrapper client to encapsulate indexing and admin operations. */
 @Component
+@Slf4j
 public class EsClient implements Closeable {
 
   @Data
@@ -190,7 +195,6 @@ public class EsClient implements Closeable {
     return elasticsearchClient.bulk(bulkRequest);
   }
 
-  /** Creates RestClient from the provided configuration. */
   public static RestClient provideRestClient(EsClientConfiguration esClientConfiguration) {
     String[] hostsUrl = esClientConfiguration.hosts.split(",");
     HttpHost[] hosts = new HttpHost[hostsUrl.length];
@@ -205,15 +209,33 @@ public class EsClient implements Closeable {
       }
     }
 
+    // Ensure timeouts are reasonable (not null, not too high)
+    int connectTimeout = Math.min(
+      esClientConfiguration.getConnectionTimeout(), 10000); // Max 10s
+    int socketTimeout = Math. min(
+      esClientConfiguration. getSocketTimeout(), 60000); // Max 60s
+    int connectionRequestTimeout = Math.min(
+      esClientConfiguration.getConnectionRequestTimeout(), 10000); // Max 10s
+
+    log.info("Elasticsearch timeout configuration: " +
+        "connectTimeout={}ms, socketTimeout={}ms, connectionRequestTimeout={}ms",
+      connectTimeout, socketTimeout, connectionRequestTimeout);
+
     return RestClient.builder(hosts)
-        .setRequestConfigCallback(
-            requestConfigBuilder ->
-                requestConfigBuilder
-                            .setConnectTimeout(esClientConfiguration.getConnectionTimeout())
-        .setSocketTimeout(esClientConfiguration.getSocketTimeout())
-        .setConnectionRequestTimeout(
-            esClientConfiguration.getConnectionRequestTimeout()))
-        .build();
+      .setRequestConfigCallback(
+        requestConfigBuilder ->
+          requestConfigBuilder
+            .setConnectTimeout(connectTimeout)
+            .setSocketTimeout(socketTimeout)
+            .setConnectionRequestTimeout(connectionRequestTimeout))
+      .setHttpClientConfigCallback(
+        httpClientBuilder ->
+          httpClientBuilder
+            .setMaxConnTotal(100)
+            .setMaxConnPerRoute(50)
+            .setConnectionTimeToLive(300, TimeUnit.SECONDS)
+            .setKeepAliveStrategy((response, context) -> 60000)) // 60s keep-alive
+      .build();
   }
 
   /** Creates ElasticSearch client using default connection settings. */

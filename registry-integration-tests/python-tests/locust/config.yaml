@@ -1,0 +1,4 @@
+gbif:
+  username: your_registry_username
+  password: your_registry_password
+  dataset_key: b8564d06-08e9-45b2-be43-b61253219afa

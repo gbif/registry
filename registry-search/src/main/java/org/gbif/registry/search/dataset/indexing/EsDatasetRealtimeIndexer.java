@@ -88,7 +88,7 @@ public class EsDatasetRealtimeIndexer implements DatasetRealtimeIndexer {
         .thenAccept(indexResponse -> {
           log.info("Dataset indexed {}, result {}", dataset.getKey(), indexResponse);
           // Refresh index to make indexed data searchable immediately
-          refreshIndex();
+          //refreshIndex();
           pendingUpdates.decrementAndGet();
         })
         .exceptionally(ex -> {
