@@ -62,6 +62,8 @@ public class EsClient implements Closeable {
     private int connectionTimeOut;
     private int socketTimeOut;
     private int connectionRequestTimeOut;
+    private int httpMaxConnTotal;
+    private int httpMaxConnPerRoute;
   }
 
   private final ElasticsearchClient elasticsearchClient;
@@ -213,6 +215,10 @@ public class EsClient implements Closeable {
         .setSocketTimeout(esClientConfiguration.getSocketTimeOut())
         .setConnectionRequestTimeout(
             esClientConfiguration.getConnectionRequestTimeOut()))
+        .setHttpClientConfigCallback(httpClientBuilder ->
+          httpClientBuilder
+            .setMaxConnTotal(esClientConfiguration.getHttpMaxConnTotal())
+            .setMaxConnPerRoute(esClientConfiguration.getHttpMaxConnPerRoute()))
         .build();
   }
 
