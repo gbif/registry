@@ -60,18 +60,19 @@ public interface CollectionsSearchClient {
   );
 
   default FacetedSearchResponse<CollectionSearchResponse, CollectionFacetParameter> searchCollections(
-    CollectionDescriptorsSearchRequest searchRequest
+    @QueryMap CollectionDescriptorsSearchRequest searchRequest
   ) {
     return searchCollections(searchRequest, searchRequest.getFacets());
   }
 
   default List<CollectionsFullSearchResponse> searchCrossEntities(
-    String query,
-    boolean highlight,
-    TypeParam type,
+    @Param(value = "q") String query,
+    @Param(value = "hl") boolean highlight,
+    @Param(value = "entityType") TypeParam type,
+    @Param(value = "displayOnNHCPortal")
     List<Boolean> displayOnNHCPortal,
-    List<Country> country,
-    int limit
+    @QueryMap List<Country> country,
+    @Param(value = "limit") int limit
   ) {
     return searchCrossEntities(SearchRequest.of(query, highlight, type, displayOnNHCPortal, country, limit));
   }
