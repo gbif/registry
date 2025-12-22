@@ -241,7 +241,6 @@ public class DatasetJsonConverter {
             / Math.max(getOccurrenceCount(), 1);
     double nameUsagesPercentage = 0D;
 
-    occurrencePercentage = Math.min(1.0, Math.max(0.0, occurrencePercentage));
     // Contribution of occurrence records
     dataset.put(
         "occurrencePercentage",
@@ -265,7 +264,6 @@ public class DatasetJsonConverter {
       }
     }
 
-    nameUsagesPercentage = Math.min(1.0, Math.max(0.0, nameUsagesPercentage));
     // Contribution of NameUsages
     dataset.put(
         "nameUsagesPercentage",
