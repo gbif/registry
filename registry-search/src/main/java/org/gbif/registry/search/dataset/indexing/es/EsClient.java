@@ -22,7 +22,6 @@ import java.io.Reader;
 import java.net.MalformedURLException;
 import java.nio.charset.StandardCharsets;
 import java.net.URL;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -41,7 +40,6 @@ import co.elastic.clients.elasticsearch.indices.GetAliasRequest;
 import co.elastic.clients.elasticsearch.indices.GetAliasResponse;
 import co.elastic.clients.elasticsearch.indices.UpdateAliasesRequest;
 import co.elastic.clients.elasticsearch.indices.PutIndicesSettingsRequest;
-import co.elastic.clients.json.JsonData;
 import co.elastic.clients.transport.ElasticsearchTransport;
 import co.elastic.clients.transport.rest_client.RestClientTransport;
 import org.elasticsearch.client.RestClient;
@@ -130,10 +128,31 @@ public class EsClient implements Closeable {
     }
   }
 
+  /**
+   * Merges provided settings with settings from a JSON string.
+   * Provided settings will override file settings for duplicate keys.
+   *
+   * @param settingsJson JSON string containing base settings
+   * @param providedSettings settings to merge (these take precedence)
+   * @return merged settings as JSON string
+   * @throws IOException if JSON parsing fails
+   */
+  String mergeSettings(String settingsJson, Map<String, Object> providedSettings) throws IOException {
+    ObjectMapper objectMapper = new ObjectMapper();
+    
+    @SuppressWarnings("unchecked")
+    Map<String, Object> settingsFromFile = objectMapper.readValue(settingsJson, Map.class);
+    
+    // Merge provided settings into file settings (provided settings override file settings)
+    providedSettings.forEach((key, value) -> settingsFromFile.put(key, value));
+    
+    // Convert merged settings back to JSON
+    return objectMapper.writeValueAsString(settingsFromFile);
+  }
+
   /** Creates a new index using the indexName, recordType and settings provided. */
   public void createIndex(
       String indexName,
-      String recordType,
       Map<String, Object> settings,
       String mappingFile,
       String settingsFile) {
@@ -149,19 +168,12 @@ public class EsClient implements Closeable {
       String settingsJson = CharStreams.toString(settingsFileReader);
       String mappingJson = CharStreams.toString(mappingFileReader);
 
-      // Merge settings
-      Map<String, JsonData> settingsMap = new java.util.HashMap<>();
-      settings.forEach((k, v) -> {
-        if (List.class.isAssignableFrom(v.getClass())) {
-          settingsMap.put(k, JsonData.of((List<String>) v));
-        } else {
-          settingsMap.put(k, JsonData.of(v.toString()));
-        }
-      });
+      // Merge settings from file with provided settings
+      String mergedSettingsJson = mergeSettings(settingsJson, settings);
 
       CreateIndexRequest createIndexRequest = new CreateIndexRequest.Builder()
           .index(indexName)
-          .settings(s -> s.withJson(new ByteArrayInputStream(settingsJson.getBytes(StandardCharsets.UTF_8))))
+          .settings(s -> s.withJson(new ByteArrayInputStream(mergedSettingsJson.getBytes(StandardCharsets.UTF_8))))
           .mappings(m -> m.withJson(new ByteArrayInputStream(mappingJson.getBytes(StandardCharsets.UTF_8))))
           .build();
 

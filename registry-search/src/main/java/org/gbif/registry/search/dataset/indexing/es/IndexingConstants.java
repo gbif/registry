@@ -22,8 +22,6 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 public class IndexingConstants {
 
-  public static final String DATASET_RECORD_TYPE = "dataset";
-
   public static final String ALIAS = "dataset";
 
   public static final String MAPPING_FILE = "dataset-es-mapping.json";

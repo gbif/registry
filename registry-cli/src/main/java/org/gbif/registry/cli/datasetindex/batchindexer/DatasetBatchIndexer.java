@@ -85,7 +85,6 @@ public class DatasetBatchIndexer {
     Stopwatch stopwatch = Stopwatch.createStarted();
     esClient.createIndex(
         indexName,
-        IndexingConstants.DATASET_RECORD_TYPE,
         config.getIndexingSettings(),
         IndexingConstants.MAPPING_FILE,
         IndexingConstants.SETTINGS_FILE);
