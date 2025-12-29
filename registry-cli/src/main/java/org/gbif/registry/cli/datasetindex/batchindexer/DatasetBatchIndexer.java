@@ -66,7 +66,7 @@ public class DatasetBatchIndexer {
       EsClient esClient,
       DatasetJsonConverter datasetJsonConverter,
       @Value("${indexing.stopAfter:-1}") Integer stopAfter,
-      @Value("${indexing.pageSize:50}") Integer pageSize) {
+      @Value("${indexing.pageSize:30}") Integer pageSize) {
     this.gbifWsClient = gbifWsClient;
     this.esClient = esClient;
     this.datasetJsonConverter = datasetJsonConverter;

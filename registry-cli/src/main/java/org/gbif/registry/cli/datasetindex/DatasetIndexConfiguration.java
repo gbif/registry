@@ -43,5 +43,5 @@ public class DatasetIndexConfiguration {
 
   private Integer stopAfter = -1;
 
-  private Integer pageSize = 50;
+  private Integer pageSize = 30;
 }
