@@ -22,7 +22,7 @@
     <main.basedir>${project.parent.basedir}</main.basedir>
     <jcommander.version>1.60</jcommander.version>
     <yammer.version>2.2.0</yammer.version>
-    <gbif-cli.version>3.0.1-SNAPSHOT</gbif-cli.version>
+    <gbif-cli.version>3.0.1</gbif-cli.version>
     <metainf-services.version>1.11</metainf-services.version>
     <javax.mail.version>1.4.7</javax.mail.version>
     <ant.version>1.10.15</ant.version>
