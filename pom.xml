@@ -90,23 +90,23 @@
     <elasticsearch.version>9.0.4</elasticsearch.version>
 
     <!-- GBIF -->
-    <gbif-api.version>2.2.1-SNAPSHOT</gbif-api.version>
-    <gbif-common.version>0.59</gbif-common.version>
+    <gbif-api.version>2.2.2</gbif-api.version>
+    <gbif-common.version>0.60</gbif-common.version>
     <gbif-common-mybatis.version>2.0.0</gbif-common-mybatis.version>
-    <gbif-common-ws.version>2.1.1-SNAPSHOT</gbif-common-ws.version>
+    <gbif-common-ws.version>2.1.1</gbif-common-ws.version>
     <gbif-directory.version>3.3</gbif-directory.version>
     <gbif-doi.version>3.0.2-java17-SNAPSHOT</gbif-doi.version>
-    <gbif-download-query-tools.version>2.0.4-SNAPSHOT</gbif-download-query-tools.version>
+    <gbif-download-query-tools.version>2.0.4</gbif-download-query-tools.version>
     <gbif-httputils.version>0.10</gbif-httputils.version>
     <gbif-metadata-profile.version>2.6</gbif-metadata-profile.version>
     <gbif-parsers.version>0.67</gbif-parsers.version>
-    <gbif-postal-service.version>1.8.1</gbif-postal-service.version>
+    <gbif-postal-service.version>2.1.4</gbif-postal-service.version>
     <xoai.version>4.1.0-gbif-4</xoai.version>
-    <gbif-occurrence.version>1.1.9-SNAPSHOT</gbif-occurrence.version>
+    <gbif-occurrence.version>1.1.8</gbif-occurrence.version>
     <gbif-vocabulary.version>2.0.2</gbif-vocabulary.version>
     <gbif-kvs.version>3.0</gbif-kvs.version>
     <checklistbank.version>3.0.0</checklistbank.version>
-    <dwc-api.version>2.1.7-SNAPSHOT</dwc-api.version>
+    <dwc-api.version>2.1.8</dwc-api.version>
     <dwca-io.version>3.0.1-SNAPSHOT</dwca-io.version>
 
     <!-- Third party -->
