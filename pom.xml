@@ -95,7 +95,7 @@
     <gbif-common-mybatis.version>2.0.0</gbif-common-mybatis.version>
     <gbif-common-ws.version>2.1.1</gbif-common-ws.version>
     <gbif-directory.version>3.3</gbif-directory.version>
-    <gbif-doi.version>3.0.2-java17-SNAPSHOT</gbif-doi.version>
+    <gbif-doi.version>3.0.3</gbif-doi.version>
     <gbif-download-query-tools.version>2.0.4</gbif-download-query-tools.version>
     <gbif-httputils.version>0.10</gbif-httputils.version>
     <gbif-metadata-profile.version>2.6</gbif-metadata-profile.version>
@@ -107,7 +107,7 @@
     <gbif-kvs.version>3.0</gbif-kvs.version>
     <checklistbank.version>3.0.0</checklistbank.version>
     <dwc-api.version>2.1.8</dwc-api.version>
-    <dwca-io.version>3.0.1-SNAPSHOT</dwca-io.version>
+    <dwca-io.version>3.0.1</dwca-io.version>
 
     <!-- Third party -->
     <commons-digester.version>3.2</commons-digester.version>
