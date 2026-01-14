@@ -424,6 +424,7 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
   @PutMapping(
       value = {"", "{key}", "{prefix}/{suffix}"},
       consumes = MediaType.APPLICATION_JSON_VALUE)
+  @Secured(ADMIN_ROLE)
   @Validated({PostPersist.class, Default.class})
   @Transactional
   @Override
