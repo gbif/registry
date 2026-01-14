@@ -469,6 +469,7 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
     value = {"{key}/license"},
     consumes = MediaType.APPLICATION_JSON_VALUE)
   @Transactional
+  @Secured(ADMIN_ROLE)
   @Override
   public void updateLicense(@PathVariable("key") String downloadKey, @RequestBody License license) {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(downloadKey));
@@ -481,6 +482,7 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
     value = {"{key}/totalRecords"},
     consumes = MediaType.APPLICATION_JSON_VALUE)
   @Transactional
+  @Secured(ADMIN_ROLE)
   @Override
   public void updateTotalRecords(@PathVariable("key") String downloadKey, @RequestBody long totalRecords) {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(downloadKey));
@@ -492,14 +494,14 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
       value = {"{key}/licenseAndTotalRecords"},
       consumes = MediaType.APPLICATION_JSON_VALUE)
   @Transactional
-  public void updateLicenseAndTotalRecords(
-      @PathVariable("key") String downloadKey, @RequestBody LicenseAndTotalRecordsParams params) {
-    Objects.requireNonNull(params);
-    updateLicenseAndTotalRecords(downloadKey, params.getLicense(), params.getTotalRecords());
-  }
-
   @Override
-  public void updateLicenseAndTotalRecords(String downloadKey, License license, long totalRecords) {
+  @Secured(ADMIN_ROLE)
+  public void updateLicenseAndTotalRecords(
+      @PathVariable("key") String downloadKey,
+      // It uses request params instead of requestBody because it conflicts with the form encoder
+      // the client uses in downloads
+      @RequestParam("license") License license,
+      @RequestParam("totalRecords") long totalRecords) {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(downloadKey));
     Objects.requireNonNull(license);
     downloadMapper.updateLicenseAndTotalRecords(downloadKey, license, totalRecords);

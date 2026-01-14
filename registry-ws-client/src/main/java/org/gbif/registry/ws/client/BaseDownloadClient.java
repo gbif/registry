@@ -139,14 +139,12 @@ public interface BaseDownloadClient extends OccurrenceDownloadService {
   void updateTotalRecords(@PathVariable("key") String downloadKey, @RequestBody long totalRecords);
 
   @PutMapping(
-    value = {"{key}/licenseAndTotalRecords"},
-    consumes = MediaType.APPLICATION_JSON_VALUE)
+      value = {"{key}/licenseAndTotalRecords"},
+      consumes = MediaType.APPLICATION_JSON_VALUE)
   void updateLicenseAndTotalRecords(
-    @PathVariable("key") String downloadKey, @RequestBody LicenseAndTotalRecordsParams params);
-
-  default void updateLicenseAndTotalRecords(String downloadKey, License license, long totalRecords) {
-    updateLicenseAndTotalRecords(downloadKey, new LicenseAndTotalRecordsParams(license, totalRecords));
-  }
+      @PathVariable("key") String downloadKey,
+      @RequestParam("license") License license,
+      @RequestParam("totalRecords") long totalRecords);
 
   @Override
   default PagingResponse<DatasetOccurrenceDownloadUsage> listDatasetUsages(@PathVariable("key") String key, @SpringQueryMap Pageable page) {
