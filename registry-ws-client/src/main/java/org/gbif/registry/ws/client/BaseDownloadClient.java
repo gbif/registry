@@ -26,7 +26,6 @@ import org.gbif.api.model.occurrence.Download;
 import org.gbif.api.model.registry.CountryOccurrenceDownloadUsage;
 import org.gbif.api.model.registry.DatasetOccurrenceDownloadUsage;
 import org.gbif.api.model.registry.OrganizationOccurrenceDownloadUsage;
-import org.gbif.api.model.registry.params.LicenseAndTotalRecordsParams;
 import org.gbif.api.service.registry.OccurrenceDownloadService;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.CountryUsageSortField;
