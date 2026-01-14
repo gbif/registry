@@ -90,7 +90,7 @@
     <elasticsearch.version>9.0.4</elasticsearch.version>
 
     <!-- GBIF -->
-    <gbif-api.version>2.2.2</gbif-api.version>
+    <gbif-api.version>2.2.3-SNAPSHOT</gbif-api.version>
     <gbif-common.version>0.60</gbif-common.version>
     <gbif-common-mybatis.version>2.0.0</gbif-common-mybatis.version>
     <gbif-common-ws.version>2.1.1</gbif-common-ws.version>

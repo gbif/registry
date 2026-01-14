@@ -210,4 +210,23 @@
     <include refid="org.gbif.registry.persistence.mapper.CommonDownload.LIST_BY_ERASE_AFTER_WHERE"/>
   </select>
 
+  <update id="updateLicense">
+    UPDATE event_download
+    SET license = #{license,jdbcType=OTHER}
+    WHERE key = #{key,jdbcType=VARCHAR}
+  </update>
+
+  <update id="updateTotalRecords">
+    UPDATE event_download
+    SET total_records = #{totalRecords,jdbcType=INTEGER}
+    WHERE key = #{key,jdbcType=VARCHAR}
+  </update>
+
+  <update id="updateLicenseAndTotalRecords">
+    UPDATE event_download
+    SET license = #{license,jdbcType=OTHER},
+    total_records = #{totalRecords,jdbcType=INTEGER}
+    WHERE key = #{key,jdbcType=VARCHAR}
+  </update>
+
 </mapper>

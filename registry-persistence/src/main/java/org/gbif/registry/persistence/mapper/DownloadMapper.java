@@ -22,8 +22,7 @@ import org.apache.ibatis.annotations.Param;
 import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.occurrence.Download;
-import org.gbif.api.model.occurrence.DownloadType;
-import org.springframework.stereotype.Repository;
+import org.gbif.api.vocabulary.License;
 
 /** Mapper that perform operations on occurrence downloads. */
 public interface DownloadMapper {
@@ -79,4 +78,13 @@ public interface DownloadMapper {
       @Param("eraseAfter") Date eraseAfter,
       @Param("size") Long size,
       @Param("erasureNotification") Date erasureNotification);
+
+  void updateLicense(@Param("key") String key, @Param("license") License license);
+
+  void updateTotalRecords(@Param("key") String key, @Param("totalRecords") long totalRecords);
+
+  void updateLicenseAndTotalRecords(
+      @Param("key") String key,
+      @Param("license") License license,
+      @Param("totalRecords") long totalRecords);
 }

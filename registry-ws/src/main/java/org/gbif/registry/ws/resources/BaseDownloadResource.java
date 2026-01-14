@@ -31,6 +31,7 @@ import org.gbif.api.model.registry.DatasetOccurrenceDownloadUsage;
 import org.gbif.api.model.registry.OrganizationOccurrenceDownloadUsage;
 import org.gbif.api.model.registry.PostPersist;
 import org.gbif.api.model.registry.PrePersist;
+import org.gbif.api.model.registry.params.LicenseAndTotalRecordsParams;
 import org.gbif.api.service.common.IdentityAccessService;
 import org.gbif.api.service.registry.OccurrenceDownloadService;
 import org.gbif.api.util.iterables.Iterables;
@@ -65,6 +66,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
@@ -460,6 +462,49 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
 
     downloadMapper.update(download);
     return downloadMapper.get(download.getKey());
+  }
+
+  @Hidden
+  @PutMapping(
+    value = {"{key}/license"},
+    consumes = MediaType.APPLICATION_JSON_VALUE)
+  @Validated({PostPersist.class, Default.class})
+  @Transactional
+  @Override
+  public void updateLicense(@PathVariable("key") String downloadKey, @RequestBody License license) {
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(downloadKey));
+    Objects.requireNonNull(license);
+    downloadMapper.updateLicense(downloadKey, license);
+  }
+
+  @Hidden
+  @PutMapping(
+    value = {"{key}/totalRecords"},
+    consumes = MediaType.APPLICATION_JSON_VALUE)
+  @Validated({PostPersist.class, Default.class})
+  @Transactional
+  @Override
+  public void updateTotalRecords(@PathVariable("key") String downloadKey, @RequestBody long totalRecords) {
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(downloadKey));
+    downloadMapper.updateTotalRecords(downloadKey, totalRecords);
+  }
+
+  @Hidden
+  @PutMapping(
+      value = {"{key}/licenseAndTotalRecords"},
+      consumes = MediaType.APPLICATION_JSON_VALUE)
+  @Validated({PostPersist.class, Default.class})
+  @Transactional
+  public void updateLicenseAndTotalRecords(
+      @PathVariable("key") String downloadKey, @RequestBody LicenseAndTotalRecordsParams params) {
+    updateLicenseAndTotalRecords(downloadKey, params.getLicense(), params.getTotalRecords());
+  }
+
+  @Override
+  public void updateLicenseAndTotalRecords(String downloadKey, License license, long totalRecords) {
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(downloadKey));
+    Objects.requireNonNull(license);
+    downloadMapper.updateLicenseAndTotalRecords(downloadKey, license, totalRecords);
   }
 
   @Override

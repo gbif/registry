@@ -13,6 +13,12 @@
  */
 package org.gbif.registry.ws.client;
 
+
+import java.time.LocalDateTime;
+import java.util.Date;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 import org.gbif.api.annotation.PartialDate;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
@@ -20,23 +26,19 @@ import org.gbif.api.model.occurrence.Download;
 import org.gbif.api.model.registry.CountryOccurrenceDownloadUsage;
 import org.gbif.api.model.registry.DatasetOccurrenceDownloadUsage;
 import org.gbif.api.model.registry.OrganizationOccurrenceDownloadUsage;
+import org.gbif.api.model.registry.params.LicenseAndTotalRecordsParams;
 import org.gbif.api.service.registry.OccurrenceDownloadService;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.CountryUsageSortField;
 import org.gbif.api.vocabulary.DatasetUsageSortField;
+import org.gbif.api.vocabulary.License;
 import org.gbif.api.vocabulary.OrganizationUsageSortField;
 import org.gbif.api.vocabulary.SortOrder;
-
-import java.time.LocalDateTime;
-import java.util.Date;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
-
 import org.springframework.cloud.openfeign.SpringQueryMap;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -123,6 +125,28 @@ public interface BaseDownloadClient extends OccurrenceDownloadService {
   @RequestMapping(method = RequestMethod.PUT, consumes = MediaType.APPLICATION_JSON_VALUE)
   @Override
   Download update(@RequestBody Download download);
+
+  @PutMapping(
+      value = {"{key}/license"},
+      consumes = MediaType.APPLICATION_JSON_VALUE)
+  @Override
+  void updateLicense(@PathVariable("key") String downloadKey, @RequestBody License license);
+
+  @PutMapping(
+    value = {"{key}/totalRecords"},
+    consumes = MediaType.APPLICATION_JSON_VALUE)
+  @Override
+  void updateTotalRecords(@PathVariable("key") String downloadKey, @RequestBody long totalRecords);
+
+  @PutMapping(
+    value = {"{key}/licenseAndTotalRecords"},
+    consumes = MediaType.APPLICATION_JSON_VALUE)
+  void updateLicenseAndTotalRecords(
+    @PathVariable("key") String downloadKey, @RequestBody LicenseAndTotalRecordsParams params);
+
+  default void updateLicenseAndTotalRecords(String downloadKey, License license, long totalRecords) {
+    updateLicenseAndTotalRecords(downloadKey, new LicenseAndTotalRecordsParams(license, totalRecords));
+  }
 
   @Override
   default PagingResponse<DatasetOccurrenceDownloadUsage> listDatasetUsages(@PathVariable("key") String key, @SpringQueryMap Pageable page) {
