@@ -468,7 +468,6 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
   @PutMapping(
     value = {"{key}/license"},
     consumes = MediaType.APPLICATION_JSON_VALUE)
-  @Validated({PostPersist.class, Default.class})
   @Transactional
   @Override
   public void updateLicense(@PathVariable("key") String downloadKey, @RequestBody License license) {
@@ -481,7 +480,6 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
   @PutMapping(
     value = {"{key}/totalRecords"},
     consumes = MediaType.APPLICATION_JSON_VALUE)
-  @Validated({PostPersist.class, Default.class})
   @Transactional
   @Override
   public void updateTotalRecords(@PathVariable("key") String downloadKey, @RequestBody long totalRecords) {
@@ -493,10 +491,10 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
   @PutMapping(
       value = {"{key}/licenseAndTotalRecords"},
       consumes = MediaType.APPLICATION_JSON_VALUE)
-  @Validated({PostPersist.class, Default.class})
   @Transactional
   public void updateLicenseAndTotalRecords(
       @PathVariable("key") String downloadKey, @RequestBody LicenseAndTotalRecordsParams params) {
+    Objects.requireNonNull(params);
     updateLicenseAndTotalRecords(downloadKey, params.getLicense(), params.getTotalRecords());
   }
 
