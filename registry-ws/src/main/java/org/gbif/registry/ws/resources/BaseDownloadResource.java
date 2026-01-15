@@ -487,8 +487,8 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
   @Secured(ADMIN_ROLE)
   public void updateLicenseAndTotalRecords(
       @PathVariable("key") String downloadKey,
-      // It uses request params instead of requestBody because it conflicts with the form encoder
-      // the client uses in downloads
+      // FIXME: It uses request params instead of requestBody because it conflicts with the form
+      // encoder the client uses in downloads
       @RequestParam("license") License license,
       @RequestParam("totalRecords") long totalRecords) {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(downloadKey));
