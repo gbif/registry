@@ -102,7 +102,7 @@ public class CollectionsSearchResourceTest extends BaseResourceIT {
 
     FacetedSearchResponse<InstitutionSearchResponse, InstitutionFacetParameter> responseReturned =
         collectionsSearchClient.searchInstitutions(
-            InstitutionFacetedSearchRequest.builder().build(), null);
+            InstitutionFacetedSearchRequest.builder().build());
     assertEquals(1, responseReturned.getResults().size());
     assertEquals(response, responseReturned.getResults().get(0));
   }
@@ -122,7 +122,7 @@ public class CollectionsSearchResourceTest extends BaseResourceIT {
 
     FacetedSearchResponse<CollectionSearchResponse, CollectionFacetParameter> responseReturned =
         collectionsSearchClient.searchCollections(
-            CollectionDescriptorsSearchRequest.builder().build(), null);
+            CollectionDescriptorsSearchRequest.builder().build());
     assertEquals(1, responseReturned.getResults().size());
     assertEquals(response, responseReturned.getResults().get(0));
   }
@@ -152,10 +152,11 @@ public class CollectionsSearchResourceTest extends BaseResourceIT {
             Collections.singletonList(response),
             Collections.singletonList(facet));
 
-    when(collectionsSearchService.searchInstitutions(searchRequest)).thenReturn(searchResponse);
+    when(collectionsSearchService.searchInstitutions(any())).thenReturn(searchResponse);
 
     FacetedSearchResponse<InstitutionSearchResponse, InstitutionFacetParameter> responseReturned =
-        collectionsSearchClient.searchInstitutions(searchRequest, null);
+        collectionsSearchClient.searchInstitutions(searchRequest);
+
     assertEquals(1, responseReturned.getResults().size());
     assertEquals(response, responseReturned.getResults().get(0));
     assertEquals(1, responseReturned.getFacets().size());
@@ -187,10 +188,10 @@ public class CollectionsSearchResourceTest extends BaseResourceIT {
             Collections.singletonList(response),
             Collections.singletonList(facet));
 
-    when(collectionsSearchService.searchCollections(searchRequest)).thenReturn(searchResponse);
+    when(collectionsSearchService.searchCollections(any())).thenReturn(searchResponse);
 
     FacetedSearchResponse<CollectionSearchResponse, CollectionFacetParameter> responseReturned =
-        collectionsSearchClient.searchCollections(searchRequest, null);
+        collectionsSearchClient.searchCollections(searchRequest);
     assertEquals(1, responseReturned.getResults().size());
     assertEquals(response, responseReturned.getResults().get(0));
     assertEquals(1, responseReturned.getFacets().size());
