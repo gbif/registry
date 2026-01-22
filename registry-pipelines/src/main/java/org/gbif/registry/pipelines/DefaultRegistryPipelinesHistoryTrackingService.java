@@ -102,7 +102,11 @@ public class DefaultRegistryPipelinesHistoryTrackingService
       Set.of(
           PipelineStep.Status.COMPLETED, PipelineStep.Status.ABORTED, PipelineStep.Status.FAILED);
 
-  private static final List<StepType> EVENT_STEP_TYPES = List.of(StepType.EVENTS_VERBATIM_TO_INTERPRETED, StepType.EVENTS_INTERPRETED_TO_INDEX, StepType.EVENTS_HDFS_VIEW);
+  private static final List<String> EVENT_STEP_TYPES =
+      List.of(
+          StepType.EVENTS_VERBATIM_TO_INTERPRETED.name(),
+          StepType.EVENTS_INTERPRETED_TO_INDEX.name(),
+          StepType.EVENTS_HDFS_VIEW.name());
 
   private ObjectMapper objectMapper;
 
@@ -437,7 +441,7 @@ public class DefaultRegistryPipelinesHistoryTrackingService
         new PipelineExecution()
             .setCreatedBy(user)
             .setRerunReason(reason)
-            .setStepsToRun(getStepTypes(stepsToSend.keySet(), dataset));
+            .setStepsToRun(getStepTypes(stepsToSend.keySet(), dataset, excludeEventSteps));
 
     long executionKey = addPipelineExecution(process.getKey(), execution, user);
 
@@ -450,8 +454,8 @@ public class DefaultRegistryPipelinesHistoryTrackingService
     stepsToSend.forEach(
         (stepType, message) -> {
 
-          if (excludeEventSteps && EVENT_STEP_TYPES.contains(stepType)) {
-            return;
+          if (excludeEventSteps) {
+            message.getPipelineSteps().removeAll(EVENT_STEP_TYPES);
           }
 
           message.setExecutionId(executionKey);
@@ -526,7 +530,8 @@ public class DefaultRegistryPipelinesHistoryTrackingService
   }
 
   @VisibleForTesting
-  protected Set<StepType> getStepTypes(Set<StepType> stepsToSend, Dataset dataset) {
+  protected Set<StepType> getStepTypes(
+      Set<StepType> stepsToSend, Dataset dataset, boolean excludeEventSteps) {
     Set<StepType> finalSteps = new HashSet<>();
     if (stepsToSend.stream().anyMatch(StepType::isEventType)) {
       finalSteps.addAll(PipelinesWorkflow.getEventWorkflow().getAllNodesFor(stepsToSend));
@@ -538,7 +543,7 @@ public class DefaultRegistryPipelinesHistoryTrackingService
     if (stepsToSend.stream().anyMatch(StepType::isVerbatimType)) {
       finalSteps.addAll(PipelinesWorkflow.getOccurrenceWorkflow().getAllNodesFor(stepsToSend));
     }
-    if (dataset != null && dataset.getType() == DatasetType.SAMPLING_EVENT) {
+    if (!excludeEventSteps && dataset != null && dataset.getType() == DatasetType.SAMPLING_EVENT) {
       finalSteps.addAll(PipelinesWorkflow.getEventOccurrenceWorkflow().getAllNodesFor(stepsToSend));
     }
     if (stepsToSend.stream().noneMatch(StepType::isVerbatimType)) {
