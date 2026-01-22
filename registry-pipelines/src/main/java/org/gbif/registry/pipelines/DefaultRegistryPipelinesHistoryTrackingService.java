@@ -102,6 +102,8 @@ public class DefaultRegistryPipelinesHistoryTrackingService
       Set.of(
           PipelineStep.Status.COMPLETED, PipelineStep.Status.ABORTED, PipelineStep.Status.FAILED);
 
+  private static final List<StepType> EVENT_STEP_TYPES = List.of(StepType.EVENTS_VERBATIM_TO_INTERPRETED, StepType.EVENTS_INTERPRETED_TO_INDEX, StepType.EVENTS_HDFS_VIEW);
+
   private ObjectMapper objectMapper;
 
   /** The messagePublisher can be optional. */
@@ -149,7 +151,8 @@ public class DefaultRegistryPipelinesHistoryTrackingService
       String prefix,
       boolean useLastSuccessful,
       boolean markPreviousAttemptAsFailed,
-      Set<String> interpretTypes) {
+      Set<String> interpretTypes,
+      boolean excludeEventSteps) {
     int attempt = findAttempt(datasetKey, steps, useLastSuccessful);
     return runPipelineAttempt(
         datasetKey,
@@ -159,7 +162,8 @@ public class DefaultRegistryPipelinesHistoryTrackingService
         user,
         prefix,
         markPreviousAttemptAsFailed,
-        interpretTypes);
+        interpretTypes,
+        excludeEventSteps);
   }
 
   private int findAttempt(UUID datasetKey, Set<StepType> steps, boolean useLastSuccessful) {
@@ -186,7 +190,8 @@ public class DefaultRegistryPipelinesHistoryTrackingService
       List<UUID> datasetsToInclude,
       boolean useLastSuccessful,
       boolean markPreviousAttemptAsFailed,
-      Set<String> interpretTypes) {
+      Set<String> interpretTypes,
+      boolean excludeEventSteps) {
     String prefix = OffsetDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ofPattern("yyyyMMddHHmm"));
     CompletableFuture.runAsync(
         () ->
@@ -200,7 +205,8 @@ public class DefaultRegistryPipelinesHistoryTrackingService
                         prefix,
                         useLastSuccessful,
                         markPreviousAttemptAsFailed,
-                        interpretTypes),
+                        interpretTypes,
+                        excludeEventSteps),
                 datasetsToExclude,
                 datasetsToInclude),
         executorService);
@@ -377,7 +383,8 @@ public class DefaultRegistryPipelinesHistoryTrackingService
       String user,
       String prefix,
       boolean markPreviousAttemptAsFailed,
-      Set<String> interpretTypes) {
+      Set<String> interpretTypes,
+      boolean excludeEventSteps) {
     Objects.requireNonNull(datasetKey, DATASET_KEY_CANNOT_BE_NULL);
     Objects.requireNonNull(steps, "Steps can't be null");
     Objects.requireNonNull(reason, "Reason can't be null");
@@ -441,7 +448,12 @@ public class DefaultRegistryPipelinesHistoryTrackingService
     // send messages
     Set<StepType> stepsFailed = new HashSet<>(stepsToSend.size());
     stepsToSend.forEach(
-        (key, message) -> {
+        (stepType, message) -> {
+
+          if (excludeEventSteps && EVENT_STEP_TYPES.contains(stepType)) {
+            return;
+          }
+
           message.setExecutionId(executionKey);
           try {
             if (message instanceof PipelinesInterpretedMessage
@@ -459,7 +471,7 @@ public class DefaultRegistryPipelinesHistoryTrackingService
             }
           } catch (IOException ex) {
             LOG.warn("Error sending message", ex);
-            stepsFailed.add(key);
+            stepsFailed.add(stepType);
           }
         });
 
