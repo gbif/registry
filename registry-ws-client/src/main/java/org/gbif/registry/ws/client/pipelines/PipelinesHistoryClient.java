@@ -122,7 +122,9 @@ public interface PipelinesHistoryClient extends PipelinesHistoryService {
       @RequestParam(value = "markPreviousAttemptAsFailed", defaultValue = "false")
           boolean markPreviousAttemptAsFailed,
       @RequestBody(required = false) RunAllParams runAllParams,
-      @RequestParam(value = "interpretTypes", defaultValue = "false") Set<String> interpretTypes);
+      @RequestParam(value = "interpretTypes", defaultValue = "false") Set<String> interpretTypes,
+      @RequestParam(value = "excludeEventSteps", required = false, defaultValue = "false")
+          boolean excludeEventSteps);
 
   @PostMapping(value = "run/{datasetKey}")
   @ResponseBody
@@ -134,7 +136,9 @@ public interface PipelinesHistoryClient extends PipelinesHistoryService {
       @RequestParam(value = "useLastSuccessful", defaultValue = "false") boolean useLastSuccessful,
       @RequestParam(value = "markPreviousAttemptAsFailed", defaultValue = "false")
           boolean markPreviousAttemptAsFailed,
-      @RequestParam(value = "interpretTypes", defaultValue = "false") Set<String> interpretTypes);
+      @RequestParam(value = "interpretTypes", defaultValue = "false") Set<String> interpretTypes,
+      @RequestParam(value = "excludeEventSteps", required = false, defaultValue = "false")
+          boolean excludeEventSteps);
 
   @PostMapping(value = "run/{datasetKey}/{attempt}")
   @ResponseBody
@@ -146,7 +150,9 @@ public interface PipelinesHistoryClient extends PipelinesHistoryService {
       @RequestParam(value = "reason", required = false) String reason,
       @RequestParam(value = "markPreviousAttemptAsFailed", defaultValue = "false")
           boolean markPreviousAttemptAsFailed,
-      @RequestParam(value = "interpretTypes", defaultValue = "false") Set<String> interpretTypes);
+      @RequestParam(value = "interpretTypes", defaultValue = "false") Set<String> interpretTypes,
+      @RequestParam(value = "excludeEventSteps", required = false, defaultValue = "false")
+          boolean excludeEventSteps);
 
   @PostMapping(
       value = "identifier/{datasetKey}/{attempt}/email",

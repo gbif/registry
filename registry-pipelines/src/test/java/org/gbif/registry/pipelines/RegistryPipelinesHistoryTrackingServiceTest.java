@@ -65,14 +65,14 @@ class RegistryPipelinesHistoryTrackingServiceTest {
     process.addExecution(execution);
 
     PipelineStep step1 =
-        trackingService.getLatestSuccessfulStep(process, StepType.ABCD_TO_VERBATIM).get();
+        trackingService.getLatestSuccessfulStep(process, s1.getType()).get();
     assertEquals(s1, step1);
   }
 
   @Test
   void getStepTypesFragmenterTest() {
     Set<StepType> result =
-        trackingService.getStepTypes(Set.of(StepType.ABCD_TO_VERBATIM));
+        trackingService.getStepTypes(Set.of(StepType.ABCD_TO_VERBATIM), null, false);
 
     assertTrue(result.contains(StepType.FRAGMENTER));
   }
@@ -81,7 +81,7 @@ class RegistryPipelinesHistoryTrackingServiceTest {
   void getStepTypesTest() {
 
     Set<StepType> result =
-        trackingService.getStepTypes(Set.of(StepType.VERBATIM_TO_INTERPRETED));
+        trackingService.getStepTypes(Set.of(StepType.VERBATIM_TO_INTERPRETED), null, false);
 
     assertFalse(result.contains(StepType.FRAGMENTER));
   }
@@ -90,7 +90,7 @@ class RegistryPipelinesHistoryTrackingServiceTest {
   void getStepTypesEventTest() {
 
     Set<StepType> result =
-      trackingService.getStepTypes(Set.of(StepType.EVENTS_VERBATIM_TO_INTERPRETED));
+      trackingService.getStepTypes(Set.of(StepType.EVENTS_VERBATIM_TO_INTERPRETED), null, false);
 
     assertTrue(result.contains(StepType.EVENTS_VERBATIM_TO_INTERPRETED));
     assertTrue(result.contains(StepType.EVENTS_HDFS_VIEW));
