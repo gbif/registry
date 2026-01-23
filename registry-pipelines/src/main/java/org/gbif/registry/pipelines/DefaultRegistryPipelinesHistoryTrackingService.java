@@ -449,7 +449,7 @@ public class DefaultRegistryPipelinesHistoryTrackingService
               LOG.info("Sending message to balancer: {}, message: {}", nextMessageClassName, messagePayload);
               publisher.send(new PipelinesBalancerMessage(nextMessageClassName, messagePayload));
             } else {
-              LOG.info("Sending message to (non)  message: {}", message);
+              LOG.info("Sending message directly: {}", message);
               publisher.send(message);
             }
           } catch (IOException ex) {
@@ -513,16 +513,16 @@ public class DefaultRegistryPipelinesHistoryTrackingService
     Set<StepType> finalSteps = new HashSet<>();
     if (stepsToSend.stream().anyMatch(StepType::isEventType)) {
       finalSteps.addAll(PipelinesWorkflow.getEventWorkflow().getAllNodesFor(stepsToSend));
+    } else if (!excludeEventSteps && dataset != null && dataset.getType() == DatasetType.SAMPLING_EVENT) {
+      finalSteps.addAll(PipelinesWorkflow.getEventOccurrenceWorkflow().getAllNodesFor(stepsToSend));
     }
+
     if (stepsToSend.stream().anyMatch(StepType::isOccurrenceType)) {
       finalSteps.addAll(PipelinesWorkflow.getOccurrenceWorkflow().getAllNodesFor(stepsToSend));
     }
 
     if (stepsToSend.stream().anyMatch(StepType::isVerbatimType)) {
       finalSteps.addAll(PipelinesWorkflow.getOccurrenceWorkflow().getAllNodesFor(stepsToSend));
-    }
-    if (!excludeEventSteps && dataset != null && dataset.getType() == DatasetType.SAMPLING_EVENT) {
-      finalSteps.addAll(PipelinesWorkflow.getEventOccurrenceWorkflow().getAllNodesFor(stepsToSend));
     }
     if (stepsToSend.stream().noneMatch(StepType::isVerbatimType)) {
       finalSteps.remove(StepType.FRAGMENTER);
