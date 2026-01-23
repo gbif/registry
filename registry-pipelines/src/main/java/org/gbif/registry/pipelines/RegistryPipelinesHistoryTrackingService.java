@@ -48,6 +48,7 @@ public interface RegistryPipelinesHistoryTrackingService {
    *     processing a dataset
    * @param interpretTypes is used for partial interpretation such as only TAXONOMY, METADATA and
    *     etc
+   * @param excludeEventSteps true if we don't want to run the event steps
    * @return a response containing the request result
    */
   RunPipelineResponse runLastAttempt(
@@ -58,7 +59,8 @@ public interface RegistryPipelinesHistoryTrackingService {
       String prefix,
       boolean useLastSuccessful,
       boolean markPreviousAttemptAsFailed,
-      Set<String> interpretTypes);
+      Set<String> interpretTypes,
+      boolean excludeEventSteps);
 
   /**
    * Executes the last crawl attempt for all datasets.
@@ -74,6 +76,7 @@ public interface RegistryPipelinesHistoryTrackingService {
    *     processing a dataset
    * @param interpretTypes is used for partial interpretation such as only TAXONOMY, METADATA and
    *     etc
+   * @param excludeEventSteps true if we don't want to run the event steps
    * @return the response of the execution request
    */
   RunPipelineResponse runLastAttempt(
@@ -84,7 +87,8 @@ public interface RegistryPipelinesHistoryTrackingService {
       List<UUID> datasetsToInclude,
       boolean useLastSuccessful,
       boolean markPreviousAttemptAsFailed,
-      Set<String> interpretTypes);
+      Set<String> interpretTypes,
+      boolean excludeEventSteps);
 
   /**
    * Executes a previously run attempt.
@@ -99,6 +103,7 @@ public interface RegistryPipelinesHistoryTrackingService {
    *     processing a dataset
    * @param interpretTypes is used for partial interpretation such as only TAXONOMY, METADATA and
    *     etc.
+   * @param excludeEventSteps true if we don't want to run the event steps
    * @return the response of the execution request
    */
   RunPipelineResponse runPipelineAttempt(
@@ -109,7 +114,8 @@ public interface RegistryPipelinesHistoryTrackingService {
       String user,
       String prefix,
       boolean markPreviousAttemptAsFailed,
-      Set<String> interpretTypes);
+      Set<String> interpretTypes,
+      boolean excludeEventSteps);
 
   /**
    * Lists the history of all {@link PipelineProcess}, sorted descending from the most recent one.

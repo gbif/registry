@@ -51,6 +51,7 @@ import org.gbif.api.model.registry.Endpoint;
 import org.gbif.api.service.registry.DatasetService;
 import org.gbif.api.util.comparators.EndpointCreatedComparator;
 import org.gbif.api.util.comparators.EndpointPriorityComparator;
+import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.api.vocabulary.EndpointType;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelineBasedMessage;
@@ -101,6 +102,12 @@ public class DefaultRegistryPipelinesHistoryTrackingService
       Set.of(
           PipelineStep.Status.COMPLETED, PipelineStep.Status.ABORTED, PipelineStep.Status.FAILED);
 
+  private static final List<String> EVENT_STEP_TYPES =
+      List.of(
+          StepType.EVENTS_VERBATIM_TO_INTERPRETED.name(),
+          StepType.EVENTS_INTERPRETED_TO_INDEX.name(),
+          StepType.EVENTS_HDFS_VIEW.name());
+
   private ObjectMapper objectMapper;
 
   /** The messagePublisher can be optional. */
@@ -148,7 +155,8 @@ public class DefaultRegistryPipelinesHistoryTrackingService
       String prefix,
       boolean useLastSuccessful,
       boolean markPreviousAttemptAsFailed,
-      Set<String> interpretTypes) {
+      Set<String> interpretTypes,
+      boolean excludeEventSteps) {
     int attempt = findAttempt(datasetKey, steps, useLastSuccessful);
     return runPipelineAttempt(
         datasetKey,
@@ -158,7 +166,8 @@ public class DefaultRegistryPipelinesHistoryTrackingService
         user,
         prefix,
         markPreviousAttemptAsFailed,
-        interpretTypes);
+        interpretTypes,
+        excludeEventSteps);
   }
 
   private int findAttempt(UUID datasetKey, Set<StepType> steps, boolean useLastSuccessful) {
@@ -185,7 +194,8 @@ public class DefaultRegistryPipelinesHistoryTrackingService
       List<UUID> datasetsToInclude,
       boolean useLastSuccessful,
       boolean markPreviousAttemptAsFailed,
-      Set<String> interpretTypes) {
+      Set<String> interpretTypes,
+      boolean excludeEventSteps) {
     String prefix = OffsetDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ofPattern("yyyyMMddHHmm"));
     CompletableFuture.runAsync(
         () ->
@@ -199,7 +209,8 @@ public class DefaultRegistryPipelinesHistoryTrackingService
                         prefix,
                         useLastSuccessful,
                         markPreviousAttemptAsFailed,
-                        interpretTypes),
+                        interpretTypes,
+                        excludeEventSteps),
                 datasetsToExclude,
                 datasetsToInclude),
         executorService);
@@ -267,12 +278,12 @@ public class DefaultRegistryPipelinesHistoryTrackingService
   @VisibleForTesting
   Optional<PipelineStep> getLatestSuccessfulStep(PipelineProcess pipelineProcess, StepType step) {
     return pipelineProcess.getExecutions().stream()
-        .filter(ex -> !ex.getStepsToRun().isEmpty())
-        .sorted(Comparator.comparing(PipelineExecution::getCreated).reversed())
-        .flatMap(ex -> ex.getSteps().stream())
-        .filter(s -> step.equals(s.getType()))
-        .filter(s -> s.getMessage() != null && !s.getMessage().isEmpty())
-        .max(Comparator.comparing(PipelineStep::getStarted));
+      .filter(ex -> !ex.getStepsToRun().isEmpty())
+      .sorted(Comparator.comparing(PipelineExecution::getCreated).reversed())
+      .flatMap(ex -> ex.getSteps().stream())
+      .filter(s -> step.equals(s.getType()))
+      .filter(s -> s.getMessage() != null && !s.getMessage().isEmpty())
+      .max(Comparator.comparing(PipelineStep::getStarted));
   }
 
   private PipelineExecution getLastestExecution(PipelineProcess pipelineProcess) {
@@ -355,7 +366,8 @@ public class DefaultRegistryPipelinesHistoryTrackingService
       String user,
       String prefix,
       boolean markPreviousAttemptAsFailed,
-      Set<String> interpretTypes) {
+      Set<String> interpretTypes,
+      boolean excludeEventSteps) {
     Objects.requireNonNull(datasetKey, DATASET_KEY_CANNOT_BE_NULL);
     Objects.requireNonNull(steps, "Steps can't be null");
     Objects.requireNonNull(reason, "Reason can't be null");
@@ -380,7 +392,7 @@ public class DefaultRegistryPipelinesHistoryTrackingService
           .build();
     }
 
-    // Performs the messaging and updates the status onces the message has been sent
+    // Performs the messaging and updates the status once the message has been sent
     Dataset dataset = datasetService.get(datasetKey);
 
     // Create Rabbit messages
@@ -388,7 +400,10 @@ public class DefaultRegistryPipelinesHistoryTrackingService
     for (StepType stepName : prioritizeSteps(steps, dataset)) {
       Optional<? extends PipelineBasedMessage> message =
           createStepMessage(stepName, process, prefix, interpretTypes);
-      message.ifPresent(m -> stepsToSend.put(stepName, m));
+      message.ifPresent(m -> {
+        LOG.info("Created message for step {} : {}", stepName, m);
+        stepsToSend.put(stepName, m);
+      });
     }
 
     if (stepsToSend.isEmpty()) {
@@ -405,27 +420,41 @@ public class DefaultRegistryPipelinesHistoryTrackingService
         new PipelineExecution()
             .setCreatedBy(user)
             .setRerunReason(reason)
-            .setStepsToRun(getStepTypes(stepsToSend.keySet()));
+            .setStepsToRun(getStepTypes(stepsToSend.keySet(), dataset, excludeEventSteps));
 
     long executionKey = addPipelineExecution(process.getKey(), execution, user);
+
+    for (StepType step : stepsToSend.keySet()) {
+      LOG.info("Outgoing messages to send: {}, message: {}", step, stepsToSend.get(step));
+    }
 
     // send messages
     Set<StepType> stepsFailed = new HashSet<>(stepsToSend.size());
     stepsToSend.forEach(
-        (key, message) -> {
+        (stepType, message) -> {
+
+          if (excludeEventSteps) {
+            message.getPipelineSteps().removeAll(EVENT_STEP_TYPES);
+          }
+
           message.setExecutionId(executionKey);
           try {
             if (message instanceof PipelinesInterpretedMessage
-                || message instanceof PipelinesVerbatimMessage) {
+                || message instanceof PipelinesVerbatimMessage
+                || message instanceof PipelinesEventsInterpretedMessage
+                || message instanceof PipelinesEventsMessage
+            ) {
               String nextMessageClassName = message.getClass().getSimpleName();
               String messagePayload = message.toString();
+              LOG.info("Sending message to balancer: {}, message: {}", nextMessageClassName, messagePayload);
               publisher.send(new PipelinesBalancerMessage(nextMessageClassName, messagePayload));
             } else {
+              LOG.info("Sending message directly: {}", message);
               publisher.send(message);
             }
           } catch (IOException ex) {
             LOG.warn("Error sending message", ex);
-            stepsFailed.add(key);
+            stepsFailed.add(stepType);
           }
         });
 
@@ -443,21 +472,23 @@ public class DefaultRegistryPipelinesHistoryTrackingService
   }
 
   private Optional<? extends PipelineBasedMessage> createStepMessage(
-      StepType stepName, PipelineProcess process, String prefix, Set<String> interpretTypes) {
-    Optional<PipelineStep> latestStepOpt = getLatestSuccessfulStep(process, stepName);
+      StepType stepType, PipelineProcess process, String prefix, Set<String> interpretTypes) {
+
+    Optional<PipelineStep> latestStepOpt = getLatestSuccessfulStep(process, stepType);
 
     if (latestStepOpt.isEmpty()) {
-      LOG.warn("Can't find latest successful step for the datasetKey {}", process.getDatasetKey());
+      LOG.warn("Can't find latest successful ingest step for the datasetKey {}", process.getDatasetKey());
       return Optional.empty();
     }
 
+    LOG.info("Latest successful ingest step found: {}", latestStepOpt.get());
     String jsonMessage = latestStepOpt.get().getMessage();
-    switch (stepName) {
+    switch (stepType) {
       case INTERPRETED_TO_INDEX:
       case FRAGMENTER:
-        return createInterpretedMessage(prefix, jsonMessage, stepName);
+        return createInterpretedMessage(prefix, jsonMessage, stepType);
       case HDFS_VIEW:
-        return createInterpretedMessage(prefix, jsonMessage, stepName, interpretTypes);
+        return createInterpretedMessage(prefix, jsonMessage, stepType, interpretTypes);
       case VERBATIM_TO_INTERPRETED:
         return createVerbatimMessage(prefix, jsonMessage, interpretTypes);
       case DWCA_TO_VERBATIM:
@@ -470,22 +501,26 @@ public class DefaultRegistryPipelinesHistoryTrackingService
         return deserializeMessage(jsonMessage, PipelinesEventsMessage.class);
       case EVENTS_INTERPRETED_TO_INDEX:
       case EVENTS_HDFS_VIEW:
-        return createEventInterpretedMessage(prefix, jsonMessage, stepName, interpretTypes);
+        return createEventInterpretedMessage(prefix, jsonMessage, stepType, interpretTypes);
       default:
         return Optional.empty();
     }
   }
 
   @VisibleForTesting
-  protected Set<StepType> getStepTypes(Set<StepType> stepsToSend) {
+  protected Set<StepType> getStepTypes(
+      Set<StepType> stepsToSend, Dataset dataset, boolean excludeEventSteps) {
     Set<StepType> finalSteps = new HashSet<>();
     if (stepsToSend.stream().anyMatch(StepType::isEventType)) {
       finalSteps.addAll(PipelinesWorkflow.getEventWorkflow().getAllNodesFor(stepsToSend));
+    } else if (!excludeEventSteps && dataset != null && dataset.getType() == DatasetType.SAMPLING_EVENT) {
+      finalSteps.addAll(PipelinesWorkflow.getEventOccurrenceWorkflow().getAllNodesFor(stepsToSend));
     }
+
     if (stepsToSend.stream().anyMatch(StepType::isOccurrenceType)) {
       finalSteps.addAll(PipelinesWorkflow.getOccurrenceWorkflow().getAllNodesFor(stepsToSend));
     }
-    // TODO: Events from dwca will be ignorred, add dataset type?
+
     if (stepsToSend.stream().anyMatch(StepType::isVerbatimType)) {
       finalSteps.addAll(PipelinesWorkflow.getOccurrenceWorkflow().getAllNodesFor(stepsToSend));
     }
