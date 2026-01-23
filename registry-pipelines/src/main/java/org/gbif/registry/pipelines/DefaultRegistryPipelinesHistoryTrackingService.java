@@ -272,27 +272,6 @@ public class DefaultRegistryPipelinesHistoryTrackingService
    * Search the last step executed of a specific StepType.
    *
    * @param pipelineProcess container of steps
-   * @return optionally, the las step found
-   */
-  @VisibleForTesting
-  Optional<PipelineStep> getLatestSuccessfulIngest(PipelineProcess pipelineProcess) {
-    return pipelineProcess.getExecutions().stream()
-        .filter(ex -> !ex.getStepsToRun().isEmpty())
-        .sorted(Comparator.comparing(PipelineExecution::getCreated).reversed())
-        .flatMap(ex -> ex.getSteps().stream())
-        .filter(s ->
-          StepType.ABCD_TO_VERBATIM.equals(s.getType())
-          || StepType.DWCA_TO_VERBATIM.equals(s.getType())
-          || StepType.XML_TO_VERBATIM.equals(s.getType())
-        )
-        .filter(s -> s.getMessage() != null && !s.getMessage().isEmpty())
-        .max(Comparator.comparing(PipelineStep::getStarted));
-  }
-
-  /**
-   * Search the last step executed of a specific StepType.
-   *
-   * @param pipelineProcess container of steps
    * @param step to be searched
    * @return optionally, the las step found
    */
@@ -495,7 +474,6 @@ public class DefaultRegistryPipelinesHistoryTrackingService
   private Optional<? extends PipelineBasedMessage> createStepMessage(
       StepType stepType, PipelineProcess process, String prefix, Set<String> interpretTypes) {
 
-//    Optional<PipelineStep> latestStepOpt = getLatestSuccessfulIngest(process);
     Optional<PipelineStep> latestStepOpt = getLatestSuccessfulStep(process, stepType);
 
     if (latestStepOpt.isEmpty()) {

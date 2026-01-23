@@ -65,7 +65,7 @@ class RegistryPipelinesHistoryTrackingServiceTest {
     process.addExecution(execution);
 
     PipelineStep step1 =
-        trackingService.getLatestSuccessfulIngest(process).get();
+        trackingService.getLatestSuccessfulStep(process, s1.getType()).get();
     assertEquals(s1, step1);
   }
 
