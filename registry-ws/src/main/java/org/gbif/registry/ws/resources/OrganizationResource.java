@@ -369,6 +369,7 @@ public class OrganizationResource
             .numPublishedDatasets(request.getNumPublishedDatasets())
             .contactUserId(request.getContactUserId())
             .contactEmail(request.getContactEmail())
+            .canModify(request.getCanModify())
             .page(request.getPage())
             .build();
 

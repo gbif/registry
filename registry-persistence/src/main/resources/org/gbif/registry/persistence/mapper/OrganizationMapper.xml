@@ -308,6 +308,18 @@
           </if>
         </if>
       </if>
+      <if test="params.canModify != null">
+        AND EXISTS (
+        SELECT 1
+        FROM editor_rights er
+        WHERE er.username = #{params.canModify}
+        AND (
+        er.key = o.key
+        OR er.key = o.endorsing_node_key
+        )
+        )
+      </if>
+
     </where>
   </sql>
 

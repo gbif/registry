@@ -35,6 +35,7 @@ public class OrganizationListParams extends BaseListParams {
   @Nullable private Range<Integer> numPublishedDatasets;
   @Nullable private String contactUserId;
   @Nullable private String contactEmail;
+  @Nullable private String canModify;
 
   public static OrganizationListParams from(BaseListParams params) {
     return BaseListParams.copy(OrganizationListParams.builder().build(), params);
