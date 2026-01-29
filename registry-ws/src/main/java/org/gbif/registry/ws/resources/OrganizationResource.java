@@ -54,8 +54,6 @@ import org.apache.ibatis.annotations.Param;
 import org.geojson.Feature;
 import org.geojson.FeatureCollection;
 import org.geojson.Point;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -115,8 +113,6 @@ import static org.gbif.registry.security.UserRoles.IPT_ROLE;
 public class OrganizationResource
     extends BaseNetworkEntityResource<Organization, OrganizationListParams>
     implements OrganizationService {
-
-  private static final Logger LOG = LoggerFactory.getLogger(OrganizationResource.class);
 
   public static final int MINIMUM_PASSWORD_SIZE = 12;
   public static final int MAXIMUM_PASSWORD_SIZE = 15;
@@ -347,10 +343,6 @@ public class OrganizationResource
   @GetMapping
   @Override
   public PagingResponse<Organization> list(OrganizationRequestSearchParams request) {
-    if (request != null) {
-      LOG.info("List organizations, request.canModify=[{}]", request.getCanModify());
-    }
-
     return listInternal(request, false);
   }
 
@@ -380,8 +372,6 @@ public class OrganizationResource
             .canModify(request.getCanModify())
             .page(request.getPage())
             .build();
-
-    LOG.info("Request to list organizations from DB, listParams.canModify={}", listParams.getCanModify());
 
     long total = organizationMapper.count(listParams);
     return pagingResponse(request.getPage(), total, organizationMapper.list(listParams));
