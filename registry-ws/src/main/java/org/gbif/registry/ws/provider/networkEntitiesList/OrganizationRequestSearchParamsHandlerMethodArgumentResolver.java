@@ -13,6 +13,7 @@
  */
 package org.gbif.registry.ws.provider.networkEntitiesList;
 
+import org.apache.commons.lang3.StringUtils;
 import org.gbif.api.model.registry.search.OrganizationRequestSearchParams;
 import org.gbif.api.util.Range;
 import org.gbif.api.util.VocabularyUtils;
@@ -59,6 +60,12 @@ public class OrganizationRequestSearchParamsHandlerMethodArgumentResolver
       } catch (Exception e) {
         throw new IllegalArgumentException("Invalid UUID for network key: " + networkKeyParam);
       }
+    }
+
+    // canModify
+    String user = webRequest.getParameter("canModify");
+    if (StringUtils.isNotEmpty(user)) {
+      params.setCanModify(user);
     }
 
     // country
