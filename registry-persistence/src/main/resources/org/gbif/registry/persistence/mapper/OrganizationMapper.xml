@@ -309,17 +309,25 @@
         </if>
       </if>
       <if test="params.canModify != null">
-        AND EXISTS (
-        SELECT 1
-        FROM editor_rights er
-        WHERE er.username = #{params.canModify}
         AND (
-        er.key = o.key
-        OR er.key = o.endorsing_node_key
+        EXISTS (
+          SELECT 1
+          FROM editor_rights er_admin
+          WHERE er_admin.username = #{params.canModify}
+          AND er_admin.key = 'REGISTRY_ADMIN'
+        )
+        OR
+        EXISTS (
+          SELECT 1
+          FROM editor_rights er
+          WHERE er.username = #{params.canModify}
+          AND (
+          er.key = o.key
+          OR er.key = o.endorsing_node_key
+          )
         )
         )
       </if>
-
     </where>
   </sql>
 
