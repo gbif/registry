@@ -314,7 +314,7 @@
           SELECT 1
           FROM "user" u
           WHERE u.username = #{params.canModify}
-          AND u.roles @> ARRAY['REGISTRY_ADMIN']
+            AND 'REGISTRY_ADMIN' = ANY(u.roles)
         )
         OR
         EXISTS (
