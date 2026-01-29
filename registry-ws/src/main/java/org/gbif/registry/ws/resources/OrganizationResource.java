@@ -347,7 +347,10 @@ public class OrganizationResource
   @GetMapping
   @Override
   public PagingResponse<Organization> list(OrganizationRequestSearchParams request) {
-    LOG.info("List organizations, request.canModify=[{}]", request.getCanModify());
+    if (request != null) {
+      LOG.info("List organizations, request.canModify=[{}]", request.getCanModify());
+    }
+
     return listInternal(request, false);
   }
 
