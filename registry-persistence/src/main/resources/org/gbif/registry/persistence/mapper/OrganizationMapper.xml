@@ -312,9 +312,9 @@
         AND (
         EXISTS (
           SELECT 1
-          FROM editor_rights er_admin
-          WHERE er_admin.username = #{params.canModify}
-          AND er_admin.key = 'REGISTRY_ADMIN'
+          FROM "user" u
+          WHERE u.username = #{params.canModify}
+          AND u.roles @> ARRAY['REGISTRY_ADMIN']
         )
         OR
         EXISTS (
