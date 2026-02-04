@@ -336,6 +336,11 @@ public class OrganizationResource
             name = "numPublishedDatasets",
             description = "Filter by number of published datasets. Examples: '5' (exactly 5), '1,*' (at least 1), '*,10' (at most 10), '5,15' (between 5 and 15).",
             schema = @Schema(implementation = String.class),
+            in = ParameterIn.QUERY),
+        @Parameter(
+            name = "canModify",
+            description = "Filter for organizations the specified user has permission to modify.",
+            schema = @Schema(implementation = String.class),
             in = ParameterIn.QUERY)
       })
   @ApiResponse(responseCode = "200", description = "Organization search successful")
