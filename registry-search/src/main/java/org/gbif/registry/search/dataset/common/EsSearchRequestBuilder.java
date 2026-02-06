@@ -45,6 +45,9 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.IntUnaryOperator;
 import java.util.stream.Collectors;
+
+import org.gbif.registry.search.dataset.indexing.es.LocalEmbeddingService;
+
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.LineString;
@@ -73,9 +76,11 @@ public class EsSearchRequestBuilder<P extends SearchParameter> {
   private static final String POST_HL_TAG = "</em>";
 
   private final EsFieldMapper<P> esFieldMapper;
+  private final LocalEmbeddingService embeddingService;
 
-  public EsSearchRequestBuilder(EsFieldMapper<P> esFieldMapper) {
+  public EsSearchRequestBuilder(EsFieldMapper<P> esFieldMapper, LocalEmbeddingService embeddingService) {
     this.esFieldMapper = esFieldMapper;
+    this.embeddingService = embeddingService;
   }
 
   private Highlight buildHighlight() {
@@ -95,7 +100,7 @@ public class EsSearchRequestBuilder<P extends SearchParameter> {
   }
 
   public SearchRequest buildSearchRequest(
-      FacetedSearchRequest<P> searchRequest, boolean facetsEnabled, String index) {
+    FacetedSearchRequest<P> searchRequest, boolean facetsEnabled, String index, boolean semanticSearch) {
 
     SearchRequest.Builder builder = new SearchRequest.Builder();
     builder.index(index);
@@ -106,7 +111,7 @@ public class EsSearchRequestBuilder<P extends SearchParameter> {
     String[] excludes = esFieldMapper.excludeFields();
     if (includes != null || excludes != null) {
       builder.source(s -> s.filter(f -> f.includes(Arrays.asList(includes != null ? includes : new String[0]))
-                                        .excludes(Arrays.asList(excludes != null ? excludes : new String[0]))));
+        .excludes(Arrays.asList(excludes != null ? excludes : new String[0]))));
     }
 
     // size and offset
@@ -118,35 +123,71 @@ public class EsSearchRequestBuilder<P extends SearchParameter> {
 
     // sort and highlighting
     if (Strings.isNullOrEmpty(searchRequest.getQ())) {
-      // Use field-based sorting for non-search queries
       SortOptions[] sorts = esFieldMapper.sorts();
       if (sorts != null && sorts.length > 0) {
         builder.sort(Arrays.asList(sorts));
       }
     } else {
-      // Use score sorting for search queries
       builder.sort(SortOptions.of(s -> s.score(sc -> sc.order(SortOrder.Desc))));
-      if (searchRequest.isHighlight()) {
+      if (searchRequest.isHighlight() && !semanticSearch) {
         builder.highlight(buildHighlight());
       }
     }
 
-    // add query
-    if (SearchConstants.QUERY_WILDCARD.equals(searchRequest.getQ())) { // Is a search all
-      builder.query(Query.of(q -> q.matchAll(ma -> ma)));
+    // Semantic search with kNN
+    if (semanticSearch && !Strings.isNullOrEmpty(searchRequest.getQ())
+      && !SearchConstants.QUERY_WILDCARD.equals(searchRequest.getQ())) {
+      float[] queryVector = embeddingService.generateEmbedding(searchRequest.getQ());
+      List<Float> vectorList = toFloatList(queryVector);
+
+      builder.knn(knn -> knn
+        .field("embedding")
+        .queryVector(vectorList)
+        .k(searchRequest.getLimit())
+        .numCandidates(Math.max(100, searchRequest.getLimit() * 2))
+      );
+
+      // Add filter for kNN if there are filter params
+      buildQuery(groupedParams.queryParams, null).ifPresent(filterQuery ->
+        builder.knn(knn -> knn
+          .field("embedding")
+          .queryVector(vectorList)
+          .k(searchRequest.getLimit())
+          .numCandidates(Math.max(100, searchRequest.getLimit() * 2))
+          .filter(filterQuery)
+        )
+      );
     } else {
-      buildQuery(groupedParams.queryParams, searchRequest.getQ())
+      // Traditional full-text search
+      if (SearchConstants.QUERY_WILDCARD.equals(searchRequest.getQ())) {
+        builder.query(Query.of(q -> q.matchAll(ma -> ma)));
+      } else {
+        buildQuery(groupedParams.queryParams, searchRequest.getQ())
           .ifPresent(builder::query);
+      }
     }
 
     // add aggs
     buildAggs(searchRequest, groupedParams.postFilterParams, facetsEnabled)
-        .ifPresent(aggsMap -> aggsMap.forEach(builder::aggregations));
+      .ifPresent(aggsMap -> aggsMap.forEach(builder::aggregations));
 
     // post-filter
     buildPostFilter(groupedParams.postFilterParams).ifPresent(builder::postFilter);
 
     return builder.build();
+  }
+
+  public SearchRequest buildSearchRequest(
+    FacetedSearchRequest<P> searchRequest, boolean facetsEnabled, String index) {
+    return buildSearchRequest(searchRequest, facetsEnabled, index, false);
+  }
+
+  private List<Float> toFloatList(float[] arr) {
+    List<Float> list = new ArrayList<>(arr.length);
+    for (float f : arr) {
+      list.add(f);
+    }
+    return list;
   }
 
   public SearchRequest buildAutocompleteQuery(

@@ -13,6 +13,8 @@
  */
 package org.gbif.registry.cli.datasetindex;
 
+import jakarta.annotation.Nullable;
+
 import org.gbif.registry.cli.common.DbConfiguration;
 
 import jakarta.validation.Valid;
@@ -38,6 +40,10 @@ public class DatasetIndexConfiguration {
   @ParametersDelegate @Valid @NotNull private ElasticsearchConfig datasetEs;
 
   @ParametersDelegate @Valid @NotNull private ElasticsearchConfig occurrenceEs;
+
+  @Parameter(names = "--model-url")
+  @Nullable
+  private String modelUrl = "djl://ai.djl.huggingface.pytorch/sentence-transformers/all-MiniLM-L6-v2";
 
   private boolean indexClb = true;
 

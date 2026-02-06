@@ -189,6 +189,12 @@
         "concept": {"type": "keyword"},
         "lineage": {"type": "keyword", "copy_to": "all"}
       }
+    },
+    "embedding": {
+      "type": "dense_vector",
+      "dims": 384,
+      "index": true,
+      "similarity": "cosine"
     }
   }
 }

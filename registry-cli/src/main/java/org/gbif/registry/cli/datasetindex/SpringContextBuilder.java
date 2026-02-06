@@ -26,6 +26,7 @@ import org.gbif.registry.search.dataset.indexing.EsDatasetRealtimeIndexer;
 import org.gbif.registry.search.dataset.indexing.checklistbank.ChecklistbankPersistenceServiceImpl;
 import org.gbif.registry.search.dataset.indexing.es.EsClient;
 import org.gbif.registry.search.dataset.indexing.es.EsConfiguration;
+import org.gbif.registry.search.dataset.indexing.es.LocalEmbeddingService;
 import org.gbif.registry.search.dataset.indexing.ws.GbifApiServiceConfig;
 import org.gbif.registry.search.dataset.indexing.ws.GbifWsWrapperClient;
 import org.gbif.registry.search.dataset.indexing.ws.JacksonObjectMapper;
@@ -98,6 +99,7 @@ public class SpringContextBuilder {
     ctx.register(EsConfiguration.class);
     ctx.register(EsClient.class);
     ctx.register(DatasetJsonConverter.class);
+    ctx.register(LocalEmbeddingService.class);
 
     if (configuration.isIndexClb()) {
       ctx.register(ChecklistbankPersistenceServiceImpl.class);

@@ -15,6 +15,10 @@ package org.gbif.registry.search.dataset.service;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+
 import org.gbif.api.model.common.search.SearchResponse;
 import org.gbif.api.model.registry.search.DatasetSearchParameter;
 import org.gbif.api.model.registry.search.DatasetSearchRequest;
@@ -31,6 +35,10 @@ import java.util.List;
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch.core.SearchRequest;
+
+import org.gbif.registry.search.dataset.indexing.es.LocalEmbeddingService;
+
+import org.jspecify.annotations.NonNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -48,10 +56,10 @@ public class DatasetSearchServiceEs implements DatasetSearchService {
 
   private final DatasetEsResponseParser esResponseParser = DatasetEsResponseParser.create();
   private final ElasticsearchClient elasticsearchClient;
+  private final LocalEmbeddingService embeddingService;
   private final String index;
 
-  private final EsSearchRequestBuilder<DatasetSearchParameter> esSearchRequestBuilder =
-      new EsSearchRequestBuilder<>(new DatasetEsFieldMapper());
+  private final EsSearchRequestBuilder<DatasetSearchParameter> esSearchRequestBuilder;
 
   @Autowired
   public DatasetSearchServiceEs(
@@ -59,6 +67,9 @@ public class DatasetSearchServiceEs implements DatasetSearchService {
       ElasticsearchClient elasticsearchClient) {
     this.index = index;
     this.elasticsearchClient = elasticsearchClient;
+    embeddingService = new LocalEmbeddingService();
+    esSearchRequestBuilder =
+      new EsSearchRequestBuilder<>(new DatasetEsFieldMapper(), embeddingService);
   }
 
   @Override
@@ -80,19 +91,7 @@ public class DatasetSearchServiceEs implements DatasetSearchService {
   @Override
   public List<DatasetSuggestResult> suggest(DatasetSuggestRequest datasetSuggestRequest) {
     try {
-      int limit = datasetSuggestRequest.getLimit();
-      if (limit <= 0) {
-        limit = DEFAULT_SUGGEST_LIMIT;
-      } else if (limit > MAX_SUGGEST_LIMIT) {
-        limit = MAX_SUGGEST_LIMIT;
-      }
-
-      // Create a copy of the request with the validated limit
-      DatasetSuggestRequest modifiedRequest = new DatasetSuggestRequest();
-      modifiedRequest.setQ(datasetSuggestRequest.getQ());
-      modifiedRequest.setLimit(limit);
-      modifiedRequest.setOffset(datasetSuggestRequest.getOffset());
-      modifiedRequest.setParameters(datasetSuggestRequest.getParameters());
+      var modifiedRequest = getDatasetSuggestRequest(datasetSuggestRequest);
 
       SearchRequest searchRequest =
           esSearchRequestBuilder.buildAutocompleteQuery(modifiedRequest, DatasetSearchParameter.DATASET_TITLE, index);
@@ -106,5 +105,23 @@ public class DatasetSearchServiceEs implements DatasetSearchService {
       log.error("Error executing the search operation", ex);
       throw new RuntimeException(ex);
     }
+  }
+
+  private static @NonNull DatasetSuggestRequest getDatasetSuggestRequest(
+    DatasetSuggestRequest datasetSuggestRequest) {
+    int limit = datasetSuggestRequest.getLimit();
+    if (limit <= 0) {
+      limit = DEFAULT_SUGGEST_LIMIT;
+    } else if (limit > MAX_SUGGEST_LIMIT) {
+      limit = MAX_SUGGEST_LIMIT;
+    }
+
+    // Create a copy of the request with the validated limit
+    DatasetSuggestRequest modifiedRequest = new DatasetSuggestRequest();
+    modifiedRequest.setQ(datasetSuggestRequest.getQ());
+    modifiedRequest.setLimit(limit);
+    modifiedRequest.setOffset(datasetSuggestRequest.getOffset());
+    modifiedRequest.setParameters(datasetSuggestRequest.getParameters());
+    return modifiedRequest;
   }
 }

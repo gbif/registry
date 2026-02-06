@@ -17,6 +17,7 @@ import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch.ElasticsearchAsyncClient;
 import org.elasticsearch.client.RestClient;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -68,5 +69,10 @@ public class EsConfiguration {
   public ElasticsearchClient occurrenceElasticsearchClient(
       @Qualifier("esOccurrenceClientConfig") EsClient.EsClientConfiguration esClientConfiguration) {
     return EsClient.provideElasticsearchClient(esClientConfiguration);
+  }
+
+  @Bean
+  public LocalEmbeddingService embeddingService(@Value("elasticsearch.registry.modelUrl") String modeUrl) {
+    return new LocalEmbeddingService(modeUrl);
   }
 }

@@ -13,6 +13,8 @@
  */
 package org.gbif.registry.search.dataset.indexing;
 
+import java.util.Arrays;
+
 import org.gbif.api.model.checklistbank.DatasetMetrics;
 import org.gbif.api.model.checklistbank.search.NameUsageSearchRequest;
 import org.gbif.api.model.common.search.SearchResponse;
@@ -31,6 +33,7 @@ import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.api.vocabulary.License;
 import org.gbif.api.vocabulary.MaintenanceUpdateFrequency;
 import org.gbif.registry.search.dataset.indexing.checklistbank.ChecklistbankPersistenceService;
+import org.gbif.registry.search.dataset.indexing.es.LocalEmbeddingService;
 import org.gbif.registry.search.dataset.indexing.ws.GbifWsClient;
 import org.gbif.registry.search.dataset.indexing.ws.JacksonObjectMapper;
 import org.gbif.vocabulary.client.ConceptClient;
@@ -105,6 +108,8 @@ public class DatasetJsonConverter {
 
   private Long nameUsagesCount;
 
+  private final LocalEmbeddingService embeddingService;
+
   private Long getOccurrenceCount() {
     if (occurrenceCount == null) {
       occurrenceCount = gbifWsClient.getOccurrenceRecordCount();
@@ -126,13 +131,15 @@ public class DatasetJsonConverter {
       @Autowired(required = false) ChecklistbankPersistenceService checklistbankPersistenceService,
       @Qualifier("apiMapper") ObjectMapper mapper,
       @Qualifier("occurrenceEsClient") ElasticsearchClient occurrenceEsClient,
-      @Value("${elasticsearch.occurrence.index}") String occurrenceIndex) {
+      @Value("${elasticsearch.occurrence.index}") String occurrenceIndex,
+      LocalEmbeddingService embeddingService) {
     this.gbifWsClient = gbifWsClient;
     this.conceptClient = conceptClient;
     this.checklistbankPersistenceService = checklistbankPersistenceService;
     this.mapper = mapper;
     this.occurrenceEsClient = occurrenceEsClient;
     this.occurrenceIndex = occurrenceIndex;
+    this.embeddingService = embeddingService;
     consumers.add(this::maintenanceFieldsTransforms);
     consumers.add(this::addTitles);
     consumers.add(this::enumTransforms);
@@ -144,14 +151,16 @@ public class DatasetJsonConverter {
       ConceptClient conceptClient,
       ChecklistbankPersistenceService checklistbankPersistenceService,
       ElasticsearchClient occurrenceEsClient,
-      String occurrenceIndex) {
+      String occurrenceIndex,
+      LocalEmbeddingService embeddingService) {
     return new DatasetJsonConverter(
         gbifWsClient,
         conceptClient,
         checklistbankPersistenceService,
         JacksonObjectMapper.get(),
         occurrenceEsClient,
-        occurrenceIndex);
+        occurrenceIndex,
+        embeddingService);
   }
 
   public ObjectNode convert(Dataset dataset) {
@@ -186,7 +195,15 @@ public class DatasetJsonConverter {
 
   @SneakyThrows
   public String convertAsJsonString(Dataset dataset) {
-    return mapper.writeValueAsString(convert(dataset));
+    ObjectNode datasetJsonNode = convert(dataset);
+
+    // Generate embedding
+    String embeddingText = embeddingService.buildEmbeddingText(dataset);
+    float[] embedding = embeddingService.generateEmbedding(embeddingText);
+
+    datasetJsonNode.put("embedding", Arrays.toString(embedding));
+
+    return mapper.writeValueAsString(datasetJsonNode);
   }
 
   private void addTitles(ObjectNode dataset) {
