@@ -178,7 +178,7 @@ public class DefaultRegistryPipelinesHistoryTrackingService
 
     Optional<Integer> attempt =
         useLastSuccessful
-            ? mapper.getLastSuccessfulAttempt(datasetKey, steps.iterator().next())
+            ? mapper.getLastSuccessfulAttempt(datasetKey, prioritizeSteps(steps, datasetKey).iterator().next())
             : mapper.getLastAttempt(datasetKey);
 
     return attempt.orElseThrow(
@@ -266,6 +266,13 @@ public class DefaultRegistryPipelinesHistoryTrackingService
     }
 
     return newSteps;
+  }
+
+  private Set<StepType> prioritizeSteps(Set<StepType> steps, UUID datasetKey) {
+    if (steps.contains(StepType.TO_VERBATIM)) {
+      return prioritizeSteps(steps, datasetService.get(datasetKey));
+    }
+    return steps;
   }
 
   /**
