@@ -49,6 +49,7 @@ public interface RegistryPipelinesHistoryTrackingService {
    * @param interpretTypes is used for partial interpretation such as only TAXONOMY, METADATA and
    *     etc
    * @param excludeEventSteps true if we don't want to run the event steps
+   * @param onlyIncludeRequestedStep only run requested step
    * @return a response containing the request result
    */
   RunPipelineResponse runLastAttempt(
@@ -60,7 +61,8 @@ public interface RegistryPipelinesHistoryTrackingService {
       boolean useLastSuccessful,
       boolean markPreviousAttemptAsFailed,
       Set<String> interpretTypes,
-      boolean excludeEventSteps);
+      boolean excludeEventSteps,
+      boolean onlyIncludeRequestedStep);
 
   /**
    * Executes the last crawl attempt for all datasets.
@@ -88,7 +90,8 @@ public interface RegistryPipelinesHistoryTrackingService {
       boolean useLastSuccessful,
       boolean markPreviousAttemptAsFailed,
       Set<String> interpretTypes,
-      boolean excludeEventSteps);
+      boolean excludeEventSteps,
+      boolean onlyIncludeRequestedStep);
 
   /**
    * Executes a previously run attempt.
@@ -115,7 +118,8 @@ public interface RegistryPipelinesHistoryTrackingService {
       String prefix,
       boolean markPreviousAttemptAsFailed,
       Set<String> interpretTypes,
-      boolean excludeEventSteps);
+      boolean excludeEventSteps,
+      boolean onlyIncludeRequestedStep);
 
   /**
    * Lists the history of all {@link PipelineProcess}, sorted descending from the most recent one.
