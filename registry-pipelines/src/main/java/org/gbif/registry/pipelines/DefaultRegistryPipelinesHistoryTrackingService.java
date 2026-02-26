@@ -402,6 +402,13 @@ public class DefaultRegistryPipelinesHistoryTrackingService
     // Performs the messaging and updates the status once the message has been sent
     Dataset dataset = datasetService.get(datasetKey);
 
+    if (dataset == null) {
+      return new RunPipelineResponse.Builder()
+        .setResponseStatus(RunPipelineResponse.ResponseStatus.ERROR)
+        .setMessage("Dataset not found")
+        .build();
+    }
+
     // Create Rabbit messages
     Map<StepType, PipelineBasedMessage> stepsToSend = new EnumMap<>(StepType.class);
     for (StepType stepName : prioritizeSteps(steps, dataset)) {
