@@ -406,7 +406,7 @@ public class DefaultRegistryPipelinesHistoryTrackingService
     Map<StepType, PipelineBasedMessage> stepsToSend = new EnumMap<>(StepType.class);
     for (StepType stepName : prioritizeSteps(steps, dataset)) {
       Optional<? extends PipelineBasedMessage> message =
-          createStepMessage(stepName, process, prefix, interpretTypes);
+          createStepMessage(stepName, process, prefix, interpretTypes, dataset);
       message.ifPresent(m -> {
         LOG.info("Created message for step {} : {}", stepName, m);
         stepsToSend.put(stepName, m);
@@ -479,7 +479,7 @@ public class DefaultRegistryPipelinesHistoryTrackingService
   }
 
   private Optional<? extends PipelineBasedMessage> createStepMessage(
-      StepType stepType, PipelineProcess process, String prefix, Set<String> interpretTypes) {
+      StepType stepType, PipelineProcess process, String prefix, Set<String> interpretTypes, Dataset dataset) {
 
     Optional<PipelineStep> latestStepOpt = getLatestSuccessfulStep(process, stepType);
 
@@ -497,7 +497,7 @@ public class DefaultRegistryPipelinesHistoryTrackingService
       case HDFS_VIEW:
         return createInterpretedMessage(prefix, jsonMessage, stepType, interpretTypes);
       case VERBATIM_TO_INTERPRETED:
-        return createVerbatimMessage(prefix, jsonMessage, interpretTypes);
+        return createVerbatimMessage(prefix, jsonMessage, interpretTypes, dataset);
       case DWCA_TO_VERBATIM:
         return deserializeMessage(jsonMessage, PipelinesDwcaMessage.class);
       case ABCD_TO_VERBATIM:
@@ -549,7 +549,7 @@ public class DefaultRegistryPipelinesHistoryTrackingService
   }
 
   private Optional<PipelineBasedMessage> createVerbatimMessage(
-      String prefix, String jsonMessage, Set<String> interpretTypes) {
+      String prefix, String jsonMessage, Set<String> interpretTypes, Dataset dataset) {
     PipelinesVerbatimMessage message =
         deserializeMessage(jsonMessage, PipelinesVerbatimMessage.class).orElse(null);
     if (message == null) {
@@ -565,7 +565,8 @@ public class DefaultRegistryPipelinesHistoryTrackingService
       steps.add(StepType.HDFS_VIEW.name());
     }
 
-    if (message.getPipelineSteps().contains(StepType.EVENTS_VERBATIM_TO_INTERPRETED.name())) {
+    if (message.getPipelineSteps().contains(StepType.EVENTS_VERBATIM_TO_INTERPRETED.name())
+        || DatasetType.SAMPLING_EVENT == dataset.getType()) {
       steps.add(StepType.EVENTS_VERBATIM_TO_INTERPRETED.name());
       steps.add(StepType.EVENTS_INTERPRETED_TO_INDEX.name());
       steps.add(StepType.EVENTS_HDFS_VIEW.name());
