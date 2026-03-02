@@ -136,7 +136,7 @@
     <resilience4j.version>2.3.0</resilience4j.version>
     <httpclient.version>4.5.14</httpclient.version>
     <httpcore.version>4.4.16</httpcore.version>
-    <jackson.version>2.19.4</jackson.version>
+    <jackson.version>2.21.1</jackson.version>
     <micrometer-tracing.version>1.6.1</micrometer-tracing.version>
     <jakarta.el.version>4.0.2</jakarta.el.version>
     <jakarta-validation.version>3.1.1</jakarta-validation.version>
