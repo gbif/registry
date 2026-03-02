@@ -56,7 +56,6 @@ public class DatasetSearchServiceEs implements DatasetSearchService {
 
   private final DatasetEsResponseParser esResponseParser = DatasetEsResponseParser.create();
   private final ElasticsearchClient elasticsearchClient;
-  private final LocalEmbeddingService embeddingService;
   private final String index;
 
   private final EsSearchRequestBuilder<DatasetSearchParameter> esSearchRequestBuilder;
@@ -64,10 +63,10 @@ public class DatasetSearchServiceEs implements DatasetSearchService {
   @Autowired
   public DatasetSearchServiceEs(
       @Value("${elasticsearch.registry.index}") String index,
+    LocalEmbeddingService embeddingService,
       ElasticsearchClient elasticsearchClient) {
     this.index = index;
     this.elasticsearchClient = elasticsearchClient;
-    embeddingService = new LocalEmbeddingService();
     esSearchRequestBuilder =
       new EsSearchRequestBuilder<>(new DatasetEsFieldMapper(), embeddingService);
   }
