@@ -30,6 +30,8 @@ import java.util.Set;
 import java.util.UUID;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.constraints.NotNull;
+
+import org.gbif.api.annotation.Experimental;
 import org.gbif.api.annotation.NullToNotFound;
 import org.gbif.api.model.common.export.ExportFormat;
 import org.gbif.api.model.common.paging.Pageable;
@@ -63,9 +65,10 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /** Event download resource/web service. */
+@Experimental
 @Validated
 @RestController("eventDownloadResource")
-@RequestMapping(value = "event/download", produces = MediaType.APPLICATION_JSON_VALUE)
+@RequestMapping(value = "experimental/event/download", produces = MediaType.APPLICATION_JSON_VALUE)
 public class EventDownloadResource extends BaseDownloadResource {
 
   public EventDownloadResource(
