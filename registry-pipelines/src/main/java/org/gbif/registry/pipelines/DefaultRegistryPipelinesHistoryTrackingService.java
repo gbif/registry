@@ -529,7 +529,7 @@ public class DefaultRegistryPipelinesHistoryTrackingService
   @VisibleForTesting
   protected Set<StepType> getStepTypes(
       Set<StepType> stepsToSend, Dataset dataset, boolean excludeEventSteps, boolean onlyIncludeRequestedStep) {
-    if (onlyIncludeRequestedStep){
+    if (onlyIncludeRequestedStep) {
       return stepsToSend;
     }
     Set<StepType> finalSteps = new HashSet<>();
