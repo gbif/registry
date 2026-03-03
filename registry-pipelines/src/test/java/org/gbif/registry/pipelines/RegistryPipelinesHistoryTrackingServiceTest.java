@@ -90,7 +90,7 @@ class RegistryPipelinesHistoryTrackingServiceTest {
   void getStepTypesEventTest() {
 
     Set<StepType> result =
-      trackingService.getStepTypes(Set.of(StepType.EVENTS_VERBATIM_TO_INTERPRETED), null, false, false  );
+        trackingService.getStepTypes(Set.of(StepType.EVENTS_VERBATIM_TO_INTERPRETED), null, false, false);
 
     assertTrue(result.contains(StepType.EVENTS_VERBATIM_TO_INTERPRETED));
     assertTrue(result.contains(StepType.EVENTS_HDFS_VIEW));
