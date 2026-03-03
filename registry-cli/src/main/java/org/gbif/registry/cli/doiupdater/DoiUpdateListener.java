@@ -234,10 +234,13 @@ public class DoiUpdateListener extends AbstractMessageCallback<ChangeDoiMessage>
       case REGISTERED:
         // the DOI was already registered
         // we only need to update the target url if changed and the metadata
+        // update metadata first
+        doiService.update(doi, xml);
+
+        // update target after metadata - otherwise, it might fail (e.g., unsupported schema)
         if (!target.equals(currState.getTarget()) || !target.equals(dataciteDoiData.getTarget())) {
           doiService.update(doi, target);
         }
-        doiService.update(doi, xml);
         LOG.info("Updated DOI {} with target {}", doi, target);
         break;
       case NEW:
