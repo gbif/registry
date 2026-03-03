@@ -124,7 +124,9 @@ public interface PipelinesHistoryClient extends PipelinesHistoryService {
       @RequestBody(required = false) RunAllParams runAllParams,
       @RequestParam(value = "interpretTypes", defaultValue = "false") Set<String> interpretTypes,
       @RequestParam(value = "excludeEventSteps", required = false, defaultValue = "false")
-          boolean excludeEventSteps);
+          boolean excludeEventSteps,
+      @RequestParam(value = "onlyIncludeRequestedStep", required = false, defaultValue = "false")
+          boolean onlyIncludeRequestedStep);
 
   @PostMapping(value = "run/{datasetKey}")
   @ResponseBody
@@ -138,7 +140,9 @@ public interface PipelinesHistoryClient extends PipelinesHistoryService {
           boolean markPreviousAttemptAsFailed,
       @RequestParam(value = "interpretTypes", defaultValue = "false") Set<String> interpretTypes,
       @RequestParam(value = "excludeEventSteps", required = false, defaultValue = "false")
-          boolean excludeEventSteps);
+          boolean excludeEventSteps,
+      @RequestParam(value = "onlyIncludeRequestedStep", required = false, defaultValue = "false")
+          boolean onlyIncludeRequestedStep);
 
   @PostMapping(value = "run/{datasetKey}/{attempt}")
   @ResponseBody
@@ -152,7 +156,9 @@ public interface PipelinesHistoryClient extends PipelinesHistoryService {
           boolean markPreviousAttemptAsFailed,
       @RequestParam(value = "interpretTypes", defaultValue = "false") Set<String> interpretTypes,
       @RequestParam(value = "excludeEventSteps", required = false, defaultValue = "false")
-          boolean excludeEventSteps);
+          boolean excludeEventSteps,
+      @RequestParam(value = "onlyIncludeRequestedStep", required = false, defaultValue = "false")
+          boolean onlyIncludeRequestedStep);
 
   @PostMapping(
       value = "identifier/{datasetKey}/{attempt}/email",

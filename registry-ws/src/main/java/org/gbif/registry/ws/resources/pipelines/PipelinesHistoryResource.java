@@ -212,7 +212,9 @@ public class PipelinesHistoryResource implements PipelinesHistoryService {
       @RequestBody(required = false) RunAllParams runAllParams,
       @RequestParam("interpretTypes") Set<String> interpretTypes,
       @RequestParam(value = "excludeEventSteps", required = false, defaultValue = "false")
-          boolean excludeEventSteps) {
+          boolean excludeEventSteps,
+      @RequestParam(value = "onlyIncludeRequestedStep", required = false, defaultValue = "false")
+          boolean onlyIncludeRequestedStep) {
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
     return historyTrackingService.runLastAttempt(
@@ -224,7 +226,8 @@ public class PipelinesHistoryResource implements PipelinesHistoryService {
         useLastSuccessful,
         markPreviousAttemptAsFailed,
         interpretTypes,
-        excludeEventSteps);
+        excludeEventSteps,
+        onlyIncludeRequestedStep);
   }
 
   /**
@@ -244,7 +247,9 @@ public class PipelinesHistoryResource implements PipelinesHistoryService {
           boolean markPreviousAttemptAsFailed,
       @RequestParam("interpretTypes") Set<String> interpretTypes,
       @RequestParam(value = "excludeEventSteps", required = false, defaultValue = "false")
-          boolean excludeEventSteps) {
+          boolean excludeEventSteps,
+      @RequestParam(value = "onlyIncludeRequestedStep", required = false, defaultValue = "false")
+          boolean onlyIncludeRequestedStep) {
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     return historyTrackingService.runLastAttempt(
         datasetKey,
@@ -255,7 +260,8 @@ public class PipelinesHistoryResource implements PipelinesHistoryService {
         useLastSuccessful,
         markPreviousAttemptAsFailed,
         interpretTypes,
-        excludeEventSteps);
+        excludeEventSteps,
+        onlyIncludeRequestedStep);
   }
 
   /**
@@ -275,7 +281,9 @@ public class PipelinesHistoryResource implements PipelinesHistoryService {
           boolean markPreviousAttemptAsFailed,
       @RequestParam("interpretTypes") Set<String> interpretTypes,
       @RequestParam(value = "excludeEventSteps", required = false, defaultValue = "false")
-          boolean excludeEventSteps) {
+          boolean excludeEventSteps,
+      @RequestParam(value = "onlyIncludeRequestedStep", required = false, defaultValue = "false")
+          boolean onlyIncludeRequestedStep) {
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     return historyTrackingService.runPipelineAttempt(
         datasetKey,
@@ -286,7 +294,8 @@ public class PipelinesHistoryResource implements PipelinesHistoryService {
         null,
         markPreviousAttemptAsFailed,
         interpretTypes,
-        excludeEventSteps);
+        excludeEventSteps,
+        onlyIncludeRequestedStep);
   }
 
   @GetMapping("search")
