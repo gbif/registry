@@ -81,7 +81,7 @@ class RegistryPipelinesHistoryTrackingServiceTest {
   void getStepTypesTest() {
 
     Set<StepType> result =
-        trackingService.getStepTypes(Set.of(StepType.VERBATIM_TO_INTERPRETED), null, false,false);
+        trackingService.getStepTypes(Set.of(StepType.VERBATIM_TO_INTERPRETED), null, false, false);
 
     assertFalse(result.contains(StepType.FRAGMENTER));
   }
