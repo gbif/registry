@@ -107,6 +107,7 @@ public interface RegistryPipelinesHistoryTrackingService {
    * @param interpretTypes is used for partial interpretation such as only TAXONOMY, METADATA and
    *     etc.
    * @param excludeEventSteps true if we don't want to run the event steps
+   * @param onlyIncludeRequestedStep only run requested step
    * @return the response of the execution request
    */
   RunPipelineResponse runPipelineAttempt(
