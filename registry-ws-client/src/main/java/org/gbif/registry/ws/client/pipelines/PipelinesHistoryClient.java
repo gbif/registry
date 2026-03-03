@@ -126,8 +126,7 @@ public interface PipelinesHistoryClient extends PipelinesHistoryService {
       @RequestParam(value = "excludeEventSteps", required = false, defaultValue = "false")
           boolean excludeEventSteps,
       @RequestParam(value = "onlyIncludeRequestedStep", required = false, defaultValue = "false")
-          boolean onlyIncludeRequestedStep
-      );
+          boolean onlyIncludeRequestedStep);
 
   @PostMapping(value = "run/{datasetKey}")
   @ResponseBody
