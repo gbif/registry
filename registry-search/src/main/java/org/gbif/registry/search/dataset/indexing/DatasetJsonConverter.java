@@ -13,8 +13,6 @@
  */
 package org.gbif.registry.search.dataset.indexing;
 
-import java.util.Arrays;
-
 import org.gbif.api.model.checklistbank.DatasetMetrics;
 import org.gbif.api.model.checklistbank.search.NameUsageSearchRequest;
 import org.gbif.api.model.common.search.SearchResponse;
@@ -201,7 +199,12 @@ public class DatasetJsonConverter {
     String embeddingText = embeddingService.buildEmbeddingText(dataset);
     float[] embedding = embeddingService.generateEmbedding(embeddingText);
 
-    datasetJsonNode.put("embedding", Arrays.toString(embedding));
+    // Add embedding as a proper JSON array of floats
+    ArrayNode embeddingArray = mapper.createArrayNode();
+    for (float value : embedding) {
+      embeddingArray.add(value);
+    }
+    datasetJsonNode.set("embedding", embeddingArray);
 
     return mapper.writeValueAsString(datasetJsonNode);
   }

@@ -72,7 +72,7 @@ public class EsConfiguration {
   }
 
   @Bean
-  public LocalEmbeddingService embeddingService(@Value("elasticsearch.registry.modelUrl") String modeUrl) {
+  public LocalEmbeddingService embeddingService(@Value("${elasticsearch.registry.modelUrl}") String modeUrl) {
     return new LocalEmbeddingService(modeUrl);
   }
 }

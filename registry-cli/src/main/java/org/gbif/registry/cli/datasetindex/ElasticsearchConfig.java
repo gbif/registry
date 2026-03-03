@@ -32,6 +32,8 @@ public class ElasticsearchConfig {
 
   private String alias;
 
+  private String modelUrl = "djl://ai.djl.huggingface.pytorch/sentence-transformers/all-MiniLM-L6-v2";
+
   @Override
   public String toString() {
     return new StringJoiner(", ", ElasticsearchConfig.class.getSimpleName() + "[", "]")
@@ -41,6 +43,7 @@ public class ElasticsearchConfig {
         .add("connectionRequestTimeOut='" + connectionRequestTimeOut + "'")
         .add("index=" + index)
         .add("alias=" + alias)
+        .add("modelUrl=" + modelUrl)
         .toString();
   }
 }

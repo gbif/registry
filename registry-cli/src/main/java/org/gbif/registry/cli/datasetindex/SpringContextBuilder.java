@@ -123,6 +123,9 @@ public class SpringContextBuilder {
             .withUrl(configuration.getApiRootUrl())
             .build(ConceptClient.class));
 
+    ctx.registerBean("localEmbeddingService", LocalEmbeddingService.class, () ->
+        new LocalEmbeddingService(configuration.getDatasetEs().getModelUrl()));
+
     ctx.register(ApplicationConfig.class);
 
     ctx.getEnvironment()
@@ -136,6 +139,7 @@ public class SpringContextBuilder {
                         "elasticsearch.occurrence.index",
                         configuration.getOccurrenceEs().getAlias())
                     .put("elasticsearch.registry.index", configuration.getDatasetEs().getAlias())
+                  .put("elasticsearch.registry.modelUrl", configuration.getDatasetEs().getModelUrl())
                     .put(
                         "indexing.datasource.checklistbank.url",
                         "jdbc:postgresql://"

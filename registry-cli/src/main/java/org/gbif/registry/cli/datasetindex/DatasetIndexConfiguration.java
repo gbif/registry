@@ -41,10 +41,6 @@ public class DatasetIndexConfiguration {
 
   @ParametersDelegate @Valid @NotNull private ElasticsearchConfig occurrenceEs;
 
-  @Parameter(names = "--model-url")
-  @Nullable
-  private String modelUrl = "djl://ai.djl.huggingface.pytorch/sentence-transformers/all-MiniLM-L6-v2";
-
   private boolean indexClb = true;
 
   private Integer stopAfter = -1;
