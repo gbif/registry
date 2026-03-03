@@ -214,8 +214,7 @@ public class PipelinesHistoryResource implements PipelinesHistoryService {
       @RequestParam(value = "excludeEventSteps", required = false, defaultValue = "false")
           boolean excludeEventSteps,
       @RequestParam(value = "onlyIncludeRequestedStep", required = false, defaultValue = "false")
-          boolean onlyIncludeRequestedStep
-      ) {
+          boolean onlyIncludeRequestedStep) {
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
     return historyTrackingService.runLastAttempt(
