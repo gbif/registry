@@ -4,14 +4,11 @@ import lombok.SneakyThrows;
 
 import org.gbif.api.model.registry.Dataset;
 
-import org.springframework.stereotype.Service;
-
 import ai.djl.huggingface.translator.TextEmbeddingTranslatorFactory;
 import ai.djl.inference.Predictor;
 import ai.djl.repository.zoo.Criteria;
 import ai.djl.repository.zoo.ZooModel;
 
-@Service
 public class LocalEmbeddingService {
 
   private final ZooModel<String, float[]> model;

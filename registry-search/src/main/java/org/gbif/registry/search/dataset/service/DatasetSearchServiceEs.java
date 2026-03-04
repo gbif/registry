@@ -74,22 +74,11 @@ public class DatasetSearchServiceEs implements DatasetSearchService {
   @Override
   public SearchResponse<DatasetSearchResult, DatasetSearchParameter> search(
       DatasetSearchRequest datasetSearchRequest) {
-    return search(datasetSearchRequest, false);
-  }
-
-  /**
-   * Search datasets with optional semantic search capability.
-   *
-   * @param datasetSearchRequest the search request
-   * @param semanticSearch if true, uses embedding-based semantic search; otherwise uses traditional full-text search
-   * @return search response with matching datasets
-   */
-  public SearchResponse<DatasetSearchResult, DatasetSearchParameter> search(
-      DatasetSearchRequest datasetSearchRequest, boolean semanticSearch) {
     try {
       SearchRequest searchRequest =
-          esSearchRequestBuilder.buildSearchRequest(datasetSearchRequest, true, index, semanticSearch);
-      log.debug("Search request (semanticSearch={}): {}", semanticSearch, searchRequest);
+          esSearchRequestBuilder.buildSearchRequest(datasetSearchRequest, true, index,
+            datasetSearchRequest.isSemanticSearch());
+      log.debug("Search request (semanticSearch={}): {}", datasetSearchRequest.isSemanticSearch(), searchRequest);
       co.elastic.clients.elasticsearch.core.SearchResponse<ObjectNode> response =
           elasticsearchClient.search(searchRequest, ObjectNode.class);
       return esResponseParser.buildSearchResponse(response, datasetSearchRequest);
