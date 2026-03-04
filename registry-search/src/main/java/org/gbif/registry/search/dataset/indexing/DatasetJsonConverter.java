@@ -199,10 +199,11 @@ public class DatasetJsonConverter {
     String embeddingText = embeddingService.buildEmbeddingText(dataset);
     float[] embedding = embeddingService.generateEmbedding(embeddingText);
 
-    // Add embedding as a proper JSON array of floats
+    // Add embedding as a proper JSON array of floats with limited precision
     ArrayNode embeddingArray = mapper.createArrayNode();
     for (float value : embedding) {
-      embeddingArray.add(value);
+      // Round to 6 decimal places to reduce JSON size
+      embeddingArray.add(Math.round(value * 1_000_000) / 1_000_000.0);
     }
     datasetJsonNode.set("embedding", embeddingArray);
 

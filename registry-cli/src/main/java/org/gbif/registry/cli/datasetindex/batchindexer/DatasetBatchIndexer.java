@@ -66,7 +66,7 @@ public class DatasetBatchIndexer {
       EsClient esClient,
       DatasetJsonConverter datasetJsonConverter,
       @Value("${indexing.stopAfter:-1}") Integer stopAfter,
-      @Value("${indexing.pageSize:50}") Integer pageSize) {
+      @Value("${indexing.pageSize:20}") Integer pageSize) {
     this.gbifWsClient = gbifWsClient;
     this.esClient = esClient;
     this.datasetJsonConverter = datasetJsonConverter;
@@ -89,7 +89,8 @@ public class DatasetBatchIndexer {
         IndexingConstants.MAPPING_FILE,
         IndexingConstants.SETTINGS_FILE);
 
-    ExecutorService executor = Executors.newWorkStealingPool();
+    // Use fixed thread pool with limited concurrency to avoid overwhelming ES
+    ExecutorService executor = Executors.newFixedThreadPool(4);
 
     List<CompletableFuture<BulkResponse>> jobs = new ArrayList<>();
 
@@ -119,28 +120,76 @@ public class DatasetBatchIndexer {
       DatasetJsonConverter datasetJsonConverter,
       String indexName,
       EsClient esClient) {
-    try {
-      BulkRequest.Builder bulkRequest = new BulkRequest.Builder();
-      pagingResponse
-          .getResults()
-          .forEach(
-              dataset -> {
-                String jsonString = datasetJsonConverter.convertAsJsonString(dataset);
-                bulkRequest.operations(BulkOperation.of(op -> op.index(IndexOperation.of(io -> io
-                    .index(indexName)
-                    .id(dataset.getKey().toString())
-                    .document(JsonData.fromJson(jsonString))))));
-              });
-      // Batching updates to Es proves quicker with batches of 100 - 1000 showing similar
-      // performance
-      log.info(
-          "Indexing {} datasets until at offset {}",
-          pagingResponse.getLimit(),
-          pagingResponse.getOffset());
-      return esClient.bulk(bulkRequest.build());
-    } catch (Exception ex) {
-      log.error("Error indexing page", ex);
-      throw new RuntimeException(ex);
+    // Pre-convert all datasets to JSON strings (this is the expensive part)
+    List<String> jsonStrings = new ArrayList<>();
+    List<String> datasetIds = new ArrayList<>();
+    pagingResponse
+        .getResults()
+        .forEach(
+            dataset -> {
+              jsonStrings.add(datasetJsonConverter.convertAsJsonString(dataset));
+              datasetIds.add(dataset.getKey().toString());
+            });
+
+    log.info(
+        "Indexing {} datasets until at offset {}",
+        pagingResponse.getLimit(),
+        pagingResponse.getOffset());
+
+    // Retry with exponential backoff for rejected execution errors
+    int maxRetries = 5;
+    int retryCount = 0;
+    long waitTime = 1000; // Start with 1 second
+
+    while (true) {
+      try {
+        // Build a fresh BulkRequest for each attempt (builders can only be used once)
+        BulkRequest.Builder bulkRequest = new BulkRequest.Builder();
+        for (int i = 0; i < jsonStrings.size(); i++) {
+          final String jsonString = jsonStrings.get(i);
+          final String datasetId = datasetIds.get(i);
+          bulkRequest.operations(BulkOperation.of(op -> op.index(IndexOperation.of(io -> io
+              .index(indexName)
+              .id(datasetId)
+              .document(JsonData.fromJson(jsonString))))));
+        }
+        BulkResponse response = esClient.bulk(bulkRequest.build());
+
+        // Check if any items failed due to rejected execution
+        if (response.errors()) {
+          boolean hasRejectedExecution = response.items().stream()
+              .anyMatch(item -> item.error() != null &&
+                  item.error().type() != null &&
+                  item.error().type().contains("rejected_execution"));
+
+          if (hasRejectedExecution && retryCount < maxRetries) {
+            retryCount++;
+            log.warn("Bulk request rejected due to ES backpressure, retrying in {}ms (attempt {}/{})",
+                waitTime, retryCount, maxRetries);
+            Thread.sleep(waitTime);
+            waitTime *= 2; // Exponential backoff
+            continue;
+          }
+        }
+        return response;
+      } catch (Exception ex) {
+        if (retryCount < maxRetries && ex.getMessage() != null &&
+            ex.getMessage().contains("rejected_execution")) {
+          retryCount++;
+          log.warn("Bulk request rejected, retrying in {}ms (attempt {}/{})",
+              waitTime, retryCount, maxRetries);
+          try {
+            Thread.sleep(waitTime);
+          } catch (InterruptedException ie) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("Interrupted during retry wait", ie);
+          }
+          waitTime *= 2;
+          continue;
+        }
+        log.error("Error indexing page", ex);
+        throw new RuntimeException(ex);
+      }
     }
   }
 
