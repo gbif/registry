@@ -344,7 +344,7 @@ class PipelinesHistoryIT extends BaseItTest {
     // run the process
     final String rerunReason = "test reason";
     service.runPipelineAttempt(
-        datasetKey1, attempt, DWCA_TO_VERBATIM.name(), rerunReason, false, null, false);
+        datasetKey1, attempt, DWCA_TO_VERBATIM.name(), rerunReason, false, null, false, false);
 
     // check that the DB was updated
     PipelineProcess process = service.getPipelineProcess(datasetKey1, attempt);
@@ -353,7 +353,7 @@ class PipelinesHistoryIT extends BaseItTest {
     // run the process without attempt now
     final String rerunReason2 = "test reason 2";
     service.runPipelineAttempt(
-        datasetKey1, DWCA_TO_VERBATIM.name(), rerunReason2, false, false, null, false);
+        datasetKey1, DWCA_TO_VERBATIM.name(), rerunReason2, false, false, null, false, false);
 
     // check that the DB was updated again
     process = service.getPipelineProcess(datasetKey1, attempt);
@@ -396,14 +396,14 @@ class PipelinesHistoryIT extends BaseItTest {
         IllegalArgumentException.class,
         () ->
             service.runPipelineAttempt(
-                datasetKey1, attempt, StepType.DWCA_TO_VERBATIM.name(), "test", false, null, false));
+                datasetKey1, attempt, StepType.DWCA_TO_VERBATIM.name(), "test", false, null, false, false));
 
     // run process without attempt and expect a bad request since the step is in running state
     assertThrows(
         IllegalArgumentException.class,
         () ->
             service.runPipelineAttempt(
-                datasetKey1, StepType.DWCA_TO_VERBATIM.name(), "test", false, false, null, false));
+                datasetKey1, StepType.DWCA_TO_VERBATIM.name(), "test", false, false, null, false, false));
   }
 
   @Execution(ExecutionMode.CONCURRENT)
@@ -447,7 +447,7 @@ class PipelinesHistoryIT extends BaseItTest {
     long stepKey = service.updatePipelineStep(pipelineStep);
 
     service.runPipelineAttempt(
-        datasetKey1, StepType.DWCA_TO_VERBATIM.name(), "test", false, true, null, false);
+        datasetKey1, StepType.DWCA_TO_VERBATIM.name(), "test", false, true, null, false, false);
 
     PipelineStep stepCreated = service.getPipelineStep(stepKey);
     assertEquals(Status.ABORTED, stepCreated.getState());

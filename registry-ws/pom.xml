@@ -4,7 +4,7 @@
   <parent>
     <groupId>org.gbif.registry</groupId>
     <artifactId>registry-parent</artifactId>
-    <version>4.2.4-SNAPSHOT</version>
+    <version>4.2.12-SNAPSHOT</version>
   </parent>
   <artifactId>registry-ws</artifactId>
   <name>GBIF Registry Webservices</name>
@@ -294,6 +294,22 @@
     <dependency>
       <groupId>com.zaxxer</groupId>
       <artifactId>HikariCP</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.hadoop</groupId>
+      <artifactId>hadoop-hdfs</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.hadoop</groupId>
+      <artifactId>hadoop-common</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.hadoop</groupId>
+      <artifactId>hadoop-common</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.hadoop</groupId>
+      <artifactId>hadoop-hdfs-client</artifactId>
     </dependency>
 
     <!-- Test dependencies -->

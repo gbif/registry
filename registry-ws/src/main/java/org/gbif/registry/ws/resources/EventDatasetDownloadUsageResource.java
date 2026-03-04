@@ -14,15 +14,18 @@
 package org.gbif.registry.ws.resources;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
+
+import org.gbif.api.annotation.Experimental;
 import org.gbif.registry.persistence.mapper.DatasetEventDownloadMapper;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /** Event download resource/web service. */
+@Experimental
 @Tag(name = "Event downloads")
 @RestController("datasetEventDownloadUsageResource")
-@RequestMapping(value = "event/download/dataset", produces = MediaType.APPLICATION_JSON_VALUE)
+@RequestMapping(value = "experimental/event/download/dataset", produces = MediaType.APPLICATION_JSON_VALUE)
 public class EventDatasetDownloadUsageResource extends DatasetDownloadUsageResourceBase {
 
   public EventDatasetDownloadUsageResource(DatasetEventDownloadMapper datasetEventDownloadMapper) {

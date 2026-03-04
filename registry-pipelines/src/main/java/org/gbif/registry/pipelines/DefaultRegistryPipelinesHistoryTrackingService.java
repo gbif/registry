@@ -156,7 +156,8 @@ public class DefaultRegistryPipelinesHistoryTrackingService
       boolean useLastSuccessful,
       boolean markPreviousAttemptAsFailed,
       Set<String> interpretTypes,
-      boolean excludeEventSteps) {
+      boolean excludeEventSteps,
+      boolean onlyIncludeRequestedStep) {
     int attempt = findAttempt(datasetKey, steps, useLastSuccessful);
     return runPipelineAttempt(
         datasetKey,
@@ -167,7 +168,8 @@ public class DefaultRegistryPipelinesHistoryTrackingService
         prefix,
         markPreviousAttemptAsFailed,
         interpretTypes,
-        excludeEventSteps);
+        excludeEventSteps,
+        onlyIncludeRequestedStep);
   }
 
   private int findAttempt(UUID datasetKey, Set<StepType> steps, boolean useLastSuccessful) {
@@ -178,7 +180,7 @@ public class DefaultRegistryPipelinesHistoryTrackingService
 
     Optional<Integer> attempt =
         useLastSuccessful
-            ? mapper.getLastSuccessfulAttempt(datasetKey, steps.iterator().next())
+            ? mapper.getLastSuccessfulAttempt(datasetKey, prioritizeSteps(steps, datasetKey).iterator().next())
             : mapper.getLastAttempt(datasetKey);
 
     return attempt.orElseThrow(
@@ -195,7 +197,8 @@ public class DefaultRegistryPipelinesHistoryTrackingService
       boolean useLastSuccessful,
       boolean markPreviousAttemptAsFailed,
       Set<String> interpretTypes,
-      boolean excludeEventSteps) {
+      boolean excludeEventSteps,
+      boolean onlyIncludeRequestedStep) {
     String prefix = OffsetDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ofPattern("yyyyMMddHHmm"));
     CompletableFuture.runAsync(
         () ->
@@ -210,7 +213,8 @@ public class DefaultRegistryPipelinesHistoryTrackingService
                         useLastSuccessful,
                         markPreviousAttemptAsFailed,
                         interpretTypes,
-                        excludeEventSteps),
+                        excludeEventSteps,
+                        onlyIncludeRequestedStep),
                 datasetsToExclude,
                 datasetsToInclude),
         executorService);
@@ -266,6 +270,13 @@ public class DefaultRegistryPipelinesHistoryTrackingService
     }
 
     return newSteps;
+  }
+
+  private Set<StepType> prioritizeSteps(Set<StepType> steps, UUID datasetKey) {
+    if (steps.contains(StepType.TO_VERBATIM)) {
+      return prioritizeSteps(steps, datasetService.get(datasetKey));
+    }
+    return steps;
   }
 
   /**
@@ -367,7 +378,8 @@ public class DefaultRegistryPipelinesHistoryTrackingService
       String prefix,
       boolean markPreviousAttemptAsFailed,
       Set<String> interpretTypes,
-      boolean excludeEventSteps) {
+      boolean excludeEventSteps,
+      boolean onlyIncludeRequestedStep) {
     Objects.requireNonNull(datasetKey, DATASET_KEY_CANNOT_BE_NULL);
     Objects.requireNonNull(steps, "Steps can't be null");
     Objects.requireNonNull(reason, "Reason can't be null");
@@ -395,11 +407,18 @@ public class DefaultRegistryPipelinesHistoryTrackingService
     // Performs the messaging and updates the status once the message has been sent
     Dataset dataset = datasetService.get(datasetKey);
 
+    if (dataset == null) {
+      return new RunPipelineResponse.Builder()
+        .setResponseStatus(RunPipelineResponse.ResponseStatus.ERROR)
+        .setMessage("Dataset not found")
+        .build();
+    }
+
     // Create Rabbit messages
     Map<StepType, PipelineBasedMessage> stepsToSend = new EnumMap<>(StepType.class);
     for (StepType stepName : prioritizeSteps(steps, dataset)) {
       Optional<? extends PipelineBasedMessage> message =
-          createStepMessage(stepName, process, prefix, interpretTypes);
+          createStepMessage(stepName, process, prefix, interpretTypes, dataset);
       message.ifPresent(m -> {
         LOG.info("Created message for step {} : {}", stepName, m);
         stepsToSend.put(stepName, m);
@@ -420,7 +439,7 @@ public class DefaultRegistryPipelinesHistoryTrackingService
         new PipelineExecution()
             .setCreatedBy(user)
             .setRerunReason(reason)
-            .setStepsToRun(getStepTypes(stepsToSend.keySet(), dataset, excludeEventSteps));
+            .setStepsToRun(getStepTypes(stepsToSend.keySet(), dataset, excludeEventSteps, onlyIncludeRequestedStep));
 
     long executionKey = addPipelineExecution(process.getKey(), execution, user);
 
@@ -472,7 +491,7 @@ public class DefaultRegistryPipelinesHistoryTrackingService
   }
 
   private Optional<? extends PipelineBasedMessage> createStepMessage(
-      StepType stepType, PipelineProcess process, String prefix, Set<String> interpretTypes) {
+      StepType stepType, PipelineProcess process, String prefix, Set<String> interpretTypes, Dataset dataset) {
 
     Optional<PipelineStep> latestStepOpt = getLatestSuccessfulStep(process, stepType);
 
@@ -490,7 +509,7 @@ public class DefaultRegistryPipelinesHistoryTrackingService
       case HDFS_VIEW:
         return createInterpretedMessage(prefix, jsonMessage, stepType, interpretTypes);
       case VERBATIM_TO_INTERPRETED:
-        return createVerbatimMessage(prefix, jsonMessage, interpretTypes);
+        return createVerbatimMessage(prefix, jsonMessage, interpretTypes, dataset);
       case DWCA_TO_VERBATIM:
         return deserializeMessage(jsonMessage, PipelinesDwcaMessage.class);
       case ABCD_TO_VERBATIM:
@@ -509,7 +528,10 @@ public class DefaultRegistryPipelinesHistoryTrackingService
 
   @VisibleForTesting
   protected Set<StepType> getStepTypes(
-      Set<StepType> stepsToSend, Dataset dataset, boolean excludeEventSteps) {
+      Set<StepType> stepsToSend, Dataset dataset, boolean excludeEventSteps, boolean onlyIncludeRequestedStep) {
+    if (onlyIncludeRequestedStep) {
+      return stepsToSend;
+    }
     Set<StepType> finalSteps = new HashSet<>();
     if (stepsToSend.stream().anyMatch(StepType::isEventType)) {
       finalSteps.addAll(PipelinesWorkflow.getEventWorkflow().getAllNodesFor(stepsToSend));
@@ -542,7 +564,7 @@ public class DefaultRegistryPipelinesHistoryTrackingService
   }
 
   private Optional<PipelineBasedMessage> createVerbatimMessage(
-      String prefix, String jsonMessage, Set<String> interpretTypes) {
+      String prefix, String jsonMessage, Set<String> interpretTypes, Dataset dataset) {
     PipelinesVerbatimMessage message =
         deserializeMessage(jsonMessage, PipelinesVerbatimMessage.class).orElse(null);
     if (message == null) {
@@ -558,7 +580,8 @@ public class DefaultRegistryPipelinesHistoryTrackingService
       steps.add(StepType.HDFS_VIEW.name());
     }
 
-    if (message.getPipelineSteps().contains(StepType.EVENTS_VERBATIM_TO_INTERPRETED.name())) {
+    if (message.getPipelineSteps().contains(StepType.EVENTS_VERBATIM_TO_INTERPRETED.name())
+        || DatasetType.SAMPLING_EVENT == dataset.getType()) {
       steps.add(StepType.EVENTS_VERBATIM_TO_INTERPRETED.name());
       steps.add(StepType.EVENTS_INTERPRETED_TO_INDEX.name());
       steps.add(StepType.EVENTS_HDFS_VIEW.name());

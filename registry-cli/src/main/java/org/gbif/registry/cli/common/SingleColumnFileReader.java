@@ -13,8 +13,6 @@
  */
 package org.gbif.registry.cli.common;
 
-import org.gbif.api.model.common.DOI;
-
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -27,15 +25,13 @@ import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.gbif.api.model.common.DOI;
 
 /** Utility class that reads a single column from a file. */
+@Slf4j
 public final class SingleColumnFileReader {
-
-  private static final Logger LOG = LoggerFactory.getLogger(SingleColumnFileReader.class);
 
   private SingleColumnFileReader() {}
 
@@ -44,7 +40,7 @@ public final class SingleColumnFileReader {
     try {
       return new DOI(line);
     } catch (IllegalArgumentException e) {
-      LOG.error("Ignore invalid DOI: {}", line);
+      log.error("Ignore invalid DOI: {}", line);
       return null;
     }
   }
@@ -54,7 +50,7 @@ public final class SingleColumnFileReader {
     try {
       return UUID.fromString(line);
     } catch (IllegalArgumentException e) {
-      LOG.error("Key {} is an invalid UUID - skipping!", line);
+      log.error("Key {} is an invalid UUID - skipping!", line);
       return null;
     }
   }
@@ -82,10 +78,10 @@ public final class SingleColumnFileReader {
               .filter(Objects::nonNull)
               .collect(Collectors.toList());
     } catch (FileNotFoundException e) {
-      LOG.error("Could not find file [{}]. Exiting", filePath, e);
+      log.error("Could not find file [{}]. Exiting", filePath, e);
       result = Collections.emptyList();
     } catch (IOException e) {
-      LOG.error("Error while reading file [{}]. Exiting", filePath, e);
+      log.error("Error while reading file [{}]. Exiting", filePath, e);
       result = Collections.emptyList();
     }
 
