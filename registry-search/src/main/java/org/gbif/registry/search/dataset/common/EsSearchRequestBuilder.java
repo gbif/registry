@@ -57,6 +57,7 @@ import org.locationtech.jts.io.WKTReader;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
 
+import static org.gbif.api.util.SearchTypeValidator.isDateRange;
 import static org.gbif.api.util.SearchTypeValidator.isNumericRange;
 import static org.gbif.registry.search.dataset.indexing.es.EsQueryUtils.LOWER_BOUND_RANGE_PARSER;
 import static org.gbif.registry.search.dataset.indexing.es.EsQueryUtils.RANGE_SEPARATOR;
@@ -477,14 +478,18 @@ public class EsSearchRequestBuilder<P extends SearchParameter> {
     // collect queries for each value
     List<String> parsedValues = new ArrayList<>();
     for (String value : values) {
-      if (isNumericRange(value)) {
+      boolean isRange =
+          isNumericRange(value)
+              || (esFieldMapper.isDateField(esField) && isDateRange(value));
+      if (isRange) {
         queries.add(buildRangeQuery(esField, value));
-        continue;
+      } else {
+        parsedValues.add(parseParamValue(value, param));
       }
-
-      parsedValues.add(parseParamValue(value, param));
     }
-    queries.add(buildTermOrTermsQuery(esField, parsedValues));
+    if (!parsedValues.isEmpty()) {
+      queries.add(buildTermOrTermsQuery(esField, parsedValues));
+    }
 
     return queries;
   }
