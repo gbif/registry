@@ -80,6 +80,7 @@ public class CollectionsEmailManager {
         CollectionsEmailType.NEW_CHANGE_SUGGESTION,
         entityKey,
         suggestionType,
+        null,
         recipients);
   }
 
@@ -90,6 +91,7 @@ public class CollectionsEmailManager {
       Country entityCountry,
       @Nullable UUID entityKey,
       Type suggestionType,
+      @Nullable List<String> comments,
       Set<String> recipients)
       throws IOException {
     return buildChangeSuggestionBaseEmailModel(
@@ -100,6 +102,7 @@ public class CollectionsEmailManager {
         CollectionsEmailType.APPLIED_CHANGE_SUGGESTION,
         entityKey,
         suggestionType,
+        comments,
         recipients);
   }
 
@@ -110,6 +113,7 @@ public class CollectionsEmailManager {
       Country entityCountry,
       @Nullable UUID entityKey,
       Type suggestionType,
+      @Nullable List<String> comments,
       Set<String> recipients)
       throws IOException {
     return buildChangeSuggestionBaseEmailModel(
@@ -120,6 +124,7 @@ public class CollectionsEmailManager {
         CollectionsEmailType.DISCARDED_CHANGE_SUGGESTION,
         entityKey,
         suggestionType,
+        comments,
         recipients);
   }
 
@@ -268,6 +273,7 @@ public class CollectionsEmailManager {
       CollectionsEmailType emailType,
       @Nullable UUID entityKey,
       Type suggestionType,
+      @Nullable List<String> comments,
       Set<String> recipients)
       throws IOException {
     BaseEmailModel baseEmailModel;
@@ -298,6 +304,9 @@ public class CollectionsEmailManager {
       templateDataModel.setEntityType(entityType);
       templateDataModel.setEntityName(entityName);
       templateDataModel.setEntityCountry(entityCountry != null ? entityCountry.name() : "");
+      if (comments != null) {
+        templateDataModel.setComments(comments);
+      }
 
       Set<String> finalRecipients = new HashSet<>();
       Set<String> ccRecipients = new HashSet<>();

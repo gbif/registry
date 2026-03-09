@@ -17,6 +17,7 @@ import org.gbif.api.model.collections.CollectionEntityType;
 import org.gbif.api.model.collections.suggestions.Type;
 
 import java.net.URL;
+import java.util.List;
 
 /**
  * Model to generate an email to notify the creation of a GRSciColl change suggestion.
@@ -30,6 +31,7 @@ public class GrscicollChangeSuggestionDataModel {
   private CollectionEntityType entityType;
   private String entityName;
   private String entityCountry;
+  private List<String> comments;
 
   public URL getChangeSuggestionUrl() {
     return changeSuggestionUrl;
@@ -69,5 +71,13 @@ public class GrscicollChangeSuggestionDataModel {
 
   public void setEntityCountry(String entityCountry) {
     this.entityCountry = entityCountry;
+  }
+
+  public List<String> getComments() {
+    return comments;
+  }
+
+  public void setComments(List<String> comments) {
+    this.comments = comments;
   }
 }
