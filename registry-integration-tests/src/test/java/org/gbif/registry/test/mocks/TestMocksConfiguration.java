@@ -33,10 +33,10 @@ public class TestMocksConfiguration {
 
   private static final Logger LOG = LoggerFactory.getLogger(TestMocksConfiguration.class);
 
-  // use InMemoryEmailSender if devemail is disabled
+  // use InMemoryEmailSender when stub is requested (e.g. integration tests)
   @Bean
   @Primary
-  @ConditionalOnProperty(value = "mail.devemail.enabled", havingValue = "false")
+  @ConditionalOnProperty(value = "mail.useInMemoryEmailSender", havingValue = "true")
   public EmailSender emailSender() {
     LOG.info("ImMemoryEmailSender (stub) activated");
     return new InMemoryEmailSender();

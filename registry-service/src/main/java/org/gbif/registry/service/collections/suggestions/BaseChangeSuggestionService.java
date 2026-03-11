@@ -39,6 +39,7 @@ import org.gbif.registry.events.EventManager;
 import org.gbif.registry.events.collections.EventType;
 import org.gbif.registry.events.collections.SubEntityCollectionEvent;
 import org.gbif.registry.mail.BaseEmailModel;
+import org.gbif.registry.mail.EmailCategory;
 import org.gbif.registry.mail.EmailSender;
 import org.gbif.registry.mail.collections.CollectionsEmailManager;
 import org.gbif.registry.mail.config.CollectionsMailConfigurationProperties;
@@ -198,7 +199,7 @@ public abstract class BaseChangeSuggestionService<
                 dto.getEntityKey(),
                 dto.getType(),
                 findRecipientsWithPermissions(dto.getEntityKey(), dto.getCountryScope()));
-        emailSender.send(emailModel);
+        emailSender.send(emailModel, EmailCategory.COLLECTIONS);
       } catch (Exception e) {
         LOG.error("Couldn't send email for new change suggestion", e);
       }
@@ -399,7 +400,7 @@ public abstract class BaseChangeSuggestionService<
                 dto.getEntityKey(),
                 dto.getType(),
                 Collections.singleton(dto.getProposerEmail()));
-        emailSender.send(emailModel);
+        emailSender.send(emailModel, EmailCategory.COLLECTIONS);
       } catch (Exception e) {
         LOG.error("Couldn't send email for discarded change suggestion", e);
       }
@@ -460,7 +461,7 @@ public abstract class BaseChangeSuggestionService<
                 dto.getEntityKey(),
                 dto.getType(),
                 Collections.singleton(dto.getProposerEmail()));
-        emailSender.send(emailModel);
+        emailSender.send(emailModel, EmailCategory.COLLECTIONS);
       } catch (Exception e) {
         LOG.error("Couldn't send email for applied change suggestion", e);
       }

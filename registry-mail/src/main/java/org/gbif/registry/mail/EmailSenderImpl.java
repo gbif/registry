@@ -54,7 +54,7 @@ public class EmailSenderImpl implements EmailSender {
    * challenge code. This method will generate an HTML email.
    */
   @Override
-  public void send(BaseEmailModel emailModel) {
+  public void send(BaseEmailModel emailModel, EmailCategory category) {
     if (emailModel == null) {
       LOG.warn("Email model is null, skip email sending");
       return;
@@ -65,17 +65,18 @@ public class EmailSenderImpl implements EmailSender {
       return;
     }
 
-    prepareAndSend(emailModel);
+    prepareAndSend(emailModel, category);
   }
 
-  private void prepareAndSend(BaseEmailModel emailModel) {
+  private void prepareAndSend(BaseEmailModel emailModel, EmailCategory category) {
     try {
       // Send E-Mail
       final MimeMessage msg = mailSender.createMimeMessage();
       MimeMessageHelper helper = new MimeMessageHelper(msg, true, "UTF-8");
 
-      if (mailConfigProperties.getDevemail().getEnabled()) {
-        helper.setTo(mailConfigProperties.getDevemail().getAddress());
+      String redirectAddress = mailConfigProperties.getRedirectAddress(category);
+      if (redirectAddress != null) {
+        helper.setTo(redirectAddress);
       } else {
         helper.setTo(emailModel.getEmailAddresses().toArray(new String[0]));
         helper.setCc(emailModel.getCcAddresses().toArray(new String[0]));
