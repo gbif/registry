@@ -369,6 +369,8 @@
       </choose>
       <if test="params.from != null" > AND i.modified &gt;= #{params.from}</if>
       <if test="params.to != null" > AND i.modified &lt; #{params.to}</if>
+      <if test="params.createdFrom != null" > AND i.created &gt;= #{params.createdFrom}</if>
+      <if test="params.createdTo != null" > AND i.created &lt; #{params.createdTo}</if>
       <if test="params.type != null" > AND i.type = #{params.type,jdbcType=OTHER}</if>
       <if test="params.identifier != null" >
         AND id.identifier = #{params.identifier,jdbcType=VARCHAR}

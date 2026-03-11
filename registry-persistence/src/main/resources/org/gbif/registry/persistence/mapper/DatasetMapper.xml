@@ -444,6 +444,8 @@
       <if test="params.installationKey != null" > AND d.installation_key = #{params.installationKey}</if>
       <if test="params.from != null" > AND d.modified &gt;= #{params.from}</if>
       <if test="params.to != null" > AND d.modified &lt; #{params.to}</if>
+      <if test="params.createdFrom != null" > AND d.created &gt;= #{params.createdFrom}</if>
+      <if test="params.createdTo != null" > AND d.created &lt; #{params.createdTo}</if>
       <if test="params.identifier != null" >
         AND i.identifier = #{params.identifier,jdbcType=VARCHAR}
       </if>
