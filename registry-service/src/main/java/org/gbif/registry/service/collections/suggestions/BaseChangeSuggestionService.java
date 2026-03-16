@@ -398,6 +398,7 @@ public abstract class BaseChangeSuggestionService<
                 changeSuggestion.getEntityCountry(),
                 dto.getEntityKey(),
                 dto.getType(),
+                dto.getComments(),
                 Collections.singleton(dto.getProposerEmail()));
         emailSender.send(emailModel);
       } catch (Exception e) {
@@ -459,6 +460,7 @@ public abstract class BaseChangeSuggestionService<
                 changeSuggestion.getEntityCountry(),
                 dto.getEntityKey(),
                 dto.getType(),
+                dto.getComments(),
                 Collections.singleton(dto.getProposerEmail()));
         emailSender.send(emailModel);
       } catch (Exception e) {
