@@ -514,6 +514,9 @@ public class EsSearchRequestBuilder<P extends SearchParameter> {
   private Query buildRangeQuery(String esField, String value) {
     String[] values = value.split(RANGE_SEPARATOR);
 
+    if (values.length == 1 && esFieldMapper.isDateField(esField)) {
+      values = new String[] {values[0], values[0]};
+    }
     if (values.length != 2) {
       throw new IllegalArgumentException("Invalid range format: " + value);
     }
