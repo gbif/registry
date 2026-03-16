@@ -773,6 +773,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset, DatasetL
     updatedDataset.setLockedForAutoUpdate(existingDataset.isLockedForAutoUpdate());
     updatedDataset.setCreatedBy(existingDataset.getCreatedBy());
     updatedDataset.setCreated(existingDataset.getCreated());
+    updatedDataset.setCategory(existingDataset.getCategory());
 
     // keep original license, unless a supported license detected in preferred metadata
     if (!replaceLicense(updatedDataset.getLicense())) {
