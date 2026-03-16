@@ -143,6 +143,8 @@
       </choose>
       <if test="params.from != null" > AND n.modified &gt;= #{params.from}</if>
       <if test="params.to != null" > AND n.modified &lt; #{params.to}</if>
+      <if test="params.createdFrom != null" > AND n.created &gt;= #{params.createdFrom}</if>
+      <if test="params.createdTo != null" > AND n.created &lt; #{params.createdTo}</if>
       <if test="params.query != null" >
         <include refid="SIMPLE_SEARCH"/>
       </if>

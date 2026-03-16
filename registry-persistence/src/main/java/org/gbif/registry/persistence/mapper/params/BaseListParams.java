@@ -37,6 +37,8 @@ public class BaseListParams {
   @Nullable private String query; // query
   @Nullable private Date from;
   @Nullable private Date to;
+  @Nullable private Date createdFrom;
+  @Nullable private Date createdTo;
   @Nullable private Pageable page;
 
   public static <T extends BaseListParams> T copy(T copy, BaseListParams other) {
@@ -49,6 +51,8 @@ public class BaseListParams {
     copy.setQuery(other.getQuery());
     copy.setFrom(other.getFrom());
     copy.setTo(other.getTo());
+    copy.setCreatedFrom(other.getCreatedFrom());
+    copy.setCreatedTo(other.getCreatedTo());
     copy.setPage(other.getPage());
     return copy;
   }

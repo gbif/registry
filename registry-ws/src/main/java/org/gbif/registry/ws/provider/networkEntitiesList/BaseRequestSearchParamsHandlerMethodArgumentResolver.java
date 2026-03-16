@@ -45,6 +45,8 @@ public abstract class BaseRequestSearchParamsHandlerMethodArgumentResolver
     params.setQ(webRequest.getParameter(RequestSearchParams.Q_PARAM));
     Optional.ofNullable(webRequest.getParameter(RequestSearchParams.MODIFIED_PARAM))
         .ifPresent(v -> params.setModified(SearchTypeValidator.parseDateRange(v)));
+    Optional.ofNullable(webRequest.getParameter(RequestSearchParams.CREATED_PARAM))
+      .ifPresent(v -> params.setCreated(SearchTypeValidator.parseDateRange(v)));
 
     // page
     Pageable page = PageableProvider.getPagingRequest(webRequest, MAX_PAGE_SIZE);

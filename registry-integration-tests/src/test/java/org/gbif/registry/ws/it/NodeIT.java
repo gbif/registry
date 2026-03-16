@@ -453,5 +453,16 @@ public class NodeIT extends NetworkEntityIT<Node> {
             LocalDate.now().minus(2, ChronoUnit.MONTHS),
             LocalDate.now().minus(1, ChronoUnit.MONTHS)));
     assertResultsOfSize(service.list(searchParams), 0);
+
+    searchParams = new NodeRequestSearchParams();
+    searchParams.setCreated(
+        Range.closed(LocalDate.now(), LocalDate.now().plus(1, ChronoUnit.DAYS)));
+    assertResultsOfSize(service.list(searchParams), 2);
+
+    searchParams.setCreated(
+        Range.closed(
+            LocalDate.now().minus(2, ChronoUnit.MONTHS),
+            LocalDate.now().minus(1, ChronoUnit.MONTHS)));
+    assertResultsOfSize(service.list(searchParams), 0);
   }
 }

@@ -332,6 +332,13 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset, DatasetL
             in = ParameterIn.QUERY,
             example = "2022-05-01,*"),
         @Parameter(
+            name = "createdDate",
+            description =
+                "Date when the dataset was created. Accepts ranges and a `*` can be used as a wildcard.",
+            schema = @Schema(implementation = String.class),
+            in = ParameterIn.QUERY,
+            example = "2022-05-01,*"),
+        @Parameter(
             name = "doi",
             description = "A DOI identifier.",
             schema = @Schema(implementation = String.class),
@@ -529,6 +536,8 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset, DatasetL
             .type(request.getType())
             .from(parseFrom(request.getModified()))
             .to(parseTo(request.getModified()))
+            .createdFrom(parseFrom(request.getCreated()))
+            .createdTo(parseTo(request.getCreated()))
             .deleted(deleted)
             .identifier(request.getIdentifier())
             .identifierType(request.getIdentifierType())
