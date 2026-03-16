@@ -17,6 +17,7 @@ import org.gbif.api.model.ChallengeCode;
 import org.gbif.api.model.common.GbifUser;
 import org.gbif.api.model.occurrence.Download;
 import org.gbif.registry.mail.BaseEmailModel;
+import org.gbif.registry.mail.EmailCategory;
 import org.gbif.registry.mail.EmailSender;
 import org.gbif.registry.mail.identity.IdentityEmailManager;
 import org.gbif.registry.mail.util.RegistryMailUtils;
@@ -71,7 +72,7 @@ public class UserSuretyDelegateImpl implements UserSuretyDelegate {
           e);
       return;
     }
-    emailSender.send(emailModel);
+    emailSender.send(emailModel, EmailCategory.IDENTITY);
   }
 
   @Override
@@ -87,7 +88,7 @@ public class UserSuretyDelegateImpl implements UserSuretyDelegate {
           e);
       return;
     }
-    emailSender.send(emailModel);
+    emailSender.send(emailModel, EmailCategory.IDENTITY);
   }
 
   @Override
@@ -115,7 +116,7 @@ public class UserSuretyDelegateImpl implements UserSuretyDelegate {
     if (confirmationSucceeded) {
       try {
         BaseEmailModel emailModel = identityEmailManager.generateWelcomeEmailModel(user);
-        emailSender.send(emailModel);
+        emailSender.send(emailModel, EmailCategory.IDENTITY);
       } catch (IOException e) {
         LOG.error(
             RegistryMailUtils.NOTIFY_ADMIN,
@@ -152,7 +153,7 @@ public class UserSuretyDelegateImpl implements UserSuretyDelegate {
           e);
       return;
     }
-    emailSender.send(emailModel);
+    emailSender.send(emailModel, EmailCategory.IDENTITY);
   }
 
   @Override
@@ -167,7 +168,7 @@ public class UserSuretyDelegateImpl implements UserSuretyDelegate {
           e);
       return;
     }
-    emailSender.send(emailModel);
+    emailSender.send(emailModel, EmailCategory.IDENTITY);
   }
 
   @Override
@@ -184,7 +185,7 @@ public class UserSuretyDelegateImpl implements UserSuretyDelegate {
           e);
       return;
     }
-    emailSender.send(emailModel);
+    emailSender.send(emailModel, EmailCategory.IDENTITY);
   }
 
   @Override
@@ -199,6 +200,6 @@ public class UserSuretyDelegateImpl implements UserSuretyDelegate {
           e);
       return;
     }
-    emailSender.send(emailModel);
+    emailSender.send(emailModel, EmailCategory.IDENTITY);
   }
 }
