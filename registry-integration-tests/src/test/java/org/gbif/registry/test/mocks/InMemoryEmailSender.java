@@ -14,6 +14,7 @@
 package org.gbif.registry.test.mocks;
 
 import org.gbif.registry.mail.BaseEmailModel;
+import org.gbif.registry.mail.EmailCategory;
 import org.gbif.registry.mail.EmailSender;
 
 import java.util.ArrayList;
@@ -38,7 +39,7 @@ public class InMemoryEmailSender implements EmailSender {
   }
 
   @Override
-  public void send(BaseEmailModel baseEmailModel) {
+  public void send(BaseEmailModel baseEmailModel, EmailCategory category) {
     emails.put(new ArrayList<>(baseEmailModel.getEmailAddresses()).get(0), baseEmailModel);
   }
 

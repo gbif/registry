@@ -27,6 +27,7 @@ import org.gbif.api.service.directory.PersonService;
 import org.gbif.api.vocabulary.directory.NodePersonRole;
 import org.gbif.registry.directory.DirectoryRegistryMapping;
 import org.gbif.registry.mail.BaseEmailModel;
+import org.gbif.registry.mail.EmailCategory;
 import org.gbif.registry.mail.EmailSender;
 import org.gbif.registry.mail.organization.OrganizationEmailManager;
 import org.gbif.registry.mail.util.RegistryMailUtils;
@@ -102,7 +103,7 @@ public class OrganizationEmailEndorsementService implements OrganizationEndorsem
       BaseEmailModel emailModel =
           emailTemplateManager.generateOrganizationEndorsementEmailModel(
               newOrganization, nodeManager.orElse(null), challengeCode.getCode(), endorsingNode);
-      emailSender.send(emailModel);
+      emailSender.send(emailModel, EmailCategory.ORGANIZATION_ENDORSEMENT);
     } catch (IOException ex) {
       LOG.error(
           RegistryMailUtils.NOTIFY_ADMIN,
@@ -139,7 +140,8 @@ public class OrganizationEmailEndorsementService implements OrganizationEndorsem
         List<BaseEmailModel> emailModel =
             emailTemplateManager.generateOrganizationEndorsedEmailModel(
                 organization, endorsingNode);
-        emailModel.forEach(emailSender::send);
+        emailModel.forEach(
+            m -> emailSender.send(m, EmailCategory.ORGANIZATION_ENDORSEMENT));
       } catch (IOException ex) {
         LOG.error(
             RegistryMailUtils.NOTIFY_ADMIN,
@@ -204,7 +206,7 @@ public class OrganizationEmailEndorsementService implements OrganizationEndorsem
       BaseEmailModel emailModel =
           emailTemplateManager.generateOrganizationPasswordReminderEmailModel(
               organization, contact, emailAddress);
-      emailSender.send(emailModel);
+      emailSender.send(emailModel, EmailCategory.ORGANIZATION_ENDORSEMENT);
     } catch (IOException e) {
       LOG.error(
           RegistryMailUtils.NOTIFY_ADMIN,

@@ -13,9 +13,13 @@
  */
 package org.gbif.registry.mail;
 
-/** Manager of emails related tasks. */
-public interface EmailSender {
-
-  /** Send an email using the provided {@link BaseEmailModel}. */
-  void send(BaseEmailModel baseEmailModel, EmailCategory category);
+/**
+ * Category of email used to select which dev-email redirect configuration applies (e.g.
+ * devEmailForIdentity, devEmailForOrganizationsEndorsement).
+ */
+public enum EmailCategory {
+  IDENTITY,
+  ORGANIZATION_ENDORSEMENT,
+  COLLECTIONS,
+  PIPELINES
 }

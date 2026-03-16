@@ -64,6 +64,7 @@ import org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage;
 import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage;
 import org.gbif.common.messaging.api.messages.PipelinesXmlMessage;
 import org.gbif.registry.mail.BaseEmailModel;
+import org.gbif.registry.mail.EmailCategory;
 import org.gbif.registry.mail.EmailSender;
 import org.gbif.registry.mail.pipelines.PipelinesEmailManager;
 import org.gbif.registry.persistence.mapper.pipelines.PipelineProcessMapper;
@@ -815,7 +816,7 @@ public class DefaultRegistryPipelinesHistoryTrackingService
           attempt,
           message);
 
-      emailSender.send(baseEmailModel);
+      emailSender.send(baseEmailModel, EmailCategory.PIPELINES);
     } catch (IOException | TemplateException ex) {
       LOG.error(ex.getMessage(), ex);
     }
