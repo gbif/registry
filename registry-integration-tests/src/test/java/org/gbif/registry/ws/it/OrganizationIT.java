@@ -521,6 +521,24 @@ public class OrganizationIT extends NetworkEntityIT<Organization> {
     // Should return all organizations (empty query is treated as no filter)
     assertTrue(response.getResults().size() >= 2, "Should return all organizations for space-only query");
 
+    // Test query that becomes empty after punctuation stripping - should not throw tsquery syntax error
+    searchParams.setQ("! !");
+    response = service.list(searchParams);
+    assertTrue(
+        response.getResults().isEmpty(),
+        "Should return no organizations when the sanitized query becomes empty");
+    assertEquals(
+        0,
+        response.getCount(),
+        "Count should be zero when the sanitized query becomes empty");
+
+    // Test query with trailing punctuation - should still match after sanitizing
+    searchParams.setQ("Test !");
+    response = service.list(searchParams);
+    assertTrue(
+        response.getResults().size() >= 2,
+        "Should find organizations even when trailing punctuation is stripped");
+
     // Test query with multiple words and multiple spaces
     searchParams.setQ("Test    Organization    One");
     response = service.list(searchParams);
