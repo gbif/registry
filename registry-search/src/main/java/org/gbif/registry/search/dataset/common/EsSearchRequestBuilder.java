@@ -134,31 +134,42 @@ public class EsSearchRequestBuilder<P extends SearchParameter> {
       }
     }
 
-    // Semantic search with kNN
+    // Hybrid search: combine semantic (kNN) + full-text for best of both worlds
     if (semanticSearch && !Strings.isNullOrEmpty(searchRequest.getQ())
       && !SearchConstants.QUERY_WILDCARD.equals(searchRequest.getQ())) {
       float[] queryVector = embeddingService.generateEmbedding(searchRequest.getQ());
       List<Float> vectorList = toFloatList(queryVector);
 
-      builder.knn(knn -> knn
-        .field("embedding")
-        .queryVector(vectorList)
-        .k(searchRequest.getLimit())
-        .numCandidates(Math.max(100, searchRequest.getLimit() * 2))
-      );
-
-      // Add filter for kNN if there are filter params
-      buildQuery(groupedParams.queryParams, null).ifPresent(filterQuery ->
+      // Add kNN for semantic similarity
+      Optional<Query> filterQuery = buildQuery(groupedParams.queryParams, null);
+      if (filterQuery.isPresent()) {
         builder.knn(knn -> knn
           .field("embedding")
           .queryVector(vectorList)
-          .k(searchRequest.getLimit())
-          .numCandidates(Math.max(100, searchRequest.getLimit() * 2))
-          .filter(filterQuery)
-        )
-      );
+          .k(Math.max(searchRequest.getLimit() * 2, 50))
+          .numCandidates(Math.max(100, searchRequest.getLimit() * 4))
+          .filter(filterQuery.get())
+        );
+      } else {
+        builder.knn(knn -> knn
+          .field("embedding")
+          .queryVector(vectorList)
+          .k(Math.max(searchRequest.getLimit() * 2, 50))
+          .numCandidates(Math.max(100, searchRequest.getLimit() * 4))
+        );
+      }
+
+      // Add full-text query to boost exact matches (hybrid search)
+      // The kNN and query scores are combined using RRF (Reciprocal Rank Fusion) by default in ES 8.9+
+      buildQuery(groupedParams.queryParams, searchRequest.getQ())
+        .ifPresent(builder::query);
+
+      // Enable highlighting for hybrid search as well
+      if (searchRequest.isHighlight()) {
+        builder.highlight(buildHighlight());
+      }
     } else {
-      // Traditional full-text search
+      // Traditional full-text search only
       if (SearchConstants.QUERY_WILDCARD.equals(searchRequest.getQ())) {
         builder.query(Query.of(q -> q.matchAll(ma -> ma)));
       } else {
