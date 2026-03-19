@@ -13,6 +13,10 @@
  */
 package org.gbif.registry.ws.it.collections.service.descriptors;
 
+import static org.junit.jupiter.api.Assertions.*;
+
+import java.util.*;
+import lombok.SneakyThrows;
 import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.MasterSourceMetadata;
 import org.gbif.api.model.collections.descriptors.Descriptor;
@@ -30,19 +34,12 @@ import org.gbif.registry.database.TestCaseDatabaseInitializer;
 import org.gbif.registry.test.mocks.NameUsageMatchingServiceMock;
 import org.gbif.registry.ws.it.collections.service.BaseServiceIT;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
-
-import java.util.*;
-
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.util.StreamUtils;
-
-import lombok.SneakyThrows;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 /** Tests the {@link CollectionService}. */
 public class DescriptorsServiceIT extends BaseServiceIT {
@@ -94,6 +91,9 @@ public class DescriptorsServiceIT extends BaseServiceIT {
         descriptorsService.listDescriptors(DescriptorSearchRequest.builder().build());
     assertEquals(5, descriptors.getResults().size());
     assertTrue(descriptors.getResults().stream().allMatch(r -> r.getVerbatim().size() == 5));
+    assertNotNull(descriptors.getResults().get(0).getDefaultChecklistKey());
+    assertFalse(descriptors.getResults().get(0).getTaxonClassification().isEmpty());
+    assertEquals(2, descriptors.getResults().get(0).getOtherTaxonClassifications().size());
 
     // check the order of the verbatim fields is the same as in the file
     descriptors
@@ -123,7 +123,21 @@ public class DescriptorsServiceIT extends BaseServiceIT {
             .listDescriptors(
                 DescriptorSearchRequest.builder()
                     .usageKey(
-                        Collections.singletonList(NameUsageMatchingServiceMock.DEFAULT_USAGE.getKey()))
+                        Collections.singletonList(
+                            NameUsageMatchingServiceMock.DEFAULT_USAGE.getKey()))
+                    .build())
+            .getResults()
+            .size());
+
+    assertEquals(
+        0,
+        descriptorsService
+            .listDescriptors(
+                DescriptorSearchRequest.builder()
+                    .checklistKey("bar")
+                    .usageKey(
+                        Collections.singletonList(
+                            NameUsageMatchingServiceMock.DEFAULT_USAGE.getKey()))
                     .build())
             .getResults()
             .size());
@@ -136,6 +150,37 @@ public class DescriptorsServiceIT extends BaseServiceIT {
                     .taxonKey(
                         Collections.singletonList(
                             NameUsageMatchingServiceMock.DEFAULT_HIGHEST_USAGE.getKey()))
+                    .build())
+            .getResults()
+            .size());
+
+    assertEquals(
+        5,
+        descriptorsService
+            .listDescriptors(
+                DescriptorSearchRequest.builder()
+                    .issues(Collections.singletonList("TAXON_MATCH_HIGHERRANK"))
+                    .build())
+            .getResults()
+            .size());
+
+    assertEquals(
+        5,
+        descriptorsService
+            .listDescriptors(
+                DescriptorSearchRequest.builder()
+                    .taxonIssues(Collections.singletonList("TAXON_MATCH_HIGHERRANK"))
+                    .build())
+            .getResults()
+            .size());
+
+    assertEquals(
+        0,
+        descriptorsService
+            .listDescriptors(
+                DescriptorSearchRequest.builder()
+                    .checklistKey("foo")
+                    .taxonIssues(Collections.singletonList("TAXON_MATCH_HIGHERRANK"))
                     .build())
             .getResults()
             .size());
@@ -290,9 +335,43 @@ public class DescriptorsServiceIT extends BaseServiceIT {
             DescriptorSearchRequest.builder().descriptorGroupKey(descriptorGroupKey).build()));
 
     PagingResponse<Descriptor> descriptors =
-      descriptorsService.listDescriptors(
-        DescriptorSearchRequest.builder().usageName(Collections.singletonList("Aves")).build());
+        descriptorsService.listDescriptors(
+            DescriptorSearchRequest.builder().usageName(Collections.singletonList("Aves")).build());
     assertEquals(2, descriptors.getResults().size());
+    assertNotNull(descriptors.getResults().get(0).getDefaultChecklistKey());
+    assertFalse(descriptors.getResults().get(0).getTaxonClassification().isEmpty());
+    assertEquals(2, descriptors.getResults().get(0).getOtherTaxonClassifications().size());
+
+    assertEquals(
+        2,
+        descriptorsService
+            .listDescriptors(
+                DescriptorSearchRequest.builder()
+                    .issues(Collections.singletonList("TAXON_MATCH_HIGHERRANK"))
+                    .build())
+            .getResults()
+            .size());
+
+    assertEquals(
+        2,
+        descriptorsService
+            .listDescriptors(
+                DescriptorSearchRequest.builder()
+                    .taxonIssues(Collections.singletonList("TAXON_MATCH_HIGHERRANK"))
+                    .build())
+            .getResults()
+            .size());
+
+    assertEquals(
+        0,
+        descriptorsService
+            .listDescriptors(
+                DescriptorSearchRequest.builder()
+                    .checklistKey("foo")
+                    .taxonIssues(Collections.singletonList("TAXON_MATCH_HIGHERRANK"))
+                    .build())
+            .getResults()
+            .size());
   }
 
   @Test
@@ -315,28 +394,25 @@ public class DescriptorsServiceIT extends BaseServiceIT {
     assertTrue(descriptorGroupKey > 0);
 
     // Search with matching tag
-    PagingResponse<DescriptorGroup> response = descriptorsService.listDescriptorGroups(
-        collection.getKey(),
-        DescriptorGroupSearchRequest.builder()
-            .tags(Set.of("test-tag"))
-            .build());
+    PagingResponse<DescriptorGroup> response =
+        descriptorsService.listDescriptorGroups(
+            collection.getKey(),
+            DescriptorGroupSearchRequest.builder().tags(Set.of("test-tag")).build());
     assertEquals(1, response.getCount());
     assertEquals("test-tag", response.getResults().get(0).getTags().iterator().next());
 
     // Search with non-matching tag
-    response = descriptorsService.listDescriptorGroups(
-        collection.getKey(),
-        DescriptorGroupSearchRequest.builder()
-            .tags(Set.of("non-matching-tag"))
-            .build());
+    response =
+        descriptorsService.listDescriptorGroups(
+            collection.getKey(),
+            DescriptorGroupSearchRequest.builder().tags(Set.of("non-matching-tag")).build());
     assertEquals(0, response.getCount());
 
     // Search with multiple tags
-    response = descriptorsService.listDescriptorGroups(
-        collection.getKey(),
-        DescriptorGroupSearchRequest.builder()
-            .tags(Set.of("test-tag", "another-tag"))
-            .build());
+    response =
+        descriptorsService.listDescriptorGroups(
+            collection.getKey(),
+            DescriptorGroupSearchRequest.builder().tags(Set.of("test-tag", "another-tag")).build());
     assertEquals(1, response.getCount());
 
     // Update descriptor group with new tags
@@ -349,11 +425,10 @@ public class DescriptorsServiceIT extends BaseServiceIT {
         "description");
 
     // Search with updated tag
-    response = descriptorsService.listDescriptorGroups(
-        collection.getKey(),
-        DescriptorGroupSearchRequest.builder()
-            .tags(Set.of("updated-tag"))
-            .build());
+    response =
+        descriptorsService.listDescriptorGroups(
+            collection.getKey(),
+            DescriptorGroupSearchRequest.builder().tags(Set.of("updated-tag")).build());
     assertEquals(1, response.getCount());
     assertEquals("updated-tag", response.getResults().get(0).getTags().iterator().next());
   }
@@ -384,10 +459,11 @@ public class DescriptorsServiceIT extends BaseServiceIT {
     assertEquals(3, descriptors.getResults().size());
 
     // Check that valid vocabulary values are preserved
-    Descriptor validDescriptor = descriptors.getResults().stream()
-        .filter(d -> "Test Species".equals(d.getVerbatim().get("dwc:scientificName")))
-        .findFirst()
-        .orElseThrow();
+    Descriptor validDescriptor =
+        descriptors.getResults().stream()
+            .filter(d -> "Test Species".equals(d.getVerbatim().get("dwc:scientificName")))
+            .findFirst()
+            .orElseThrow();
 
     // Valid biome should be preserved
     assertNotNull(validDescriptor.getBiome());
@@ -402,10 +478,11 @@ public class DescriptorsServiceIT extends BaseServiceIT {
     assertEquals("Terrestrial", validDescriptor.getBiomeType());
 
     // Check test descriptor with mixed values
-    Descriptor testDesc = descriptors.getResults().stream()
-        .filter(d -> "Another Species".equals(d.getVerbatim().get("dwc:scientificName")))
-        .findFirst()
-        .orElseThrow();
+    Descriptor testDesc =
+        descriptors.getResults().stream()
+            .filter(d -> "Another Species".equals(d.getVerbatim().get("dwc:scientificName")))
+            .findFirst()
+            .orElseThrow();
 
     assertNotNull(testDesc.getBiome());
     assertEquals("Desert", testDesc.getBiome());
@@ -413,12 +490,12 @@ public class DescriptorsServiceIT extends BaseServiceIT {
     assertNull(testDesc.getObjectClassification());
     assertNull(testDesc.getBiomeType());
 
-
     // Check that empty values are handled correctly
-    Descriptor emptyDescriptor = descriptors.getResults().stream()
-        .filter(d -> "Third Species".equals(d.getVerbatim().get("dwc:scientificName")))
-        .findFirst()
-        .orElseThrow();
+    Descriptor emptyDescriptor =
+        descriptors.getResults().stream()
+            .filter(d -> "Third Species".equals(d.getVerbatim().get("dwc:scientificName")))
+            .findFirst()
+            .orElseThrow();
 
     // Empty biome should remain null
     assertNull(emptyDescriptor.getBiome());
@@ -460,10 +537,11 @@ public class DescriptorsServiceIT extends BaseServiceIT {
     assertEquals(3, descriptors.getResults().size());
 
     // Check that valid vocabulary values are still preserved after reinterpretation
-    Descriptor validDescriptor = descriptors.getResults().stream()
-        .filter(d -> "Test Species".equals(d.getVerbatim().get("dwc:scientificName")))
-        .findFirst()
-        .orElseThrow();
+    Descriptor validDescriptor =
+        descriptors.getResults().stream()
+            .filter(d -> "Test Species".equals(d.getVerbatim().get("dwc:scientificName")))
+            .findFirst()
+            .orElseThrow();
 
     assertNotNull(validDescriptor.getBiome());
     assertEquals("Tropical", validDescriptor.getBiome());
@@ -473,10 +551,11 @@ public class DescriptorsServiceIT extends BaseServiceIT {
     assertEquals("Terrestrial", validDescriptor.getBiomeType());
 
     // Check test descriptor after reinterpretation
-    Descriptor testDesc = descriptors.getResults().stream()
-        .filter(d -> "Another Species".equals(d.getVerbatim().get("dwc:scientificName")))
-        .findFirst()
-        .orElseThrow();
+    Descriptor testDesc =
+        descriptors.getResults().stream()
+            .filter(d -> "Another Species".equals(d.getVerbatim().get("dwc:scientificName")))
+            .findFirst()
+            .orElseThrow();
 
     // Biome: not vocabulary-managed, "Desert" preserved
     assertNotNull(testDesc.getBiome());
@@ -487,10 +566,11 @@ public class DescriptorsServiceIT extends BaseServiceIT {
     assertNull(testDesc.getBiomeType());
 
     // Check that empty values are handled correctly after reinterpretation
-    Descriptor emptyDescriptor = descriptors.getResults().stream()
-        .filter(d -> "Third Species".equals(d.getVerbatim().get("dwc:scientificName")))
-        .findFirst()
-        .orElseThrow();
+    Descriptor emptyDescriptor =
+        descriptors.getResults().stream()
+            .filter(d -> "Third Species".equals(d.getVerbatim().get("dwc:scientificName")))
+            .findFirst()
+            .orElseThrow();
 
     // Empty biome should remain null
     assertNull(emptyDescriptor.getBiome());

@@ -53,7 +53,7 @@
 
   <sql id="FULLTEXT_SEARCH">
     JOIN to_tsquery('english', CASE WHEN regexp_replace(unaccent(trim(#{params.query})), '[^A-Za-z0-9@.\-\s]+', '', 'g') = '' THEN 'false'
-    ELSE regexp_replace(regexp_replace(unaccent(trim(#{params.query})), '[^A-Za-z0-9@.\-\s]+', '', 'g'), '\s+', ':* &amp; ', 'g') || ':*' END)  AS query ON query @@ c.fulltext_search
+    ELSE regexp_replace(regexp_replace(unaccent(trim(#{params.query})), '[^A-Za-z0-9@.\-\s]+', '', 'g'), '\s+', ':* &amp; ', 'g') || ':*' END)
   </sql>
 
   <insert id="createDescriptorGroup" parameterType="DescriptorGroup" useGeneratedKeys="true" keyProperty="key">
@@ -148,32 +148,22 @@
     <result property="typeStatus" column="type_status" typeHandler="StringArrayTypeHandler"/>
     <result property="recordedBy" column="recorded_by" typeHandler="StringArrayTypeHandler"/>
     <result property="issues" column="issues" typeHandler="StringArrayTypeHandler"/>
-    <result property="taxonClassification" column="taxon_classification" typeHandler="RankedNameListTypeHandler"/>
     <collection property="verbatim" column="key" select="listVerbatims"/>
+    <collection property="taxonomyDescriptors" column="key" select="listTaxonomyDescriptors"/>
   </resultMap>
 
   <sql id="DESCRIPTOR_WRITE_FIELDS">
-    collection_descriptor_group_key, usage_key, usage_name, usage_rank, taxon_classification, taxon_keys, country,
-    individual_count, identified_by, date_identified, type_status, recorded_by, discipline, object_classification_name,
-    biome, biome_type, issues, kingdom_key, kingdom_name, phylum_key, phylum_name, class_key, class_name, order_key, order_name, family_key,
-    family_name, genus_key, genus_name, species_key, species_name
+    collection_descriptor_group_key, country, individual_count, identified_by, date_identified, type_status,
+    recorded_by, discipline, object_classification_name, biome, biome_type, issues
   </sql>
 
   <sql id="DESCRIPTOR_READ_FIELDS">
-    d.key, d.collection_descriptor_group_key, d.usage_key, d.usage_name, d.usage_rank, d.taxon_classification, d.country,
-    d.individual_count, d.identified_by, d.date_identified, d.type_status, d.recorded_by, d.discipline,
-    d.object_classification_name, d.biome, d.biome_type, d.issues, d.kingdom_key, d.kingdom_name, d.phylum_key, d.phylum_name,
-    d.class_key, d.class_name, d.order_key, d.order_name, d.family_key, d.family_name, d.genus_key, d.genus_name,
-    d.species_key, d.species_name
+    d.key, d.collection_descriptor_group_key, d.country, d.individual_count, d.identified_by, d.date_identified,
+    d.type_status, d.recorded_by, d.discipline, d.object_classification_name, d.biome, d.biome_type, d.issues
   </sql>
 
   <sql id="DESCRIPTOR_PARAMS_CREATE">
     #{descriptorGroupKey,jdbcType=INTEGER},
-    #{usageKey,jdbcType=VARCHAR},
-    #{usageName,jdbcType=VARCHAR},
-    #{usageRank,jdbcType=VARCHAR},
-    #{taxonClassification,jdbcType=OTHER,typeHandler=RankedNameListTypeHandler}::jsonb,
-    #{taxonKeys,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler},
     #{country,jdbcType=VARCHAR},
     #{individualCount,jdbcType=INTEGER},
     #{identifiedBy,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler},
@@ -184,29 +174,10 @@
     #{objectClassificationName,jdbcType=VARCHAR},
     #{biome,jdbcType=VARCHAR},
     #{biomeType,jdbcType=VARCHAR},
-    #{issues,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler},
-    #{kingdomKey,jdbcType=VARCHAR},
-    #{kingdomName,jdbcType=VARCHAR},
-    #{phylumKey,jdbcType=VARCHAR},
-    #{phylumName,jdbcType=VARCHAR},
-    #{classKey,jdbcType=VARCHAR},
-    #{className,jdbcType=VARCHAR},
-    #{orderKey,jdbcType=VARCHAR},
-    #{orderName,jdbcType=VARCHAR},
-    #{familyKey,jdbcType=VARCHAR},
-    #{familyName,jdbcType=VARCHAR},
-    #{genusKey,jdbcType=VARCHAR},
-    #{genusName,jdbcType=VARCHAR},
-    #{speciesKey,jdbcType=VARCHAR},
-    #{speciesName,jdbcType=VARCHAR}
+    #{issues,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler}
   </sql>
 
   <sql id="DESCRIPTOR_PARAMS_UPDATE">
-    usage_key = #{usageKey,jdbcType=VARCHAR},
-    usage_name = #{usageName,jdbcType=VARCHAR},
-    usage_rank = #{usageRank,jdbcType=VARCHAR},
-    taxon_classification = #{taxonClassification,jdbcType=OTHER,typeHandler=RankedNameListTypeHandler}::jsonb,
-    taxon_keys = #{taxonKeys,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler},
     country = #{country,jdbcType=VARCHAR},
     individual_count = #{individualCount,jdbcType=INTEGER},
     identified_by = #{identifiedBy,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler},
@@ -217,21 +188,7 @@
     object_classification_name = #{objectClassificationName,jdbcType=VARCHAR},
     biome = #{biome,jdbcType=VARCHAR},
     biome_type = #{biomeType,jdbcType=VARCHAR},
-    issues = #{issues,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler},
-    kingdom_key = #{kingdomKey,jdbcType=VARCHAR},
-    kingdom_name = #{kingdomName,jdbcType=VARCHAR},
-    phylum_key =  #{phylumKey,jdbcType=VARCHAR},
-    phylum_name = #{phylumName,jdbcType=VARCHAR},
-    class_key =  #{classKey,jdbcType=VARCHAR},
-    class_name = #{className,jdbcType=VARCHAR},
-    order_key =  #{orderKey,jdbcType=VARCHAR},
-    order_name = #{orderName,jdbcType=VARCHAR},
-    family_key = #{familyKey,jdbcType=VARCHAR},
-    family_name = #{familyName,jdbcType=VARCHAR},
-    genus_key = #{genusKey,jdbcType=VARCHAR},
-    genus_name = #{genusName,jdbcType=VARCHAR},
-    species_key = #{speciesKey,jdbcType=VARCHAR},
-    species_name = #{speciesName,jdbcType=VARCHAR}
+    issues = #{issues,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler}
   </sql>
 
   <insert id="createDescriptor" parameterType="DescriptorDto" useGeneratedKeys="true" keyProperty="key">
@@ -256,6 +213,98 @@
     FROM collection_descriptor d
     WHERE d.key = #{key,jdbcType=OTHER}
   </select>
+
+  <!-- taxonomy descriptors -->
+  <resultMap id="TAXONOMY_DESCRIPTOR_DTO_MAP" type="TaxonomyDescriptorDto" autoMapping="true">
+    <id property="key" column="key"/>
+    <result property="issues" column="issues" typeHandler="StringArrayTypeHandler"/>
+    <result property="taxonClassification" column="taxon_classification" typeHandler="RankedNameListTypeHandler"/>
+  </resultMap>
+
+  <sql id="TAXONOMY_DESCRIPTOR_WRITE_FIELDS">
+    collection_descriptor_key, checklist_key, usage_key, usage_name, usage_rank,
+    taxon_classification, taxon_keys, issues, kingdom_key, kingdom_name, phylum_key, phylum_name,
+    class_key, class_name, order_key, order_name, family_key, family_name, genus_key,
+    genus_name, species_key, species_name
+  </sql>
+
+  <sql id="TAXONOMY_DESCRIPTOR_READ_FIELDS">
+    cdt.key, cdt.collection_descriptor_key, cdt.checklist_key, cdt.usage_key, cdt.usage_name, cdt.usage_rank,
+    cdt.taxon_classification, cdt.issues, cdt.kingdom_key, cdt.kingdom_name, cdt.phylum_key, cdt.phylum_name,
+    cdt.class_key, cdt.class_name, cdt.order_key, cdt.order_name, cdt.family_key, cdt.family_name, cdt.genus_key,
+    cdt.genus_name, cdt.species_key, cdt.species_name
+  </sql>
+
+  <sql id="TAXONOMY_DESCRIPTOR_PARAMS_CREATE">
+    #{collectionDescriptorKey,jdbcType=INTEGER},
+    #{checklistKey,jdbcType=VARCHAR},
+    #{usageKey,jdbcType=VARCHAR},
+    #{usageName,jdbcType=VARCHAR},
+    #{usageRank,jdbcType=VARCHAR},
+    #{taxonClassification,jdbcType=OTHER,typeHandler=RankedNameListTypeHandler}::jsonb,
+    #{taxonKeys,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler},
+    #{issues,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler},
+    #{kingdomKey,jdbcType=VARCHAR},
+    #{kingdomName,jdbcType=VARCHAR},
+    #{phylumKey,jdbcType=VARCHAR},
+    #{phylumName,jdbcType=VARCHAR},
+    #{classKey,jdbcType=VARCHAR},
+    #{className,jdbcType=VARCHAR},
+    #{orderKey,jdbcType=VARCHAR},
+    #{orderName,jdbcType=VARCHAR},
+    #{familyKey,jdbcType=VARCHAR},
+    #{familyName,jdbcType=VARCHAR},
+    #{genusKey,jdbcType=VARCHAR},
+    #{genusName,jdbcType=VARCHAR},
+    #{speciesKey,jdbcType=VARCHAR},
+    #{speciesName,jdbcType=VARCHAR}
+  </sql>
+
+  <sql id="TAXONOMY_DESCRIPTOR_PARAMS_UPDATE">
+    usage_key = #{usageKey,jdbcType=VARCHAR},
+    usage_name = #{usageName,jdbcType=VARCHAR},
+    usage_rank = #{usageRank,jdbcType=VARCHAR},
+    taxon_classification = #{taxonClassification,jdbcType=OTHER,typeHandler=RankedNameListTypeHandler}::jsonb,
+    taxon_keys = #{taxonKeys,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler},
+    issues = #{issues,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler},
+    kingdom_key = #{kingdomKey,jdbcType=VARCHAR},
+    kingdom_name = #{kingdomName,jdbcType=VARCHAR},
+    phylum_key =  #{phylumKey,jdbcType=VARCHAR},
+    phylum_name = #{phylumName,jdbcType=VARCHAR},
+    class_key =  #{classKey,jdbcType=VARCHAR},
+    class_name = #{className,jdbcType=VARCHAR},
+    order_key =  #{orderKey,jdbcType=VARCHAR},
+    order_name = #{orderName,jdbcType=VARCHAR},
+    family_key = #{familyKey,jdbcType=VARCHAR},
+    family_name = #{familyName,jdbcType=VARCHAR},
+    genus_key = #{genusKey,jdbcType=VARCHAR},
+    genus_name = #{genusName,jdbcType=VARCHAR},
+    species_key = #{speciesKey,jdbcType=VARCHAR},
+    species_name = #{speciesName,jdbcType=VARCHAR}
+  </sql>
+
+  <insert id="createTaxonomyDescriptor" parameterType="TaxonomyDescriptorDto" useGeneratedKeys="true" keyProperty="key">
+    INSERT INTO collection_descriptor_taxonomy(<include refid="TAXONOMY_DESCRIPTOR_WRITE_FIELDS"/>)
+    VALUES(<include refid="TAXONOMY_DESCRIPTOR_PARAMS_CREATE"/>)
+  </insert>
+
+  <delete id="deleteTaxonomyDescriptors">
+    DELETE FROM collection_descriptor_taxonomy
+    WHERE collection_descriptor_key = #{collectionDescriptorKey,jdbcType=INTEGER}
+  </delete>
+
+  <update id="updateTaxonomyDescriptor" parameterType="TaxonomyDescriptorDto">
+    UPDATE collection_descriptor_taxonomy
+    SET <include refid="TAXONOMY_DESCRIPTOR_PARAMS_UPDATE"/>
+    WHERE key = #{key,jdbcType=OTHER}
+  </update>
+
+  <select id="listTaxonomyDescriptors" resultMap="TAXONOMY_DESCRIPTOR_DTO_MAP">
+    SELECT <include refid="TAXONOMY_DESCRIPTOR_READ_FIELDS"/>
+    FROM collection_descriptor_taxonomy cdt
+    WHERE cdt.collection_descriptor_key = #{descriptorKey,jdbcType=INTEGER}
+  </select>
+  <!-- End taxonomy descriptors -->
 
   <select id="listDescriptors" resultType="DescriptorDto" resultMap="DESCRIPTOR_DTO_MAP" parameterType="Pageable">
     SELECT DISTINCT ON(
@@ -292,32 +341,41 @@
     INNER JOIN collection_descriptor_group ds ON ds.key = d.collection_descriptor_group_key AND ds.deleted IS NULL
     <if test="params.query != null">
       <include refid="FULLTEXT_SEARCH"/> AS query ON query @@ d.fulltext_search
+      OR EXISTS(
+        SELECT cdt.key
+        FROM collection_descriptor_taxonomy cdt JOIN collection_descriptor cd ON cd.key = cdt.collection_descriptor_key
+        WHERE query @@ cdt.fulltext_search
+      )
+    </if>
+    <if test="params.containsTaxonParams()">
+      INNER JOIN collection_descriptor_taxonomy cdt ON cdt.collection_descriptor_key = d.key
+        AND cdt.checklist_key = #{params.checklistKey,jdbcType=VARCHAR}
     </if>
     <where>
       <if test="params.descriptorGroupKey != null">
         AND d.collection_descriptor_group_key = #{params.descriptorGroupKey,jdbcType=OTHER}
       </if>
       <if test="params.usageKey != null and params.usageKey.size > 0">
-        AND d.usage_key IN
+        AND cdt.usage_key IN
         <foreach item="item" collection="params.usageKey" open="(" separator="," close=")">
           #{item,jdbcType=VARCHAR}
         </foreach>
       </if>
       <if test="params.usageName != null and params.usageName.size > 0">
-        AND d.usage_name IN
+        AND cdt.usage_name IN
         <foreach item="item" collection="params.usageName" open="(" separator="," close=")">
           #{item,jdbcType=VARCHAR}
         </foreach>
       </if>
       <if test="params.usageRank != null and params.usageRank.size > 0">
-        AND d.usage_rank IN
+        AND cdt.usage_rank IN
         <foreach item="item" collection="params.usageRank" open="(" separator="," close=")">
           #{item,jdbcType=VARCHAR}
         </foreach>
       </if>
       <if test="params.taxonKey != null and params.taxonKey.size > 0">
-        AND d.taxon_keys &amp;&amp; ARRAY
-        <foreach item="item" collection="params.taxonKey" open="[" separator="," close="]">
+        AND cdt.taxon_keys &amp;&amp; ARRAY
+        <foreach item="item" collection="params.taxonKey" open="[" separator="," close="]::text[]">
           #{item,jdbcType=VARCHAR}
         </foreach>
       </if>
@@ -380,6 +438,12 @@
       <if test="params.issues != null and params.issues.size > 0">
         AND d.issues &amp;&amp; ARRAY
         <foreach item="item" collection="params.issues" open="[" separator="," close="]">
+          #{item,jdbcType=VARCHAR}::text
+        </foreach>
+      </if>
+      <if test="params.taxonIssues != null and params.taxonIssues.size > 0">
+        AND cdt.issues &amp;&amp; ARRAY
+        <foreach item="item" collection="params.taxonIssues" open="[" separator="," close="]">
           #{item,jdbcType=VARCHAR}::text
         </foreach>
       </if>

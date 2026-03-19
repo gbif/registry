@@ -40,4 +40,5 @@ public class CollectionSearchDto extends SearchDto {
   private String temporalCoverage;
   private Float queryRank;
   private Float queryDescriptorRank;
+  private Float queryDescriptorTaxonomyRank;
 }

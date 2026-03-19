@@ -15,6 +15,7 @@ package org.gbif.registry.persistence.mapper.collections;
 
 import org.gbif.api.model.collections.descriptors.DescriptorGroup;
 import org.gbif.registry.persistence.mapper.collections.dto.DescriptorDto;
+import org.gbif.registry.persistence.mapper.collections.dto.TaxonomyDescriptorDto;
 import org.gbif.registry.persistence.mapper.collections.dto.VerbatimDto;
 import org.gbif.registry.persistence.mapper.collections.params.DescriptorGroupParams;
 import org.gbif.registry.persistence.mapper.collections.params.DescriptorParams;
@@ -67,4 +68,13 @@ public interface DescriptorsMapper {
   List<VerbatimDto> getVerbatimValues(@Param("descriptorKey") long descriptorKey);
 
   void moveDescriptorGroupForCollectionMerge(DescriptorGroup entity);
+
+  void createTaxonomyDescriptor(TaxonomyDescriptorDto entity);
+
+  void deleteTaxonomyDescriptors(@Param("collectionDescriptorKey") long collectionDescriptorKey);
+
+  void updateTaxonomyDescriptor(TaxonomyDescriptorDto entity);
+
+  List<TaxonomyDescriptorDto> listTaxonomyDescriptors(
+      @Param("collectionDescriptorKey") long collectionDescriptorKey);
 }

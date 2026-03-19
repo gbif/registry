@@ -13,6 +13,22 @@
  */
 package org.gbif.registry.service.collections;
 
+import static org.gbif.registry.service.collections.utils.ParamUtils.parseDateRangeParameters;
+import static org.gbif.registry.service.collections.utils.ParamUtils.parseGbifRegion;
+import static org.gbif.registry.service.collections.utils.ParamUtils.parseIntegerRangeParameters;
+
+import com.google.common.base.CharMatcher;
+import com.google.common.base.Strings;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import org.gbif.api.model.collections.request.CollectionDescriptorsSearchRequest;
 import org.gbif.api.model.collections.request.FacetedSearchRequest;
 import org.gbif.api.model.collections.request.InstitutionFacetedSearchRequest;
@@ -45,28 +61,9 @@ import org.gbif.registry.persistence.mapper.collections.params.ListParams;
 import org.gbif.registry.service.collections.utils.SearchUtils;
 import org.gbif.registry.service.collections.utils.Vocabularies;
 import org.gbif.vocabulary.client.ConceptClient;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
-
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-
-import com.google.common.base.CharMatcher;
-import com.google.common.base.Strings;
-
-import static org.gbif.registry.service.collections.utils.ParamUtils.parseDateRangeParameters;
-import static org.gbif.registry.service.collections.utils.ParamUtils.parseGbifRegion;
-import static org.gbif.registry.service.collections.utils.ParamUtils.parseIntegerRangeParameters;
-
 
 /** Service to lookup GRSciColl institutions and collections. */
 @Service
@@ -76,12 +73,16 @@ public class CollectionsSearchService {
 
   private final CollectionsSearchMapper searchMapper;
   private final ConceptClient conceptClient;
+  private final String defaultChecklistKey;
 
   @Autowired
   public CollectionsSearchService(
-      CollectionsSearchMapper searchMapper, ConceptClient conceptClient) {
+      CollectionsSearchMapper searchMapper,
+      ConceptClient conceptClient,
+      @Value("${grscicoll.defaultChecklistKey}") String defaultChecklistKey) {
     this.searchMapper = searchMapper;
     this.conceptClient = conceptClient;
+    this.defaultChecklistKey = defaultChecklistKey;
   }
 
   public List<CollectionsFullSearchResponse> search(
@@ -133,6 +134,7 @@ public class CollectionsSearchService {
             response.setInstitutionName(dto.getInstitutionName());
           }
 
+          // TODO: set to null since it's always null??
           if (dto.getDescriptorKey() != null) {
             response.getDescriptorMatches().add(addDescriptorMatch(dto));
           }
@@ -193,13 +195,7 @@ public class CollectionsSearchService {
     if (searchRequest.getFacets() != null && !searchRequest.getFacets().isEmpty()) {
       searchRequest
           .getFacets()
-          .forEach(
-              f -> addInstitutionFacet(
-                  f,
-                  facets,
-                  dtos,
-                  listParamsBuilder,
-                  searchRequest));
+          .forEach(f -> addInstitutionFacet(f, facets, dtos, listParamsBuilder, searchRequest));
     }
 
     return new FacetedSearchResponse<>(
@@ -223,6 +219,11 @@ public class CollectionsSearchService {
 
     DescriptorsListParams.DescriptorsListParamsBuilder listParamsBuilder =
         DescriptorsListParams.builder()
+            .checklistKey(
+                !Strings.isNullOrEmpty(searchRequest.getChecklistKey())
+                    ? searchRequest.getChecklistKey()
+                    : defaultChecklistKey)
+            .taxonIssues(searchRequest.getTaxonIssues())
             .contentTypes(searchRequest.getContentTypes())
             .preservationTypes(searchRequest.getPreservationTypes())
             .accessionStatus(searchRequest.getAccessionStatus())
@@ -298,12 +299,7 @@ public class CollectionsSearchService {
           .getFacets()
           .forEach(
               f -> {
-                addCollectionFacet(
-                    f,
-                    facets,
-                    results,
-                    listParamsBuilder,
-                    searchRequest);
+                addCollectionFacet(f, facets, results, listParamsBuilder, searchRequest);
               });
     }
 
@@ -312,21 +308,22 @@ public class CollectionsSearchService {
   }
 
   private <F extends CollectionsFacetParameter> CollectionFacet<F> createFacet(
-    F f, List<FacetDto> facetDtos, long cardinality) {
+      F f, List<FacetDto> facetDtos, long cardinality) {
     List<CollectionFacet.Count> facetCounts =
-      facetDtos.stream()
-        .filter(dto -> !Strings.isNullOrEmpty(dto.getFacet()))
-        .map(dto -> new CollectionFacet.Count(dto.getFacet(), dto.getCount()))
-        .collect(Collectors.toList());
+        facetDtos.stream()
+            .filter(dto -> !Strings.isNullOrEmpty(dto.getFacet()))
+            .map(dto -> new CollectionFacet.Count(dto.getFacet(), dto.getCount()))
+            .collect(Collectors.toList());
 
     // Sort by count (descending) and then by name
-    facetCounts.sort((c1, c2) -> {
-        int countCompare = Long.compare(c2.getCount(), c1.getCount());
-        if (countCompare != 0) {
+    facetCounts.sort(
+        (c1, c2) -> {
+          int countCompare = Long.compare(c2.getCount(), c1.getCount());
+          if (countCompare != 0) {
             return countCompare;
-        }
-        return c1.getName().compareTo(c2.getName());
-    });
+          }
+          return c1.getName().compareTo(c2.getName());
+        });
 
     CollectionFacet<F> collectionFacet = new CollectionFacet<>();
     collectionFacet.setField(f);
@@ -367,7 +364,9 @@ public class CollectionsSearchService {
   private static boolean isCollectionDescriptorResult(
       CollectionSearchDto dto, DescriptorsListParams params) {
     return dto.getDescriptorKey() != null
-        && (dto.getQueryDescriptorRank() != null && dto.getQueryDescriptorRank() > 0
+        && ((dto.getQueryDescriptorRank() != null && dto.getQueryDescriptorRank() > 0)
+            || (dto.getQueryDescriptorTaxonomyRank() != null
+                && dto.getQueryDescriptorTaxonomyRank() > 0)
             || params.descriptorSearchWithoutQuery());
   }
 
@@ -389,6 +388,11 @@ public class CollectionsSearchService {
     descriptorMatch.setBiome(dto.getDescriptorBiome());
     descriptorMatch.setBiomeType(dto.getDescriptorBiomeType());
     descriptorMatch.setIssues(dto.getDescriptorIssues());
+
+    if (dto.getDescriptorTaxonIssues() != null) {
+      descriptorMatch.getIssues().addAll(dto.getDescriptorTaxonIssues());
+    }
+
     return descriptorMatch;
   }
 
@@ -476,14 +480,14 @@ public class CollectionsSearchService {
         .ifPresent(highlights::add);
     createHighlightMatch(
             dto.getDescriptorObjectClassificationHighlight(), "descriptor.objectClassification")
-      .ifPresent(highlights::add);
-    createHighlightMatch(
-      dto.getDescriptorBiomeHighlight(), "descriptor.biome")
         .ifPresent(highlights::add);
-    createHighlightMatch(
-      dto.getDescriptorBiomeTypeHighlight(), "descriptor.biomeType")
-      .ifPresent(highlights::add);
+    createHighlightMatch(dto.getDescriptorBiomeHighlight(), "descriptor.biome")
+        .ifPresent(highlights::add);
+    createHighlightMatch(dto.getDescriptorBiomeTypeHighlight(), "descriptor.biomeType")
+        .ifPresent(highlights::add);
     createHighlightMatch(dto.getDescriptorIssuesHighlight(), "descriptor.issues")
+        .ifPresent(highlights::add);
+    createHighlightMatch(dto.getDescriptorTaxonIssuesHighlight(), "descriptor.taxonIssues")
         .ifPresent(highlights::add);
     createHighlightMatch(dto.getDescriptorGroupTitleHighlight(), "descriptorGroup.title")
         .ifPresent(highlights::add);
@@ -530,9 +534,7 @@ public class CollectionsSearchService {
       InstitutionFacetedSearchRequest searchRequest) {
 
     InstitutionListParams.InstitutionListParamsBuilder facetParamsBuilder =
-        searchRequest.isMultiSelectFacets()
-            ? InstitutionListParams.builder()
-            : listParamsBuilder;
+        searchRequest.isMultiSelectFacets() ? InstitutionListParams.builder() : listParamsBuilder;
 
     InstitutionListParams facetParams =
         (InstitutionListParams)
@@ -557,9 +559,7 @@ public class CollectionsSearchService {
       CollectionDescriptorsSearchRequest searchRequest) {
 
     DescriptorsListParams.DescriptorsListParamsBuilder facetParamsBuilder =
-        searchRequest.isMultiSelectFacets()
-            ? DescriptorsListParams.builder()
-            : listParamsBuilder;
+        searchRequest.isMultiSelectFacets() ? DescriptorsListParams.builder() : listParamsBuilder;
 
     DescriptorsListParams facetParams =
         (DescriptorsListParams)

@@ -1,0 +1,100 @@
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+  <changeSet id="177" author="mlopez" runInTransaction="false">
+    <sql splitStatements="false" stripComments="true">
+      <![CDATA[
+         CREATE TABLE collection_descriptor_taxonomy(
+          key serial NOT NULL PRIMARY KEY,
+          collection_descriptor_key integer NOT NULL REFERENCES collection_descriptor(key) ON DELETE CASCADE,
+          checklist_key text NOT NULL,
+          usage_key text,
+          usage_name text,
+          usage_rank text,
+          taxon_classification jsonb,
+          taxon_keys text[],
+          kingdom_key text,
+          kingdom_name text,
+          phylum_key text,
+          phylum_name text,
+          class_key text,
+          class_name text,
+          order_key text,
+          order_name text,
+          family_key text,
+          family_name text,
+          genus_key text,
+          genus_name text,
+          species_key text,
+          species_name text,
+          issues text[],
+          fulltext_search tsvector
+         );
+
+         CREATE INDEX collection_descriptor_taxonomy_fulltext_search_idx ON collection_descriptor_taxonomy USING gin(fulltext_search);
+
+         CREATE INDEX collection_descriptor_taxonomy_checklist_key_idx ON collection_descriptor_taxonomy(checklist_key);
+         CREATE INDEX collection_descriptor_taxonomy_usage_key_idx ON collection_descriptor_taxonomy(usage_key);
+         CREATE INDEX collection_descriptor_taxonomy_usage_name_idx ON collection_descriptor_taxonomy(usage_name);
+         CREATE INDEX collection_descriptor_taxonomy_usage_rank_idx ON collection_descriptor_taxonomy(usage_rank);
+         CREATE INDEX collection_descriptor_taxonomy_taxon_keys_idx ON collection_descriptor_taxonomy(taxon_keys);
+
+         CREATE OR REPLACE FUNCTION collection_descriptor_taxonomy_change_trigger()
+          RETURNS TRIGGER AS
+          $recordchange$
+              BEGIN
+                NEW.fulltext_search :=
+                  TO_TSVECTOR('pg_catalog.english', unaccent(COALESCE(NEW.usage_name,''))) ||
+                  TO_TSVECTOR('pg_catalog.english', unaccent(COALESCE(NEW.usage_rank,'')));
+                RETURN NEW;
+              END;
+          $recordchange$
+          LANGUAGE plpgsql;
+
+          CREATE TRIGGER collection_descriptor_taxonomy_fulltext_update
+           BEFORE INSERT OR UPDATE OF usage_name, usage_rank ON collection_descriptor_taxonomy
+           FOR EACH ROW EXECUTE PROCEDURE collection_descriptor_taxonomy_change_trigger();
+
+         CREATE OR REPLACE FUNCTION collection_descriptor_change_trigger()
+          RETURNS TRIGGER AS
+          $recordchange$
+              BEGIN
+                NEW.fulltext_search :=
+                  TO_TSVECTOR('pg_catalog.english', unaccent(COALESCE(NEW.country,''))) ||
+                  TO_TSVECTOR('pg_catalog.english', unaccent(COALESCE(array_to_string(NEW.identified_by, ' '),''))) ||
+                  TO_TSVECTOR('pg_catalog.english', unaccent(COALESCE(array_to_string(NEW.type_status, ' '),''))) ||
+                  TO_TSVECTOR('pg_catalog.english', unaccent(COALESCE(array_to_string(NEW.recorded_by, ' '),''))) ||
+                  TO_TSVECTOR('pg_catalog.english', unaccent(COALESCE(NEW.discipline,''))) ||
+                  TO_TSVECTOR('pg_catalog.english', unaccent(COALESCE(NEW.object_classification_name,'')));
+                RETURN NEW;
+              END;
+          $recordchange$
+          LANGUAGE plpgsql
+          SET search_path = public, pg_catalog;
+
+         ALTER TABLE collection_descriptor DROP COLUMN usage_key;
+         ALTER TABLE collection_descriptor DROP COLUMN usage_name;
+         ALTER TABLE collection_descriptor DROP COLUMN usage_rank;
+         ALTER TABLE collection_descriptor DROP COLUMN taxon_classification;
+         ALTER TABLE collection_descriptor DROP COLUMN taxon_keys;
+         ALTER TABLE collection_descriptor DROP COLUMN kingdom_key;
+         ALTER TABLE collection_descriptor DROP COLUMN kingdom_name;
+         ALTER TABLE collection_descriptor DROP COLUMN phylum_key;
+         ALTER TABLE collection_descriptor DROP COLUMN phylum_name;
+         ALTER TABLE collection_descriptor DROP COLUMN class_key;
+         ALTER TABLE collection_descriptor DROP COLUMN class_name;
+         ALTER TABLE collection_descriptor DROP COLUMN order_key;
+         ALTER TABLE collection_descriptor DROP COLUMN order_name;
+         ALTER TABLE collection_descriptor DROP COLUMN family_key;
+         ALTER TABLE collection_descriptor DROP COLUMN family_name;
+         ALTER TABLE collection_descriptor DROP COLUMN genus_key;
+         ALTER TABLE collection_descriptor DROP COLUMN genus_name;
+         ALTER TABLE collection_descriptor DROP COLUMN species_key;
+         ALTER TABLE collection_descriptor DROP COLUMN species_name;
+
+      ]]>
+    </sql>
+  </changeSet>
+</databaseChangeLog>

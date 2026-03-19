@@ -50,4 +50,5 @@ public class SearchDto extends BaseSearchDto {
   private String descriptorBiome;
   private String descriptorBiomeType;
   private List<String> descriptorIssues;
+  private List<String> descriptorTaxonIssues;
 }

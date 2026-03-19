@@ -13,6 +13,17 @@
  */
 package org.gbif.registry.ws.it.persistence.mapper;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.UUID;
 import org.gbif.api.model.collections.Address;
 import org.gbif.api.model.collections.AlternativeCode;
 import org.gbif.api.model.collections.Collection;
@@ -32,6 +43,7 @@ import org.gbif.registry.persistence.mapper.collections.InstitutionMapper;
 import org.gbif.registry.persistence.mapper.collections.dto.CollectionSearchDto;
 import org.gbif.registry.persistence.mapper.collections.dto.DescriptorDto;
 import org.gbif.registry.persistence.mapper.collections.dto.FacetDto;
+import org.gbif.registry.persistence.mapper.collections.dto.TaxonomyDescriptorDto;
 import org.gbif.registry.persistence.mapper.collections.params.DescriptorsListParams;
 import org.gbif.registry.persistence.mapper.collections.params.InstitutionListParams;
 import org.gbif.registry.persistence.mapper.dto.GrSciCollVocabConceptDto;
@@ -39,29 +51,18 @@ import org.gbif.registry.search.test.ElasticsearchTestContainerConfiguration;
 import org.gbif.registry.ws.it.BaseItTest;
 import org.gbif.registry.ws.it.collections.ConceptTestSetup;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
-
-import java.net.URI;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.UUID;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Autowired;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class CollectionsSearchMapperIT extends BaseItTest {
 
   @RegisterExtension
   protected TestCaseDatabaseInitializer databaseRule =
       new TestCaseDatabaseInitializer("collection");
+
+  private static final String DEFAULT_CHECKLIST_KEY = "defaultChecklistKey";
 
   private CollectionMapper collectionMapper;
   private InstitutionMapper institutionMapper;
@@ -154,13 +155,22 @@ public class CollectionsSearchMapperIT extends BaseItTest {
 
     DescriptorDto descriptorDto = new DescriptorDto();
     descriptorDto.setDescriptorGroupKey(descriptorGroup.getKey());
-    descriptorDto.setUsageName("aves");
     descriptorDto.setCountry(Country.SPAIN);
     descriptorsMapper.createDescriptor(descriptorDto);
 
+    TaxonomyDescriptorDto taxonomyDescriptorDto = new TaxonomyDescriptorDto();
+    taxonomyDescriptorDto.setCollectionDescriptorKey(descriptorDto.getKey());
+    taxonomyDescriptorDto.setChecklistKey(DEFAULT_CHECKLIST_KEY);
+    taxonomyDescriptorDto.setUsageName("aves");
+    taxonomyDescriptorDto.setIssues(List.of("TAXON_ISSUE_TEST"));
+    descriptorsMapper.createTaxonomyDescriptor(taxonomyDescriptorDto);
+
     List<CollectionSearchDto> dtos =
         collectionsSearchMapper.searchCollections(
-            DescriptorsListParams.builder().query("aves").build());
+            DescriptorsListParams.builder()
+                .checklistKey(DEFAULT_CHECKLIST_KEY)
+                .query("aves")
+                .build());
     assertEquals(1, dtos.size());
     assertEquals(Country.SPAIN, dtos.get(0).getCountry());
     assertEquals(Country.SPAIN, dtos.get(0).getMailingCountry());
@@ -176,14 +186,39 @@ public class CollectionsSearchMapperIT extends BaseItTest {
 
     dtos =
         collectionsSearchMapper.searchCollections(
-            DescriptorsListParams.builder().query("aves").build());
+            DescriptorsListParams.builder().checklistKey("foo").query("aves").build());
+    assertEquals(0, dtos.size());
+
+    dtos =
+      collectionsSearchMapper.searchCollections(
+        DescriptorsListParams.builder().checklistKey(DEFAULT_CHECKLIST_KEY).query("aves").build());
     assertEquals(1, dtos.size());
-    assertEquals(0, dtos.get(0).getQueryRank());
-    assertTrue(dtos.get(0).getQueryDescriptorRank() > 0);
+    assertEquals(0, dtos.get(0).getQueryDescriptorRank());
+    assertTrue(dtos.get(0).getQueryDescriptorTaxonomyRank() > 0);
 
     dtos =
         collectionsSearchMapper.searchCollections(
-            DescriptorsListParams.builder().usageName(Collections.singletonList("aves")).build());
+            DescriptorsListParams.builder()
+                .checklistKey(DEFAULT_CHECKLIST_KEY)
+                .usageName(Collections.singletonList("aves"))
+                .build());
+    assertEquals(1, dtos.size());
+    assertNotNull(dtos.get(0).getDescriptorKey());
+
+    dtos =
+        collectionsSearchMapper.searchCollections(
+            DescriptorsListParams.builder()
+                .checklistKey("foo")
+                .usageName(Collections.singletonList("aves"))
+                .build());
+    assertEquals(0, dtos.size());
+
+    dtos =
+        collectionsSearchMapper.searchCollections(
+            DescriptorsListParams.builder()
+                .checklistKey(DEFAULT_CHECKLIST_KEY)
+                .taxonIssues(Collections.singletonList("TAXON_ISSUE_TEST"))
+                .build());
     assertEquals(1, dtos.size());
     assertNotNull(dtos.get(0).getDescriptorKey());
   }
@@ -210,10 +245,14 @@ public class CollectionsSearchMapperIT extends BaseItTest {
     institutionMapper.create(i1);
 
     // Create institution facet links for i1
-    Long ty1FacetKey = grScicollVocabConceptMapper.getConceptKeyByVocabularyAndName("InstitutionType", "ty1");
-    Long ty2FacetKey = grScicollVocabConceptMapper.getConceptKeyByVocabularyAndName("InstitutionType", "ty2");
-    Long di1FacetKey = grScicollVocabConceptMapper.getConceptKeyByVocabularyAndName("Discipline", "di1");
-    Long di2FacetKey = grScicollVocabConceptMapper.getConceptKeyByVocabularyAndName("Discipline", "di2");
+    Long ty1FacetKey =
+        grScicollVocabConceptMapper.getConceptKeyByVocabularyAndName("InstitutionType", "ty1");
+    Long ty2FacetKey =
+        grScicollVocabConceptMapper.getConceptKeyByVocabularyAndName("InstitutionType", "ty2");
+    Long di1FacetKey =
+        grScicollVocabConceptMapper.getConceptKeyByVocabularyAndName("Discipline", "di1");
+    Long di2FacetKey =
+        grScicollVocabConceptMapper.getConceptKeyByVocabularyAndName("Discipline", "di2");
 
     grScicollVocabConceptMapper.insertInstitutionConcept(i1Key, ty1FacetKey);
     grScicollVocabConceptMapper.insertInstitutionConcept(i1Key, ty2FacetKey);
@@ -272,8 +311,12 @@ public class CollectionsSearchMapperIT extends BaseItTest {
 
     // Create facet links for collection facets that need to work in tests
     // For c1 with preservationTypes: StorageControlledAtmosphere, SampleCryopreserved
-    Long storageControlledId = grScicollVocabConceptMapper.getConceptKeyByVocabularyAndName("PreservationType", "StorageControlledAtmosphere");
-    Long sampleCryopreservedId = grScicollVocabConceptMapper.getConceptKeyByVocabularyAndName("PreservationType", "SampleCryopreserved");
+    Long storageControlledId =
+        grScicollVocabConceptMapper.getConceptKeyByVocabularyAndName(
+            "PreservationType", "StorageControlledAtmosphere");
+    Long sampleCryopreservedId =
+        grScicollVocabConceptMapper.getConceptKeyByVocabularyAndName(
+            "PreservationType", "SampleCryopreserved");
     if (storageControlledId == null) {
       GrSciCollVocabConceptDto facet = new GrSciCollVocabConceptDto();
       facet.setConceptKey(20001L); // Use unique test key
@@ -308,15 +351,15 @@ public class CollectionsSearchMapperIT extends BaseItTest {
 
     DescriptorDto descriptorDto1 = new DescriptorDto();
     descriptorDto1.setDescriptorGroupKey(descriptorGroup.getKey());
-    descriptorDto1.setUsageName("aves");
+    //    descriptorDto1.setUsageName("aves");
     descriptorDto1.setCountry(Country.DENMARK);
     descriptorDto1.setRecordedBy(Arrays.asList("John", "Clint"));
-    descriptorDto1.setKingdomKey("1");
+    //    descriptorDto1.setKingdomKey("1");
     descriptorsMapper.createDescriptor(descriptorDto1);
 
     DescriptorDto descriptorDto2 = new DescriptorDto();
     descriptorDto2.setDescriptorGroupKey(descriptorGroup.getKey());
-    descriptorDto2.setKingdomKey("1");
+    //    descriptorDto2.setKingdomKey("1");
     descriptorDto2.setCountry(Country.DENMARK);
     descriptorDto2.setObjectClassificationName("obn1");
     descriptorsMapper.createDescriptor(descriptorDto2);
@@ -354,8 +397,8 @@ public class CollectionsSearchMapperIT extends BaseItTest {
 
     DescriptorDto descriptorDtoC2 = new DescriptorDto();
     descriptorDtoC2.setDescriptorGroupKey(descriptorGroupC2.getKey());
-    descriptorDtoC2.setKingdomKey("2");
-    descriptorDtoC2.setTaxonKeys(List.of("123"));
+    //    descriptorDtoC2.setKingdomKey("2");
+    //    descriptorDtoC2.setTaxonKeys(List.of("123"));
     descriptorDtoC2.setRecordedBy(Collections.singletonList("John"));
     descriptorDtoC2.setCountry(Country.DENMARK);
     descriptorDtoC2.setObjectClassificationName("obn1");
@@ -374,14 +417,17 @@ public class CollectionsSearchMapperIT extends BaseItTest {
                 .build());
 
     System.out.println("Facet query returned " + facetDtos.size() + " results:");
-    facetDtos.forEach(f -> System.out.println("  Facet: " + f.getFacet() + ", Count: " + f.getCount()));
+    facetDtos.forEach(
+        f -> System.out.println("  Facet: " + f.getFacet() + ", Count: " + f.getCount()));
 
     assertEquals(2, facetDtos.size());
 
     facetDtos =
-      collectionsSearchMapper.collectionFacet(
-        DescriptorsListParams.builder().facet(CollectionFacetParameter.COUNTRY)
-          .taxonKey(Collections.singletonList("123")).build());
+        collectionsSearchMapper.collectionFacet(
+            DescriptorsListParams.builder()
+                .facet(CollectionFacetParameter.COUNTRY)
+                .taxonKey(Collections.singletonList("123"))
+                .build());
     assertEquals(1, facetDtos.size());
 
     facetDtos =
@@ -510,10 +556,17 @@ public class CollectionsSearchMapperIT extends BaseItTest {
   @Test
   public void hierarchicalFacetsTest() {
     // Get facet IDs from the setup data
-    Long biologicalFacetId = grScicollVocabConceptMapper.getConceptKeyByVocabularyAndName("Discipline", "Biological");
-    Long archaeologicalFacetId = grScicollVocabConceptMapper.getConceptKeyByVocabularyAndName("CollectionContentType", "Archaeological");
-    Long sampleDriedFacetId = grScicollVocabConceptMapper.getConceptKeyByVocabularyAndName("PreservationType", "SampleDried");
-    Long storageIndoorsFacetId = grScicollVocabConceptMapper.getConceptKeyByVocabularyAndName("PreservationType", "StorageIndoors");
+    Long biologicalFacetId =
+        grScicollVocabConceptMapper.getConceptKeyByVocabularyAndName("Discipline", "Biological");
+    Long archaeologicalFacetId =
+        grScicollVocabConceptMapper.getConceptKeyByVocabularyAndName(
+            "CollectionContentType", "Archaeological");
+    Long sampleDriedFacetId =
+        grScicollVocabConceptMapper.getConceptKeyByVocabularyAndName(
+            "PreservationType", "SampleDried");
+    Long storageIndoorsFacetId =
+        grScicollVocabConceptMapper.getConceptKeyByVocabularyAndName(
+            "PreservationType", "StorageIndoors");
 
     // Create test collection with hierarchical facet data
     UUID c1Key = UUID.randomUUID();
@@ -537,9 +590,7 @@ public class CollectionsSearchMapperIT extends BaseItTest {
     // Test hierarchical content type facets
     List<FacetDto> facetDtos =
         collectionsSearchMapper.collectionFacet(
-            DescriptorsListParams.builder()
-                .facet(CollectionFacetParameter.CONTENT_TYPE)
-                .build());
+            DescriptorsListParams.builder().facet(CollectionFacetParameter.CONTENT_TYPE).build());
 
     // Should return hierarchical facet counts, not array-based
     assertTrue(facetDtos.size() > 0, "Content type facets should be returned");
@@ -554,16 +605,16 @@ public class CollectionsSearchMapperIT extends BaseItTest {
     assertTrue(facetDtos.size() > 0, "Preservation type facets should be returned");
 
     // Verify cardinality calculation for hierarchical facets
-    long cardinality = collectionsSearchMapper.collectionFacetCardinality(
-        DescriptorsListParams.builder()
-            .facet(CollectionFacetParameter.CONTENT_TYPE)
-            .build());
+    long cardinality =
+        collectionsSearchMapper.collectionFacetCardinality(
+            DescriptorsListParams.builder().facet(CollectionFacetParameter.CONTENT_TYPE).build());
     assertTrue(cardinality > 0, "Content type cardinality should be > 0");
 
-    cardinality = collectionsSearchMapper.collectionFacetCardinality(
-        DescriptorsListParams.builder()
-            .facet(CollectionFacetParameter.PRESERVATION_TYPE)
-            .build());
+    cardinality =
+        collectionsSearchMapper.collectionFacetCardinality(
+            DescriptorsListParams.builder()
+                .facet(CollectionFacetParameter.PRESERVATION_TYPE)
+                .build());
     assertTrue(cardinality > 0, "Preservation type cardinality should be > 0");
 
     // Clean up
@@ -573,9 +624,15 @@ public class CollectionsSearchMapperIT extends BaseItTest {
   @Test
   public void hierarchicalFacetFilteringTest() {
     // Get facet IDs from the setup data
-    Long archaeologicalFacetId = grScicollVocabConceptMapper.getConceptKeyByVocabularyAndName("CollectionContentType", "Archaeological");
-    Long sampleDriedFacetId = grScicollVocabConceptMapper.getConceptKeyByVocabularyAndName("PreservationType", "SampleDried");
-    Long storageIndoorsFacetId = grScicollVocabConceptMapper.getConceptKeyByVocabularyAndName("PreservationType", "StorageIndoors");
+    Long archaeologicalFacetId =
+        grScicollVocabConceptMapper.getConceptKeyByVocabularyAndName(
+            "CollectionContentType", "Archaeological");
+    Long sampleDriedFacetId =
+        grScicollVocabConceptMapper.getConceptKeyByVocabularyAndName(
+            "PreservationType", "SampleDried");
+    Long storageIndoorsFacetId =
+        grScicollVocabConceptMapper.getConceptKeyByVocabularyAndName(
+            "PreservationType", "StorageIndoors");
 
     // Create test collections with specific content types for hierarchical testing
     UUID c3Key = UUID.randomUUID();
@@ -597,32 +654,30 @@ public class CollectionsSearchMapperIT extends BaseItTest {
     grScicollVocabConceptMapper.insertCollectionConcept(c3Key, sampleDriedFacetId);
     grScicollVocabConceptMapper.insertCollectionConcept(c3Key, storageIndoorsFacetId);
 
-
     // Test that hierarchical filtering works with facet-based approach
-    List<CollectionSearchDto> results = collectionsSearchMapper.searchCollections(
-        DescriptorsListParams.builder()
-            .contentTypes(List.of("Archaeological"))
-            .build());
+    List<CollectionSearchDto> results =
+        collectionsSearchMapper.searchCollections(
+            DescriptorsListParams.builder().contentTypes(List.of("Archaeological")).build());
 
     // Should find collections with Archaeological content type via facet links
     assertFalse(results.isEmpty());
     assertTrue(results.stream().anyMatch(r -> r.getKey().equals(c3Key)));
 
     // Test preservation type filtering
-    results = collectionsSearchMapper.searchCollections(
-        DescriptorsListParams.builder()
-            .preservationTypes(List.of("SampleDried"))
-            .build());
+    results =
+        collectionsSearchMapper.searchCollections(
+            DescriptorsListParams.builder().preservationTypes(List.of("SampleDried")).build());
 
     assertFalse(results.isEmpty());
     assertTrue(results.stream().anyMatch(r -> r.getKey().equals(c3Key)));
 
     // Test combined filtering
-    results = collectionsSearchMapper.searchCollections(
-        DescriptorsListParams.builder()
-            .contentTypes(List.of("Archaeological"))
-            .preservationTypes(List.of("SampleDried"))
-            .build());
+    results =
+        collectionsSearchMapper.searchCollections(
+            DescriptorsListParams.builder()
+                .contentTypes(List.of("Archaeological"))
+                .preservationTypes(List.of("SampleDried"))
+                .build());
 
     assertFalse(results.isEmpty());
     assertTrue(results.stream().anyMatch(r -> r.getKey().equals(c3Key)));

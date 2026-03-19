@@ -13,16 +13,13 @@
  */
 package org.gbif.registry.persistence.mapper.collections.params;
 
-import org.gbif.api.model.common.paging.Pageable;
-import org.gbif.api.vocabulary.Country;
-
+import jakarta.annotation.Nullable;
 import java.time.LocalDate;
 import java.util.List;
-
-import jakarta.annotation.Nullable;
-
 import lombok.Builder;
 import lombok.Getter;
+import org.gbif.api.model.common.paging.Pageable;
+import org.gbif.api.vocabulary.Country;
 
 @Getter
 @Builder
@@ -34,6 +31,7 @@ public class DescriptorParams {
   @Nullable List<String> usageName;
   @Nullable List<String> usageRank;
   @Nullable List<String> taxonKey;
+  @Nullable String checklistKey;
   @Nullable List<Country> country;
   @Nullable List<RangeParam<Integer>> individualCount;
   @Nullable List<String> identifiedBy;
@@ -45,5 +43,18 @@ public class DescriptorParams {
   @Nullable List<String> biome;
   @Nullable List<String> biomeType;
   @Nullable List<String> issues;
+  @Nullable List<String> taxonIssues;
   @Nullable Pageable page;
+
+  public boolean containsTaxonParams() {
+    return isPopulated(usageKey)
+        || isPopulated(usageName)
+        || isPopulated(usageRank)
+        || isPopulated(taxonKey)
+        || isPopulated(taxonIssues);
+  }
+
+  private static boolean isPopulated(List<String> list) {
+    return list != null && !list.isEmpty();
+  }
 }
