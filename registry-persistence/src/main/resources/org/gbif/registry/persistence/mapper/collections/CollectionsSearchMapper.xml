@@ -262,6 +262,7 @@
     <result column="descriptorTypeStatus" property="descriptorTypeStatus" typeHandler="StringArrayTypeHandler"/>
     <result column="descriptorRecordedBy" property="descriptorRecordedBy" typeHandler="StringArrayTypeHandler"/>
     <result column="descriptorIssues" property="descriptorIssues" typeHandler="StringArrayTypeHandler"/>
+    <result column="descriptorTaxonIssues" property="descriptorTaxonIssues" typeHandler="StringArrayTypeHandler"/>
   </resultMap>
 
   <select id="searchCollections" resultType="CollectionSearchDto" resultMap="COLLECTION_DTO_MAP"

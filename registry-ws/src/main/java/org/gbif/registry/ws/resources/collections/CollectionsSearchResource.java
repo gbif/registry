@@ -27,8 +27,13 @@ import org.gbif.api.vocabulary.collections.CollectionFacetParameter;
 import org.gbif.registry.domain.collections.TypeParam;
 import org.gbif.registry.service.collections.CollectionsSearchService;
 
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 import java.util.Arrays;
 import java.util.List;
+import java.util.UUID;
 
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -45,6 +50,8 @@ import io.swagger.v3.oas.annotations.extensions.Extension;
 import io.swagger.v3.oas.annotations.extensions.ExtensionProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+
+import static io.swagger.v3.oas.annotations.enums.Explode.TRUE;
 
 @io.swagger.v3.oas.annotations.tags.Tag(
     name = "Search institutions and collections",
@@ -137,6 +144,7 @@ public class CollectionsSearchResource {
               name = "Order",
               properties = @ExtensionProperty(name = "Order", value = "0120")))
   @CollectionResource.CollectionSearchParameters
+  @CollectionResource.CollectionDescriptorSearchParameters
   @CommonParameters.HighlightParameter
   @ApiResponse(responseCode = "200", description = "Search successful")
   @ApiResponse(responseCode = "400", description = "Invalid search query provided")

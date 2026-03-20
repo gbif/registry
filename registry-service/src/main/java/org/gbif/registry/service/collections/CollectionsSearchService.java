@@ -223,7 +223,7 @@ public class CollectionsSearchService {
                 !Strings.isNullOrEmpty(searchRequest.getChecklistKey())
                     ? searchRequest.getChecklistKey()
                     : defaultChecklistKey)
-            .taxonIssues(searchRequest.getTaxonIssues())
+            .taxonIssues(searchRequest.getTaxonIssue())
             .contentTypes(searchRequest.getContentTypes())
             .preservationTypes(searchRequest.getPreservationTypes())
             .accessionStatus(searchRequest.getAccessionStatus())
@@ -285,7 +285,9 @@ public class CollectionsSearchService {
           response.setTypeSpecimenCount(dto.getTypeSpecimenCount());
 
           if (isCollectionDescriptorResult(dto, listParams)) {
-            response.getDescriptorMatches().add(addDescriptorMatch(dto));
+            DescriptorMatch descriptorMatch = addDescriptorMatch(dto);
+            descriptorMatch.setChecklistKey(listParams.getChecklistKey());
+            response.getDescriptorMatches().add(descriptorMatch);
           }
 
           if (Boolean.TRUE.equals(searchRequest.getHl())) {
@@ -387,15 +389,22 @@ public class CollectionsSearchService {
     descriptorMatch.setObjectClassification(dto.getDescriptorObjectClassification());
     descriptorMatch.setBiome(dto.getDescriptorBiome());
     descriptorMatch.setBiomeType(dto.getDescriptorBiomeType());
-    descriptorMatch.setIssues(dto.getDescriptorIssues());
 
+    Set<String> issues = new HashSet<>();
+    if (dto.getDescriptorIssues() != null) {
+      issues.addAll(dto.getDescriptorIssues());
+    }
     if (dto.getDescriptorTaxonIssues() != null) {
-      descriptorMatch.getIssues().addAll(dto.getDescriptorTaxonIssues());
+      issues.addAll(dto.getDescriptorTaxonIssues());
+    }
+    if (!issues.isEmpty()) {
+      descriptorMatch.setIssues(new ArrayList<>(issues));
     }
 
     return descriptorMatch;
   }
 
+  @SuppressWarnings("unchecked")
   private void buildCommonParams(
       ListParams.ListParamsBuilder listParams, SearchRequest searchRequest) {
     String query =

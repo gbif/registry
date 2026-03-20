@@ -494,7 +494,7 @@ public class CollectionsSearchIT extends BaseServiceIT {
             1,
             7,
             CollectionDescriptorsSearchRequest.builder()
-                .taxonIssues(List.of("TAXON_MATCH_HIGHERRANK"))
+                .taxonIssue(List.of("TAXON_MATCH_HIGHERRANK"))
                 .build());
     assertEquals(
         1,
@@ -505,7 +505,7 @@ public class CollectionsSearchIT extends BaseServiceIT {
         0,
         CollectionDescriptorsSearchRequest.builder()
             .checklistKey("foo")
-            .taxonIssues(List.of("TAXON_MATCH_HIGHERRANK"))
+            .taxonIssue(List.of("TAXON_MATCH_HIGHERRANK"))
             .build());
 
     assertDescriptorSearch(
@@ -513,7 +513,7 @@ public class CollectionsSearchIT extends BaseServiceIT {
         7,
         CollectionDescriptorsSearchRequest.builder()
             .checklistKey("d7dddbf4-2cf0-4f39-9b2a-bb099caae36c")
-            .taxonIssues(List.of("TAXON_MATCH_HIGHERRANK"))
+            .taxonIssue(List.of("TAXON_MATCH_HIGHERRANK"))
             .build());
 
     PagingResponse<CollectionSearchResponse> first =

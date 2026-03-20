@@ -13,53 +13,19 @@
  */
 package org.gbif.registry.ws.resources.collections;
 
-import org.gbif.api.annotation.NullToNotFound;
-import org.gbif.api.annotation.Trim;
-import org.gbif.api.documentation.CommonParameters;
-import org.gbif.api.model.collections.Collection;
-import org.gbif.api.model.collections.CollectionImportParams;
-import org.gbif.api.model.collections.SourceableField;
-import org.gbif.api.model.collections.descriptors.Descriptor;
-import org.gbif.api.model.collections.descriptors.DescriptorChangeSuggestion;
-import org.gbif.api.model.collections.descriptors.DescriptorChangeSuggestionRequest;
-import org.gbif.api.model.collections.descriptors.DescriptorGroup;
-import org.gbif.api.model.collections.latimercore.ObjectGroup;
-import org.gbif.api.model.collections.request.CollectionDescriptorsSearchRequest;
-import org.gbif.api.model.collections.request.CollectionSearchRequest;
-import org.gbif.api.model.collections.request.DescriptorGroupSearchRequest;
-import org.gbif.api.model.collections.request.DescriptorSearchRequest;
-import org.gbif.api.model.collections.request.InstitutionSearchRequest;
-import org.gbif.api.model.collections.suggestions.CollectionChangeSuggestion;
-import org.gbif.api.model.collections.suggestions.Status;
-import org.gbif.api.model.collections.suggestions.Type;
-import org.gbif.api.model.collections.search.CollectionSearchResponse;
-import org.gbif.api.model.collections.search.FacetedSearchResponse;
-import org.gbif.api.model.collections.view.CollectionView;
-import org.gbif.api.model.common.export.ExportFormat;
-import org.gbif.api.model.common.paging.Pageable;
-import org.gbif.api.model.common.paging.PagingResponse;
-import org.gbif.api.model.registry.search.collections.KeyCodeNameResult;
-import org.gbif.api.service.collections.CollectionService;
-import org.gbif.api.service.collections.DescriptorChangeSuggestionService;
-import org.gbif.api.service.collections.DescriptorsService;
-import org.gbif.api.util.iterables.Iterables;
-import org.gbif.api.vocabulary.Country;
-import org.gbif.api.vocabulary.GbifRegion;
-import org.gbif.api.vocabulary.IdentifierType;
-import org.gbif.api.vocabulary.Rank;
-import org.gbif.api.vocabulary.collections.CollectionFacetParameter;
-import org.gbif.api.vocabulary.collections.Source;
-import org.gbif.registry.service.collections.batch.CollectionBatchService;
-import org.gbif.registry.service.collections.CollectionsSearchService;
-import org.gbif.registry.service.collections.DefaultCollectionService;
-import org.gbif.registry.service.collections.duplicates.CollectionDuplicatesService;
-import org.gbif.registry.service.collections.merge.CollectionMergeService;
-import org.gbif.registry.service.collections.suggestions.CollectionChangeSuggestionService;
-import org.gbif.registry.service.collections.utils.MasterSourceUtils;
-import org.gbif.registry.ws.export.CsvWriter;
-import org.gbif.registry.ws.resources.Docs;
-import org.gbif.ws.WebApplicationException;
-
+import com.google.common.base.Preconditions;
+import io.swagger.v3.oas.annotations.Hidden;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.Parameters;
+import io.swagger.v3.oas.annotations.enums.Explode;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
+import io.swagger.v3.oas.annotations.extensions.Extension;
+import io.swagger.v3.oas.annotations.extensions.ExtensionProperty;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import jakarta.servlet.http.HttpServletResponse;
 import java.io.BufferedWriter;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -80,16 +46,60 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
-import java.util.Objects;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
-
-import jakarta.servlet.http.HttpServletResponse;
-
+import lombok.SneakyThrows;
 import org.apache.commons.io.IOUtils;
+import org.gbif.api.annotation.NullToNotFound;
+import org.gbif.api.annotation.Trim;
+import org.gbif.api.documentation.CommonParameters;
+import org.gbif.api.model.collections.Collection;
+import org.gbif.api.model.collections.CollectionImportParams;
+import org.gbif.api.model.collections.SourceableField;
+import org.gbif.api.model.collections.descriptors.Descriptor;
+import org.gbif.api.model.collections.descriptors.DescriptorChangeSuggestion;
+import org.gbif.api.model.collections.descriptors.DescriptorChangeSuggestionRequest;
+import org.gbif.api.model.collections.descriptors.DescriptorGroup;
+import org.gbif.api.model.collections.latimercore.ObjectGroup;
+import org.gbif.api.model.collections.request.CollectionDescriptorsSearchRequest;
+import org.gbif.api.model.collections.request.CollectionSearchRequest;
+import org.gbif.api.model.collections.request.DescriptorGroupSearchRequest;
+import org.gbif.api.model.collections.request.DescriptorSearchRequest;
+import org.gbif.api.model.collections.request.InstitutionSearchRequest;
+import org.gbif.api.model.collections.search.CollectionSearchResponse;
+import org.gbif.api.model.collections.search.FacetedSearchResponse;
+import org.gbif.api.model.collections.suggestions.CollectionChangeSuggestion;
+import org.gbif.api.model.collections.suggestions.Status;
+import org.gbif.api.model.collections.suggestions.Type;
+import org.gbif.api.model.collections.view.CollectionView;
+import org.gbif.api.model.common.export.ExportFormat;
+import org.gbif.api.model.common.paging.Pageable;
+import org.gbif.api.model.common.paging.PagingResponse;
+import org.gbif.api.model.registry.search.collections.KeyCodeNameResult;
+import org.gbif.api.service.collections.CollectionService;
+import org.gbif.api.service.collections.DescriptorChangeSuggestionService;
+import org.gbif.api.service.collections.DescriptorsService;
+import org.gbif.api.util.iterables.Iterables;
+import org.gbif.api.vocabulary.Country;
+import org.gbif.api.vocabulary.GbifRegion;
+import org.gbif.api.vocabulary.IdentifierType;
+import org.gbif.api.vocabulary.Rank;
+import org.gbif.api.vocabulary.collections.CollectionFacetParameter;
+import org.gbif.api.vocabulary.collections.Source;
+import org.gbif.registry.service.collections.CollectionsSearchService;
+import org.gbif.registry.service.collections.DefaultCollectionService;
+import org.gbif.registry.service.collections.batch.CollectionBatchService;
+import org.gbif.registry.service.collections.duplicates.CollectionDuplicatesService;
+import org.gbif.registry.service.collections.merge.CollectionMergeService;
+import org.gbif.registry.service.collections.suggestions.CollectionChangeSuggestionService;
+import org.gbif.registry.service.collections.utils.MasterSourceUtils;
+import org.gbif.registry.ws.export.CsvWriter;
+import org.gbif.registry.ws.resources.Docs;
+import org.gbif.ws.WebApplicationException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
@@ -101,21 +111,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.util.StreamUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-
-import com.google.common.base.Preconditions;
-
-import io.swagger.v3.oas.annotations.Hidden;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.Parameters;
-import io.swagger.v3.oas.annotations.enums.Explode;
-import io.swagger.v3.oas.annotations.enums.ParameterIn;
-import io.swagger.v3.oas.annotations.extensions.Extension;
-import io.swagger.v3.oas.annotations.extensions.ExtensionProperty;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import lombok.SneakyThrows;
 
 /**
  * Class that acts both as the WS endpoint for {@link Collection} entities and also provides an
@@ -876,14 +871,8 @@ public class CollectionResource
     return zipFile;
   }
 
-  @Operation(
-      operationId = "getCollectionDescriptors",
-      summary = "Lists the descriptors.",
-      description = "Lists the descriptors.",
-      extensions =
-          @Extension(
-              name = "Order",
-              properties = @ExtensionProperty(name = "Order", value = "0700")))
+  @Target({ElementType.METHOD, ElementType.TYPE})
+  @Retention(RetentionPolicy.RUNTIME)
   @Parameters(
       value = {
         @Parameter(
@@ -926,7 +915,8 @@ public class CollectionResource
             description =
                 "Individual count of the descriptor. It supports ranges and a `*` can be used as a wildcard",
             schema = @Schema(implementation = String.class),
-            in = ParameterIn.QUERY),
+            in = ParameterIn.QUERY,
+            explode = Explode.TRUE),
         @Parameter(
             name = "identifiedBy",
             description = "Identified by field of the descriptor",
@@ -935,19 +925,11 @@ public class CollectionResource
             explode = Explode.TRUE),
         @Parameter(
             name = "dateIdentified",
-            description = "Date identified field of the descriptor",
+            description =
+                "Date identified field of the descriptor. It supports ranges and a `*` can be used as a wildcard",
             schema = @Schema(implementation = Date.class),
-            in = ParameterIn.QUERY),
-        @Parameter(
-            name = "dateIdentifiedFrom",
-            description = "Date identified of the descriptor is equal or higher than the specified",
-            schema = @Schema(implementation = Date.class),
-            in = ParameterIn.QUERY),
-        @Parameter(
-            name = "dateIdentifiedBefore",
-            description = "Date identified of the descriptor is lower than the specified",
-            schema = @Schema(implementation = Date.class),
-            in = ParameterIn.QUERY),
+            in = ParameterIn.QUERY,
+            explode = Explode.TRUE),
         @Parameter(
             name = "typeStatus",
             description = "Type status of the descriptor",
@@ -973,12 +955,46 @@ public class CollectionResource
             in = ParameterIn.QUERY,
             explode = Explode.TRUE),
         @Parameter(
+            name = "biome",
+            description = "Biome of the descriptor",
+            schema = @Schema(implementation = String.class),
+            in = ParameterIn.QUERY,
+            explode = Explode.TRUE),
+        @Parameter(
+            name = "biomeType",
+            description = "Biome type of the descriptor",
+            schema = @Schema(implementation = String.class),
+            in = ParameterIn.QUERY,
+            explode = Explode.TRUE),
+        @Parameter(
             name = "issues",
             description = "Issues of the descriptor",
             schema = @Schema(implementation = String.class),
             in = ParameterIn.QUERY,
-            explode = Explode.TRUE)
+            explode = Explode.TRUE),
+        @Parameter(
+            name = "taxonIssues",
+            description = "Taxon Issues of the descriptor",
+            schema = @Schema(implementation = String.class),
+            in = ParameterIn.QUERY,
+            explode = Explode.TRUE),
+        @Parameter(
+            name = "checklistKey",
+            description = "Checklist key to use with the taxonomy filters.",
+            schema = @Schema(implementation = String.class),
+            in = ParameterIn.QUERY)
       })
+  @interface CollectionDescriptorSearchParameters {}
+
+  @Operation(
+      operationId = "getCollectionDescriptors",
+      summary = "Lists the descriptors.",
+      description = "Lists the descriptors.",
+      extensions =
+          @Extension(
+              name = "Order",
+              properties = @ExtensionProperty(name = "Order", value = "0700")))
+  @CollectionDescriptorSearchParameters
   @CommonParameters.QParameter
   @Pageable.OffsetLimitParameters
   @Docs.DefaultEntityKeyParameter
