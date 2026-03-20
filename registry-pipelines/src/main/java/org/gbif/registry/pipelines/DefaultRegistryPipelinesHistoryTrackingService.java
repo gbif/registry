@@ -76,8 +76,6 @@ import org.gbif.registry.pipelines.issues.GithubApiClient.IssueComment;
 import org.gbif.registry.pipelines.issues.GithubApiClient.IssueResult;
 import org.gbif.registry.pipelines.issues.IssueCreator;
 import org.gbif.registry.pipelines.util.PredicateUtils;
-
-import org.jspecify.annotations.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -533,7 +531,7 @@ public class DefaultRegistryPipelinesHistoryTrackingService
     }
   }
 
-  private @NonNull Optional<? extends PipelineBasedMessage> createVerbatimIdentifierMessage(String prefix, String jsonMessage) {
+  private Optional<? extends PipelineBasedMessage> createVerbatimIdentifierMessage(String prefix, String jsonMessage) {
     PipelinesVerbatimMessage message = deserializeMessage(jsonMessage, PipelinesVerbatimMessage.class)
       .orElse(null);
 
