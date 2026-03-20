@@ -142,7 +142,6 @@
   <!-- record queries -->
   <resultMap id="DESCRIPTOR_DTO_MAP" type="DescriptorDto" autoMapping="true">
     <id property="key" column="key"/>
-    <result property="descriptorKey" column="collection_descriptor_key"/>
     <result property="descriptorGroupKey" column="collection_descriptor_group_key"/>
     <result property="identifiedBy" column="identified_by" typeHandler="StringArrayTypeHandler"/>
     <result property="typeStatus" column="type_status" typeHandler="StringArrayTypeHandler"/>
@@ -150,6 +149,11 @@
     <result property="issues" column="issues" typeHandler="StringArrayTypeHandler"/>
     <collection property="verbatim" column="key" select="listVerbatims"/>
     <collection property="taxonomyDescriptors" column="key" select="listTaxonomyDescriptors"/>
+  </resultMap>
+
+  <resultMap id="DESCRIPTOR_DTO_WITH_KEY_AND_VERBATIM_MAP" type="DescriptorDto" autoMapping="false">
+    <id property="key" column="key"/>
+    <collection property="verbatim" column="key" select="listVerbatims"/>
   </resultMap>
 
   <sql id="DESCRIPTOR_WRITE_FIELDS">
@@ -316,6 +320,18 @@
     <if test="params.page != null">
       LIMIT #{params.page.limit} OFFSET #{params.page.offset}
     </if>
+  </select>
+
+  <select id="listDescriptorsWithKeyAndVerbatimOnlyByDescriptorGroup"
+          resultMap="DESCRIPTOR_DTO_WITH_KEY_AND_VERBATIM_MAP"
+          parameterType="Pageable">
+      SELECT DISTINCT ON(d.key) d.key
+      FROM collection_descriptor d
+      WHERE d.collection_descriptor_group_key = #{descriptorGroupKey,jdbcType=OTHER}
+      ORDER BY d.key
+      <if test="page != null">
+        LIMIT #{page.limit} OFFSET #{page.offset}
+      </if>
   </select>
 
   <select id="countDescriptors" resultType="Long">

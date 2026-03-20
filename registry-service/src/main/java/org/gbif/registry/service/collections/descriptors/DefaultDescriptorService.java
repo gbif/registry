@@ -433,14 +433,9 @@ public class DefaultDescriptorService implements DescriptorsService {
   public void reinterpretDescriptorGroup(long descriptorGroupKey) {
     int limit = 100;
     long offset = 0;
-    // TODO: avoid loading taxon?? or load only key and verbatim?? list verbatim by collection or
-    // descriptor group
     List<DescriptorDto> descriptorDtos =
-        descriptorsMapper.listDescriptors(
-            DescriptorParams.builder()
-                .descriptorGroupKey(descriptorGroupKey)
-                .page(new PagingRequest(offset, limit))
-                .build());
+        descriptorsMapper.listDescriptorsWithKeyAndVerbatimOnlyByDescriptorGroup(
+            descriptorGroupKey, new PagingRequest(offset, limit));
     while (!descriptorDtos.isEmpty()) {
       descriptorDtos.forEach(
           dto -> {
@@ -467,11 +462,8 @@ public class DefaultDescriptorService implements DescriptorsService {
           });
       offset += limit;
       descriptorDtos =
-          descriptorsMapper.listDescriptors(
-              DescriptorParams.builder()
-                  .descriptorGroupKey(descriptorGroupKey)
-                  .page(new PagingRequest(offset, limit))
-                  .build());
+          descriptorsMapper.listDescriptorsWithKeyAndVerbatimOnlyByDescriptorGroup(
+              descriptorGroupKey, new PagingRequest(offset, limit));
     }
   }
 

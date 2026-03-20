@@ -14,6 +14,7 @@
 package org.gbif.registry.persistence.mapper.collections;
 
 import org.gbif.api.model.collections.descriptors.DescriptorGroup;
+import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.registry.persistence.mapper.collections.dto.DescriptorDto;
 import org.gbif.registry.persistence.mapper.collections.dto.TaxonomyDescriptorDto;
 import org.gbif.registry.persistence.mapper.collections.dto.VerbatimDto;
@@ -24,6 +25,8 @@ import java.util.List;
 
 import org.apache.ibatis.annotations.Param;
 import org.springframework.stereotype.Repository;
+
+import javax.annotation.Nullable;
 
 @Repository
 public interface DescriptorsMapper {
@@ -49,6 +52,9 @@ public interface DescriptorsMapper {
   void deleteDescriptor(@Param("key") long key);
 
   List<DescriptorDto> listDescriptors(@Param("params") DescriptorParams searchParams);
+
+  List<DescriptorDto> listDescriptorsWithKeyAndVerbatimOnlyByDescriptorGroup(
+      @Param("descriptorGroupKey") long descriptorGroupKey, @Nullable @Param("page") Pageable page);
 
   long countDescriptors(@Param("params") DescriptorParams searchParams);
 

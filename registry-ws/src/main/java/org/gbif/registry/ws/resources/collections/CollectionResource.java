@@ -996,6 +996,8 @@ public class CollectionResource
       return null;
     }
 
+    Preconditions.checkArgument(existingDescriptorGroup.getCollectionKey().equals(collectionKey));
+
     searchRequest.setDescriptorGroupKey(descriptorGroupKey);
     return descriptorsService.listDescriptors(searchRequest);
   }

@@ -19,10 +19,12 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.descriptors.DescriptorGroup;
+import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.v2.RankedName;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.Rank;
@@ -187,6 +189,13 @@ public class DescriptorsMapperIT extends BaseItTest {
         descriptorsMapper
             .listDescriptorGroups(DescriptorGroupParams.builder().deleted(true).build())
             .size());
+
+    List<DescriptorDto> descriptorDtos =
+        descriptorsMapper.listDescriptorsWithKeyAndVerbatimOnlyByDescriptorGroup(
+            descriptorGroup.getKey(), new PagingRequest(0, 20));
+    assertEquals(1, descriptorDtos.size());
+    assertTrue(descriptorDtos.get(0).getKey() > 0);
+    assertEquals(2, descriptorDtos.get(0).getVerbatim().size());
 
     // update descriptor
     createdDescriptor.setCountry(Country.COCOS_ISLANDS);
