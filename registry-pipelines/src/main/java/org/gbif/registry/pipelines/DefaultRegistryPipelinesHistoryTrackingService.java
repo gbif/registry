@@ -19,6 +19,8 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Ordering;
+import com.google.common.collect.Sets;
+
 import freemarker.template.TemplateException;
 import java.io.IOException;
 import java.time.OffsetDateTime;
@@ -504,6 +506,8 @@ public class DefaultRegistryPipelinesHistoryTrackingService
         return createInterpretedMessage(prefix, jsonMessage, stepType);
       case HDFS_VIEW:
         return createInterpretedMessage(prefix, jsonMessage, stepType, interpretTypes);
+      case VERBATIM_TO_IDENTIFIER:
+        return createVerbatimIdentifierMessage(prefix, jsonMessage);
       case VERBATIM_TO_INTERPRETED:
         return createVerbatimMessage(prefix, jsonMessage, interpretTypes, dataset);
       case DWCA_TO_VERBATIM:
@@ -520,6 +524,26 @@ public class DefaultRegistryPipelinesHistoryTrackingService
       default:
         return Optional.empty();
     }
+  }
+
+  private Optional<? extends PipelineBasedMessage> createVerbatimIdentifierMessage(String prefix, String jsonMessage) {
+    PipelinesVerbatimMessage message = deserializeMessage(jsonMessage, PipelinesVerbatimMessage.class)
+      .orElse(null);
+
+    if (message == null) {
+      return Optional.empty();
+    }
+
+    Optional.ofNullable(prefix).ifPresent(message::setResetPrefix);
+    message.setPipelineSteps(Sets.newLinkedHashSet(
+      List.of(
+        StepType.VERBATIM_TO_IDENTIFIER.name(),
+        StepType.VERBATIM_TO_INTERPRETED.name(),
+        StepType.INTERPRETED_TO_INDEX.name(),
+        StepType.HDFS_VIEW.name()
+      )
+    ));
+    return Optional.of(message);
   }
 
   @VisibleForTesting
