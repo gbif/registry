@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.EnumMap;
@@ -507,7 +508,7 @@ public class DefaultRegistryPipelinesHistoryTrackingService
       case HDFS_VIEW:
         return createInterpretedMessage(prefix, jsonMessage, stepType, interpretTypes);
       case VERBATIM_TO_IDENTIFIER:
-        return createVerbatimIdentifierMessage(prefix, jsonMessage);
+        return createVerbatimIdentifierMessage(prefix, jsonMessage, interpretTypes, dataset);
       case VERBATIM_TO_INTERPRETED:
         return createVerbatimMessage(prefix, jsonMessage, interpretTypes, dataset);
       case DWCA_TO_VERBATIM:
@@ -526,23 +527,33 @@ public class DefaultRegistryPipelinesHistoryTrackingService
     }
   }
 
-  private Optional<? extends PipelineBasedMessage> createVerbatimIdentifierMessage(String prefix, String jsonMessage) {
+  private Optional<? extends PipelineBasedMessage> createVerbatimIdentifierMessage(String prefix,
+                                                                                   String jsonMessage,
+                                                                                   Set<String> interpretTypes,
+                                                                                   Dataset dataset) {
     PipelinesVerbatimMessage message = deserializeMessage(jsonMessage, PipelinesVerbatimMessage.class)
       .orElse(null);
 
     if (message == null) {
       return Optional.empty();
     }
+;
+    List<String> steps = new ArrayList<>();
+    steps.add(StepType.VERBATIM_TO_IDENTIFIER.name());
+    steps.add(StepType.VERBATIM_TO_INTERPRETED.name());
+    steps.add(StepType.INTERPRETED_TO_INDEX.name());
+    steps.add(StepType.HDFS_VIEW.name());
+
+    if (message.getPipelineSteps().contains(StepType.EVENTS_VERBATIM_TO_INTERPRETED.name())
+      || DatasetType.SAMPLING_EVENT == dataset.getType()) {
+      steps.add(StepType.EVENTS_VERBATIM_TO_INTERPRETED.name());
+      steps.add(StepType.EVENTS_INTERPRETED_TO_INDEX.name());
+      steps.add(StepType.EVENTS_HDFS_VIEW.name());
+    }
 
     Optional.ofNullable(prefix).ifPresent(message::setResetPrefix);
-    message.setPipelineSteps(Sets.newLinkedHashSet(
-      List.of(
-        StepType.VERBATIM_TO_IDENTIFIER.name(),
-        StepType.VERBATIM_TO_INTERPRETED.name(),
-        StepType.INTERPRETED_TO_INDEX.name(),
-        StepType.HDFS_VIEW.name()
-      )
-    ));
+    message.setPipelineSteps(Sets.newLinkedHashSet(steps));
+
     return Optional.of(message);
   }
 
