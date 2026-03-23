@@ -230,7 +230,9 @@ public class DefaultDescriptorService implements DescriptorsService {
       descriptorDto.setIssues(new ArrayList<>());
     }
     if (result.getIssues() != null) {
-      descriptorDto.getIssues().addAll(result.getIssues());
+      Set<String> issues = new HashSet<>(result.getIssues());
+      issues.addAll(descriptorDto.getIssues());
+      descriptorDto.setIssues(new ArrayList<>(issues));
     }
   }
 
@@ -431,7 +433,7 @@ public class DefaultDescriptorService implements DescriptorsService {
   @Transactional
   @Override
   public void reinterpretDescriptorGroup(long descriptorGroupKey) {
-    int limit = 100;
+    int limit = 300;
     long offset = 0;
     List<DescriptorDto> descriptorDtos =
         descriptorsMapper.listDescriptorsWithKeyAndVerbatimOnlyByDescriptorGroup(
@@ -471,7 +473,7 @@ public class DefaultDescriptorService implements DescriptorsService {
   @Override
   public void reinterpretCollectionDescriptorGroups(UUID collectionKey) {
     log.info("Starting collection descriptors reinterpretation");
-    int limit = 100;
+    int limit = 300;
     long offset = 0;
     List<DescriptorGroup> descriptorGroups =
         descriptorsMapper.listDescriptorGroups(
@@ -480,6 +482,7 @@ public class DefaultDescriptorService implements DescriptorsService {
                 .page(new PagingRequest(offset, limit))
                 .build());
     while (!descriptorGroups.isEmpty()) {
+      log.info("Interpreting descriptor groups from offset {} and limit {}", offset, limit);
       descriptorGroups.forEach(dg -> reinterpretDescriptorGroup(dg.getKey()));
       offset += limit;
       descriptorGroups =
