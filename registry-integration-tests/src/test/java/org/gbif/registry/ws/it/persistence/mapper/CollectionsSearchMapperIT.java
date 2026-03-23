@@ -190,8 +190,11 @@ public class CollectionsSearchMapperIT extends BaseItTest {
     assertEquals(0, dtos.size());
 
     dtos =
-      collectionsSearchMapper.searchCollections(
-        DescriptorsListParams.builder().checklistKey(DEFAULT_CHECKLIST_KEY).query("aves").build());
+        collectionsSearchMapper.searchCollections(
+            DescriptorsListParams.builder()
+                .checklistKey(DEFAULT_CHECKLIST_KEY)
+                .query("aves")
+                .build());
     assertEquals(1, dtos.size());
     assertEquals(0, dtos.get(0).getQueryDescriptorRank());
     assertTrue(dtos.get(0).getQueryDescriptorTaxonomyRank() > 0);
@@ -351,18 +354,28 @@ public class CollectionsSearchMapperIT extends BaseItTest {
 
     DescriptorDto descriptorDto1 = new DescriptorDto();
     descriptorDto1.setDescriptorGroupKey(descriptorGroup.getKey());
-    //    descriptorDto1.setUsageName("aves");
     descriptorDto1.setCountry(Country.DENMARK);
     descriptorDto1.setRecordedBy(Arrays.asList("John", "Clint"));
-    //    descriptorDto1.setKingdomKey("1");
     descriptorsMapper.createDescriptor(descriptorDto1);
+
+    TaxonomyDescriptorDto taxonomyDescriptorDto1 = new TaxonomyDescriptorDto();
+    taxonomyDescriptorDto1.setCollectionDescriptorKey(descriptorDto1.getKey());
+    taxonomyDescriptorDto1.setChecklistKey(DEFAULT_CHECKLIST_KEY);
+    taxonomyDescriptorDto1.setUsageName("aves");
+    taxonomyDescriptorDto1.setKingdomKey("1");
+    descriptorsMapper.createTaxonomyDescriptor(taxonomyDescriptorDto1);
 
     DescriptorDto descriptorDto2 = new DescriptorDto();
     descriptorDto2.setDescriptorGroupKey(descriptorGroup.getKey());
-    //    descriptorDto2.setKingdomKey("1");
     descriptorDto2.setCountry(Country.DENMARK);
     descriptorDto2.setObjectClassificationName("obn1");
     descriptorsMapper.createDescriptor(descriptorDto2);
+
+    TaxonomyDescriptorDto taxonomyDescriptorDto2 = new TaxonomyDescriptorDto();
+    taxonomyDescriptorDto2.setCollectionDescriptorKey(descriptorDto2.getKey());
+    taxonomyDescriptorDto2.setChecklistKey(DEFAULT_CHECKLIST_KEY);
+    taxonomyDescriptorDto2.setKingdomKey("1");
+    descriptorsMapper.createTaxonomyDescriptor(taxonomyDescriptorDto1);
 
     UUID c2Key = UUID.randomUUID();
     Collection c2 = new Collection();
@@ -397,12 +410,17 @@ public class CollectionsSearchMapperIT extends BaseItTest {
 
     DescriptorDto descriptorDtoC2 = new DescriptorDto();
     descriptorDtoC2.setDescriptorGroupKey(descriptorGroupC2.getKey());
-    //    descriptorDtoC2.setKingdomKey("2");
-    //    descriptorDtoC2.setTaxonKeys(List.of("123"));
     descriptorDtoC2.setRecordedBy(Collections.singletonList("John"));
     descriptorDtoC2.setCountry(Country.DENMARK);
     descriptorDtoC2.setObjectClassificationName("obn1");
     descriptorsMapper.createDescriptor(descriptorDtoC2);
+
+    TaxonomyDescriptorDto taxonomyDescriptorDtoC2 = new TaxonomyDescriptorDto();
+    taxonomyDescriptorDtoC2.setCollectionDescriptorKey(descriptorDtoC2.getKey());
+    taxonomyDescriptorDtoC2.setChecklistKey(DEFAULT_CHECKLIST_KEY);
+    taxonomyDescriptorDtoC2.setKingdomKey("2");
+    taxonomyDescriptorDtoC2.setTaxonKeys(List.of("123"));
+    descriptorsMapper.createTaxonomyDescriptor(taxonomyDescriptorDtoC2);
 
     // Debug: Let's see what collections and facets we have
     System.out.println("=== Testing PRESERVATION_TYPE facets ===");
@@ -426,6 +444,7 @@ public class CollectionsSearchMapperIT extends BaseItTest {
         collectionsSearchMapper.collectionFacet(
             DescriptorsListParams.builder()
                 .facet(CollectionFacetParameter.COUNTRY)
+                .checklistKey(DEFAULT_CHECKLIST_KEY)
                 .taxonKey(Collections.singletonList("123"))
                 .build());
     assertEquals(1, facetDtos.size());
@@ -456,14 +475,20 @@ public class CollectionsSearchMapperIT extends BaseItTest {
 
     facetDtos =
         collectionsSearchMapper.collectionFacet(
-            DescriptorsListParams.builder().facet(CollectionFacetParameter.KINGDOM_KEY).build());
+            DescriptorsListParams.builder()
+                .checklistKey(DEFAULT_CHECKLIST_KEY)
+                .facet(CollectionFacetParameter.KINGDOM_KEY)
+                .build());
     assertEquals(2, facetDtos.size());
     facetDtos.forEach(f -> assertEquals(1, f.getCount()));
 
     assertEquals(
         2,
         collectionsSearchMapper.collectionFacetCardinality(
-            DescriptorsListParams.builder().facet(CollectionFacetParameter.KINGDOM_KEY).build()));
+            DescriptorsListParams.builder()
+                .checklistKey(DEFAULT_CHECKLIST_KEY)
+                .facet(CollectionFacetParameter.KINGDOM_KEY)
+                .build()));
 
     facetDtos =
         collectionsSearchMapper.collectionFacet(

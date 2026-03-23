@@ -771,7 +771,7 @@
         c.accession_status
       </when>
       <when test="params.facet.name.equals('TAXON_KEY')">
-        unnest(cd.taxon_keys)
+        unnest(cdt.taxon_keys)
       </when>
       <when test="params.facet.name.equals('DESCRIPTOR_COUNTRY')">
         cd.country
@@ -853,7 +853,7 @@
             cd.recorded_by
           </when>
           <when test="params.facet.name.equals('TAXON_KEY')">
-            cd.taxon_keys
+            cdt.taxon_keys
           </when>
         </choose>
         ) facet ON true
@@ -871,25 +871,25 @@
             cd.country
           </when>
           <when test="params.facet.name.equals('KINGDOM_KEY')">
-            cd.kingdom_key
+            cdt.kingdom_key
           </when>
           <when test="params.facet.name.equals('PHYLUM_KEY')">
-            cd.phylum_key
+            cdt.phylum_key
           </when>
           <when test="params.facet.name.equals('CLASS_KEY')">
-            cd.class_key
+            cdt.class_key
           </when>
           <when test="params.facet.name.equals('ORDER_KEY')">
-            cd.order_key
+            cdt.order_key
           </when>
           <when test="params.facet.name.equals('FAMILY_KEY')">
-            cd.family_key
+            cdt.family_key
           </when>
           <when test="params.facet.name.equals('GENUS_KEY')">
-            cd.genus_key
+            cdt.genus_key
           </when>
           <when test="params.facet.name.equals('SPECIES_KEY')">
-            cd.species_key
+            cdt.species_key
           </when>
           <when test="params.facet.name.equals('OBJECT_CLASSIFICATION')">
             cd.object_classification_name
