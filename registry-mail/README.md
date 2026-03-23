@@ -11,9 +11,13 @@ This module offers:
 
 ## Configuration
 
-  * `mail.devemail.enabled` enable dev mode. If true sends email to `mail.devemail.address` and ignores copy addresses
+  * Per-category dev redirect (e.g. for workshops: allow identity emails, redirect endorsement emails):
+    * `mail.devEmailForIdentity.enabled` / `mail.devEmailForIdentity.address` — identity (user registration, password reset, etc.)
+    * `mail.devEmailForOrganizationsEndorsement.enabled` / `mail.devEmailForOrganizationsEndorsement.address` — organization endorsement emails to nodes
+    * `mail.devEmailForCollections.enabled` / `mail.devEmailForCollections.address` — collections (GRSciColl) notifications
+    * `mail.devEmailForPipelines.enabled` / `mail.devEmailForPipelines.address` — pipelines notifications
 
-  * `mail.devemail.address` email address for dev mode
+  * `mail.useInMemoryEmailSender` when true, use an in-memory sender (no real emails). Set to `true` in integration tests.
 
   * `mail.cc` mail carbon copy addresses (comma separated list)
 

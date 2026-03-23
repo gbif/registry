@@ -19,8 +19,8 @@
   </sql>
 
   <sql id="TS_QUERY">
-    to_tsquery('english', CASE WHEN regexp_replace(unaccent(trim(#{params.query})), '[^A-Za-z0-9@.\-\s]+', '', 'g') = '' THEN 'false'
-    ELSE regexp_replace(regexp_replace(regexp_replace(unaccent(trim(#{params.query})), '[^A-Za-z0-9@.\-\s]+', '', 'g'), '\s+', ':* &amp; ', 'g'), ':* &amp; $', '', 'g') || ':*' END)
+    to_tsquery('english', CASE WHEN trim(regexp_replace(unaccent(trim(#{params.query})), '[^A-Za-z0-9@.\-\s]+', '', 'g')) = '' THEN 'false'
+    ELSE regexp_replace(trim(regexp_replace(unaccent(trim(#{params.query})), '[^A-Za-z0-9@.\-\s]+', '', 'g')), '\s+', ':* &amp; ', 'g') || ':*' END)
   </sql>
 
   <select id="search" resultMap="SEARCH_DTO_MAP">
@@ -243,8 +243,8 @@
   </select>
 
   <sql id="INSTITUTIONS_FULLTEXT_SEARCH">
-    JOIN to_tsquery('english', CASE WHEN regexp_replace(unaccent(trim(#{params.query})), '[^A-Za-z0-9@.\-\s]+', '', 'g') = '' THEN 'false'
-    ELSE regexp_replace(regexp_replace(unaccent(trim(#{params.query})), '[^A-Za-z0-9@.\-\s]+', '', 'g'), '\s+', ':* &amp; ', 'g') || ':*' END)
+    JOIN to_tsquery('english', CASE WHEN trim(regexp_replace(unaccent(trim(#{params.query})), '[^A-Za-z0-9@.\-\s]+', '', 'g')) = '' THEN 'false'
+    ELSE regexp_replace(trim(regexp_replace(unaccent(trim(#{params.query})), '[^A-Za-z0-9@.\-\s]+', '', 'g')), '\s+', ':* &amp; ', 'g') || ':*' END)
     AS query ON query @@ fulltext_search
     OR EXISTS(
     SELECT collection_contact_key
@@ -482,8 +482,8 @@
   </sql>
 
   <sql id="COLLECTIONS_FULLTEXT_SEARCH">
-    JOIN to_tsquery('english', CASE WHEN regexp_replace(unaccent(trim(#{params.query})), '[^A-Za-z0-9@.\-\s]+', '', 'g') = '' THEN 'false'
-    ELSE regexp_replace(regexp_replace(regexp_replace(unaccent(trim(#{params.query})), '[^A-Za-z0-9@.\-\s]+', '', 'g'), '\s+', ':* &amp; ', 'g'), ':* &amp; $', '', 'g') || ':*' END)
+    JOIN to_tsquery('english', CASE WHEN trim(regexp_replace(unaccent(trim(#{params.query})), '[^A-Za-z0-9@.\-\s]+', '', 'g')) = '' THEN 'false'
+    ELSE regexp_replace(trim(regexp_replace(unaccent(trim(#{params.query})), '[^A-Za-z0-9@.\-\s]+', '', 'g')), '\s+', ':* &amp; ', 'g') || ':*' END)
     AS query ON query @@ c.fulltext_search
     OR EXISTS(
     SELECT collection_contact_key

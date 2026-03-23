@@ -32,7 +32,10 @@ Add this to local setting.xml (MacOS: `/Users/youruser/.m2/settings.xml`)
                 <registry.messaging.username>doi</registry.messaging.username>
                 <registry.messaging.password>%queue_password%</registry.messaging.password>
 
-                <mail.devemail.enabled>false</mail.devemail.enabled>
+                <mail.devEmailForIdentity.enabled>true</mail.devEmailForIdentity.enabled>
+                <mail.devEmailForOrganizationsEndorsement.enabled>true</mail.devEmailForOrganizationsEndorsement.enabled>
+                <mail.devEmailForCollections.enabled>true</mail.devEmailForCollections.enabled>
+                <mail.devEmailForPipelines.enabled>true</mail.devEmailForPipelines.enabled>
                 <mail.smtp.host>smtp.gmail.com</mail.smtp.host>
                 <mail.smtp.port>587</mail.smtp.port>
                 <mail.cc></mail.cc>

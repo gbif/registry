@@ -19,11 +19,14 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Ordering;
+import com.google.common.collect.Sets;
+
 import freemarker.template.TemplateException;
 import java.io.IOException;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.EnumMap;
@@ -64,6 +67,7 @@ import org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage;
 import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage;
 import org.gbif.common.messaging.api.messages.PipelinesXmlMessage;
 import org.gbif.registry.mail.BaseEmailModel;
+import org.gbif.registry.mail.EmailCategory;
 import org.gbif.registry.mail.EmailSender;
 import org.gbif.registry.mail.pipelines.PipelinesEmailManager;
 import org.gbif.registry.persistence.mapper.pipelines.PipelineProcessMapper;
@@ -508,6 +512,8 @@ public class DefaultRegistryPipelinesHistoryTrackingService
         return createInterpretedMessage(prefix, jsonMessage, stepType);
       case HDFS_VIEW:
         return createInterpretedMessage(prefix, jsonMessage, stepType, interpretTypes);
+      case VERBATIM_TO_IDENTIFIER:
+        return createVerbatimIdentifierMessage(prefix, jsonMessage, interpretTypes, dataset);
       case VERBATIM_TO_INTERPRETED:
         return createVerbatimMessage(prefix, jsonMessage, interpretTypes, dataset);
       case DWCA_TO_VERBATIM:
@@ -524,6 +530,36 @@ public class DefaultRegistryPipelinesHistoryTrackingService
       default:
         return Optional.empty();
     }
+  }
+
+  private Optional<? extends PipelineBasedMessage> createVerbatimIdentifierMessage(String prefix,
+                                                                                   String jsonMessage,
+                                                                                   Set<String> interpretTypes,
+                                                                                   Dataset dataset) {
+    PipelinesVerbatimMessage message = deserializeMessage(jsonMessage, PipelinesVerbatimMessage.class)
+      .orElse(null);
+
+    if (message == null) {
+      return Optional.empty();
+    }
+;
+    List<String> steps = new ArrayList<>();
+    steps.add(StepType.VERBATIM_TO_IDENTIFIER.name());
+    steps.add(StepType.VERBATIM_TO_INTERPRETED.name());
+    steps.add(StepType.INTERPRETED_TO_INDEX.name());
+    steps.add(StepType.HDFS_VIEW.name());
+
+    if (message.getPipelineSteps().contains(StepType.EVENTS_VERBATIM_TO_INTERPRETED.name())
+      || DatasetType.SAMPLING_EVENT == dataset.getType()) {
+      steps.add(StepType.EVENTS_VERBATIM_TO_INTERPRETED.name());
+      steps.add(StepType.EVENTS_INTERPRETED_TO_INDEX.name());
+      steps.add(StepType.EVENTS_HDFS_VIEW.name());
+    }
+
+    Optional.ofNullable(prefix).ifPresent(message::setResetPrefix);
+    message.setPipelineSteps(Sets.newLinkedHashSet(steps));
+
+    return Optional.of(message);
   }
 
   @VisibleForTesting
@@ -823,7 +859,7 @@ public class DefaultRegistryPipelinesHistoryTrackingService
           attempt,
           message);
 
-      emailSender.send(baseEmailModel);
+      emailSender.send(baseEmailModel, EmailCategory.PIPELINES);
     } catch (IOException | TemplateException ex) {
       LOG.error(ex.getMessage(), ex);
     }

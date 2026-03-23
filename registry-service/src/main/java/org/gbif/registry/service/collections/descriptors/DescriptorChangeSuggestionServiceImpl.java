@@ -31,6 +31,7 @@ import org.gbif.registry.events.EventManager;
 import org.gbif.registry.events.collections.EventType;
 import org.gbif.registry.events.collections.SubEntityCollectionEvent;
 import org.gbif.registry.mail.BaseEmailModel;
+import org.gbif.registry.mail.EmailCategory;
 import org.gbif.registry.mail.EmailSender;
 import org.gbif.registry.mail.collections.CollectionsEmailManager;
 import org.gbif.registry.mail.config.CollectionsMailConfigurationProperties;
@@ -161,7 +162,7 @@ public class DescriptorChangeSuggestionServiceImpl implements DescriptorChangeSu
                 suggestion.getTags(),
                 suggestion.getProposerEmail(),
                 findRecipientsWithPermissions(request.getCollectionKey(), suggestion.getCountry()));
-        emailSender.send(emailModel);
+        emailSender.send(emailModel, EmailCategory.COLLECTIONS);
       } catch (Exception e) {
         log.error("Couldn't send email for new descriptor suggestion", e);
       }
@@ -339,7 +340,7 @@ public class DescriptorChangeSuggestionServiceImpl implements DescriptorChangeSu
                 suggestion.getTags(),
                 suggestion.getProposerEmail(),
                 Collections.singleton(suggestion.getProposerEmail()));
-        emailSender.send(emailModel);
+        emailSender.send(emailModel, EmailCategory.COLLECTIONS);
       } catch (Exception e) {
         log.error("Couldn't send email for applied descriptor suggestion", e);
       }
@@ -399,7 +400,7 @@ public class DescriptorChangeSuggestionServiceImpl implements DescriptorChangeSu
                 suggestion.getTags(),
                 suggestion.getProposerEmail(),
                 Collections.singleton(suggestion.getProposerEmail()));
-        emailSender.send(emailModel);
+        emailSender.send(emailModel, EmailCategory.COLLECTIONS);
       } catch (Exception e) {
         log.error("Couldn't send email for discarded descriptor suggestion", e);
       }

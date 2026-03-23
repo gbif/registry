@@ -6,10 +6,32 @@
       "sourceType": "org.gbif.registry.mail.config.MailConfigurationProperties"
     },
     {
-      "name": "mail.devemail",
-      "type": "org.gbif.registry.mail.config.DevemailProperties",
+      "name": "mail.devEmailForIdentity",
+      "type": "org.gbif.registry.mail.config.MailConfigurationProperties$DevemailProperties",
       "sourceType": "org.gbif.registry.mail.config.MailConfigurationProperties$DevemailProperties",
-      "sourceMethod": "getDevemail()"
+      "sourceMethod": "getDevEmailForIdentity()",
+      "description": "Redirect identity emails (user registration, password reset, etc.) to a dev address when enabled."
+    },
+    {
+      "name": "mail.devEmailForOrganizationsEndorsement",
+      "type": "org.gbif.registry.mail.config.MailConfigurationProperties$DevemailProperties",
+      "sourceType": "org.gbif.registry.mail.config.MailConfigurationProperties$DevemailProperties",
+      "sourceMethod": "getDevEmailForOrganizationsEndorsement()",
+      "description": "Redirect organization endorsement emails to a dev address when enabled."
+    },
+    {
+      "name": "mail.devEmailForCollections",
+      "type": "org.gbif.registry.mail.config.MailConfigurationProperties$DevemailProperties",
+      "sourceType": "org.gbif.registry.mail.config.MailConfigurationProperties$DevemailProperties",
+      "sourceMethod": "getDevEmailForCollections()",
+      "description": "Redirect collections (GRSciColl) emails to a dev address when enabled."
+    },
+    {
+      "name": "mail.devEmailForPipelines",
+      "type": "org.gbif.registry.mail.config.MailConfigurationProperties$DevemailProperties",
+      "sourceType": "org.gbif.registry.mail.config.MailConfigurationProperties$DevemailProperties",
+      "sourceMethod": "getDevEmailForPipelines()",
+      "description": "Redirect pipelines notification emails to a dev address when enabled."
     },
     {
       "name": "organization.surety.mail",
@@ -41,15 +63,54 @@
   ],
   "properties": [
     {
-      "name": "mail.devemail.enabled",
+      "name": "mail.devEmailForIdentity.enabled",
       "type": "java.lang.Boolean",
       "defaultValue": false,
       "sourceType": "org.gbif.registry.mail.config.MailConfigurationProperties$DevemailProperties"
     },
     {
-      "name": "mail.devemail.address",
+      "name": "mail.devEmailForIdentity.address",
       "type": "java.lang.String",
       "sourceType": "org.gbif.registry.mail.config.MailConfigurationProperties$DevemailProperties"
+    },
+    {
+      "name": "mail.devEmailForOrganizationsEndorsement.enabled",
+      "type": "java.lang.Boolean",
+      "defaultValue": false,
+      "sourceType": "org.gbif.registry.mail.config.MailConfigurationProperties$DevemailProperties"
+    },
+    {
+      "name": "mail.devEmailForOrganizationsEndorsement.address",
+      "type": "java.lang.String",
+      "sourceType": "org.gbif.registry.mail.config.MailConfigurationProperties$DevemailProperties"
+    },
+    {
+      "name": "mail.devEmailForCollections.enabled",
+      "type": "java.lang.Boolean",
+      "defaultValue": false,
+      "sourceType": "org.gbif.registry.mail.config.MailConfigurationProperties$DevemailProperties"
+    },
+    {
+      "name": "mail.devEmailForCollections.address",
+      "type": "java.lang.String",
+      "sourceType": "org.gbif.registry.mail.config.MailConfigurationProperties$DevemailProperties"
+    },
+    {
+      "name": "mail.devEmailForPipelines.enabled",
+      "type": "java.lang.Boolean",
+      "defaultValue": false,
+      "sourceType": "org.gbif.registry.mail.config.MailConfigurationProperties$DevemailProperties"
+    },
+    {
+      "name": "mail.devEmailForPipelines.address",
+      "type": "java.lang.String",
+      "sourceType": "org.gbif.registry.mail.config.MailConfigurationProperties$DevemailProperties"
+    },
+    {
+      "name": "mail.useInMemoryEmailSender",
+      "type": "java.lang.Boolean",
+      "defaultValue": false,
+      "description": "When true, use an in-memory email sender (no real emails). Used by integration tests."
     },
     {
       "name": "mail.from",
