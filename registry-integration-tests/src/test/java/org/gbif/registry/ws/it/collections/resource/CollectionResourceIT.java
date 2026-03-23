@@ -359,7 +359,7 @@ public class CollectionResourceIT
         1,
         getClient()
             .listCollectionDescriptors(
-                UUID.randomUUID(),
+                collectionKey,
                 1L,
                 DescriptorSearchRequest.builder()
                     .q("foo")
