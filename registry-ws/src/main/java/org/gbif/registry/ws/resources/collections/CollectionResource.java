@@ -159,7 +159,7 @@ public class CollectionResource
       DescriptorsService descriptorsService,
       CollectionsSearchService collectionsSearchService,
       @Value("${api.root.url}") String apiBaseUrl,
-    DescriptorChangeSuggestionService descriptorChangeSuggestionService) {
+      DescriptorChangeSuggestionService descriptorChangeSuggestionService) {
     super(
         collectionMergeService,
         collectionService,
@@ -200,7 +200,8 @@ public class CollectionResource
             in = ParameterIn.QUERY),
         @Parameter(
             name = "accessionStatus",
-            description = "Accession status of a GrSciColl collection. Accepts multiple values, for example "
+            description =
+                "Accession status of a GrSciColl collection. Accepts multiple values, for example "
                     + "`accessionStatus=Institutional&accessionStatus=Project",
             schema = @Schema(implementation = String.class),
             in = ParameterIn.QUERY),
@@ -438,7 +439,8 @@ public class CollectionResource
     }
   }
 
-  private List<CollectionView> getAllCollectionsForExport(CollectionDescriptorsSearchRequest searchRequest) {
+  private List<CollectionView> getAllCollectionsForExport(
+      CollectionDescriptorsSearchRequest searchRequest) {
     List<CollectionView> allCollections = new ArrayList<>();
     long offset = searchRequest.getOffset() != null ? searchRequest.getOffset() : 0L;
     int limit = searchRequest.getLimit() != null ? searchRequest.getLimit() : 20;
@@ -450,11 +452,14 @@ public class CollectionResource
 
       searchResponse = collectionsSearchService.searchCollections(searchRequest);
 
-        // Convert CollectionSearchResponse to CollectionView - Might be improved in case of performance issues
-        List<UUID> keys = searchResponse.getResults().stream()
-            .map(CollectionSearchResponse::getKey)
-            .collect(Collectors.toList());
-        List<CollectionView> pageCollections = ((DefaultCollectionService) collectionService).getCollectionViews(keys);
+      // Convert CollectionSearchResponse to CollectionView - Might be improved in case of
+      // performance issues
+      List<UUID> keys =
+          searchResponse.getResults().stream()
+              .map(CollectionSearchResponse::getKey)
+              .collect(Collectors.toList());
+      List<CollectionView> pageCollections =
+          ((DefaultCollectionService) collectionService).getCollectionViews(keys);
 
       allCollections.addAll(pageCollections);
       offset += limit;
@@ -464,13 +469,12 @@ public class CollectionResource
     return allCollections;
   }
 
-
-
   @Operation(
       operationId = "listCollectionsForInstitutions",
       summary = "List collections for institutions matching search criteria",
-      description = "Returns collections that belong to institutions matching the provided search criteria. "
-          + "The method first retrieves all matching institutions using pagination, then returns their collections.",
+      description =
+          "Returns collections that belong to institutions matching the provided search criteria. "
+              + "The method first retrieves all matching institutions using pagination, then returns their collections.",
       extensions =
           @Extension(
               name = "Order",
@@ -478,29 +482,38 @@ public class CollectionResource
   @ApiResponse(responseCode = "200", description = "Collections found and returned")
   @ApiResponse(responseCode = "400", description = "Invalid search query provided")
   @GetMapping("listForInstitution")
-  public PagingResponse<CollectionView> listForInstitutions(InstitutionSearchRequest searchRequest) {
-    List<CollectionView> collections = collectionService.getCollectionsForInstitutionsBySearch(searchRequest);
+  public PagingResponse<CollectionView> listForInstitutions(
+      InstitutionSearchRequest searchRequest) {
+    List<CollectionView> collections =
+        collectionService.getCollectionsForInstitutionsBySearch(searchRequest);
     return new PagingResponse<>(new PagingResponse<>(), (long) collections.size(), collections);
   }
 
   @Operation(
       operationId = "exportCollectionsForInstitutions",
       summary = "Export collections for institutions matching search criteria",
-      description = "Download collections that belong to institutions matching the provided search criteria. "
-          + "The method first retrieves all matching institutions using pagination, then exports their collections "
-          + "in the specified format (TSV or CSV).",
+      description =
+          "Download collections that belong to institutions matching the provided search criteria. "
+              + "The method first retrieves all matching institutions using pagination, then exports their collections "
+              + "in the specified format (TSV or CSV).",
       extensions =
           @Extension(
               name = "Order",
               properties = @ExtensionProperty(name = "Order", value = "0103")))
   @ApiResponse(responseCode = "200", description = "Collections exported successfully")
-  @ApiResponse(responseCode = "204", description = "No institutions found matching the search criteria")
+  @ApiResponse(
+      responseCode = "204",
+      description = "No institutions found matching the search criteria")
   @ApiResponse(responseCode = "400", description = "Invalid search query provided")
   @GetMapping("exportForInstitution")
-  public void exportForInstitutions(HttpServletResponse response,
-    @RequestParam(value = "format", defaultValue = "TSV") ExportFormat format, InstitutionSearchRequest searchRequest) throws IOException {
+  public void exportForInstitutions(
+      HttpServletResponse response,
+      @RequestParam(value = "format", defaultValue = "TSV") ExportFormat format,
+      InstitutionSearchRequest searchRequest)
+      throws IOException {
 
-    List<CollectionView> collections = collectionService.getCollectionsForInstitutionsBySearch(searchRequest);
+    List<CollectionView> collections =
+        collectionService.getCollectionsForInstitutionsBySearch(searchRequest);
 
     if (collections.isEmpty()) {
       response.setStatus(HttpServletResponse.SC_NO_CONTENT);
@@ -508,25 +521,30 @@ public class CollectionResource
     }
 
     // Create collection search request with the search parameters for the file header
-    CollectionSearchRequest collectionRequest = CollectionSearchRequest.builder()
-        .country(searchRequest.getCountry())
-        .gbifRegion(searchRequest.getGbifRegion())
-        .city(searchRequest.getCity())
-        .name(searchRequest.getName())
-        .code(searchRequest.getCode())
-        .alternativeCode(searchRequest.getAlternativeCode())
-        .identifierType(searchRequest.getIdentifierType())
-        .identifier(searchRequest.getIdentifier())
-        .machineTagNamespace(searchRequest.getMachineTagNamespace())
-        .machineTagName(searchRequest.getMachineTagName())
-        .machineTagValue(searchRequest.getMachineTagValue())
-        .fuzzyName(searchRequest.getFuzzyName())
-        .q(searchRequest.getInstitutionalGovernance() != null
-            ? searchRequest.getInstitutionalGovernance().stream().filter(Objects::nonNull).collect(Collectors.joining(","))
-            : null)
-        .build();
+    CollectionSearchRequest collectionRequest =
+        CollectionSearchRequest.builder()
+            .country(searchRequest.getCountry())
+            .gbifRegion(searchRequest.getGbifRegion())
+            .city(searchRequest.getCity())
+            .name(searchRequest.getName())
+            .code(searchRequest.getCode())
+            .alternativeCode(searchRequest.getAlternativeCode())
+            .identifierType(searchRequest.getIdentifierType())
+            .identifier(searchRequest.getIdentifier())
+            .machineTagNamespace(searchRequest.getMachineTagNamespace())
+            .machineTagName(searchRequest.getMachineTagName())
+            .machineTagValue(searchRequest.getMachineTagValue())
+            .fuzzyName(searchRequest.getFuzzyName())
+            .q(
+                searchRequest.getInstitutionalGovernance() != null
+                    ? searchRequest.getInstitutionalGovernance().stream()
+                        .filter(Objects::nonNull)
+                        .collect(Collectors.joining(","))
+                    : null)
+            .build();
 
-    response.setHeader(HttpHeaders.CONTENT_DISPOSITION, getExportFileHeader(collectionRequest, format));
+    response.setHeader(
+        HttpHeaders.CONTENT_DISPOSITION, getExportFileHeader(collectionRequest, format));
 
     try (Writer writer = new BufferedWriter(new OutputStreamWriter(response.getOutputStream()))) {
       CsvWriter.collections(collections, format).export(writer);
@@ -699,14 +717,12 @@ public class CollectionResource
     }
 
     Preconditions.checkArgument(existingDescriptorGroup.getCollectionKey().equals(collectionKey));
-    byte[] file = descriptorsFile != null ? StreamUtils.copyToByteArray(descriptorsFile.getResource().getInputStream()) : null;
+    byte[] file =
+        descriptorsFile != null
+            ? StreamUtils.copyToByteArray(descriptorsFile.getResource().getInputStream())
+            : null;
     descriptorsService.updateDescriptorGroup(
-        descriptorGroupKey,
-        file,
-        format,
-        title,
-        tags,
-        description);
+        descriptorGroupKey, file, format, title, tags, description);
   }
 
   @Operation(
@@ -1012,7 +1028,9 @@ public class CollectionResource
       return null;
     }
 
-    Preconditions.checkArgument(existingDescriptorGroup.getCollectionKey().equals(collectionKey));
+    Preconditions.checkArgument(
+        existingDescriptorGroup.getCollectionKey().equals(collectionKey),
+        "Collection key in the path doesn't match with the collection key of the descriptor key");
 
     searchRequest.setDescriptorGroupKey(descriptorGroupKey);
     return descriptorsService.listDescriptors(searchRequest);
@@ -1119,7 +1137,9 @@ public class CollectionResource
       responseCode = "201",
       description = "Descriptor suggestion created, new suggestion's key returned")
   @Docs.DefaultUnsuccessfulWriteResponses
-  @PostMapping(value = "{collectionKey}/descriptorGroup/suggestion", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+  @PostMapping(
+      value = "{collectionKey}/descriptorGroup/suggestion",
+      consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
   public DescriptorChangeSuggestion createDescriptorSuggestion(
       @PathVariable("collectionKey") UUID collectionKey,
       @RequestPart(value = "file", required = false) MultipartFile file,
@@ -1130,7 +1150,8 @@ public class CollectionResource
       @RequestParam("format") ExportFormat format,
       @RequestParam("comments") List<String> comments,
       @RequestParam("proposerEmail") String proposerEmail,
-      @RequestParam(value = "tags", required = false) Set<String> tags) throws IOException {
+      @RequestParam(value = "tags", required = false) Set<String> tags)
+      throws IOException {
 
     if (type == Type.CREATE && (file == null || file.isEmpty())) {
       throw new IllegalArgumentException("File is required for CREATE type suggestions");
@@ -1148,9 +1169,9 @@ public class CollectionResource
     request.setProposerEmail(proposerEmail);
 
     return descriptorChangeSuggestionService.createSuggestion(
-      file != null ? file.getInputStream() : null,
-      file != null ? file.getOriginalFilename() : null,
-      request);
+        file != null ? file.getInputStream() : null,
+        file != null ? file.getOriginalFilename() : null,
+        request);
   }
 
   @Operation(
@@ -1163,15 +1184,18 @@ public class CollectionResource
               properties = @ExtensionProperty(name = "Order", value = "0301")))
   @ApiResponse(responseCode = "200", description = "File found and returned")
   @Docs.DefaultUnsuccessfulReadResponses
-  @GetMapping(value = "{collectionKey}/descriptorGroup/suggestion/{key}/file", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
+  @GetMapping(
+      value = "{collectionKey}/descriptorGroup/suggestion/{key}/file",
+      produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
   public ResponseEntity<Resource> exportDescriptorSuggestionFile(
-      @PathVariable("collectionKey") UUID collectionKey,
-      @PathVariable("key") Integer key) throws IOException {
+      @PathVariable("collectionKey") UUID collectionKey, @PathVariable("key") Integer key)
+      throws IOException {
 
     // Get the suggestion details to include in the filename
     DescriptorChangeSuggestion suggestion = descriptorChangeSuggestionService.getSuggestion(key);
     if (suggestion == null) {
-      throw new WebApplicationException("Descriptor suggestion was not found", HttpStatus.NOT_FOUND);
+      throw new WebApplicationException(
+          "Descriptor suggestion was not found", HttpStatus.NOT_FOUND);
     }
 
     // Verify collection key matches
@@ -1182,14 +1206,14 @@ public class CollectionResource
     // Get the file content
     InputStream stream = descriptorChangeSuggestionService.getSuggestionFile(key);
     if (stream == null) {
-      throw new WebApplicationException("Descriptor group suggestion file was not found",
-        HttpStatus.NOT_FOUND);
+      throw new WebApplicationException(
+          "Descriptor group suggestion file was not found", HttpStatus.NOT_FOUND);
     }
     byte[] fileBytes = IOUtils.toByteArray(stream);
 
     // Generate a descriptive filename
-    String extension = suggestion.getFormat() != null ?
-        suggestion.getFormat().name().toLowerCase() : "csv";
+    String extension =
+        suggestion.getFormat() != null ? suggestion.getFormat().name().toLowerCase() : "csv";
     String filename = "descriptor_suggestion_" + suggestion.getTitle() + "." + extension;
 
     // Create the ByteArrayResource from the file bytes
@@ -1214,8 +1238,7 @@ public class CollectionResource
   @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping(value = "{collectionKey}/descriptorGroup/suggestion/{key}")
   public DescriptorChangeSuggestion getDescriptorSuggestion(
-      @PathVariable("collectionKey") UUID collectionKey,
-      @PathVariable("key") long key) {
+      @PathVariable("collectionKey") UUID collectionKey, @PathVariable("key") long key) {
     return descriptorChangeSuggestionService.getSuggestion(key);
   }
 
@@ -1229,10 +1252,12 @@ public class CollectionResource
               properties = @ExtensionProperty(name = "Order", value = "0303")))
   @ApiResponse(responseCode = "200", description = "Suggestion applied successfully")
   @Docs.DefaultUnsuccessfulWriteResponses
-  @PutMapping(value = "{collectionKey}/descriptorGroup/suggestion/{key}/apply", consumes = MediaType.ALL_VALUE)
+  @PutMapping(
+      value = "{collectionKey}/descriptorGroup/suggestion/{key}/apply",
+      consumes = MediaType.ALL_VALUE)
   public void applyDescriptorSuggestion(
-      @PathVariable("collectionKey") UUID collectionKey,
-      @PathVariable("key") long key) throws IOException {
+      @PathVariable("collectionKey") UUID collectionKey, @PathVariable("key") long key)
+      throws IOException {
     descriptorChangeSuggestionService.applySuggestion(key);
   }
 
@@ -1248,8 +1273,7 @@ public class CollectionResource
   @Docs.DefaultUnsuccessfulWriteResponses
   @PutMapping(value = "{collectionKey}/descriptorGroup/suggestion/{key}/discard")
   public void discardDescriptorSuggestion(
-      @PathVariable("collectionKey") UUID collectionKey,
-      @PathVariable("key") long key) {
+      @PathVariable("collectionKey") UUID collectionKey, @PathVariable("key") long key) {
     descriptorChangeSuggestionService.discardSuggestion(key);
   }
 
@@ -1263,7 +1287,9 @@ public class CollectionResource
               properties = @ExtensionProperty(name = "Order", value = "0306")))
   @ApiResponse(responseCode = "200", description = "Suggestion updated successfully")
   @Docs.DefaultUnsuccessfulWriteResponses
-  @PutMapping(value = "{collectionKey}/descriptorGroup/suggestion/{key}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+  @PutMapping(
+      value = "{collectionKey}/descriptorGroup/suggestion/{key}",
+      consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
   public void updateDescriptorSuggestion(
       @PathVariable("collectionKey") UUID collectionKey,
       @PathVariable("key") long key,
@@ -1274,7 +1300,8 @@ public class CollectionResource
       @RequestParam("format") ExportFormat format,
       @RequestParam("comments") List<String> comments,
       @RequestParam(value = "tags", required = false) Set<String> tags,
-      @RequestParam("proposerEmail") String proposerEmail) throws IOException {
+      @RequestParam("proposerEmail") String proposerEmail)
+      throws IOException {
 
     DescriptorChangeSuggestionRequest request = new DescriptorChangeSuggestionRequest();
     request.setCollectionKey(collectionKey);
@@ -1287,10 +1314,10 @@ public class CollectionResource
     request.setProposerEmail(proposerEmail);
 
     descriptorChangeSuggestionService.updateSuggestion(
-      key,
-      request,
-      file != null ? file.getInputStream() : null,
-      file != null ? file.getOriginalFilename() : null);
+        key,
+        request,
+        file != null ? file.getInputStream() : null,
+        file != null ? file.getOriginalFilename() : null);
   }
 
   @Operation(
@@ -1311,7 +1338,8 @@ public class CollectionResource
       @RequestParam(value = "proposerEmail", required = false) String proposerEmail,
       @RequestParam(value = "country", required = false) Country country,
       Pageable page) {
-    return descriptorChangeSuggestionService.list(page, status, type, proposerEmail, collectionKey, country);
+    return descriptorChangeSuggestionService.list(
+        page, status, type, proposerEmail, collectionKey, country);
   }
 
   @Operation(
@@ -1333,5 +1361,4 @@ public class CollectionResource
       Pageable page) {
     return descriptorChangeSuggestionService.list(page, status, type, proposerEmail, null, country);
   }
-
 }

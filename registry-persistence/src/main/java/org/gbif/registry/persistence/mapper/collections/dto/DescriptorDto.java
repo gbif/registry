@@ -13,17 +13,11 @@
  */
 package org.gbif.registry.persistence.mapper.collections.dto;
 
-import lombok.Builder;
 
-import org.gbif.api.v2.RankedName;
-import org.gbif.api.vocabulary.Country;
-
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
-
 import lombok.Data;
+import org.gbif.api.vocabulary.Country;
 
 @Data
 public class DescriptorDto {

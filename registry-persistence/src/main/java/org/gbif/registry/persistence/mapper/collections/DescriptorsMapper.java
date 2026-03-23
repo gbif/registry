@@ -82,5 +82,5 @@ public interface DescriptorsMapper {
   void updateTaxonomyDescriptor(TaxonomyDescriptorDto entity);
 
   List<TaxonomyDescriptorDto> listTaxonomyDescriptors(
-      @Param("collectionDescriptorKey") long collectionDescriptorKey);
+      @Param("descriptorKey") long collectionDescriptorKey);
 }

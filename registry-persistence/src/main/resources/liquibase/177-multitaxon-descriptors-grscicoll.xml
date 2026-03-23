@@ -39,7 +39,7 @@
          CREATE INDEX collection_descriptor_taxonomy_usage_key_idx ON collection_descriptor_taxonomy(usage_key);
          CREATE INDEX collection_descriptor_taxonomy_usage_name_idx ON collection_descriptor_taxonomy(usage_name);
          CREATE INDEX collection_descriptor_taxonomy_usage_rank_idx ON collection_descriptor_taxonomy(usage_rank);
-         CREATE INDEX collection_descriptor_taxonomy_taxon_keys_idx ON collection_descriptor_taxonomy(taxon_keys);
+         CREATE INDEX collection_descriptor_taxonomy_taxon_keys_idx ON collection_descriptor_taxonomy USING gin(taxon_keys);
 
          CREATE OR REPLACE FUNCTION collection_descriptor_taxonomy_change_trigger()
           RETURNS TRIGGER AS
@@ -51,7 +51,8 @@
                 RETURN NEW;
               END;
           $recordchange$
-          LANGUAGE plpgsql;
+          LANGUAGE plpgsql
+          SET search_path = public, pg_catalog;
 
           CREATE TRIGGER collection_descriptor_taxonomy_fulltext_update
            BEFORE INSERT OR UPDATE OF usage_name, usage_rank ON collection_descriptor_taxonomy

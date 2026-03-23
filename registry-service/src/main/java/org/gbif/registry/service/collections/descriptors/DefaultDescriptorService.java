@@ -663,7 +663,13 @@ public class DefaultDescriptorService implements DescriptorsService {
                 descriptorRecord.setUsageName(taxonDto.getUsageName());
                 descriptorRecord.setUsageRank(taxonDto.getUsageRank());
                 descriptorRecord.setTaxonClassification(taxonDto.getTaxonClassification());
-                descriptorRecord.getIssues().addAll(taxonDto.getIssues());
+
+                if (taxonDto.getIssues() != null && !taxonDto.getIssues().isEmpty()) {
+                  if (descriptorRecord.getIssues() == null) {
+                    descriptorRecord.setIssues(new ArrayList<>());
+                  }
+                  descriptorRecord.getIssues().addAll(taxonDto.getIssues());
+                }
               } else {
                 Descriptor.OtherTaxonClassification otherTaxonClassification =
                     Descriptor.OtherTaxonClassification.builder()

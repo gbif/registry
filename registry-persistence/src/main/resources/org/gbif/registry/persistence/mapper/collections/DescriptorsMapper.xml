@@ -360,7 +360,7 @@
       OR EXISTS(
         SELECT cdt.key
         FROM collection_descriptor_taxonomy cdt JOIN collection_descriptor cd ON cd.key = cdt.collection_descriptor_key
-        WHERE query @@ cdt.fulltext_search
+        WHERE cdt.collection_descriptor_key = d.key AND query @@ cdt.fulltext_search
       )
     </if>
     <if test="params.containsTaxonParams()">
