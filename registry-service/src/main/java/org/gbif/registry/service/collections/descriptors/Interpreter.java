@@ -13,25 +13,15 @@
  */
 package org.gbif.registry.service.collections.descriptors;
 
-import org.gbif.api.model.collections.descriptors.DescriptorValidationResult;
-import org.gbif.api.v2.RankedName;
-import org.gbif.registry.persistence.mapper.collections.dto.DescriptorDto;
-import org.gbif.api.vocabulary.Country;
-import org.gbif.api.vocabulary.DescriptorIssue;
-import org.gbif.api.vocabulary.OccurrenceIssue;
-import org.gbif.common.parsers.CountryParser;
-import org.gbif.common.parsers.NumberParser;
-import org.gbif.common.parsers.core.OccurrenceParseResult;
-import org.gbif.common.parsers.core.ParseResult;
-import org.gbif.common.parsers.date.MultiinputTemporalParser;
-import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.kvs.species.NameUsageMatchRequest;
-import org.gbif.registry.service.collections.utils.Vocabularies;
-import org.gbif.rest.client.species.NameUsageMatchResponse;
-import org.gbif.rest.client.species.NameUsageMatchingService;
-import org.gbif.vocabulary.client.ConceptClient;
-import org.gbif.vocabulary.model.search.LookupResult;
+import static org.gbif.api.vocabulary.Kingdom.INCERTAE_SEDIS;
+import static org.gbif.api.vocabulary.OccurrenceIssue.*;
 
+import com.google.common.base.Strings;
+import com.google.common.collect.Range;
+import io.github.resilience4j.core.IntervalFunction;
+import io.github.resilience4j.retry.Retry;
+import io.github.resilience4j.retry.RetryConfig;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -42,21 +32,40 @@ import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
-import com.google.common.base.Strings;
-import com.google.common.collect.Range;
-
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.Singular;
-
-import static org.gbif.api.vocabulary.Kingdom.INCERTAE_SEDIS;
-import static org.gbif.api.vocabulary.OccurrenceIssue.*;
+import org.gbif.api.model.collections.descriptors.DescriptorValidationResult;
+import org.gbif.api.v2.RankedName;
+import org.gbif.api.vocabulary.Country;
+import org.gbif.api.vocabulary.DescriptorIssue;
+import org.gbif.api.vocabulary.OccurrenceIssue;
+import org.gbif.common.parsers.CountryParser;
+import org.gbif.common.parsers.NumberParser;
+import org.gbif.common.parsers.core.OccurrenceParseResult;
+import org.gbif.common.parsers.core.ParseResult;
+import org.gbif.common.parsers.date.MultiinputTemporalParser;
+import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.kvs.species.NameUsageMatchRequest;
+import org.gbif.registry.persistence.mapper.collections.dto.DescriptorDto;
+import org.gbif.registry.service.collections.utils.Vocabularies;
+import org.gbif.rest.client.species.NameUsageMatchResponse;
+import org.gbif.rest.client.species.NameUsageMatchingService;
+import org.gbif.vocabulary.client.ConceptClient;
+import org.gbif.vocabulary.model.search.LookupResult;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class Interpreter {
+
+  private static final Retry RETRY =
+      Retry.of(
+          "grscicollInterpreterCall",
+          RetryConfig.custom()
+              .maxAttempts(7)
+              .intervalFunction(IntervalFunction.ofExponentialBackoff(Duration.ofSeconds(1)))
+              .build());
 
   private static final String DEFAULT_SEPARATOR = "\\|";
   private static final LocalDate EARLIEST_DATE_IDENTIFIED = LocalDate.of(1753, 1, 1);
@@ -136,8 +145,8 @@ public class Interpreter {
   }
 
   /**
-   * Interprets biome type field with graceful vocabulary validation.
-   * Invalid values are left blank rather than causing the entire operation to fail.
+   * Interprets biome type field with graceful vocabulary validation. Invalid values are left blank
+   * rather than causing the entire operation to fail.
    */
   public static InterpretedResult<String> interpretBiomeType(
       ConceptClient conceptClient, Map<String, String> valuesMap) {
@@ -155,8 +164,11 @@ public class Interpreter {
 
     Set<String> issues = new HashSet<>();
     if (validationResult.hasIssues()) {
-      validationResult.getIssues().forEach(issue ->
-        issues.add(DescriptorIssue.BIOME_TYPE_VALIDATION_ISSUE.getId() + ": " + issue));
+      validationResult
+          .getIssues()
+          .forEach(
+              issue ->
+                  issues.add(DescriptorIssue.BIOME_TYPE_VALIDATION_ISSUE.getId() + ": " + issue));
     }
 
     return InterpretedResult.<String>builder()
@@ -166,8 +178,8 @@ public class Interpreter {
   }
 
   /**
-   * Interprets object classification field with graceful vocabulary validation.
-   * Invalid values are left blank rather than causing the entire operation to fail.
+   * Interprets object classification field with graceful vocabulary validation. Invalid values are
+   * left blank rather than causing the entire operation to fail.
    */
   public static InterpretedResult<String> interpretObjectClassification(
       Map<String, String> valuesMap, ConceptClient conceptClient) {
@@ -188,8 +200,14 @@ public class Interpreter {
 
     Set<String> issues = new HashSet<>();
     if (validationResult.hasIssues()) {
-      validationResult.getIssues().forEach(issue ->
-          issues.add(DescriptorIssue.OBJECT_CLASSIFICATION_VALIDATION_ISSUE.getId()+": " + issue));
+      validationResult
+          .getIssues()
+          .forEach(
+              issue ->
+                  issues.add(
+                      DescriptorIssue.OBJECT_CLASSIFICATION_VALIDATION_ISSUE.getId()
+                          + ": "
+                          + issue));
     }
 
     return InterpretedResult.<String>builder()
@@ -312,7 +330,9 @@ public class Interpreter {
   }
 
   public static InterpretedResult<TaxonData> interpretTaxonomy(
-      Map<String, String> valuesMap, NameUsageMatchingService nameUsageMatchingService, String checklistKey) {
+      Map<String, String> valuesMap,
+      NameUsageMatchingService nameUsageMatchingService,
+      String checklistKey) {
     if (valuesMap.isEmpty()) {
       return InterpretedResult.empty();
     }
@@ -349,25 +369,29 @@ public class Interpreter {
       return InterpretedResult.empty();
     }
 
-    NameUsageMatchRequest nameUsageMatchRequest = NameUsageMatchRequest.builder()
-      .withChecklistKey(checklistKey)
-      .withScientificName(scientificName)
-      .withScientificNameAuthorship(scientificNameAuthorship)
-      .withTaxonRank(taxonRank)
-      .withGenericName(genericName)
-      .withSpecificEpithet(specificEpithet)
-      .withInfraspecificEpithet(infraspecificEpithet)
-      .withKingdom(kingdom)
-      .withPhylum(phylum)
-      .withClazz(clazz)
-      .withOrder(order)
-      .withFamily(family)
-      .withGenus(genus)
-      .withTaxonID(taxonID)
-      .withStrict(false)
-      .withVerbose(false).build();
+    NameUsageMatchRequest nameUsageMatchRequest =
+        NameUsageMatchRequest.builder()
+            .withChecklistKey(checklistKey)
+            .withScientificName(scientificName)
+            .withScientificNameAuthorship(scientificNameAuthorship)
+            .withTaxonRank(taxonRank)
+            .withGenericName(genericName)
+            .withSpecificEpithet(specificEpithet)
+            .withInfraspecificEpithet(infraspecificEpithet)
+            .withKingdom(kingdom)
+            .withPhylum(phylum)
+            .withClazz(clazz)
+            .withOrder(order)
+            .withFamily(family)
+            .withGenus(genus)
+            .withTaxonID(taxonID)
+            .withStrict(false)
+            .withVerbose(false)
+            .build();
 
-    NameUsageMatchResponse nameUsageMatchResponse = nameUsageMatchingService.match(nameUsageMatchRequest);
+    NameUsageMatchResponse nameUsageMatchResponse =
+        Retry.decorateSupplier(RETRY, () -> nameUsageMatchingService.match(nameUsageMatchRequest))
+            .get();
 
     if (nameUsageMatchResponse == null
         || isEmptyResponse(nameUsageMatchResponse)
@@ -382,7 +406,8 @@ public class Interpreter {
           .issues(Collections.singletonList(TAXON_MATCH_NONE.getId()))
           .build();
     } else {
-      NameUsageMatchResponse.MatchType matchType = nameUsageMatchResponse.getDiagnostics().getMatchType();
+      NameUsageMatchResponse.MatchType matchType =
+          nameUsageMatchResponse.getDiagnostics().getMatchType();
 
       List<String> issues = new ArrayList<>();
       if (NameUsageMatchResponse.MatchType.NONE == matchType) {
@@ -409,7 +434,9 @@ public class Interpreter {
             .getClassification()
             .forEach(
                 rankedName -> {
-                  taxonDataBuilder.rankedName(new RankedName(rankedName.getKey(), rankedName.getName(), rankedName.getRank(),  null));
+                  taxonDataBuilder.rankedName(
+                      new RankedName(
+                          rankedName.getKey(), rankedName.getName(), rankedName.getRank(), null));
                   taxonKeys.add(String.valueOf(rankedName.getKey()));
                 });
       }
@@ -448,8 +475,11 @@ public class Interpreter {
     return response == null || response.getUsage() == null || response.getDiagnostics() == null;
   }
 
-  private static boolean checkFuzzy(NameUsageMatchRequest nameUsageRequest, NameUsageMatchResponse usageMatchResponse) {
-    boolean isFuzzy = NameUsageMatchResponse.MatchType.VARIANT == usageMatchResponse.getDiagnostics().getMatchType();
+  private static boolean checkFuzzy(
+      NameUsageMatchRequest nameUsageRequest, NameUsageMatchResponse usageMatchResponse) {
+    boolean isFuzzy =
+        NameUsageMatchResponse.MatchType.VARIANT
+            == usageMatchResponse.getDiagnostics().getMatchType();
     boolean isEmptyTaxa =
         Strings.isNullOrEmpty(nameUsageRequest.getKingdom())
             && Strings.isNullOrEmpty(nameUsageRequest.getPhylum())
