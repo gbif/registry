@@ -375,7 +375,7 @@ public class CollectionsSearchMapperIT extends BaseItTest {
     taxonomyDescriptorDto2.setCollectionDescriptorKey(descriptorDto2.getKey());
     taxonomyDescriptorDto2.setChecklistKey(DEFAULT_CHECKLIST_KEY);
     taxonomyDescriptorDto2.setKingdomKey("1");
-    descriptorsMapper.createTaxonomyDescriptor(taxonomyDescriptorDto1);
+    descriptorsMapper.createTaxonomyDescriptor(taxonomyDescriptorDto2);
 
     UUID c2Key = UUID.randomUUID();
     Collection c2 = new Collection();

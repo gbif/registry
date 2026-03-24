@@ -925,7 +925,10 @@ public class CsvWriter<T> {
     }
 
     public static String issuesToString(List<String> value) {
-      return value.stream().map(CleanStringProcessor::cleanString).collect(Collectors.joining(":"));
+      return value.stream()
+          .filter(Objects::nonNull)
+          .map(CleanStringProcessor::cleanString)
+          .collect(Collectors.joining(":"));
     }
 
     @Override

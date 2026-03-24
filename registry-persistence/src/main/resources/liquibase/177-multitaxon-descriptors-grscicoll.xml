@@ -68,7 +68,9 @@
                   TO_TSVECTOR('pg_catalog.english', unaccent(COALESCE(array_to_string(NEW.type_status, ' '),''))) ||
                   TO_TSVECTOR('pg_catalog.english', unaccent(COALESCE(array_to_string(NEW.recorded_by, ' '),''))) ||
                   TO_TSVECTOR('pg_catalog.english', unaccent(COALESCE(NEW.discipline,''))) ||
-                  TO_TSVECTOR('pg_catalog.english', unaccent(COALESCE(NEW.object_classification_name,'')));
+                  TO_TSVECTOR('pg_catalog.english', unaccent(COALESCE(NEW.object_classification_name,''))) ||
+                  TO_TSVECTOR('pg_catalog.english', unaccent(COALESCE(NEW.biome,''))) ||
+                  TO_TSVECTOR('pg_catalog.english', unaccent(COALESCE(NEW.biome_type,'')));
                 RETURN NEW;
               END;
           $recordchange$

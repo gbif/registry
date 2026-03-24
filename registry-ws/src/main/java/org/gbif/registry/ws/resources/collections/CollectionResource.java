@@ -1030,7 +1030,7 @@ public class CollectionResource
 
     Preconditions.checkArgument(
         existingDescriptorGroup.getCollectionKey().equals(collectionKey),
-        "Collection key in the path doesn't match with the collection key of the descriptor key");
+        "Collection key in the path doesn't match the collection key of the descriptor group");
 
     searchRequest.setDescriptorGroupKey(descriptorGroupKey);
     return descriptorsService.listDescriptors(searchRequest);
