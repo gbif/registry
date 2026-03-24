@@ -655,7 +655,6 @@ public class DefaultDescriptorService implements DescriptorsService {
     descriptorRecord.setBiomeType(dto.getBiomeType());
     descriptorRecord.setTypeStatus(dto.getTypeStatus());
     descriptorRecord.setVerbatim(verbatimDtosToMap(dto.getVerbatim()));
-    descriptorRecord.setDefaultChecklistKey(defaultChecklistKey);
 
     Map<String, Descriptor.OtherTaxonClassification> otherTaxonClassifications = new HashMap<>();
     dto.getTaxonomyDescriptors()
@@ -666,6 +665,7 @@ public class DefaultDescriptorService implements DescriptorsService {
                 descriptorRecord.setUsageName(taxonDto.getUsageName());
                 descriptorRecord.setUsageRank(taxonDto.getUsageRank());
                 descriptorRecord.setTaxonClassification(taxonDto.getTaxonClassification());
+                descriptorRecord.setDefaultChecklistKey(defaultChecklistKey);
 
                 if (taxonDto.getIssues() != null && !taxonDto.getIssues().isEmpty()) {
                   if (descriptorRecord.getIssues() == null) {
