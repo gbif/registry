@@ -65,6 +65,7 @@ public abstract class BaseSearchDto {
   private String descriptorBiomeHighlight;
   private String descriptorBiomeTypeHighlight;
   private String descriptorIssuesHighlight;
+  private String descriptorTaxonIssuesHighlight;
   private String descriptorGroupTitleHighlight;
   private String descriptorGroupDescriptionHighlight;
   private boolean similarityMatch;

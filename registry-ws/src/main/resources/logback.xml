@@ -13,7 +13,7 @@
     </encoder>
   </appender>
 
-  <logger name="org.gbif.registry.persistence.mapper.collections" level="DEBUG"/>
+  <logger name="org.gbif.registry.persistence.mapper.collections" level="INFO"/>
 
   <logger name="org.gbif.ws.security" level="WARN"/>
   <logger name="org.gbif.ws.server" level="INFO"/>

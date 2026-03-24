@@ -13,8 +13,18 @@
  */
 package org.gbif.registry.ws.it.persistence.mapper;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
 import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.descriptors.DescriptorGroup;
+import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.v2.RankedName;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.Rank;
@@ -23,25 +33,15 @@ import org.gbif.registry.database.TestCaseDatabaseInitializer;
 import org.gbif.registry.persistence.mapper.collections.CollectionMapper;
 import org.gbif.registry.persistence.mapper.collections.DescriptorsMapper;
 import org.gbif.registry.persistence.mapper.collections.dto.DescriptorDto;
+import org.gbif.registry.persistence.mapper.collections.dto.TaxonomyDescriptorDto;
 import org.gbif.registry.persistence.mapper.collections.params.DescriptorGroupParams;
 import org.gbif.registry.persistence.mapper.collections.params.DescriptorParams;
 import org.gbif.registry.search.test.ElasticsearchTestContainerConfiguration;
-import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.ws.it.BaseItTest;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
-
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Set;
-import java.util.UUID;
-
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Autowired;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class DescriptorsMapperIT extends BaseItTest {
 
@@ -51,7 +51,10 @@ public class DescriptorsMapperIT extends BaseItTest {
           "collection",
           "collection_descriptor_group",
           "collection_descriptor",
-          "collection_descriptor_verbatim");
+          "collection_descriptor_verbatim",
+          "collection_descriptor_taxonomy");
+
+  private static final String DEFAULT_CHECKLIST_KEY = "defaultChecklistKey";
 
   private final DescriptorsMapper descriptorsMapper;
   private final CollectionMapper collectionMapper;
@@ -110,15 +113,20 @@ public class DescriptorsMapperIT extends BaseItTest {
     descriptorDto.setDiscipline("discipline");
     descriptorDto.setIssues(Arrays.asList("i1", "i2"));
     descriptorDto.setTypeStatus(Collections.singletonList(TypeStatus.ALLOLECTOTYPE.name()));
-    descriptorDto.setUsageRank(Rank.ABERRATION.toString());
-    descriptorDto.setUsageName("usage");
-    descriptorDto.setUsageKey(String.valueOf(5));
-
-    descriptorDto.setTaxonClassification(
-        Arrays.asList(
-            new RankedName("1", "Kingdom", Rank.KINGDOM.toString(), ""), new RankedName("3", "Phylum", Rank.PHYLUM.toString(), "")));
     descriptorsMapper.createDescriptor(descriptorDto);
     assertTrue(descriptorDto.getKey() > 0);
+
+    TaxonomyDescriptorDto taxonomyDescriptorDto = new TaxonomyDescriptorDto();
+    taxonomyDescriptorDto.setCollectionDescriptorKey(descriptorDto.getKey());
+    taxonomyDescriptorDto.setChecklistKey(DEFAULT_CHECKLIST_KEY);
+    taxonomyDescriptorDto.setUsageRank(Rank.ABERRATION.toString());
+    taxonomyDescriptorDto.setUsageName("usage");
+    taxonomyDescriptorDto.setUsageKey(String.valueOf(5));
+    taxonomyDescriptorDto.setTaxonClassification(
+        Arrays.asList(
+            new RankedName("1", "Kingdom", Rank.KINGDOM.toString(), ""),
+            new RankedName("3", "Phylum", Rank.PHYLUM.toString(), "")));
+    descriptorsMapper.createTaxonomyDescriptor(taxonomyDescriptorDto);
 
     descriptorsMapper.createVerbatim(descriptorDto.getKey(), "f1", "v1");
     descriptorsMapper.createVerbatim(descriptorDto.getKey(), "f2", "v2");
@@ -128,8 +136,11 @@ public class DescriptorsMapperIT extends BaseItTest {
     assertEquals(1, createdDescriptor.getTypeStatus().size());
     assertEquals(Country.DENMARK, createdDescriptor.getCountry());
     assertEquals(2, createdDescriptor.getVerbatim().size());
-    assertEquals(Rank.ABERRATION.toString(), createdDescriptor.getUsageRank());
-    assertEquals(2, createdDescriptor.getTaxonClassification().size());
+    assertEquals(
+        Rank.ABERRATION.toString(),
+        createdDescriptor.getTaxonomyDescriptors().get(0).getUsageRank());
+    assertEquals(
+        2, createdDescriptor.getTaxonomyDescriptors().get(0).getTaxonClassification().size());
 
     assertEquals(2, descriptorsMapper.getVerbatimNames(descriptorGroup.getKey()).size());
 
@@ -144,7 +155,10 @@ public class DescriptorsMapperIT extends BaseItTest {
         1,
         descriptorsMapper
             .listDescriptors(
-                DescriptorParams.builder().usageKey(Collections.singletonList("5")).build())
+                DescriptorParams.builder()
+                    .checklistKey(DEFAULT_CHECKLIST_KEY)
+                    .usageKey(Collections.singletonList("5"))
+                    .build())
             .size());
 
     assertEquals(
@@ -152,8 +166,15 @@ public class DescriptorsMapperIT extends BaseItTest {
         descriptorsMapper
             .listDescriptors(
                 DescriptorParams.builder()
+                    .checklistKey(DEFAULT_CHECKLIST_KEY)
                     .usageRank(Collections.singletonList(Rank.ABERRATION.toString()))
                     .build())
+            .size());
+
+    assertEquals(
+        1,
+        descriptorsMapper
+            .listDescriptors(DescriptorParams.builder().query("usage").build())
             .size());
 
     descriptorsMapper.deleteDescriptorGroup(descriptorGroup.getKey());
@@ -169,18 +190,38 @@ public class DescriptorsMapperIT extends BaseItTest {
             .listDescriptorGroups(DescriptorGroupParams.builder().deleted(true).build())
             .size());
 
+    List<DescriptorDto> descriptorDtos =
+        descriptorsMapper.listDescriptorsWithKeyAndVerbatimOnlyByDescriptorGroup(
+            descriptorGroup.getKey(), new PagingRequest(0, 20));
+    assertEquals(1, descriptorDtos.size());
+    assertTrue(descriptorDtos.get(0).getKey() > 0);
+    assertEquals(2, descriptorDtos.get(0).getVerbatim().size());
+
     // update descriptor
     createdDescriptor.setCountry(Country.COCOS_ISLANDS);
-    createdDescriptor.setUsageName("NEW");
-    createdDescriptor.setTaxonClassification(
-        Arrays.asList(new RankedName("1", "Kingdom2", Rank.KINGDOM.toString(), "")));
     descriptorsMapper.updateDescriptor(createdDescriptor);
+
+    createdDescriptor.getTaxonomyDescriptors().get(0).setUsageName("NEW");
+    createdDescriptor
+        .getTaxonomyDescriptors()
+        .get(0)
+        .setTaxonClassification(
+            Arrays.asList(new RankedName("1", "Kingdom2", Rank.KINGDOM.toString(), "")));
+    descriptorsMapper.updateTaxonomyDescriptor(createdDescriptor.getTaxonomyDescriptors().get(0));
 
     DescriptorDto updatedDescriptor = descriptorsMapper.getDescriptor(createdDescriptor.getKey());
     assertEquals(Country.COCOS_ISLANDS, updatedDescriptor.getCountry());
-    assertEquals("NEW", updatedDescriptor.getUsageName());
-    assertEquals(1, updatedDescriptor.getTaxonClassification().size());
-    assertEquals("Kingdom2", updatedDescriptor.getTaxonClassification().get(0).getName());
+    assertEquals("NEW", updatedDescriptor.getTaxonomyDescriptors().get(0).getUsageName());
+    assertEquals(
+        1, updatedDescriptor.getTaxonomyDescriptors().get(0).getTaxonClassification().size());
+    assertEquals(
+        "Kingdom2",
+        updatedDescriptor
+            .getTaxonomyDescriptors()
+            .get(0)
+            .getTaxonClassification()
+            .get(0)
+            .getName());
 
     descriptorsMapper.deleteDescriptors(descriptorGroup.getKey());
 
