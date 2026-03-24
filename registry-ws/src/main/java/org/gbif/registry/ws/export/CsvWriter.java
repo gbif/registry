@@ -13,6 +13,20 @@
  */
 package org.gbif.registry.ws.export;
 
+import com.fasterxml.jackson.databind.util.StdDateFormat;
+import java.io.Writer;
+import java.net.URI;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.UUID;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import lombok.Builder;
+import lombok.Data;
+import lombok.SneakyThrows;
 import org.gbif.api.model.collections.*;
 import org.gbif.api.model.collections.Address;
 import org.gbif.api.model.collections.Contact;
@@ -29,18 +43,6 @@ import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.api.vocabulary.License;
 import org.gbif.api.vocabulary.Rank;
 import org.gbif.api.vocabulary.collections.MasterSourceType;
-
-import java.io.Writer;
-import java.net.URI;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-import java.util.UUID;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
-
 import org.supercsv.cellprocessor.*;
 import org.supercsv.cellprocessor.ift.CellProcessor;
 import org.supercsv.io.CsvBeanWriter;
@@ -50,12 +52,6 @@ import org.supercsv.io.ICsvMapWriter;
 import org.supercsv.io.dozer.CsvDozerBeanWriter;
 import org.supercsv.prefs.CsvPreference;
 import org.supercsv.util.CsvContext;
-
-import com.fasterxml.jackson.databind.util.StdDateFormat;
-
-import lombok.Builder;
-import lombok.Data;
-import lombok.SneakyThrows;
 
 @Data
 @Builder
@@ -516,6 +512,8 @@ public class CsvWriter<T> {
               "discipline",
               "objectClassification",
               "taxonClassification",
+              "defaultChecklistKey",
+              "otherTaxonClassifications",
               "issues"
             })
         .header(
@@ -534,6 +532,8 @@ public class CsvWriter<T> {
               "discipline",
               "object_classification",
               "taxon_classification",
+              "defaultChecklistKey",
+              "otherTaxonClassifications",
               "issues"
             })
         .processors(
@@ -552,6 +552,8 @@ public class CsvWriter<T> {
               new Optional(new CleanStringProcessor()), // discipline
               new Optional(new CleanStringProcessor()), // objectClassification
               new Optional(new ListRankedNameProcessor()), // taxonClassification
+              new CleanStringProcessor(), // defaultChecklistKey: String
+              new Optional(new OtherTaxonomiesProcessor()), // OtherTaxonClassifications
               new Optional(new ListStringProcessor()) // issues
             })
         .preference(preference)
@@ -891,6 +893,46 @@ public class CsvWriter<T> {
     @Override
     public String execute(Object value, CsvContext csvContext) {
       return value != null ? toString((List<RankedName>) value) : "";
+    }
+  }
+
+  public static class OtherTaxonomiesProcessor implements CellProcessor {
+
+    public static String toString(Map<String, Descriptor.OtherTaxonClassification> value) {
+      return value.entrySet().stream()
+          .filter(Objects::nonNull)
+          .map(e -> OtherTaxonomiesProcessor.toString(e.getKey(), e.getValue()))
+          .collect(Collectors.joining(ARRAY_DELIMITER));
+    }
+
+    public static String toString(
+        String checklistKey, Descriptor.OtherTaxonClassification otherTaxonClassification) {
+      return notNullJoiner(
+          ":",
+          checklistKey,
+          otherTaxonClassification.getUsageKey(),
+          otherTaxonClassification.getUsageName(),
+          otherTaxonClassification.getUsageRank(),
+          classificationToString(otherTaxonClassification.getClassification()),
+          issuesToString(otherTaxonClassification.getIssues()));
+    }
+
+    public static String classificationToString(List<RankedName> value) {
+      return value.stream()
+          .filter(Objects::nonNull)
+          .map(ListRankedNameProcessor::toString)
+          .collect(Collectors.joining(":"));
+    }
+
+    public static String issuesToString(List<String> value) {
+      return value.stream().map(CleanStringProcessor::cleanString).collect(Collectors.joining(":"));
+    }
+
+    @Override
+    public String execute(Object value, CsvContext csvContext) {
+      return value != null
+          ? toString((Map<String, Descriptor.OtherTaxonClassification>) value)
+          : "";
     }
   }
 }
