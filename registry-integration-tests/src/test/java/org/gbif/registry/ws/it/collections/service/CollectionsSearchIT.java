@@ -13,6 +13,18 @@
  */
 package org.gbif.registry.ws.it.collections.service;
 
+import static org.gbif.registry.domain.collections.TypeParam.COLLECTION;
+import static org.gbif.registry.domain.collections.TypeParam.INSTITUTION;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import lombok.SneakyThrows;
 import org.gbif.api.model.collections.Address;
 import org.gbif.api.model.collections.AlternativeCode;
 import org.gbif.api.model.collections.Collection;
@@ -43,27 +55,12 @@ import org.gbif.registry.service.collections.CollectionsSearchService;
 import org.gbif.registry.test.mocks.NameUsageMatchingServiceMock;
 import org.gbif.registry.ws.it.collections.ConceptTestSetup;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
-
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.util.StreamUtils;
-
-import lombok.SneakyThrows;
-
-import static org.gbif.registry.domain.collections.TypeParam.COLLECTION;
-import static org.gbif.registry.domain.collections.TypeParam.INSTITUTION;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /** Tests the {@link CollectionsSearchService} * */
 public class CollectionsSearchIT extends BaseServiceIT {
@@ -466,7 +463,8 @@ public class CollectionsSearchIT extends BaseServiceIT {
         1,
         null,
         CollectionDescriptorsSearchRequest.builder()
-            .usageName(Collections.singletonList(NameUsageMatchingServiceMock.DEFAULT_USAGE.getName()))
+            .usageName(
+                Collections.singletonList(NameUsageMatchingServiceMock.DEFAULT_USAGE.getName()))
             .build());
 
     assertDescriptorSearch(
@@ -482,6 +480,40 @@ public class CollectionsSearchIT extends BaseServiceIT {
         null,
         CollectionDescriptorsSearchRequest.builder()
             .descriptorCountry(Collections.singletonList(Country.DENMARK))
+            .build());
+
+    assertDescriptorSearch(
+        1,
+        7,
+        CollectionDescriptorsSearchRequest.builder()
+            .issue(List.of("TAXON_MATCH_HIGHERRANK"))
+            .build());
+
+    response =
+        assertDescriptorSearch(
+            1,
+            7,
+            CollectionDescriptorsSearchRequest.builder()
+                .taxonIssue(List.of("TAXON_MATCH_HIGHERRANK"))
+                .build());
+    assertEquals(
+        1,
+        response.getResults().get(0).getDescriptorMatches().iterator().next().getIssues().size());
+
+    assertDescriptorSearch(
+        0,
+        0,
+        CollectionDescriptorsSearchRequest.builder()
+            .checklistKey("foo")
+            .taxonIssue(List.of("TAXON_MATCH_HIGHERRANK"))
+            .build());
+
+    assertDescriptorSearch(
+        1,
+        7,
+        CollectionDescriptorsSearchRequest.builder()
+            .checklistKey("d7dddbf4-2cf0-4f39-9b2a-bb099caae36c")
+            .taxonIssue(List.of("TAXON_MATCH_HIGHERRANK"))
             .build());
 
     PagingResponse<CollectionSearchResponse> first =
@@ -833,7 +865,7 @@ public class CollectionsSearchIT extends BaseServiceIT {
         1, searchResponse.getFacets().stream().filter(f -> f.getCounts().size() == 2).count());
   }
 
-  private void assertDescriptorSearch(
+  private PagingResponse<CollectionSearchResponse> assertDescriptorSearch(
       int expectedResults,
       Integer expectedDescriptors,
       CollectionDescriptorsSearchRequest searchRequest) {
@@ -847,5 +879,7 @@ public class CollectionsSearchIT extends BaseServiceIT {
     if (expectedResults == 1 && expectedDescriptors != null) {
       assertEquals(expectedDescriptors, response.getResults().get(0).getDescriptorMatches().size());
     }
+
+    return response;
   }
 }

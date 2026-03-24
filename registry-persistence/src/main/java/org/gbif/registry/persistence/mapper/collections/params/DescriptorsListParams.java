@@ -13,17 +13,14 @@
  */
 package org.gbif.registry.persistence.mapper.collections.params;
 
-import org.gbif.api.vocabulary.Country;
-import org.gbif.api.vocabulary.collections.CollectionFacetParameter;
-
+import jakarta.annotation.Nullable;
 import java.time.LocalDate;
 import java.util.List;
-
-import jakarta.annotation.Nullable;
-
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
+import org.gbif.api.vocabulary.Country;
+import org.gbif.api.vocabulary.collections.CollectionFacetParameter;
 
 @Getter
 @Setter
@@ -46,6 +43,8 @@ public class DescriptorsListParams extends CollectionListParams {
   @Nullable List<String> biome;
   @Nullable List<String> biomeType;
   @Nullable List<String> issues;
+  @Nullable List<String> taxonIssues;
+  @Nullable String checklistKey;
 
   // facets
   @Nullable CollectionFacetParameter facet;
@@ -67,6 +66,17 @@ public class DescriptorsListParams extends CollectionListParams {
         || facet == CollectionFacetParameter.TAXON_KEY;
   }
 
+  public boolean descriptorTaxonFacet() {
+    return facet == CollectionFacetParameter.KINGDOM_KEY
+        || facet == CollectionFacetParameter.PHYLUM_KEY
+        || facet == CollectionFacetParameter.CLASS_KEY
+        || facet == CollectionFacetParameter.ORDER_KEY
+        || facet == CollectionFacetParameter.FAMILY_KEY
+        || facet == CollectionFacetParameter.GENUS_KEY
+        || facet == CollectionFacetParameter.SPECIES_KEY
+        || facet == CollectionFacetParameter.TAXON_KEY;
+  }
+
   public boolean descriptorSearch() {
     return query != null
         || usageName != null
@@ -83,7 +93,17 @@ public class DescriptorsListParams extends CollectionListParams {
         || objectClassification != null
         || biome != null
         || biomeType != null
+        || taxonIssues != null
         || issues != null;
+  }
+
+  public boolean descriptorTaxonSearch() {
+    return query != null
+        || usageName != null
+        || usageKey != null
+        || usageRank != null
+        || taxonKey != null
+        || taxonIssues != null;
   }
 
   public boolean descriptorSearchWithoutQuery() {
@@ -101,6 +121,7 @@ public class DescriptorsListParams extends CollectionListParams {
         || objectClassification != null
         || biome != null
         || biomeType != null
+        || taxonIssues != null
         || issues != null;
   }
 

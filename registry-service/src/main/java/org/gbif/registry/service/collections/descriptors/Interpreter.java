@@ -312,7 +312,7 @@ public class Interpreter {
   }
 
   public static InterpretedResult<TaxonData> interpretTaxonomy(
-      Map<String, String> valuesMap, NameUsageMatchingService nameUsageMatchingService) {
+      Map<String, String> valuesMap, NameUsageMatchingService nameUsageMatchingService, String checklistKey) {
     if (valuesMap.isEmpty()) {
       return InterpretedResult.empty();
     }
@@ -350,6 +350,7 @@ public class Interpreter {
     }
 
     NameUsageMatchRequest nameUsageMatchRequest = NameUsageMatchRequest.builder()
+      .withChecklistKey(checklistKey)
       .withScientificName(scientificName)
       .withScientificNameAuthorship(scientificNameAuthorship)
       .withTaxonRank(taxonRank)

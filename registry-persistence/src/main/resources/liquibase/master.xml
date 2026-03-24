@@ -182,4 +182,5 @@
   <include file="liquibase/174-griscicol-lookup-index.xml" />
   <include file="liquibase/175-grscicoll-occurrence-mapping-code-index.xml" />
   <include file="liquibase/176-fix-function-search-paths.xml" />
+  <include file="liquibase/177-multitaxon-descriptors-grscicoll.xml" />
 </databaseChangeLog>
