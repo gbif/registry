@@ -34,6 +34,9 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 import lombok.SneakyThrows;
@@ -87,6 +90,7 @@ public class DefaultDescriptorService implements DescriptorsService {
   private final ConceptClient conceptClient;
   private final List<String> checklistKeys;
   private final String defaultChecklistKey;
+  private final int reinterpretThreads;
 
   @Autowired
   public DefaultDescriptorService(
@@ -96,7 +100,8 @@ public class DefaultDescriptorService implements DescriptorsService {
       CollectionService collectionService,
       ConceptClient conceptClient,
       @Value("${grscicoll.checklistKeys}") List<String> checklistKeys,
-      @Value("${grscicoll.defaultChecklistKey}") String defaultChecklistKey) {
+      @Value("${grscicoll.defaultChecklistKey}") String defaultChecklistKey,
+      @Value("${grscicoll.reinterpretThreads:6}") int reinterpretThreads) {
     this.nameUsageMatchingService = nameUsageMatchingService;
     this.descriptorsMapper = descriptorsMapper;
     this.eventManager = eventManager;
@@ -104,6 +109,7 @@ public class DefaultDescriptorService implements DescriptorsService {
     this.conceptClient = conceptClient;
     this.checklistKeys = checklistKeys;
     this.defaultChecklistKey = defaultChecklistKey;
+    this.reinterpretThreads = reinterpretThreads;
   }
 
   @SneakyThrows
@@ -473,24 +479,43 @@ public class DefaultDescriptorService implements DescriptorsService {
   @Override
   public void reinterpretCollectionDescriptorGroups(UUID collectionKey) {
     log.info("Starting collection descriptors reinterpretation");
-    int limit = 300;
-    long offset = 0;
-    List<DescriptorGroup> descriptorGroups =
-        descriptorsMapper.listDescriptorGroups(
-            DescriptorGroupParams.builder()
-                .collectionKey(collectionKey)
-                .page(new PagingRequest(offset, limit))
-                .build());
-    while (!descriptorGroups.isEmpty()) {
-      log.info("Interpreting descriptor groups from offset {} and limit {}", offset, limit);
-      descriptorGroups.forEach(dg -> reinterpretDescriptorGroup(dg.getKey()));
-      offset += limit;
-      descriptorGroups =
+    ExecutorService executor = Executors.newFixedThreadPool(reinterpretThreads);
+    try {
+      int limit = 300;
+      long offset = 0;
+      List<DescriptorGroup> descriptorGroups =
           descriptorsMapper.listDescriptorGroups(
               DescriptorGroupParams.builder()
                   .collectionKey(collectionKey)
                   .page(new PagingRequest(offset, limit))
                   .build());
+      while (!descriptorGroups.isEmpty()) {
+        log.info("Interpreting descriptor groups from offset {} and limit {}", offset, limit);
+        List<CompletableFuture<Void>> futures =
+            descriptorGroups.stream()
+                .map(
+                    dg ->
+                        CompletableFuture.runAsync(
+                                () -> reinterpretDescriptorGroup(dg.getKey()), executor)
+                            .exceptionally(
+                                e -> {
+                                  log.error(
+                                      "Error reinterpreting descriptor group {}", dg.getKey(), e);
+                                  return null;
+                                }))
+                .toList();
+        CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
+
+        offset += limit;
+        descriptorGroups =
+            descriptorsMapper.listDescriptorGroups(
+                DescriptorGroupParams.builder()
+                    .collectionKey(collectionKey)
+                    .page(new PagingRequest(offset, limit))
+                    .build());
+      }
+    } finally {
+      executor.shutdown();
     }
     log.info("Collection descriptors reinterpretation finished");
   }
