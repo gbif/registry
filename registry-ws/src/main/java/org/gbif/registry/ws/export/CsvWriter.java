@@ -16,7 +16,10 @@ package org.gbif.registry.ws.export;
 import com.fasterxml.jackson.databind.util.StdDateFormat;
 import java.io.Writer;
 import java.net.URI;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -113,6 +116,8 @@ public class CsvWriter<T> {
               "publishingOrganizationKey",
               "publishingOrganizationTitle",
               "publishingCountry",
+              "publicationDate",
+              "modified",
               "endorsingNodeKey",
               "networkKeys",
               "projectIdentifier",
@@ -133,6 +138,8 @@ public class CsvWriter<T> {
               "publishing_organization_key",
               "publishing_organization_title",
               "publishing_country",
+              "publication_date",
+              "modified",
               "endorsing_node_key",
               "network_keys",
               "project_identifier",
@@ -154,6 +161,8 @@ public class CsvWriter<T> {
               new UUIDProcessor(), // publishingOrganizationKey
               new CleanStringProcessor(), // publishingOrganizationTitle
               new CountryProcessor(), // publishingCountry
+              new DateProcessor(), //publicationDate
+              new DateProcessor(),//modified
               new UUIDProcessor(), // endorsingNodeKey
               new ListUUIDProcessor(), // networkKeys
               new CleanStringProcessor(), // projectIdentifier
@@ -662,6 +671,21 @@ public class CsvWriter<T> {
     @Override
     public String execute(Object value, CsvContext csvContext) {
       return value != null ? ((Country) value).getIso2LetterCode() : "";
+    }
+  }
+
+  /** Produces a yyyy-MM-dd format date. If the valye is null an empty string is returned. */
+  public static class DateProcessor implements CellProcessor {
+    private static final DateTimeFormatter ISO_FORMATTER =
+      DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
+    @Override
+    public String execute(Object value, CsvContext csvContext) {
+      if (value == null) {
+        return "";
+      }
+      Date date = (Date) value;
+      return ISO_FORMATTER.format(date.toInstant().atOffset(ZoneOffset.UTC));
     }
   }
 
