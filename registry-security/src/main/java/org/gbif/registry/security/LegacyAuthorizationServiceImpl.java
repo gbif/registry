@@ -158,6 +158,10 @@ public class LegacyAuthorizationServiceImpl implements LegacyAuthorizationServic
   @Override
   public boolean isAuthorizedToModifyOrganization(
       LegacyRequestAuthorization authorization, UUID organizationKey) {
+    if (authorization == null) {
+      LOG.error("Authorization is null");
+      return false;
+    }
     if (organizationKey == null) {
       LOG.error("Organization key is null");
       return false;
@@ -186,6 +190,10 @@ public class LegacyAuthorizationServiceImpl implements LegacyAuthorizationServic
   @Override
   public boolean isAuthorizedToModifyOrganizationsDataset(
       LegacyRequestAuthorization authorization, UUID datasetKey) {
+    if (authorization == null) {
+      LOG.error("Authorization is null");
+      return false;
+    }
     if (datasetKey == null) {
       LOG.error("Dataset key was null");
       return false;
@@ -228,6 +236,10 @@ public class LegacyAuthorizationServiceImpl implements LegacyAuthorizationServic
   @Override
   public boolean isAuthorizedToModifyInstallation(
       LegacyRequestAuthorization authorization, UUID installationKey) {
+    if (authorization == null) {
+      LOG.error("Authorization is null");
+      return false;
+    }
     // retrieve path param for installation key
     if (installationKey == null) {
       return false;
