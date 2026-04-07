@@ -288,6 +288,8 @@ public class InstallationResource
             .organizationKey(request.getOrganizationKey())
             .from(parseFrom(request.getModified()))
             .to(parseTo(request.getModified()))
+            .createdFrom(parseFrom(request.getCreated()))
+            .createdTo(parseTo(request.getCreated()))
             .deleted(deleted)
             .identifier(request.getIdentifier())
             .identifierType(request.getIdentifierType())

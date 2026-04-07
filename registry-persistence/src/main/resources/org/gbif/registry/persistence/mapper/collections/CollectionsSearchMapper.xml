@@ -19,8 +19,8 @@
   </sql>
 
   <sql id="TS_QUERY">
-    to_tsquery('english', CASE WHEN regexp_replace(unaccent(trim(#{params.query})), '[^A-Za-z0-9@.\-\s]+', '', 'g') = '' THEN 'false'
-    ELSE regexp_replace(regexp_replace(regexp_replace(unaccent(trim(#{params.query})), '[^A-Za-z0-9@.\-\s]+', '', 'g'), '\s+', ':* &amp; ', 'g'), ':* &amp; $', '', 'g') || ':*' END)
+    to_tsquery('english', CASE WHEN trim(regexp_replace(unaccent(trim(#{params.query})), '[^A-Za-z0-9@.\-\s]+', '', 'g')) = '' THEN 'false'
+    ELSE regexp_replace(trim(regexp_replace(unaccent(trim(#{params.query})), '[^A-Za-z0-9@.\-\s]+', '', 'g')), '\s+', ':* &amp; ', 'g') || ':*' END)
   </sql>
 
   <select id="search" resultMap="SEARCH_DTO_MAP">
@@ -243,8 +243,8 @@
   </select>
 
   <sql id="INSTITUTIONS_FULLTEXT_SEARCH">
-    JOIN to_tsquery('english', CASE WHEN regexp_replace(unaccent(trim(#{params.query})), '[^A-Za-z0-9@.\-\s]+', '', 'g') = '' THEN 'false'
-    ELSE regexp_replace(regexp_replace(unaccent(trim(#{params.query})), '[^A-Za-z0-9@.\-\s]+', '', 'g'), '\s+', ':* &amp; ', 'g') || ':*' END)
+    JOIN to_tsquery('english', CASE WHEN trim(regexp_replace(unaccent(trim(#{params.query})), '[^A-Za-z0-9@.\-\s]+', '', 'g')) = '' THEN 'false'
+    ELSE regexp_replace(trim(regexp_replace(unaccent(trim(#{params.query})), '[^A-Za-z0-9@.\-\s]+', '', 'g')), '\s+', ':* &amp; ', 'g') || ':*' END)
     AS query ON query @@ fulltext_search
     OR EXISTS(
     SELECT collection_contact_key
@@ -262,18 +262,22 @@
     <result column="descriptorTypeStatus" property="descriptorTypeStatus" typeHandler="StringArrayTypeHandler"/>
     <result column="descriptorRecordedBy" property="descriptorRecordedBy" typeHandler="StringArrayTypeHandler"/>
     <result column="descriptorIssues" property="descriptorIssues" typeHandler="StringArrayTypeHandler"/>
+    <result column="descriptorTaxonIssues" property="descriptorTaxonIssues" typeHandler="StringArrayTypeHandler"/>
   </resultMap>
 
   <select id="searchCollections" resultType="CollectionSearchDto" resultMap="COLLECTION_DTO_MAP"
           parameterType="Pageable">
     SELECT c.*
     <if test="params.descriptorSearch or params.descriptorFacet">
-      ,cd.key AS descriptorKey, cd.collection_descriptor_group_key AS descriptorGroupKey, cd.usage_key AS descriptorUsageKey,
-      cd.usage_name AS descriptorUsageName, cd.usage_rank AS descriptorUsageRank, cd.country AS descriptorCountry,
+      ,cd.key AS descriptorKey, cd.collection_descriptor_group_key AS descriptorGroupKey, cd.country AS descriptorCountry,
       cd.individual_count AS descriptorIndividualCount, cd.identified_by AS descriptorIdentifiedBy,
       cd.date_identified as descriptorDateIdentified, cd.type_status AS descriptorTypeStatus,
       cd.recorded_by AS descriptorRecordedBy, cd.discipline AS descriptorDiscipline,
       cd.object_classification_name AS descriptorObjectClassification, cd.biome_type AS descriptorBiomeType, cd.biome AS descriptorBiome, cd.issues AS descriptorIssues
+    </if>
+    <if test="params.descriptorTaxonSearch or params.descriptorTaxonFacet">
+      ,cdt.usage_key AS descriptorUsageKey, cdt.usage_name AS descriptorUsageName, cdt.usage_rank AS descriptorUsageRank,
+      cdt.issues AS descriptorTaxonIssues
     </if>
     <if test="params.query != null &amp;&amp; params.highlight">
       ,ts_headline(c.code, c.query) code_highlight, ts_headline(c.name, c.query) name_highlight
@@ -283,10 +287,9 @@
       ,ts_headline(province, c.query) province_highlight,ts_headline(c.country, c.query) country_highlight
       ,ts_headline(mail_address, c.query) mail_address_highlight,ts_headline(mailingCity, c.query) mail_city_highlight
       ,ts_headline(mail_province, c.query) mail_province_highlight, ts_headline(mailingCountry, c.query)
-      mail_country_highlight,
+      mail_country_highlight
       <if test="params.descriptorSearch or params.descriptorFacet">
-        ts_headline(cd.usage_name, c.query) descriptor_usage_name_highlight,
-        ts_headline(cd.country, c.query) descriptor_country_highlight,
+        ,ts_headline(cd.country, c.query) descriptor_country_highlight,
         ts_headline(array_to_string(cd.identified_by, ' '), c.query) descriptor_identified_by_highlight,
         ts_headline(array_to_string(cd.type_status, ' '), c.query) descriptor_type_status_highlight,
         ts_headline(array_to_string(cd.recorded_by, ' '), c.query) descriptor_recorded_by_highlight,
@@ -298,9 +301,14 @@
         ts_headline(cdg.title, c.query) descriptor_group_title_highlight,
         ts_headline(cdg.description, c.query) descriptor_group_description_highlight
       </if>
+      <if test="params.descriptorTaxonSearch or params.descriptorTaxonFacet">
+        ,ts_headline(cdt.usage_name, c.query) descriptor_usage_name_highlight,
+        ts_headline(array_to_string(cdt.issues, ' '), c.query) descriptor_taxon_issues_highlight
+      </if>
     </if>
     <if test="params.query != null">
-      ,ts_rank_cd(c.fulltext_search, c.query) AS query_rank, ts_rank_cd(cd.fulltext_search, c.query) query_descriptor_rank
+      ,ts_rank_cd(c.fulltext_search, c.query) AS query_rank, ts_rank_cd(cd.fulltext_search, c.query) query_descriptor_rank,
+      ts_rank_cd(cdt.fulltext_search, c.query) query_descriptor_taxonomy_rank
     </if>
     <if test="params.query != null">,c.query</if>
     <if test="params.fuzzyName != null">,similar_name_score(c.name, #{params.fuzzyName,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler}::text[]) AS similarity_score
@@ -327,6 +335,10 @@
       LEFT JOIN collection_descriptor_group cdg ON cdg.collection_key = c.key AND cdg.deleted IS NULL
       LEFT JOIN collection_descriptor cd ON cd.collection_descriptor_group_key = cdg.key
     </if>
+    <if test="params.descriptorTaxonSearch or params.descriptorTaxonFacet">
+      LEFT JOIN collection_descriptor_taxonomy cdt ON cdt.collection_descriptor_key = cd.key
+        AND cdt.checklist_key = #{params.checklistKey,jdbcType=VARCHAR}
+    </if>
     <if test="params.query != null" >
       <include refid="COLLECTIONS_FULLTEXT_SEARCH"/>
     </if>
@@ -347,6 +359,10 @@
       LEFT JOIN collection_descriptor_group cdg ON cdg.collection_key = c.key AND cdg.deleted IS NULL
       LEFT JOIN collection_descriptor cd ON cd.collection_descriptor_group_key = cdg.key
     </if>
+    <if test="params.descriptorTaxonSearch or params.descriptorTaxonFacet">
+      LEFT JOIN collection_descriptor_taxonomy cdt ON cdt.collection_descriptor_key = cd.key
+        AND cdt.checklist_key = #{params.checklistKey,jdbcType=VARCHAR}
+    </if>
     <where>
       <include refid="DESCRIPTORS_FILTER"/>
     </where>
@@ -359,6 +375,10 @@
       LEFT JOIN collection_descriptor_group cdg ON cdg.collection_key = c.key AND cdg.deleted IS NULL
       LEFT JOIN collection_descriptor cd ON cd.collection_descriptor_group_key = cdg.key
     </if>
+    <if test="params.descriptorTaxonSearch or params.descriptorTaxonFacet">
+      LEFT JOIN collection_descriptor_taxonomy cdt ON cdt.collection_descriptor_key = cd.key
+        AND cdt.checklist_key = #{params.checklistKey,jdbcType=VARCHAR}
+    </if>
     <if test="params.query != null" >
       <include refid="COLLECTIONS_FULLTEXT_SEARCH"/>
     </if>
@@ -368,27 +388,27 @@
 
   <sql id="DESCRIPTORS_FILTER">
     <if test="params.usageKey != null and params.usageKey.size > 0">
-      AND cd.usage_key IN
+      AND cdt.usage_key IN
       <foreach item="item" collection="params.usageKey" open="(" separator="," close=")">
         #{item,jdbcType=VARCHAR}
       </foreach>
     </if>
     <if test="params.usageName != null and params.usageName.size > 0">
-      AND cd.usage_name IN
+      AND cdt.usage_name IN
       <foreach item="item" collection="params.usageName" open="(" separator="," close=")">
         #{item,jdbcType=VARCHAR}
       </foreach>
     </if>
     <if test="params.usageRank != null and params.usageRank.size > 0">
-      AND cd.usage_rank IN
+      AND cdt.usage_rank IN
       <foreach item="item" collection="params.usageRank" open="(" separator="," close=")">
         #{item,jdbcType=VARCHAR}
       </foreach>
     </if>
     <if test="params.taxonKey != null  and params.taxonKey.size > 0">
-      AND cd.taxon_keys &amp;&amp; ARRAY
+      AND cdt.taxon_keys &amp;&amp; ARRAY
       <foreach item="item" collection="params.taxonKey" open="[" separator="," close="]">
-        #{item,jdbcType=VARCHAR}
+        #{item,jdbcType=VARCHAR}::text
       </foreach>
     </if>
     <include refid="org.gbif.registry.persistence.mapper.collections.Common.MULTIVALUE_RANGE_FIELD_FILTER">
@@ -453,11 +473,17 @@
         #{item,jdbcType=VARCHAR}::text
       </foreach>
     </if>
+    <if test="params.taxonIssues != null and params.taxonIssues.size > 0">
+      AND cdt.issues &amp;&amp; ARRAY
+      <foreach item="item" collection="params.taxonIssues" open="[" separator="," close="]::text[]">
+        #{item,jdbcType=VARCHAR}::text
+      </foreach>
+    </if>
   </sql>
 
   <sql id="COLLECTIONS_FULLTEXT_SEARCH">
-    JOIN to_tsquery('english', CASE WHEN regexp_replace(unaccent(trim(#{params.query})), '[^A-Za-z0-9@.\-\s]+', '', 'g') = '' THEN 'false'
-    ELSE regexp_replace(regexp_replace(regexp_replace(unaccent(trim(#{params.query})), '[^A-Za-z0-9@.\-\s]+', '', 'g'), '\s+', ':* &amp; ', 'g'), ':* &amp; $', '', 'g') || ':*' END)
+    JOIN to_tsquery('english', CASE WHEN trim(regexp_replace(unaccent(trim(#{params.query})), '[^A-Za-z0-9@.\-\s]+', '', 'g')) = '' THEN 'false'
+    ELSE regexp_replace(trim(regexp_replace(unaccent(trim(#{params.query})), '[^A-Za-z0-9@.\-\s]+', '', 'g')), '\s+', ':* &amp; ', 'g') || ':*' END)
     AS query ON query @@ c.fulltext_search
     OR EXISTS(
     SELECT collection_contact_key
@@ -466,6 +492,7 @@
     )
     OR <include refid="TS_QUERY"/> @@ cd.fulltext_search
     OR <include refid="TS_QUERY"/> @@ cdg.fulltext_search
+    OR <include refid="TS_QUERY"/> @@ cdt.fulltext_search
   </sql>
 
   <select id="institutionFacet" resultMap="FACET_DTO_MAP" resultType="FacetDto" parameterType="Pageable">
@@ -610,6 +637,10 @@
             INNER JOIN collection_descriptor_group cdg ON cdg.collection_key = c.key AND cdg.deleted IS NULL
             INNER JOIN collection_descriptor cd ON cd.collection_descriptor_group_key = cdg.key
           </if>
+          <if test="params.descriptorTaxonSearch or params.descriptorTaxonFacet">
+            INNER JOIN collection_descriptor_taxonomy cdt ON cdt.collection_descriptor_key = cd.key
+              AND cdt.checklist_key = #{params.checklistKey,jdbcType=VARCHAR}
+          </if>
           <include refid="org.gbif.registry.persistence.mapper.collections.CollectionMapper.LIST_FILTER"/>
           <include refid="DESCRIPTORS_FILTER"/>
           AND vc.name IS NOT NULL
@@ -637,6 +668,10 @@
         <if test="params.descriptorSearch or params.descriptorFacet">
           INNER JOIN collection_descriptor_group cdg ON cdg.collection_key = c.key AND cdg.deleted IS NULL
           INNER JOIN collection_descriptor cd ON cd.collection_descriptor_group_key = cdg.key
+        </if>
+        <if test="params.descriptorTaxonSearch or params.descriptorTaxonFacet">
+          INNER JOIN collection_descriptor_taxonomy cdt ON cdt.collection_descriptor_key = cd.key
+            AND cdt.checklist_key = #{params.checklistKey,jdbcType=VARCHAR}
         </if>
         <include refid="org.gbif.registry.persistence.mapper.collections.CollectionMapper.LIST_FILTER"/>
         <include refid="DESCRIPTORS_FILTER"/>
@@ -668,6 +703,10 @@
           INNER JOIN collection_descriptor_group cdg ON cdg.collection_key = c.key AND cdg.deleted IS NULL
           INNER JOIN collection_descriptor cd ON cd.collection_descriptor_group_key = cdg.key
         </if>
+        <if test="params.descriptorTaxonSearch or params.descriptorTaxonFacet">
+          INNER JOIN collection_descriptor_taxonomy cdt ON cdt.collection_descriptor_key = cd.key
+            AND cdt.checklist_key = #{params.checklistKey,jdbcType=VARCHAR}
+        </if>
         <include refid="org.gbif.registry.persistence.mapper.collections.CollectionMapper.LIST_FILTER"/>
         <include refid="DESCRIPTORS_FILTER"/>
         AND ancestor_concept.name IS NOT NULL
@@ -683,6 +722,10 @@
         <if test="params.descriptorSearch or params.descriptorFacet">
           INNER JOIN collection_descriptor_group cdg ON cdg.collection_key = c.key AND cdg.deleted IS NULL
           INNER JOIN collection_descriptor cd ON cd.collection_descriptor_group_key = cdg.key
+        </if>
+        <if test="params.descriptorTaxonSearch or params.descriptorTaxonFacet">
+          INNER JOIN collection_descriptor_taxonomy cdt ON cdt.collection_descriptor_key = cd.key
+            AND cdt.checklist_key = #{params.checklistKey,jdbcType=VARCHAR}
         </if>
         <include refid="org.gbif.registry.persistence.mapper.collections.CollectionMapper.LIST_FILTER"/>
         <include refid="DESCRIPTORS_FILTER"/>
@@ -728,31 +771,31 @@
         c.accession_status
       </when>
       <when test="params.facet.name.equals('TAXON_KEY')">
-        unnest(cd.taxon_keys)
+        unnest(cdt.taxon_keys)
       </when>
       <when test="params.facet.name.equals('DESCRIPTOR_COUNTRY')">
         cd.country
       </when>
       <when test="params.facet.name.equals('KINGDOM_KEY')">
-        cd.kingdom_key
+        cdt.kingdom_key
       </when>
       <when test="params.facet.name.equals('PHYLUM_KEY')">
-        cd.phylum_key
+        cdt.phylum_key
       </when>
       <when test="params.facet.name.equals('CLASS_KEY')">
-        cd.class_key
+        cdt.class_key
       </when>
       <when test="params.facet.name.equals('ORDER_KEY')">
-        cd.order_key
+        cdt.order_key
       </when>
       <when test="params.facet.name.equals('FAMILY_KEY')">
-        cd.family_key
+        cdt.family_key
       </when>
       <when test="params.facet.name.equals('GENUS_KEY')">
-        cd.genus_key
+        cdt.genus_key
       </when>
       <when test="params.facet.name.equals('SPECIES_KEY')">
-        cd.species_key
+        cdt.species_key
       </when>
       <when test="params.facet.name.equals('OBJECT_CLASSIFICATION')">
         cd.object_classification_name
@@ -775,6 +818,10 @@
           INNER JOIN collection_descriptor_group cdg ON cdg.collection_key = c.key AND cdg.deleted IS NULL
           INNER JOIN collection_descriptor cd ON cd.collection_descriptor_group_key = cdg.key
         </if>
+        <if test="params.descriptorTaxonSearch or params.descriptorTaxonFacet">
+          INNER JOIN collection_descriptor_taxonomy cdt ON cdt.collection_descriptor_key = cd.key
+            AND cdt.checklist_key = #{params.checklistKey,jdbcType=VARCHAR}
+        </if>
       </when>
       <when test="params.facet.name.equals('PRESERVATION_TYPE')
                   or params.facet.name.equals('CONTENT_TYPE')
@@ -786,6 +833,10 @@
         <if test="params.descriptorSearch or params.descriptorFacet">
           INNER JOIN collection_descriptor_group cdg ON cdg.collection_key = c.key AND cdg.deleted IS NULL
           INNER JOIN collection_descriptor cd ON cd.collection_descriptor_group_key = cdg.key
+        </if>
+        <if test="params.descriptorTaxonSearch or params.descriptorTaxonFacet">
+          INNER JOIN collection_descriptor_taxonomy cdt ON cdt.collection_descriptor_key = cd.key
+            AND cdt.checklist_key = #{params.checklistKey,jdbcType=VARCHAR}
         </if>
         INNER JOIN unnest(
         <choose>
@@ -802,7 +853,7 @@
             cd.recorded_by
           </when>
           <when test="params.facet.name.equals('TAXON_KEY')">
-            cd.taxon_keys
+            cdt.taxon_keys
           </when>
         </choose>
         ) facet ON true
@@ -820,25 +871,25 @@
             cd.country
           </when>
           <when test="params.facet.name.equals('KINGDOM_KEY')">
-            cd.kingdom_key
+            cdt.kingdom_key
           </when>
           <when test="params.facet.name.equals('PHYLUM_KEY')">
-            cd.phylum_key
+            cdt.phylum_key
           </when>
           <when test="params.facet.name.equals('CLASS_KEY')">
-            cd.class_key
+            cdt.class_key
           </when>
           <when test="params.facet.name.equals('ORDER_KEY')">
-            cd.order_key
+            cdt.order_key
           </when>
           <when test="params.facet.name.equals('FAMILY_KEY')">
-            cd.family_key
+            cdt.family_key
           </when>
           <when test="params.facet.name.equals('GENUS_KEY')">
-            cd.genus_key
+            cdt.genus_key
           </when>
           <when test="params.facet.name.equals('SPECIES_KEY')">
-            cd.species_key
+            cdt.species_key
           </when>
           <when test="params.facet.name.equals('OBJECT_CLASSIFICATION')">
             cd.object_classification_name
@@ -854,6 +905,10 @@
         <if test="params.descriptorSearch or params.descriptorFacet">
           INNER JOIN collection_descriptor_group cdg ON cdg.collection_key = c.key AND cdg.deleted IS NULL
           INNER JOIN collection_descriptor cd ON cd.collection_descriptor_group_key = cdg.key
+        </if>
+        <if test="params.descriptorTaxonSearch or params.descriptorTaxonFacet">
+          INNER JOIN collection_descriptor_taxonomy cdt ON cdt.collection_descriptor_key = cd.key
+            AND cdt.checklist_key = #{params.checklistKey,jdbcType=VARCHAR}
         </if>
       </otherwise>
     </choose>

@@ -117,8 +117,8 @@
   </sql>
 
   <sql id="FULLTEXT_SEARCH">
-    JOIN to_tsquery('english', CASE WHEN regexp_replace(unaccent(trim(#{params.query})), '[^A-Za-z0-9@.\-\s]+', '', 'g') = '' THEN 'false'
-    ELSE regexp_replace(regexp_replace(unaccent(trim(#{params.query})), '[^A-Za-z0-9@.\-\s]+', '', 'g'), '\s+', ':* &amp; ', 'g') || ':*' END)  AS query ON query @@ fulltext_search
+    JOIN to_tsquery('english', CASE WHEN trim(regexp_replace(unaccent(trim(#{params.query})), '[^A-Za-z0-9@.\-\s]+', '', 'g')) = '' THEN 'false'
+    ELSE regexp_replace(trim(regexp_replace(unaccent(trim(#{params.query})), '[^A-Za-z0-9@.\-\s]+', '', 'g')), '\s+', ':* &amp; ', 'g') || ':*' END)  AS query ON query @@ fulltext_search
     OR EXISTS(
       SELECT collection_contact_key
       FROM institution_collection_contact JOIN collection_contact cc ON cc.key = collection_contact_key
@@ -577,8 +577,8 @@
       FROM (
         SELECT key, code, name,
         to_tsvector('english', code || ' ' || name) AS document,
-        to_tsquery('english', CASE WHEN regexp_replace(unaccent(trim(#{q})), '[^A-Za-z0-9@.\-\s]+', '', 'g') = '' THEN 'false'
-        ELSE regexp_replace(regexp_replace(unaccent(trim(#{q})), '[^A-Za-z0-9@.\-\s]+', '', 'g'), '\s+', ':* &amp; ', 'g') || ':*' END)  AS query
+        to_tsquery('english', CASE WHEN trim(regexp_replace(unaccent(trim(#{q})), '[^A-Za-z0-9@.\-\s]+', '', 'g')) = '' THEN 'false'
+        ELSE regexp_replace(trim(regexp_replace(unaccent(trim(#{q})), '[^A-Za-z0-9@.\-\s]+', '', 'g')), '\s+', ':* &amp; ', 'g') || ':*' END)  AS query
         FROM institution
         WHERE deleted IS NULL
       ) AS subquery

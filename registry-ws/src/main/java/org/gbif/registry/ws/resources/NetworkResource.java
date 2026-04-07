@@ -243,6 +243,8 @@ public class NetworkResource extends BaseNetworkEntityResource<Network, NetworkL
             .query(parseQuery(request.getQ()))
             .from(parseFrom(request.getModified()))
             .to(parseTo(request.getModified()))
+            .createdFrom(parseFrom(request.getCreated()))
+            .createdTo(parseTo(request.getCreated()))
             .deleted(false)
             .identifier(request.getIdentifier())
             .identifierType(request.getIdentifierType())

@@ -4,10 +4,26 @@ mail:
   cc: @mail.cc@
   bcc: @mail.bcc@
   enabled: false
-  devemail:
-    address: gbifregistry@mailinator.com
-    enabled: @mail.devemail.enabled@
-
+  useInMemoryEmailSender: true
+  # When enabled, emails are redirected to the given address instead of real recipients.
+  # Useful for dev/test/workshops: e.g. allow real user registration (Identity off) but redirect
+  # endorsement emails so they don't go to real node managers (OrganizationsEndorsement on).
+  #devEmailForIdentity:
+  #  enabled: true
+  #  address: gbifregistry@mailinator.com
+  #  # Identity: user registration, password reset, email change, account confirmation
+  #devEmailForOrganizationsEndorsement:
+  #  enabled: true
+  #  address: gbifregistry@mailinator.com
+  #  # Organizations endorsement: emails to node managers when an org requests endorsement or is endorsed
+  #devEmailForCollections:
+  #  enabled: true
+  #  address: gbifregistry@mailinator.com
+  #  # Collections (GRSciColl): change suggestions, descriptor suggestions, master source sync notifications
+  #devEmailForPipelines:
+  #  enabled: true
+  #  address: gbifregistry@mailinator.com
+  #  # Pipelines: dataset pipeline run notifications (e.g. absent identifiers)
 message:
   enabled: false
 
@@ -36,6 +52,11 @@ grscicoll:
   batchResultPath: src/test/resources/collections/
   descriptorSuggestions:
     storage: src/test/resources/collections/descriptorGroupSuggestions
+  checklistKeys:
+    d7dddbf4-2cf0-4f39-9b2a-bb099caae36c,
+    7ddf754f-d193-4cc9-b351-99906754a03b,
+    defaultChecklistKey
+  defaultChecklistKey: defaultChecklistKey
 
 derivedDataset:
   text: Derived dataset GBIF.org ({0}) Filtered export of GBIF occurrence data https://doi.org/{1}

@@ -28,6 +28,7 @@ import org.gbif.registry.events.EventManager;
 import org.gbif.registry.events.UpdateEvent;
 import org.gbif.registry.events.collections.MasterSourceMetadataAddedEvent;
 import org.gbif.registry.mail.BaseEmailModel;
+import org.gbif.registry.mail.EmailCategory;
 import org.gbif.registry.mail.EmailSender;
 import org.gbif.registry.mail.collections.CollectionsEmailManager;
 import org.gbif.registry.persistence.mapper.collections.CollectionMapper;
@@ -249,7 +250,7 @@ public class MasterSourceSynchronizer {
               masterSourceEntityKey,
               masterSourceName,
               masterSourceType);
-      emailSender.send(emailModel);
+      emailSender.send(emailModel, EmailCategory.COLLECTIONS);
     } catch (Exception e) {
       log.error("Couldn't send email for GRSciColl master source deleted", e);
     }

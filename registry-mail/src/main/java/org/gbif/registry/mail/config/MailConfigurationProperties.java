@@ -16,14 +16,18 @@ package org.gbif.registry.mail.config;
 import java.util.Collections;
 import java.util.Set;
 
+import lombok.Getter;
+
+import lombok.Setter;
+
+import org.gbif.registry.mail.EmailCategory;
+
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
 @Component
 @ConfigurationProperties(prefix = "mail")
 public class MailConfigurationProperties {
-
-  private DevemailProperties devemail;
 
   private String from;
 
@@ -33,12 +37,42 @@ public class MailConfigurationProperties {
 
   private Boolean enabled = Boolean.FALSE;
 
-  public DevemailProperties getDevemail() {
-    return devemail;
+  private DevemailProperties devEmailForIdentity;
+  private DevemailProperties devEmailForOrganizationsEndorsement;
+  private DevemailProperties devEmailForCollections;
+  private DevemailProperties devEmailForPipelines;
+
+  public DevemailProperties getDevEmailForIdentity() {
+    return devEmailForIdentity;
   }
 
-  public void setDevemail(DevemailProperties devemail) {
-    this.devemail = devemail;
+  public void setDevEmailForIdentity(DevemailProperties devEmailForIdentity) {
+    this.devEmailForIdentity = devEmailForIdentity;
+  }
+
+  public DevemailProperties getDevEmailForOrganizationsEndorsement() {
+    return devEmailForOrganizationsEndorsement;
+  }
+
+  public void setDevEmailForOrganizationsEndorsement(
+      DevemailProperties devEmailForOrganizationsEndorsement) {
+    this.devEmailForOrganizationsEndorsement = devEmailForOrganizationsEndorsement;
+  }
+
+  public DevemailProperties getDevEmailForCollections() {
+    return devEmailForCollections;
+  }
+
+  public void setDevEmailForCollections(DevemailProperties devEmailForCollections) {
+    this.devEmailForCollections = devEmailForCollections;
+  }
+
+  public DevemailProperties getDevEmailForPipelines() {
+    return devEmailForPipelines;
+  }
+
+  public void setDevEmailForPipelines(DevemailProperties devEmailForPipelines) {
+    this.devEmailForPipelines = devEmailForPipelines;
   }
 
   public String getFrom() {
@@ -73,26 +107,47 @@ public class MailConfigurationProperties {
     this.enabled = enabled;
   }
 
+  /**
+   * Returns the address to redirect to for dev mode, or null if no redirect.
+   * Uses the category-specific devEmailForX configuration.
+   */
+  public String getRedirectAddress(EmailCategory category) {
+    if (category == null) {
+      return null;
+    }
+    DevemailProperties props = null;
+    switch (category) {
+      case IDENTITY:
+        props = getDevEmailForIdentity();
+        break;
+      case ORGANIZATION_ENDORSEMENT:
+        props = getDevEmailForOrganizationsEndorsement();
+        break;
+      case COLLECTIONS:
+        props = getDevEmailForCollections();
+        break;
+      case PIPELINES:
+        props = getDevEmailForPipelines();
+        break;
+      default:
+        return null;
+    }
+    if (props != null
+        && Boolean.TRUE.equals(props.getEnabled())
+        && props.getAddress() != null
+        && !props.getAddress().isEmpty()) {
+      return props.getAddress();
+    }
+    return null;
+  }
+
+  @Setter
+  @Getter
   public static class DevemailProperties {
 
     private Boolean enabled = Boolean.FALSE;
 
     private String address;
 
-    public Boolean getEnabled() {
-      return enabled;
-    }
-
-    public void setEnabled(Boolean enabled) {
-      this.enabled = enabled;
-    }
-
-    public String getAddress() {
-      return address;
-    }
-
-    public void setAddress(String address) {
-      this.address = address;
-    }
   }
 }

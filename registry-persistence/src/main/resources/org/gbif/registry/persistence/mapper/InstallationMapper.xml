@@ -342,8 +342,8 @@
 
   <sql id="LIST_FILTER">
     FROM installation i<if test="params.query != null" >,
-    to_tsquery('english', CASE WHEN regexp_replace(unaccent(trim(#{params.query})), '[^A-Za-z0-9@.\-\s]+', '', 'g') = '' THEN 'false'
-    ELSE regexp_replace(regexp_replace(regexp_replace(unaccent(trim(#{params.query})), '[^A-Za-z0-9@.\-\s]+', '', 'g'), '\s+', ':* &amp; ', 'g'), ':* &amp; $', '', 'g') || ':*' END)  AS query</if>
+    to_tsquery('english', CASE WHEN trim(regexp_replace(unaccent(trim(#{params.query})), '[^A-Za-z0-9@.\-\s]+', '', 'g')) = '' THEN 'false'
+    ELSE regexp_replace(trim(regexp_replace(unaccent(trim(#{params.query})), '[^A-Za-z0-9@.\-\s]+', '', 'g')), '\s+', ':* &amp; ', 'g') || ':*' END)  AS query</if>
     <if test="params.identifier != null or params.identifierType != null">
       INNER JOIN installation_identifier ii ON ii.installation_key = i.key
       INNER JOIN identifier id ON ii.identifier_key = id.key
@@ -369,6 +369,8 @@
       </choose>
       <if test="params.from != null" > AND i.modified &gt;= #{params.from}</if>
       <if test="params.to != null" > AND i.modified &lt; #{params.to}</if>
+      <if test="params.createdFrom != null" > AND i.created &gt;= #{params.createdFrom}</if>
+      <if test="params.createdTo != null" > AND i.created &lt; #{params.createdTo}</if>
       <if test="params.type != null" > AND i.type = #{params.type,jdbcType=OTHER}</if>
       <if test="params.identifier != null" >
         AND id.identifier = #{params.identifier,jdbcType=VARCHAR}

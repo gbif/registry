@@ -284,6 +284,17 @@ public class OrganizationIT extends NetworkEntityIT<Organization> {
         LocalDate.now().minus(1, ChronoUnit.MONTHS)));
     assertResultsOfSize(service.list(searchParams), 0);
 
+    searchParams = new OrganizationRequestSearchParams();
+    searchParams.setCreated(
+        Range.closed(LocalDate.now(), LocalDate.now().plus(1, ChronoUnit.DAYS)));
+    assertResultsOfSize(service.list(searchParams), 2);
+
+    searchParams.setCreated(
+        Range.closed(
+            LocalDate.now().minus(2, ChronoUnit.MONTHS),
+            LocalDate.now().minus(1, ChronoUnit.MONTHS)));
+    assertResultsOfSize(service.list(searchParams), 0);
+
     service.delete(key2);
     searchParams = new OrganizationRequestSearchParams();
     assertResultsOfSize(service.listDeleted(searchParams), 1);
@@ -509,6 +520,24 @@ public class OrganizationIT extends NetworkEntityIT<Organization> {
     response = service.list(searchParams);
     // Should return all organizations (empty query is treated as no filter)
     assertTrue(response.getResults().size() >= 2, "Should return all organizations for space-only query");
+
+    // Test query that becomes empty after punctuation stripping - should not throw tsquery syntax error
+    searchParams.setQ("! !");
+    response = service.list(searchParams);
+    assertTrue(
+        response.getResults().isEmpty(),
+        "Should return no organizations when the sanitized query becomes empty");
+    assertEquals(
+        0,
+        response.getCount(),
+        "Count should be zero when the sanitized query becomes empty");
+
+    // Test query with trailing punctuation - should still match after sanitizing
+    searchParams.setQ("Test !");
+    response = service.list(searchParams);
+    assertTrue(
+        response.getResults().size() >= 2,
+        "Should find organizations even when trailing punctuation is stripped");
 
     // Test query with multiple words and multiple spaces
     searchParams.setQ("Test    Organization    One");

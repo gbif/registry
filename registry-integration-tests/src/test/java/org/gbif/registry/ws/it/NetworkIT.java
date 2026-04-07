@@ -332,6 +332,17 @@ public class NetworkIT extends NetworkEntityIT<Network> {
         LocalDate.now().minus(2, ChronoUnit.MONTHS),
         LocalDate.now().minus(1, ChronoUnit.MONTHS)));
     assertResultsOfSize(service.list(searchParams), 0);
+
+    searchParams = new NetworkRequestSearchParams();
+    searchParams.setCreated(
+        Range.closed(LocalDate.now(), LocalDate.now().plus(1, ChronoUnit.DAYS)));
+    assertResultsOfSize(service.list(searchParams), 2);
+
+    searchParams.setCreated(
+        Range.closed(
+            LocalDate.now().minus(2, ChronoUnit.MONTHS),
+            LocalDate.now().minus(1, ChronoUnit.MONTHS)));
+    assertResultsOfSize(service.list(searchParams), 0);
   }
 
   @Override

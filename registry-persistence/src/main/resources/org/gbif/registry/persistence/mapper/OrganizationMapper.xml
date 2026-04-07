@@ -212,8 +212,9 @@
   <sql id="LIST_FILTER">
     FROM organization o
     <if test="params.query != null" >
-      JOIN to_tsquery('english', CASE WHEN regexp_replace(unaccent(trim(#{params.query})), '[^A-Za-z0-9@.\-\s]+', '', 'g') = '' THEN 'false'
-      ELSE regexp_replace(regexp_replace(regexp_replace(unaccent(trim(#{params.query})), '[^A-Za-z0-9@.\-\s]+', '', 'g'), '\s+', ':* &amp; ', 'g'), ':* &amp; $', '', 'g') || ':*' END) AS query ON <include refid="SIMPLE_SEARCH"/>
+      JOIN to_tsquery('english', CASE
+      WHEN trim(regexp_replace(unaccent(trim(#{params.query})), '[^A-Za-z0-9@.\-\s]+', '', 'g')) = '' THEN 'false'
+      ELSE regexp_replace(trim(regexp_replace(unaccent(trim(#{params.query})), '[^A-Za-z0-9@.\-\s]+', '', 'g')), '\s+', ':* &amp; ', 'g') || ':*' END) AS query ON <include refid="SIMPLE_SEARCH"/>
     </if>
     <if test="params.identifier != null or params.identifierType != null">
       INNER JOIN organization_identifier oi ON oi.organization_key = o.key
@@ -245,6 +246,8 @@
       </choose>
       <if test="params.from != null" > AND o.modified &gt;= #{params.from}</if>
       <if test="params.to != null" > AND o.modified &lt; #{params.to}</if>
+      <if test="params.createdFrom != null" > AND o.created &gt;= #{params.createdFrom}</if>
+      <if test="params.createdTo != null" > AND o.created &lt; #{params.createdTo}</if>
       <if test="params.country != null" >
         AND o.country = #{params.country,jdbcType=OTHER}
       </if>

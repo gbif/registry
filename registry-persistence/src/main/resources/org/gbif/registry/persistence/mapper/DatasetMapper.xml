@@ -411,8 +411,8 @@
   <sql id="LIST_FILTER">
     FROM dataset d
     <if test="params.query != null" >
-      JOIN to_tsquery('english', CASE WHEN regexp_replace(unaccent(trim(#{params.query})), '[^A-Za-z0-9@.\-\s]+', '', 'g') = '' THEN 'false'
-      ELSE regexp_replace(regexp_replace(regexp_replace(unaccent(trim(#{params.query})), '[^A-Za-z0-9@.\-\s]+', '', 'g'), '\s+', ':* &amp; ', 'g'), ':* &amp; $', '', 'g') || ':*' END)  AS query ON <include refid="SIMPLE_SEARCH"/>
+      JOIN to_tsquery('english', CASE WHEN trim(regexp_replace(unaccent(trim(#{params.query})), '[^A-Za-z0-9@.\-\s]+', '', 'g')) = '' THEN 'false'
+      ELSE regexp_replace(trim(regexp_replace(unaccent(trim(#{params.query})), '[^A-Za-z0-9@.\-\s]+', '', 'g')), '\s+', ':* &amp; ', 'g') || ':*' END)  AS query ON <include refid="SIMPLE_SEARCH"/>
     </if>
     INNER JOIN organization o ON d.publishing_organization_key = o.key
     <if test="params.identifier != null or params.identifierType != null or params.doi != null">
@@ -444,6 +444,8 @@
       <if test="params.installationKey != null" > AND d.installation_key = #{params.installationKey}</if>
       <if test="params.from != null" > AND d.modified &gt;= #{params.from}</if>
       <if test="params.to != null" > AND d.modified &lt; #{params.to}</if>
+      <if test="params.createdFrom != null" > AND d.created &gt;= #{params.createdFrom}</if>
+      <if test="params.createdTo != null" > AND d.created &lt; #{params.createdTo}</if>
       <if test="params.identifier != null" >
         AND i.identifier = #{params.identifier,jdbcType=VARCHAR}
       </if>

@@ -13,21 +13,19 @@
  */
 package org.gbif.registry.ws.provider;
 
-import org.gbif.api.model.collections.request.CollectionDescriptorsSearchRequest;
-import org.gbif.api.util.IsoDateParsingUtils;
-import org.gbif.api.vocabulary.collections.CollectionFacetParameter;
+import static org.gbif.api.util.SearchTypeValidator.isDateRange;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
-
+import org.gbif.api.model.collections.request.CollectionDescriptorsSearchRequest;
+import org.gbif.api.util.IsoDateParsingUtils;
+import org.gbif.api.vocabulary.collections.CollectionFacetParameter;
 import org.springframework.core.MethodParameter;
 import org.springframework.web.bind.support.WebDataBinderFactory;
 import org.springframework.web.context.request.NativeWebRequest;
 import org.springframework.web.method.support.ModelAndViewContainer;
-
-import static org.gbif.api.util.SearchTypeValidator.isDateRange;
 
 @SuppressWarnings("NullableProblems")
 public class CollectionDescriptorsSearchRequestHandlerMethodArgumentResolver
@@ -62,11 +60,31 @@ public class CollectionDescriptorsSearchRequestHandlerMethodArgumentResolver
         .ifPresent(searchRequest::setObjectClassification);
     extractMultivalueParam(params, "biome").ifPresent(searchRequest::setBiome);
     extractMultivalueParam(params, "biomeType").ifPresent(searchRequest::setBiomeType);
-    extractMultivalueParam(params, "issue").ifPresent(searchRequest::setIssue);
+
+    // we support the singular name for backwards compatibility
+    List<String> issues = new ArrayList<>();
+    extractMultivalueParam(params, "issue").ifPresent(issues::addAll);
+    extractMultivalueParam(params, "issues").ifPresent(issues::addAll);
+    if (!issues.isEmpty()) {
+      searchRequest.setIssue(issues);
+    }
+
+    List<String> taxonIssues = new ArrayList<>();
+    extractMultivalueParam(params, "taxonIssue").ifPresent(taxonIssues::addAll);
+    extractMultivalueParam(params, "taxonIssues").ifPresent(taxonIssues::addAll);
+    if (!taxonIssues.isEmpty()) {
+      searchRequest.setTaxonIssue(taxonIssues);
+    }
+
     extractMultivalueRangeParam(params, "individualCount")
         .ifPresent(searchRequest::setIndividualCount);
     extractMultivalueCountryParam(params, "descriptorCountry")
         .ifPresent(searchRequest::setDescriptorCountry);
+
+    final String checklistKey = getFirstIgnoreCase(params, "checklistkey");
+    if (checklistKey != null && !checklistKey.isEmpty()) {
+      searchRequest.setChecklistKey(checklistKey);
+    }
 
     String[] dateIdentifiedParams = params.get("dateIdentified".toLowerCase());
     if (dateIdentifiedParams != null) {

@@ -124,6 +124,7 @@ public class MyBatisConfiguration {
       configuration.getTypeAliasRegistry().registerAlias("DescriptorChangeSuggestion", DescriptorChangeSuggestion.class);
       configuration.getTypeAliasRegistry().registerAlias("Descriptor", Descriptor.class);
       configuration.getTypeAliasRegistry().registerAlias("DescriptorDto", DescriptorDto.class);
+      configuration.getTypeAliasRegistry().registerAlias("TaxonomyDescriptorDto", TaxonomyDescriptorDto.class);
       configuration.getTypeAliasRegistry().registerAlias("VerbatimDto", VerbatimDto.class);
       configuration
           .getTypeAliasRegistry()

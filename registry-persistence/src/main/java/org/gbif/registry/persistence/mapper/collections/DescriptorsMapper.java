@@ -14,7 +14,9 @@
 package org.gbif.registry.persistence.mapper.collections;
 
 import org.gbif.api.model.collections.descriptors.DescriptorGroup;
+import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.registry.persistence.mapper.collections.dto.DescriptorDto;
+import org.gbif.registry.persistence.mapper.collections.dto.TaxonomyDescriptorDto;
 import org.gbif.registry.persistence.mapper.collections.dto.VerbatimDto;
 import org.gbif.registry.persistence.mapper.collections.params.DescriptorGroupParams;
 import org.gbif.registry.persistence.mapper.collections.params.DescriptorParams;
@@ -23,6 +25,8 @@ import java.util.List;
 
 import org.apache.ibatis.annotations.Param;
 import org.springframework.stereotype.Repository;
+
+import javax.annotation.Nullable;
 
 @Repository
 public interface DescriptorsMapper {
@@ -49,6 +53,9 @@ public interface DescriptorsMapper {
 
   List<DescriptorDto> listDescriptors(@Param("params") DescriptorParams searchParams);
 
+  List<DescriptorDto> listDescriptorsWithKeyAndVerbatimOnlyByDescriptorGroup(
+      @Param("descriptorGroupKey") long descriptorGroupKey, @Nullable @Param("page") Pageable page);
+
   long countDescriptors(@Param("params") DescriptorParams searchParams);
 
   List<DescriptorDto> listDescriptorsWithVocabularyField(@Param("fieldName") String fieldName);
@@ -67,4 +74,13 @@ public interface DescriptorsMapper {
   List<VerbatimDto> getVerbatimValues(@Param("descriptorKey") long descriptorKey);
 
   void moveDescriptorGroupForCollectionMerge(DescriptorGroup entity);
+
+  void createTaxonomyDescriptor(TaxonomyDescriptorDto entity);
+
+  void deleteTaxonomyDescriptors(@Param("collectionDescriptorKey") long collectionDescriptorKey);
+
+  void updateTaxonomyDescriptor(TaxonomyDescriptorDto entity);
+
+  List<TaxonomyDescriptorDto> listTaxonomyDescriptors(
+      @Param("descriptorKey") long collectionDescriptorKey);
 }

@@ -54,6 +54,7 @@ public class DatasetEsFieldMapper implements EsFieldMapper<DatasetSearchParamete
           .put(DatasetSearchParameter.KEYWORD, "keyword")
           .put(DatasetSearchParameter.LICENSE, "license")
           .put(DatasetSearchParameter.MODIFIED_DATE, "modified")
+          .put(DatasetSearchParameter.CREATED_DATE, "created")
           .put(DatasetSearchParameter.PROJECT_ID, "project.identifier")
           .put(DatasetSearchParameter.RECORD_COUNT, "occurrenceCount")
           .put(DatasetSearchParameter.SUBTYPE, "subtype")
@@ -172,32 +173,100 @@ public class DatasetEsFieldMapper implements EsFieldMapper<DatasetSearchParamete
 
   @Override
   public Query fullTextQuery(String q) {
+    // Keep fuzzy full-text recall, but strongly boost exact/phrase hits so queries like
+    // "eBird" rank datasets containing that term above broader fuzzy matches such as "bird".
+    Query broadQuery =
+        Query.of(
+            query ->
+                query.multiMatch(
+                    mm ->
+                        mm.query(q)
+                            .fields(
+                                List.of(
+                                    "doi^25",
+                                    "title^20",
+                                    "keyword^10",
+                                    "description^8",
+                                    "publishingOrganizationTitle^5",
+                                    "hostingOrganizationTitle^5",
+                                    "networkTitles^4",
+                                    "metadata^3",
+                                    "projectId^2",
+                                    "category.lineage^5",
+                                    "all^1"))
+                            .tieBreaker(0.2)
+                            .minimumShouldMatch("2<100% 3<75% 5<50%")
+                            .fuzziness("AUTO")
+                            .slop(100)));
+
     return Query.of(
         qu ->
             qu.functionScore(
                 fs ->
                     fs.query(
                             inner ->
-                                inner.multiMatch(
-                                    mm ->
-                                        mm.query(q)
-                                            .fields(
+                                inner.bool(
+                                    b ->
+                                        b.minimumShouldMatch("1")
+                                            .should(
                                                 List.of(
-                                                    "doi^25",
-                                                    "title^20",
-                                                    "keyword^10",
-                                                    "description^8",
-                                                    "publishingOrganizationTitle^5",
-                                                    "hostingOrganizationTitle^5",
-                                                    "networkTitle^4",
-                                                    "metadata^3",
-                                                    "projectId^2",
-                                                    "category.lineage^5",
-                                                    "all^1"))
-                                            .tieBreaker(0.2)
-                                            .minimumShouldMatch("2<100% 3<75% 5<50%")
-                                            .fuzziness("AUTO")
-                                            .slop(100)))
+                                                    Query.of(
+                                                        sq ->
+                                                            sq.term(
+                                                                t ->
+                                                                    t.field("doi")
+                                                                        .value(q)
+                                                                        .boost(80.0f))),
+                                                    Query.of(
+                                                        sq ->
+                                                            sq.matchPhrase(
+                                                                mp ->
+                                                                    mp.field("title")
+                                                                        .query(q)
+                                                                        .boost(60.0f))),
+                                                    Query.of(
+                                                        sq ->
+                                                            sq.term(
+                                                                t ->
+                                                                    t.field("keyword")
+                                                                        .value(q)
+                                                                        .boost(30.0f))),
+                                                    Query.of(
+                                                        sq ->
+                                                            sq.matchPhrase(
+                                                                mp ->
+                                                                    mp.field("description")
+                                                                        .query(q)
+                                                                        .boost(14.0f))),
+                                                    Query.of(
+                                                        sq ->
+                                                            sq.matchPhrase(
+                                                                mp ->
+                                                                    mp.field("publishingOrganizationTitle")
+                                                                        .query(q)
+                                                                        .boost(20.0f))),
+                                                    Query.of(
+                                                        sq ->
+                                                            sq.matchPhrase(
+                                                                mp ->
+                                                                    mp.field("hostingOrganizationTitle")
+                                                                        .query(q)
+                                                                        .boost(20.0f))),
+                                                    Query.of(
+                                                        sq ->
+                                                            sq.matchPhrase(
+                                                                mp ->
+                                                                    mp.field("networkTitles")
+                                                                        .query(q)
+                                                                        .boost(16.0f))),
+                                                    Query.of(
+                                                        sq ->
+                                                            sq.matchPhrase(
+                                                                mp ->
+                                                                    mp.field("metadata")
+                                                                        .query(q)
+                                                                        .boost(6.0f))),
+                                                    broadQuery))))
                         .functions(
                             fns ->
                                 fns.fieldValueFactor(
