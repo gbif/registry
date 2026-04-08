@@ -116,6 +116,7 @@ public class LegacyAuthorizationServiceImpl implements LegacyAuthorizationServic
       if (password.equals(org.getPassword())) {
         return new LegacyRequestAuthorization(user, organizationKey);
       } else {
+        LOG.error("Organization [{}] password does not match", user);
         throw new WebApplicationException(
             "Organization password does not match", HttpStatus.UNAUTHORIZED);
       }
@@ -127,13 +128,15 @@ public class LegacyAuthorizationServiceImpl implements LegacyAuthorizationServic
         if (password.equals(installation.getPassword())) {
           return new LegacyRequestAuthorization(user, organizationKey);
         } else {
+          LOG.error("Installation [{}] password does not match", user);
           throw new WebApplicationException(
-              MessageFormat.format("Installation password {0} does not match", organizationKey),
+              MessageFormat.format("Installation password {0} does not match", user),
               HttpStatus.UNAUTHORIZED);
         }
       } else {
+        LOG.error("Organization or installation [{}] was not found", user);
         throw new WebApplicationException(
-            MessageFormat.format("Organization or installation {0} was not found", organizationKey),
+            MessageFormat.format("Organization or installation {0} was not found", user),
             HttpStatus.UNAUTHORIZED);
       }
     }
