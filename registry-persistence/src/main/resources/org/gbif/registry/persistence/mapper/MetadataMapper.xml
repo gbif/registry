@@ -27,9 +27,15 @@
     WHERE key = #{key}
   </select>
 
+  <select id="getContentJson" resultType="String">
+    SELECT content_json::text
+    FROM metadata
+    WHERE key = #{key}
+  </select>
+
   <insert id="create" useGeneratedKeys="true" keyProperty="meta.key">
     INSERT INTO metadata(
-    <include refid="WRITABLE_METADATA_FIELDS"/>, content
+    <include refid="WRITABLE_METADATA_FIELDS"/>, content, content_json
     )
     VALUES(
     #{meta.datasetKey, jdbcType=OTHER},
@@ -38,7 +44,8 @@
     #{meta.createdBy, jdbcType=VARCHAR},
     now(), <!-- modified -->
     #{meta.createdBy, jdbcType=VARCHAR},
-    #{data, typeHandler=org.apache.ibatis.type.ByteArrayTypeHandler}
+    #{data, typeHandler=org.apache.ibatis.type.ByteArrayTypeHandler},
+    CAST(#{contentJson, jdbcType=VARCHAR} AS jsonb)
     )
   </insert>
 

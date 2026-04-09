@@ -20,6 +20,7 @@ import org.gbif.api.model.common.search.SearchResponse;
 import org.gbif.api.model.registry.Citation;
 import org.gbif.api.model.registry.Contact;
 import org.gbif.api.model.registry.Dataset;
+import org.gbif.api.model.registry.Endpoint;
 import org.gbif.api.model.registry.Identifier;
 import org.gbif.api.model.registry.Installation;
 import org.gbif.api.model.registry.MachineTag;
@@ -37,6 +38,7 @@ import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.api.util.Range;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.DatasetType;
+import org.gbif.api.vocabulary.EndpointType;
 import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.api.vocabulary.Language;
 import org.gbif.api.vocabulary.License;
@@ -58,10 +60,12 @@ import org.gbif.ws.NotFoundException;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 import org.gbif.ws.security.KeyStore;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
@@ -89,6 +93,7 @@ import org.springframework.boot.test.web.server.LocalServerPort;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.CharStreams;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.gbif.registry.test.Datasets.buildExpectedProcessedProperties;
@@ -112,6 +117,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
     classes = RegistryIntegrationTestsConfiguration.class,
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class DatasetIT extends NetworkEntityIT<Dataset> {
+  private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
   private final DatasetSearchService searchService;
   private final OrganizationService organizationResource;
@@ -664,14 +670,14 @@ class DatasetIT extends NetworkEntityIT<Dataset> {
     req.setQ(query);
     SearchResponse<DatasetSearchResult, DatasetSearchParameter> resp = searchService.search(req);
     assertNotNull(resp.getCount());
-    
+
     // Count assertion - at least expected results (more are acceptable due to fuzzy matching)
     assertTrue(
         resp.getCount() >= expected,
         "Elasticsearch should return at least " + expected + " results for query[" + query + "], but got " + resp.getCount());
-    
+
     List<DatasetSearchResult> results = resp.getResults();
-    
+
     // Verify that the first result is the most relevant one (only if expectedFirstKey is provided)
     if (!results.isEmpty() && expectedFirstKey != null) {
       DatasetSearchResult firstResult = results.get(0);
@@ -679,10 +685,10 @@ class DatasetIT extends NetworkEntityIT<Dataset> {
           expectedFirstKey,
           firstResult.getKey(),
           "First result should be the most relevant dataset for query[" + query + "]. " +
-          "Expected key: " + expectedFirstKey + ", but got: " + firstResult.getKey() + 
+          "Expected key: " + expectedFirstKey + ", but got: " + firstResult.getKey() +
           " (title: " + firstResult.getTitle() + ")");
     }
-    
+
     return results;
   }
 
@@ -1461,6 +1467,184 @@ class DatasetIT extends NetworkEntityIT<Dataset> {
   private Dataset newAndCreate(int expectedCount, ServiceType serviceType) {
     Dataset newDataset = newEntity(serviceType);
     return create(newDataset, serviceType, expectedCount);
+  }
+
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  public void testMetadataContentJsonPersistence(ServiceType serviceType) throws IOException {
+    DatasetService service = (DatasetService) getService(serviceType);
+    Dataset dataset = newAndCreate(1, serviceType);
+    List<Metadata> metadata = service.listMetadata(dataset.getKey(), MetadataType.EML);
+    assertTrue(metadata.isEmpty(), "No EML uploaded yet");
+
+    String contentJson = "{\"source\":\"coldp\",\"datasetVersion\":\"2026-03-25\"}";
+    Metadata insertedMetadata =
+        service.insertMetadata(
+            dataset.getKey(), FileUtils.classpathStream("metadata/sample.xml"), contentJson);
+
+    // XML representation through /metadata/{key}/document
+    String xmlDocument =
+        CharStreams.toString(
+            new InputStreamReader(
+                service.getMetadataDocument(insertedMetadata.getKey()), Charsets.UTF_8));
+    String originalXml =
+        CharStreams.toString(
+            new InputStreamReader(FileUtils.classpathStream("metadata/sample.xml"), Charsets.UTF_8));
+    assertEquals(originalXml, xmlDocument);
+
+    assertEquals(
+        OBJECT_MAPPER.readTree(contentJson),
+        OBJECT_MAPPER.readTree(service.getMetadataContentJson(insertedMetadata.getKey())));
+
+    Metadata duplicateMetadata =
+        service.insertMetadata(
+            dataset.getKey(),
+            FileUtils.classpathStream("metadata/sample.xml"),
+            "{\"source\": \"coldp\", \"datasetVersion\": \"2026-03-25\"}");
+    assertEquals(insertedMetadata.getKey(), duplicateMetadata.getKey());
+  }
+
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  public void testMetadataContentJsonUsesPrioritizedColdpYamlEndpoint(ServiceType serviceType)
+      throws IOException {
+    assertColdpMetadataFlow(serviceType, "metadata/coldp-metadata.yaml");
+  }
+
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  public void testMetadataContentJsonUsesPrioritizedColdpJsonEndpoint(ServiceType serviceType)
+      throws IOException {
+    assertColdpMetadataFlow(serviceType, "metadata/coldp-metadata.json");
+  }
+
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  public void testColdpYamlDocumentDetectedWithoutEndpoint(ServiceType serviceType)
+      throws IOException {
+    assertColdpDocumentDetectedWithoutEndpoint(serviceType, "metadata/coldp-metadata.yaml");
+  }
+
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  public void testColdpJsonDocumentDetectedWithoutEndpoint(ServiceType serviceType)
+      throws IOException {
+    assertColdpDocumentDetectedWithoutEndpoint(serviceType, "metadata/coldp-metadata.json");
+  }
+
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  public void testMetadataInsertFailsForUnknownNonXmlDocumentWithoutContentJson(
+      ServiceType serviceType) {
+    DatasetService service = (DatasetService) getService(serviceType);
+    Dataset dataset = newAndCreate(1, serviceType);
+
+    ByteArrayInputStream input =
+      new ByteArrayInputStream("definitely-not-metadata".getBytes(StandardCharsets.UTF_8));
+
+    assertThrows(
+      IllegalArgumentException.class,
+      () -> service.insertMetadata(dataset.getKey(), input));
+  }
+
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  public void testMetadataTypeFallsBackToDocumentWhenEndpointHasNoMapping(ServiceType serviceType)
+      throws IOException {
+    DatasetService service = (DatasetService) getService(serviceType);
+    Dataset dataset = newAndCreate(1, serviceType);
+    service.addEndpoint(dataset.getKey(), newEndpoint(EndpointType.DIGIR_MANIS));
+
+    Metadata insertedMetadata =
+        service.insertMetadata(dataset.getKey(), FileUtils.classpathStream("metadata/sample.xml"));
+
+    assertEquals(MetadataType.EML, insertedMetadata.getType());
+  }
+
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  public void testMetadataTypeFallsBackToDocumentWhenEndpointIsEml(ServiceType serviceType)
+      throws IOException {
+    DatasetService service = (DatasetService) getService(serviceType);
+    Dataset dataset = newAndCreate(1, serviceType);
+    service.addEndpoint(dataset.getKey(), newEndpoint(EndpointType.EML));
+
+    Metadata insertedMetadata =
+        service.insertMetadata(dataset.getKey(), FileUtils.classpathStream("metadata/worms_dc.xml"));
+
+    assertEquals(MetadataType.DC, insertedMetadata.getType());
+  }
+
+  private Endpoint newEndpoint(EndpointType endpointType) {
+    Endpoint endpoint = new Endpoint();
+    endpoint.setType(endpointType);
+    endpoint.setUrl(URI.create("https://example.org/" + endpointType.name().toLowerCase()));
+    return endpoint;
+  }
+
+  private void assertColdpMetadataFlow(ServiceType serviceType, String resource) throws IOException {
+    DatasetService service = (DatasetService) getService(serviceType);
+    Dataset dataset = newAndCreate(1, serviceType);
+    service.addEndpoint(dataset.getKey(), newEndpoint(EndpointType.COLDP));
+
+    String contentJson = coldpContentJson();
+    Metadata insertedMetadata =
+        service.insertMetadata(dataset.getKey(), FileUtils.classpathStream(resource), contentJson);
+
+    assertEquals(MetadataType.COLDP, insertedMetadata.getType());
+    assertEquals(
+        OBJECT_MAPPER.readTree(contentJson),
+        OBJECT_MAPPER.readTree(service.getMetadataContentJson(insertedMetadata.getKey())));
+
+    Dataset updatedDataset = service.get(dataset.getKey());
+    assertEquals("ColDP Metadata Title", updatedDataset.getTitle());
+    assertEquals("ColDP metadata description", updatedDataset.getDescription());
+    assertEquals(URI.create("https://example.org/coldp"), updatedDataset.getHomepage());
+    assertEquals(License.CC_BY_4_0, updatedDataset.getLicense());
+    assertEquals(1, updatedDataset.getContacts().size());
+    assertEquals("ColDP Org", updatedDataset.getContacts().get(0).getOrganization());
+    assertEquals("jane@example.org", updatedDataset.getContacts().get(0).getEmail().get(0));
+    assertEquals(1, updatedDataset.getIdentifiers().size());
+    assertEquals("doi:10.1234/coldp.test", updatedDataset.getIdentifiers().get(0).getIdentifier());
+
+    Metadata duplicateMetadata =
+        service.insertMetadata(dataset.getKey(), FileUtils.classpathStream(resource), coldpContentJsonPretty());
+    assertEquals(insertedMetadata.getKey(), duplicateMetadata.getKey());
+  }
+
+  private void assertColdpDocumentDetectedWithoutEndpoint(ServiceType serviceType, String resource)
+      throws IOException {
+    DatasetService service = (DatasetService) getService(serviceType);
+    Dataset dataset = newAndCreate(1, serviceType);
+
+    Metadata insertedMetadata =
+        service.insertMetadata(dataset.getKey(), FileUtils.classpathStream(resource), coldpContentJson());
+
+    assertEquals(MetadataType.COLDP, insertedMetadata.getType());
+  }
+
+  private String coldpContentJson() {
+    return "{\"title\":\"ColDP Metadata Title\","
+        + "\"description\":\"ColDP metadata description\","
+        + "\"issued\":\"2026-03-25\","
+        + "\"version\":\"2026-03-25\","
+        + "\"license\":\"http://creativecommons.org/licenses/by/4.0/legalcode\","
+        + "\"url\":\"https://example.org/coldp\","
+        + "\"language\":\"en\","
+        + "\"identifier\":{\"doi\":\"10.1234/coldp.test\"},"
+        + "\"contact\":{\"given\":\"Jane\",\"family\":\"Doe\",\"organisation\":\"ColDP Org\",\"email\":\"jane@example.org\"}}";
+  }
+
+  private String coldpContentJsonPretty() {
+    return "{\"title\": \"ColDP Metadata Title\","
+        + "\"description\": \"ColDP metadata description\","
+        + "\"issued\": \"2026-03-25\","
+        + "\"version\": \"2026-03-25\","
+        + "\"license\": \"http://creativecommons.org/licenses/by/4.0/legalcode\","
+        + "\"url\": \"https://example.org/coldp\","
+        + "\"language\": \"en\","
+        + "\"identifier\": {\"doi\": \"10.1234/coldp.test\"},"
+        + "\"contact\": {\"given\": \"Jane\", \"family\": \"Doe\", \"organisation\": \"ColDP Org\", \"email\": \"jane@example.org\"}}";
   }
 
   // Dataset Category Tests

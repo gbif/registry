@@ -34,6 +34,8 @@ import java.util.UUID;
 import jakarta.validation.constraints.NotNull;
 
 import org.apache.commons.io.IOUtils;
+import com.fasterxml.jackson.databind.JsonNode;
+import feign.form.FormData;
 import org.springframework.cloud.openfeign.SpringQueryMap;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -43,6 +45,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 @RequestMapping("dataset")
@@ -123,6 +126,18 @@ public interface DatasetClient extends NetworkEntityClient<Dataset>, DatasetServ
     }
   }
 
+  default Metadata insertMetadata(UUID key, InputStream document, String contentJson) {
+    try {
+      return insertMetadata(
+          key,
+          new FormData(
+              MediaType.APPLICATION_OCTET_STREAM_VALUE, "document", IOUtils.toByteArray(document)),
+          contentJson);
+    } catch (IOException e) {
+      throw new IllegalArgumentException("Unreadable document", e);
+    }
+  }
+
   @RequestMapping(
       method = RequestMethod.POST,
       value = "{key}/document",
@@ -130,6 +145,17 @@ public interface DatasetClient extends NetworkEntityClient<Dataset>, DatasetServ
       produces = MediaType.APPLICATION_JSON_VALUE)
   @ResponseBody
   Metadata insertMetadata(@PathVariable("key") UUID key, @RequestBody byte[] bytes);
+
+  @RequestMapping(
+      method = RequestMethod.POST,
+      value = "{key}/document",
+      consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+      produces = MediaType.APPLICATION_JSON_VALUE)
+  @ResponseBody
+  Metadata insertMetadata(
+      @PathVariable("key") UUID key,
+      @RequestPart("document") FormData document,
+      @RequestPart("contentJson") String contentJson);
 
   @Override
   default InputStream getMetadataDocument(UUID key) {
@@ -142,18 +168,38 @@ public interface DatasetClient extends NetworkEntityClient<Dataset>, DatasetServ
     return null;
   }
 
-  @RequestMapping(method = RequestMethod.GET, value = "{key}/document")
+  @RequestMapping(
+      method = RequestMethod.GET,
+      value = "{key}/document",
+      produces = MediaType.APPLICATION_XML_VALUE)
   @ResponseBody
   byte[] getMetadataDocumentAsBytes(@PathVariable("key") UUID key);
 
   @Override
   default InputStream getMetadataDocument(int key) {
-    return new ByteArrayInputStream(getMetadataDocumentAsBytes(key));
+    byte[] bytes = getMetadataDocumentAsBytes(key);
+    return bytes == null ? null : new ByteArrayInputStream(bytes);
   }
 
-  @RequestMapping(method = RequestMethod.GET, value = "metadata/{key}/document")
+  @RequestMapping(
+      method = RequestMethod.GET,
+      value = "metadata/{key}/document",
+      produces = MediaType.APPLICATION_XML_VALUE)
   @ResponseBody
   byte[] getMetadataDocumentAsBytes(@PathVariable("key") int key);
+
+  @RequestMapping(
+      method = RequestMethod.GET,
+      value = "metadata/{key}/document",
+      produces = MediaType.APPLICATION_JSON_VALUE)
+  @ResponseBody
+  JsonNode getMetadataDocumentJson(@PathVariable("key") int key);
+
+  @Override
+  default String getMetadataContentJson(int key) {
+    JsonNode json = getMetadataDocumentJson(key);
+    return json == null ? null : json.toString();
+  }
 
   @RequestMapping(
       method = RequestMethod.GET,
