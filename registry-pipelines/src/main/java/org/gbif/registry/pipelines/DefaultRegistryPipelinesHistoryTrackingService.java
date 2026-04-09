@@ -160,7 +160,8 @@ public class DefaultRegistryPipelinesHistoryTrackingService
       boolean useLastSuccessful,
       boolean markPreviousAttemptAsFailed,
       Set<String> interpretTypes,
-      boolean excludeEventSteps) {
+      boolean excludeEventSteps,
+      boolean onlyIncludeRequestedStep) {
     int attempt = findAttempt(datasetKey, steps, useLastSuccessful);
     return runPipelineAttempt(
         datasetKey,
@@ -171,7 +172,8 @@ public class DefaultRegistryPipelinesHistoryTrackingService
         prefix,
         markPreviousAttemptAsFailed,
         interpretTypes,
-        excludeEventSteps);
+        excludeEventSteps,
+        onlyIncludeRequestedStep);
   }
 
   private int findAttempt(UUID datasetKey, Set<StepType> steps, boolean useLastSuccessful) {
@@ -199,7 +201,8 @@ public class DefaultRegistryPipelinesHistoryTrackingService
       boolean useLastSuccessful,
       boolean markPreviousAttemptAsFailed,
       Set<String> interpretTypes,
-      boolean excludeEventSteps) {
+      boolean excludeEventSteps,
+      boolean onlyIncludeRequestedStep) {
     String prefix = OffsetDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ofPattern("yyyyMMddHHmm"));
     CompletableFuture.runAsync(
         () ->
@@ -214,7 +217,8 @@ public class DefaultRegistryPipelinesHistoryTrackingService
                         useLastSuccessful,
                         markPreviousAttemptAsFailed,
                         interpretTypes,
-                        excludeEventSteps),
+                        excludeEventSteps,
+                        onlyIncludeRequestedStep),
                 datasetsToExclude,
                 datasetsToInclude),
         executorService);
@@ -378,7 +382,8 @@ public class DefaultRegistryPipelinesHistoryTrackingService
       String prefix,
       boolean markPreviousAttemptAsFailed,
       Set<String> interpretTypes,
-      boolean excludeEventSteps) {
+      boolean excludeEventSteps,
+      boolean onlyIncludeRequestedStep) {
     Objects.requireNonNull(datasetKey, DATASET_KEY_CANNOT_BE_NULL);
     Objects.requireNonNull(steps, "Steps can't be null");
     Objects.requireNonNull(reason, "Reason can't be null");
@@ -438,7 +443,7 @@ public class DefaultRegistryPipelinesHistoryTrackingService
         new PipelineExecution()
             .setCreatedBy(user)
             .setRerunReason(reason)
-            .setStepsToRun(getStepTypes(stepsToSend.keySet(), dataset, excludeEventSteps));
+            .setStepsToRun(getStepTypes(stepsToSend.keySet(), dataset, excludeEventSteps, onlyIncludeRequestedStep));
 
     long executionKey = addPipelineExecution(process.getKey(), execution, user);
 
@@ -559,7 +564,10 @@ public class DefaultRegistryPipelinesHistoryTrackingService
 
   @VisibleForTesting
   protected Set<StepType> getStepTypes(
-      Set<StepType> stepsToSend, Dataset dataset, boolean excludeEventSteps) {
+      Set<StepType> stepsToSend, Dataset dataset, boolean excludeEventSteps, boolean onlyIncludeRequestedStep) {
+    if (onlyIncludeRequestedStep) {
+      return stepsToSend;
+    }
     Set<StepType> finalSteps = new HashSet<>();
     if (stepsToSend.stream().anyMatch(StepType::isEventType)) {
       finalSteps.addAll(PipelinesWorkflow.getEventWorkflow().getAllNodesFor(stepsToSend));
