@@ -183,4 +183,6 @@
   <include file="liquibase/175-grscicoll-occurrence-mapping-code-index.xml" />
   <include file="liquibase/176-fix-function-search-paths.xml" />
   <include file="liquibase/177-multitaxon-descriptors-grscicoll.xml" />
+  <include file="liquibase/178-metadata-content-json.xml" />
+  <include file="liquibase/179-metadata-type-values.xml" />
 </databaseChangeLog>

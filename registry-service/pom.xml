@@ -54,6 +54,10 @@
         </dependency>
         <dependency>
             <groupId>org.gbif</groupId>
+            <artifactId>gbif-metadata-profile-coldp</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.gbif</groupId>
             <artifactId>gbif-metadata-profile-eml</artifactId>
         </dependency>
         <dependency>

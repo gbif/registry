@@ -1,0 +1,14 @@
+title: ColDP Metadata Title
+description: ColDP metadata description
+issued: 2026-03-25
+version: 2026-03-25
+license: http://creativecommons.org/licenses/by/4.0/legalcode
+url: https://example.org/coldp
+language: en
+identifier:
+  doi: 10.1234/coldp.test
+contact:
+  given: Jane
+  family: Doe
+  organisation: ColDP Org
+  email: jane@example.org
