@@ -11,7 +11,7 @@
 
   <groupId>org.gbif.registry</groupId>
   <artifactId>registry-parent</artifactId>
-  <version>4.2.16-SNAPSHOT</version>
+  <version>4.2.16-DpToMetadata-SNAPSHOT</version>
   <name>GBIF Registry Parent</name>
   <description>GBIF Registry project</description>
 
@@ -83,7 +83,7 @@
     <elasticsearch.version>9.0.4</elasticsearch.version>
 
     <!-- GBIF -->
-    <gbif-api.version>2.4.4-SNAPSHOT</gbif-api.version>
+    <gbif-api.version>2.4.5-SNAPSHOT</gbif-api.version>
     <gbif-common.version>0.60</gbif-common.version>
     <gbif-common-mybatis.version>2.0.0</gbif-common-mybatis.version>
     <gbif-common-ws.version>2.1.1</gbif-common-ws.version>
@@ -91,7 +91,7 @@
     <gbif-doi.version>3.0.3</gbif-doi.version>
     <gbif-download-query-tools.version>2.0.4</gbif-download-query-tools.version>
     <gbif-httputils.version>0.10</gbif-httputils.version>
-    <gbif-metadata-profile.version>2.4-SNAPSHOT</gbif-metadata-profile.version>
+    <gbif-metadata-profile.version>3.0-SNAPSHOT</gbif-metadata-profile.version>
     <gbif-parsers.version>0.67</gbif-parsers.version>
     <gbif-postal-service.version>2.1.4</gbif-postal-service.version>
     <xoai.version>4.1.0-gbif-4</xoai.version>
@@ -387,6 +387,11 @@
         <groupId>org.gbif</groupId>
         <artifactId>gbif-httputils</artifactId>
         <version>${gbif-httputils.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.gbif</groupId>
+        <artifactId>gbif-metadata-profile-dwcdp</artifactId>
+        <version>${gbif-metadata-profile.version}</version>
       </dependency>
       <dependency>
         <groupId>org.gbif</groupId>

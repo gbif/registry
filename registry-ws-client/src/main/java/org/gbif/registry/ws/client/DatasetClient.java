@@ -127,12 +127,18 @@ public interface DatasetClient extends NetworkEntityClient<Dataset>, DatasetServ
   }
 
   default Metadata insertMetadata(UUID key, InputStream document, String contentJson) {
+    return insertMetadata(key, document, contentJson, null);
+  }
+
+  default Metadata insertMetadata(
+      UUID key, InputStream document, String contentJson, MetadataType metadataType) {
     try {
       return insertMetadata(
           key,
           new FormData(
               MediaType.APPLICATION_OCTET_STREAM_VALUE, "document", IOUtils.toByteArray(document)),
-          contentJson);
+          contentJson,
+          metadataType);
     } catch (IOException e) {
       throw new IllegalArgumentException("Unreadable document", e);
     }
@@ -155,7 +161,8 @@ public interface DatasetClient extends NetworkEntityClient<Dataset>, DatasetServ
   Metadata insertMetadata(
       @PathVariable("key") UUID key,
       @RequestPart("document") FormData document,
-      @RequestPart("contentJson") String contentJson);
+      @RequestPart("contentJson") String contentJson,
+      @RequestPart(value = "metadataType", required = false) MetadataType metadataType);
 
   @Override
   default InputStream getMetadataDocument(UUID key) {

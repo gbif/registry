@@ -28,6 +28,7 @@ import org.gbif.api.vocabulary.License;
 import org.gbif.api.vocabulary.MetadataType;
 import org.gbif.crawler.coldp.metadata.ColDpMetadata;
 import org.gbif.crawler.coldp.metadata.ColDpMetadataParser;
+import org.gbif.crawler.dwcdp.metadata.DwcDpMetadataParser;
 import org.gbif.metadata.dc.parse.DatasetDcParser;
 import org.gbif.metadata.eml.parse.DatasetEmlParser;
 import org.gbif.registry.doi.util.RegistryDoiUtils;
@@ -309,7 +310,7 @@ public class RegistryDatasetServiceImpl implements RegistryDatasetService {
           case EML:
             return DatasetEmlParser.build(metadataDocument);
           case DWC_DP:
-            return null;
+            return DwcDpMetadataParser.build(metadataDocument);
           case COLDP:
             return buildDatasetFromColdpMetadata(metadataDocument);
         }

@@ -15,7 +15,6 @@ package org.gbif.registry.ws.resources;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
 import com.fasterxml.jackson.databind.node.ArrayNode;
 
 import io.swagger.v3.oas.annotations.Hidden;
@@ -30,8 +29,10 @@ import org.gbif.api.annotation.Trim;
 import org.gbif.api.model.common.paging.PageableBase;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.Dataset;
+import org.gbif.api.service.registry.DatasetService;
 import org.gbif.api.service.registry.DatasetDataPackageService;
-import org.gbif.registry.persistence.mapper.*;
+import org.gbif.api.vocabulary.MetadataType;
+import org.gbif.registry.persistence.mapper.DatasetDataPackageMapper;
 import org.springframework.context.annotation.Primary;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.annotation.Secured;
@@ -42,13 +43,15 @@ import org.springframework.web.bind.annotation.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.io.ByteArrayInputStream;
+import java.nio.charset.StandardCharsets;
+
 import static org.gbif.registry.security.UserRoles.ADMIN_ROLE;
 
 @SuppressWarnings("UnstableApiUsage")
 @io.swagger.v3.oas.annotations.tags.Tag(
     name = "Dataset Data Package",
-    description =
-        "APIs for managing Dataset Data Package information. Requires ADMIN role.",
+    description = "Compatibility APIs for Dataset Data Package metadata. Requires ADMIN role.",
     extensions =
         @Extension(
             name = "Order",
@@ -62,10 +65,13 @@ import static org.gbif.registry.security.UserRoles.ADMIN_ROLE;
 public class DatasetDataPackageResource implements DatasetDataPackageService {
 
   private final DatasetDataPackageMapper datasetDataPackageMapper;
+  private final DatasetService datasetService;
   private final ObjectMapper mapper;
 
-  public DatasetDataPackageResource(DatasetDataPackageMapper datasetDataPackageMapper, ObjectMapper mapper) {
+  public DatasetDataPackageResource(
+      DatasetDataPackageMapper datasetDataPackageMapper, DatasetService datasetService, ObjectMapper mapper) {
     this.datasetDataPackageMapper = datasetDataPackageMapper;
+    this.datasetService = datasetService;
     this.mapper = mapper;
   }
 
@@ -75,8 +81,9 @@ public class DatasetDataPackageResource implements DatasetDataPackageService {
   @Transactional
   @Secured(ADMIN_ROLE)
   @Override
-  public void create(@PathVariable("datasetKey") UUID datasetKey, @RequestBody @Trim Dataset.DataPackage dataPackage) {
-    datasetDataPackageMapper.create(datasetKey, dataPackage);
+  public void create(
+      @PathVariable("datasetKey") UUID datasetKey, @RequestBody @Trim Dataset.DataPackage dataPackage) {
+    insertDataPackageMetadata(datasetKey, dataPackage);
   }
 
   @Hidden
@@ -85,8 +92,9 @@ public class DatasetDataPackageResource implements DatasetDataPackageService {
   @Transactional
   @Secured(ADMIN_ROLE)
   @Override
-  public void update(@PathVariable("datasetKey") UUID datasetKey, @RequestBody @Trim Dataset.DataPackage dataPackage) {
-    datasetDataPackageMapper.update(datasetKey, dataPackage);
+  public void update(
+      @PathVariable("datasetKey") UUID datasetKey, @RequestBody @Trim Dataset.DataPackage dataPackage) {
+    insertDataPackageMetadata(datasetKey, dataPackage);
   }
 
   @Hidden
@@ -109,7 +117,8 @@ public class DatasetDataPackageResource implements DatasetDataPackageService {
   @GetMapping(value = "{datasetKey}/datapackage/resource/{resourceName}", produces = MediaType.APPLICATION_JSON_VALUE)
   @Trim
   @Override
-  public String getResource(@PathVariable("datasetKey") UUID datasetKey, @PathVariable("resourceName") String resourceName) {
+  public String getResource(
+      @PathVariable("datasetKey") UUID datasetKey, @PathVariable("resourceName") String resourceName) {
     return datasetDataPackageMapper.getResource(datasetKey, resourceName);
   }
 
@@ -126,7 +135,7 @@ public class DatasetDataPackageResource implements DatasetDataPackageService {
   @Trim
   @Override
   public PagingResponse<Dataset.DataPackage> list(PageableBase params) {
-    return new PagingResponse<>(params,datasetDataPackageMapper.count(),datasetDataPackageMapper.list(params));
+    return new PagingResponse<>(params, datasetDataPackageMapper.count(), datasetDataPackageMapper.list(params));
   }
 
   @SneakyThrows
@@ -140,5 +149,16 @@ public class DatasetDataPackageResource implements DatasetDataPackageService {
     }
     return result;
   }
-}
 
+  private void insertDataPackageMetadata(UUID datasetKey, Dataset.DataPackage dataPackage) {
+    String metadataJson = dataPackage.getMetadata();
+    if (metadataJson == null) {
+      throw new IllegalArgumentException("metadata must be provided");
+    }
+    datasetService.insertMetadata(
+        datasetKey,
+        new ByteArrayInputStream(metadataJson.getBytes(StandardCharsets.UTF_8)),
+        metadataJson,
+        MetadataType.DWC_DP);
+  }
+}

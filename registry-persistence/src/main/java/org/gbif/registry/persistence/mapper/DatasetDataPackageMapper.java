@@ -23,61 +23,29 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * Mapper for operations on the dataset data package (a JSONB column in the dataset table).
- */
 @Repository
 public interface DatasetDataPackageMapper {
 
-  /**
-   * Inserts a new dataset data package record.
-   *
-   * @param datasetKey the UUID of the dataset
-   * @param dataPackage the data package to insert
-   */
-  void create(@Param("datasetKey") UUID datasetKey, @Param("dp") Dataset.DataPackage dataPackage);
+  void create(
+      @Param("datasetKey") UUID datasetKey,
+      @Param("dp") Dataset.DataPackage dataPackage,
+      @Param("user") String user);
 
-  /**
-   * Updates an existing dataset data package record.
-   *
-   * @param datasetKey the UUID of the dataset
-   * @param dataPackage the data package to update
-   */
-  void update(@Param("datasetKey") UUID datasetKey, @Param("dp") Dataset.DataPackage dataPackage);
+  void update(
+      @Param("datasetKey") UUID datasetKey,
+      @Param("dp") Dataset.DataPackage dataPackage,
+      @Param("user") String user);
 
-  /**
-   * Retrieves the data package associated with a dataset.
-   *
-   * @param datasetKey the UUID of the dataset
-   * @return the data package of the dataset, or null if not found
-   */
   Dataset.DataPackage get(@Param("datasetKey") UUID datasetKey);
 
-  /**
-   *  Retrieves the data package resources associated with a dataset.
-   * @param datasetKey the UUID of the dataset
-   * @return a String containing a JSON array with the resources(schemas) of data package
-   */
   String getResources(@Param("datasetKey") UUID datasetKey);
 
-  /**
-   *  Retrieves the data package resources by their name.
-   * @param datasetKey the UUID of the dataset
-   * @param resourceName data package resource unique name
-   * @return a String containing a JSON object with the resources(schema) of the data package
-   */
   String getResource(@Param("datasetKey") UUID datasetKey, @Param("resourceName") String resourceName);
 
-  /**
-   *  Retrieves the data package resource field values.
-   * @param datasetKey the UUID of the dataset
-   * @param resourceNameFieldName resourceNameFieldName to retrieve
-   * @return a String containing a JSON object with the resources(schema) of the data package
-   */
-  String getResourceField(@Param("datasetKey") UUID datasetKey, @Param("resourceNameFieldName") String resourceNameFieldName);
+  String getResourceField(
+      @Param("datasetKey") UUID datasetKey, @Param("resourceNameFieldName") String resourceNameFieldName);
 
   List<Dataset.DataPackage> list(@Param("params") PageableBase params);
 
   Long count();
-
 }

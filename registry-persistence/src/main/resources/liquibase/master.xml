@@ -185,4 +185,6 @@
   <include file="liquibase/177-multitaxon-descriptors-grscicoll.xml" />
   <include file="liquibase/178-metadata-content-json.xml" />
   <include file="liquibase/179-metadata-type-values.xml" />
+  <include file="liquibase/180-backfill-dwcdp-metadata.xml" />
+  <include file="liquibase/181-drop-data-package-table.xml" />
 </databaseChangeLog>

@@ -90,7 +90,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -124,7 +123,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
@@ -133,6 +131,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.google.common.base.Strings;
 import com.google.common.io.ByteStreams;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.swagger.v3.oas.annotations.Hidden;
@@ -675,7 +674,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset, DatasetL
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
   public Metadata insertMetadata(
       @PathVariable("key") UUID datasetKey, @RequestBody byte[] document) {
-    return storeMetadata(datasetKey, document, null, currentUsername());
+    return storeMetadata(datasetKey, document, null, null, currentUsername());
   }
 
   @PostMapping(value = "{key}/document", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -683,18 +682,23 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset, DatasetL
   public Metadata insertMetadata(
       @PathVariable("key") UUID datasetKey,
       @RequestPart("document") byte[] document,
-      @RequestPart("contentJson") String contentJson) {
-    return storeMetadata(datasetKey, document, contentJson, currentUsername());
+      @RequestParam("contentJson") String contentJson,
+      @RequestParam(value = "metadataType", required = false) MetadataType metadataType) {
+    return storeMetadata(datasetKey, document, contentJson, metadataType, currentUsername());
   }
 
   @Override
   public Metadata insertMetadata(
-      UUID datasetKey, InputStream document, @Nullable String contentJson) {
-    return storeMetadata(datasetKey, readDocumentBytes(document), contentJson, currentUsername());
+      UUID datasetKey, InputStream document, @Nullable String contentJson, @Nullable MetadataType metadataType) {
+    return storeMetadata(datasetKey, readDocumentBytes(document), contentJson, metadataType, currentUsername());
   }
 
   private Metadata storeMetadata(
-      UUID datasetKey, byte[] data, @Nullable String contentJson, String user) {
+      UUID datasetKey,
+      byte[] data,
+      @Nullable String contentJson,
+      @Nullable MetadataType metadataType,
+      String user) {
     // check if the dataset actually exists
     Dataset dataset = super.get(datasetKey);
     if (dataset == null) {
@@ -707,7 +711,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset, DatasetL
 
     String normalizedContentJson = normalizeJson(contentJson);
 
-    MetadataType type = detectMetadataType(dataset, data, normalizedContentJson);
+    MetadataType type = detectMetadataType(dataset, data, normalizedContentJson, metadataType);
 
     // first, determine if this document is already stored, returning it with no action
     // we do this, because updating metadata when nothing has changed, results in registry change
@@ -1139,7 +1143,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset, DatasetL
    */
   public Metadata insertMetadata(UUID datasetKey, InputStream document) {
     // this method should never be called but from tests
-    return storeMetadata(datasetKey, readDocumentBytes(document), null, "UNKNOWN USER");
+    return storeMetadata(datasetKey, readDocumentBytes(document), null, null, "UNKNOWN USER");
   }
 
   @Nullable
@@ -1166,11 +1170,25 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset, DatasetL
   }
 
   private MetadataType detectMetadataType(
-      Dataset dataset, byte[] data, @Nullable String normalizedContentJson) {
+      Dataset dataset,
+      byte[] data,
+      @Nullable String normalizedContentJson,
+      @Nullable MetadataType metadataTypeHint) {
+    if (metadataTypeHint != null) {
+      return metadataTypeHint;
+    }
+
+    MetadataType documentType = detectMetadataTypeFromDocument(data, normalizedContentJson);
+    if (documentType != null) {
+      return documentType;
+    }
+
     MetadataType endpointType = detectMetadataTypeFromEndpoints(dataset);
-    return endpointType == null
-        ? detectMetadataTypeFromDocument(data, normalizedContentJson)
-        : endpointType;
+    if (endpointType != null) {
+      return endpointType;
+    }
+
+    throw new IllegalArgumentException("Unable to detect metadata type");
   }
 
   @Nullable
@@ -1215,16 +1233,26 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset, DatasetL
     try (InputStream in = new ByteArrayInputStream(data)) {
       MetadataType type = MetadataUtils.detectParserType(in);
       if (type == null && normalizedContentJson != null) {
-        return MetadataType.COLDP;
+        return detectStructuredMetadataType(normalizedContentJson);
       }
       return type;
     } catch (IllegalArgumentException e) {
       if (normalizedContentJson != null) {
-        return MetadataType.COLDP;
+        return detectStructuredMetadataType(normalizedContentJson);
       }
       throw e;
     } catch (IOException e) {
       throw new IllegalArgumentException("Unreadable document", e);
+    }
+  }
+
+  private MetadataType detectStructuredMetadataType(String normalizedContentJson) {
+    try {
+      JsonNode parsedContentJson = OBJECT_MAPPER.readTree(normalizedContentJson);
+      JsonNode resourcesNode = parsedContentJson.path("resources");
+      return resourcesNode.isArray() ? MetadataType.DWC_DP : MetadataType.COLDP;
+    } catch (JsonProcessingException e) {
+      throw new IllegalArgumentException("Unreadable contentJson", e);
     }
   }
 
@@ -1374,10 +1402,15 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset, DatasetL
   @GetMapping(
       value = "metadata/{metadataKey}/document",
       produces = {MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE})
-  public ResponseEntity<byte[]> getMetadataDocumentResponse(
-      @PathVariable("metadataKey") int metadataKey,
-      @RequestHeader(value = HttpHeaders.ACCEPT, required = false) String acceptHeader) {
-    if (requestsStructuredJson(acceptHeader)) {
+  public ResponseEntity<byte[]> getMetadataDocumentResponse(@PathVariable("metadataKey") int metadataKey) {
+    Metadata metadata = metadataMapper.get(metadataKey);
+    if (metadata == null) {
+      throw new NotFoundException(
+          "Entity not found for uri: /dataset/metadata/" + metadataKey + "/document",
+          URI.create("/dataset/metadata/{metadataKey}/document"));
+    }
+
+    if (isStructuredMetadataType(metadata.getType())) {
       return ResponseEntity.ok()
           .contentType(MediaType.APPLICATION_JSON)
           .body(getMetadataDocumentJson(metadataKey).getBytes(StandardCharsets.UTF_8));
@@ -1390,6 +1423,10 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset, DatasetL
           URI.create("/dataset/metadata/{metadataKey}/document"));
     }
     return ResponseEntity.ok().contentType(MediaType.APPLICATION_XML).body(content);
+  }
+
+  private boolean isStructuredMetadataType(@Nullable MetadataType metadataType) {
+    return metadataType == MetadataType.COLDP || metadataType == MetadataType.DWC_DP;
   }
 
   public String getMetadataDocumentJson(@PathVariable("metadataKey") int metadataKey) {
@@ -1409,38 +1446,6 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset, DatasetL
 
   private String getStoredMetadataContentJson(int metadataKey) {
     return metadataMapper.getContentJson(metadataKey);
-  }
-
-  private boolean requestsStructuredJson(@Nullable String acceptHeader) {
-    if (Strings.isNullOrEmpty(acceptHeader)) {
-      return false;
-    }
-
-    try {
-      List<MediaType> acceptedMediaTypes = MediaType.parseMediaTypes(acceptHeader);
-      acceptedMediaTypes.sort(
-          Comparator.comparingDouble(MediaType::getQualityValue)
-              .reversed()
-              .thenComparingInt(mediaType -> mediaType.isWildcardType() ? 1 : 0)
-              .thenComparingInt(mediaType -> mediaType.isWildcardSubtype() ? 1 : 0));
-
-      for (MediaType acceptedMediaType : acceptedMediaTypes) {
-        if (MediaType.APPLICATION_JSON.includes(acceptedMediaType)
-            || acceptedMediaType.getSubtype().endsWith("+json")) {
-          return true;
-        }
-        if (acceptedMediaType.isWildcardType()
-            || acceptedMediaType.isWildcardSubtype()
-            || MediaType.APPLICATION_XML.includes(acceptedMediaType)
-            || MediaType.TEXT_XML.includes(acceptedMediaType)) {
-          return false;
-        }
-      }
-    } catch (IllegalArgumentException e) {
-      LOG.debug("Ignoring unreadable Accept header: {}", acceptHeader, e);
-    }
-
-    return false;
   }
 
   @Operation(

@@ -1,0 +1,10 @@
+{
+  "name": "dwcdp-package",
+  "resources": [
+    {
+      "name": "occurrence",
+      "path": "occurrence.csv",
+      "profile": "tabular-data-resource"
+    }
+  ]
+}
