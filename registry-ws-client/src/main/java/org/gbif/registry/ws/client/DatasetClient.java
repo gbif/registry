@@ -28,6 +28,7 @@ import org.gbif.api.vocabulary.MetadataType;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.UUID;
 
@@ -184,6 +185,14 @@ public interface DatasetClient extends NetworkEntityClient<Dataset>, DatasetServ
 
   @Override
   default InputStream getMetadataDocument(int key) {
+    Metadata metadata = getMetadata(key);
+    if (metadata != null
+        && (metadata.getType() == MetadataType.COLDP || metadata.getType() == MetadataType.DWC_DP)) {
+      JsonNode json = getMetadataDocumentJson(key);
+      return json == null
+          ? null
+          : new ByteArrayInputStream(json.toString().getBytes(StandardCharsets.UTF_8));
+    }
     byte[] bytes = getMetadataDocumentAsBytes(key);
     return bytes == null ? null : new ByteArrayInputStream(bytes);
   }

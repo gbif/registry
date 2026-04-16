@@ -1474,23 +1474,26 @@ class DatasetIT extends NetworkEntityIT<Dataset> {
   public void testMetadataContentJsonPersistence(ServiceType serviceType) throws IOException {
     DatasetService service = (DatasetService) getService(serviceType);
     Dataset dataset = newAndCreate(1, serviceType);
-    List<Metadata> metadata = service.listMetadata(dataset.getKey(), MetadataType.EML);
-    assertTrue(metadata.isEmpty(), "No EML uploaded yet");
+    List<Metadata> metadata = service.listMetadata(dataset.getKey(), MetadataType.COLDP);
+    assertTrue(metadata.isEmpty(), "No COLDP uploaded yet");
 
-    String contentJson = "{\"source\":\"coldp\",\"datasetVersion\":\"2026-03-25\"}";
+    String contentJson = coldpContentJson();
     Metadata insertedMetadata =
         service.insertMetadata(
-            dataset.getKey(), FileUtils.classpathStream("metadata/sample.xml"), contentJson, MetadataType.COLDP);
+            dataset.getKey(),
+            FileUtils.classpathStream("metadata/coldp-metadata.json"),
+            contentJson,
+            MetadataType.COLDP);
 
-    // XML representation through /metadata/{key}/document
-    String xmlDocument =
+    // Stored source document representation through /metadata/{key}/document
+    String storedDocument =
         CharStreams.toString(
             new InputStreamReader(
                 service.getMetadataDocument(insertedMetadata.getKey()), Charsets.UTF_8));
-    String originalXml =
+    String originalDocument =
         CharStreams.toString(
-            new InputStreamReader(FileUtils.classpathStream("metadata/sample.xml"), Charsets.UTF_8));
-    assertEquals(originalXml, xmlDocument);
+            new InputStreamReader(FileUtils.classpathStream("metadata/coldp-metadata.json"), Charsets.UTF_8));
+    assertEquals(OBJECT_MAPPER.readTree(originalDocument), OBJECT_MAPPER.readTree(storedDocument));
 
     assertEquals(
         OBJECT_MAPPER.readTree(contentJson),
@@ -1499,8 +1502,9 @@ class DatasetIT extends NetworkEntityIT<Dataset> {
     Metadata duplicateMetadata =
         service.insertMetadata(
             dataset.getKey(),
-            FileUtils.classpathStream("metadata/sample.xml"),
-            "{\"source\": \"coldp\", \"datasetVersion\": \"2026-03-25\"}", MetadataType.COLDP);
+            FileUtils.classpathStream("metadata/coldp-metadata.json"),
+            coldpContentJsonPretty(),
+            MetadataType.COLDP);
     assertEquals(insertedMetadata.getKey(), duplicateMetadata.getKey());
   }
 
