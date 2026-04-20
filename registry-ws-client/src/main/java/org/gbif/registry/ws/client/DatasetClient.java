@@ -162,8 +162,8 @@ public interface DatasetClient extends NetworkEntityClient<Dataset>, DatasetServ
   Metadata insertMetadata(
       @PathVariable("key") UUID key,
       @RequestPart("document") FormData document,
-      @RequestPart("contentJson") String contentJson,
-      @RequestPart(value = "metadataType", required = false) MetadataType metadataType);
+      @RequestParam("contentJson") String contentJson,
+      @RequestParam(value = "metadataType", required = false) MetadataType metadataType);
 
   @Override
   default InputStream getMetadataDocument(UUID key) {
