@@ -302,12 +302,17 @@ public class DefaultRegistryPipelinesHistoryTrackingService
       }
     });
 
-    level2Step.values().stream().min(Integer::compareTo).ifPresent(minLevel -> {
-      if (level2Step.values().stream().anyMatch(level -> level != minLevel)) {
-        LOG.warn("Steps {} are not at the same level, only the lowest level steps will be included", steps);
-        level2Step.entrySet().stream().filter(entry -> entry.getValue() == minLevel).map(Map.Entry::getKey).forEach(steps::remove);
+    Integer lowestLevel = level2Step.values().stream().min(Integer::compareTo).get();
+    LOG.info("Steps to run: {}, with levels: {}, lowest level: {}", steps, level2Step, lowestLevel);
+    List<StepType> toBeRemoved =  new ArrayList<>();
+    level2Step.forEach((step, level) -> {
+      if (level > lowestLevel) {
+        toBeRemoved.add(step);
       }
     });
+
+    steps.removeAll(toBeRemoved);
+    LOG.info("Steps to run after checking levels: {}, with levels: {}", steps, level2Step);
     return steps;
   }
 
