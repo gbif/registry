@@ -30,6 +30,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.EnumMap;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -184,7 +185,7 @@ public class DefaultRegistryPipelinesHistoryTrackingService
 
     Optional<Integer> attempt =
         useLastSuccessful
-            ? mapper.getLastSuccessfulAttempt(datasetKey, prioritizeSteps(steps, datasetKey).iterator().next())
+            ? mapper.getLastSuccessfulAttempt(datasetKey, selectCorrectVerbatimSteps(steps, datasetKey).iterator().next())
             : mapper.getLastAttempt(datasetKey);
 
     return attempt.orElseThrow(
@@ -256,7 +257,7 @@ public class DefaultRegistryPipelinesHistoryTrackingService
                     executorService));
   }
 
-  private Set<StepType> prioritizeSteps(Set<StepType> steps, Dataset dataset) {
+  private Set<StepType> selectCorrectVerbatimSteps(Set<StepType> steps, Dataset dataset) {
     Set<StepType> newSteps = new HashSet<>(steps);
     if (steps.contains(StepType.TO_VERBATIM)) {
       newSteps.remove(StepType.TO_VERBATIM);
@@ -276,10 +277,37 @@ public class DefaultRegistryPipelinesHistoryTrackingService
     return newSteps;
   }
 
-  private Set<StepType> prioritizeSteps(Set<StepType> steps, UUID datasetKey) {
+  private Set<StepType> selectCorrectVerbatimSteps(Set<StepType> steps, UUID datasetKey) {
     if (steps.contains(StepType.TO_VERBATIM)) {
-      return prioritizeSteps(steps, datasetService.get(datasetKey));
+      return selectCorrectVerbatimSteps(steps, datasetService.get(datasetKey));
     }
+    return steps;
+  }
+
+  private Set<StepType> checkStepLevels(Set<StepType> steps, Dataset dataset){
+
+    PipelinesWorkflow.Graph<StepType> workflowGraph =
+      dataset.getType() == DatasetType.SAMPLING_EVENT
+        ? PipelinesWorkflow.getEventOccurrenceWorkflow()
+         : PipelinesWorkflow.getOccurrenceWorkflow();
+
+    // check each all steps are at the same level, if there is a difference only return
+    // the lowest
+    Map<StepType, Integer> level2Step = new HashMap<>();
+
+    steps.forEach(step -> {
+      if (workflowGraph.getAllNodes().contains(step)) {
+        int level = workflowGraph.getLevel(step);
+        level2Step.put(step, level);
+      }
+    });
+
+    level2Step.values().stream().min(Integer::compareTo).ifPresent(minLevel -> {
+      if (level2Step.values().stream().anyMatch(level -> level != minLevel)) {
+        LOG.warn("Steps {} are not at the same level, only the lowest level steps will be included", steps);
+        level2Step.entrySet().stream().filter(entry -> entry.getValue() == minLevel).map(Map.Entry::getKey).forEach(steps::remove);
+      }
+    });
     return steps;
   }
 
@@ -420,7 +448,12 @@ public class DefaultRegistryPipelinesHistoryTrackingService
 
     // Create Rabbit messages
     Map<StepType, PipelineBasedMessage> stepsToSend = new EnumMap<>(StepType.class);
-    for (StepType stepName : prioritizeSteps(steps, dataset)) {
+
+    // catch the case of ID,INTERPRETED
+    Set<StepType> checkedSteps = checkStepLevels(steps, dataset);
+
+    Set<StepType> prioritizedSteps = selectCorrectVerbatimSteps(checkedSteps, dataset);
+    for (StepType stepName : prioritizedSteps) {
       Optional<? extends PipelineBasedMessage> message =
           createStepMessage(stepName, process, prefix, interpretTypes, dataset);
       message.ifPresent(m -> {
@@ -565,9 +598,11 @@ public class DefaultRegistryPipelinesHistoryTrackingService
   @VisibleForTesting
   protected Set<StepType> getStepTypes(
       Set<StepType> stepsToSend, Dataset dataset, boolean excludeEventSteps, boolean onlyIncludeRequestedStep) {
+
     if (onlyIncludeRequestedStep) {
       return stepsToSend;
     }
+
     Set<StepType> finalSteps = new HashSet<>();
     if (stepsToSend.stream().anyMatch(StepType::isEventType)) {
       finalSteps.addAll(PipelinesWorkflow.getEventWorkflow().getAllNodesFor(stepsToSend));
