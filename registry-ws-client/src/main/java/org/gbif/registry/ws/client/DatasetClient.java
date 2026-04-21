@@ -36,7 +36,6 @@ import jakarta.validation.constraints.NotNull;
 
 import org.apache.commons.io.IOUtils;
 import com.fasterxml.jackson.databind.JsonNode;
-import feign.form.FormData;
 import org.springframework.cloud.openfeign.SpringQueryMap;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -48,6 +47,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.multipart.MultipartFile;
 
 @RequestMapping("dataset")
 public interface DatasetClient extends NetworkEntityClient<Dataset>, DatasetService {
@@ -127,24 +127,6 @@ public interface DatasetClient extends NetworkEntityClient<Dataset>, DatasetServ
     }
   }
 
-  default Metadata insertMetadata(UUID key, InputStream document, String contentJson) {
-    return insertMetadata(key, document, contentJson, null);
-  }
-
-  default Metadata insertMetadata(
-      UUID key, InputStream document, String contentJson, MetadataType metadataType) {
-    try {
-      return insertMetadata(
-          key,
-          new FormData(
-              MediaType.APPLICATION_OCTET_STREAM_VALUE, "document", IOUtils.toByteArray(document)),
-          contentJson,
-          metadataType);
-    } catch (IOException e) {
-      throw new IllegalArgumentException("Unreadable document", e);
-    }
-  }
-
   @RequestMapping(
       method = RequestMethod.POST,
       value = "{key}/document",
@@ -152,6 +134,15 @@ public interface DatasetClient extends NetworkEntityClient<Dataset>, DatasetServ
       produces = MediaType.APPLICATION_JSON_VALUE)
   @ResponseBody
   Metadata insertMetadata(@PathVariable("key") UUID key, @RequestBody byte[] bytes);
+
+  @Override
+  default Metadata insertMetadata(
+      UUID key, byte[] bytes, String contentJson, MetadataType metadataType) {
+    if (contentJson != null) {
+      return insertMetadata(key, new BytesMultipartFile(bytes), contentJson, metadataType);
+    }
+    return insertMetadata(key, bytes);
+  }
 
   @RequestMapping(
       method = RequestMethod.POST,
@@ -161,7 +152,7 @@ public interface DatasetClient extends NetworkEntityClient<Dataset>, DatasetServ
   @ResponseBody
   Metadata insertMetadata(
       @PathVariable("key") UUID key,
-      @RequestPart("document") FormData document,
+      @RequestPart("document") MultipartFile document,
       @RequestParam("contentJson") String contentJson,
       @RequestParam(value = "metadataType", required = false) MetadataType metadataType);
 

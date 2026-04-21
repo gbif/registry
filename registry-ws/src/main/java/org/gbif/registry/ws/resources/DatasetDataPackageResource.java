@@ -157,7 +157,7 @@ public class DatasetDataPackageResource implements DatasetDataPackageService {
     }
     datasetService.insertMetadata(
         datasetKey,
-        new ByteArrayInputStream(metadataJson.getBytes(StandardCharsets.UTF_8)),
+        metadataJson.getBytes(StandardCharsets.UTF_8),
         metadataJson,
         MetadataType.DWC_DP);
   }

@@ -127,6 +127,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.google.common.base.Strings;
 import com.google.common.io.ByteStreams;
@@ -681,16 +682,17 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset, DatasetL
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
   public Metadata insertMetadata(
       @PathVariable("key") UUID datasetKey,
-      @RequestPart("document") byte[] document,
+      @RequestPart("document") MultipartFile document,
       @RequestParam("contentJson") String contentJson,
-      @RequestParam(value = "metadataType", required = false) MetadataType metadataType) {
-    return storeMetadata(datasetKey, document, contentJson, metadataType, currentUsername());
+      @RequestParam(value = "metadataType", required = false) MetadataType metadataType)
+    throws IOException {
+    return storeMetadata(datasetKey, document.getBytes(), contentJson, metadataType, currentUsername());
   }
 
   @Override
   public Metadata insertMetadata(
-      UUID datasetKey, InputStream document, @Nullable String contentJson, @Nullable MetadataType metadataType) {
-    return storeMetadata(datasetKey, readDocumentBytes(document), contentJson, metadataType, currentUsername());
+      UUID datasetKey, byte[] document, @Nullable String contentJson, @Nullable MetadataType metadataType) {
+    return storeMetadata(datasetKey, document, contentJson, metadataType, currentUsername());
   }
 
   private Metadata storeMetadata(
