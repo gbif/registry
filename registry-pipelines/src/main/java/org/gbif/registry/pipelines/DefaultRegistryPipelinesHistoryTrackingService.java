@@ -284,7 +284,7 @@ public class DefaultRegistryPipelinesHistoryTrackingService
     return steps;
   }
 
-  private Set<StepType> checkStepLevels(Set<StepType> steps, Dataset dataset){
+  private Set<StepType> getStepsToTriggerNow(Set<StepType> steps, Dataset dataset){
 
     PipelinesWorkflow.Graph<StepType> workflowGraph =
       dataset.getType() == DatasetType.SAMPLING_EVENT
@@ -417,6 +417,7 @@ public class DefaultRegistryPipelinesHistoryTrackingService
       Set<String> interpretTypes,
       boolean excludeEventSteps,
       boolean onlyIncludeRequestedStep) {
+
     Objects.requireNonNull(datasetKey, DATASET_KEY_CANNOT_BE_NULL);
     Objects.requireNonNull(steps, "Steps can't be null");
     Objects.requireNonNull(reason, "Reason can't be null");
@@ -455,12 +456,14 @@ public class DefaultRegistryPipelinesHistoryTrackingService
     Map<StepType, PipelineBasedMessage> stepsToSend = new EnumMap<>(StepType.class);
 
     // catch the case of ID,INTERPRETED
-    Set<StepType> checkedSteps = checkStepLevels(steps, dataset);
+    Set<StepType> prioritizedSteps = selectCorrectVerbatimSteps(steps, dataset);
+    Set<StepType> toRunNow = getStepsToTriggerNow(prioritizedSteps, dataset);
 
-    Set<StepType> prioritizedSteps = selectCorrectVerbatimSteps(checkedSteps, dataset);
-    for (StepType stepName : prioritizedSteps) {
+    for (StepType stepName : toRunNow) {
+
       Optional<? extends PipelineBasedMessage> message =
           createStepMessage(stepName, process, prefix, interpretTypes, dataset);
+
       message.ifPresent(m -> {
         LOG.info("Created message for step {} : {}", stepName, m);
         stepsToSend.put(stepName, m);
@@ -481,7 +484,9 @@ public class DefaultRegistryPipelinesHistoryTrackingService
         new PipelineExecution()
             .setCreatedBy(user)
             .setRerunReason(reason)
-            .setStepsToRun(getStepTypes(stepsToSend.keySet(), dataset, excludeEventSteps, onlyIncludeRequestedStep));
+            .setStepsToRun(
+              getStepTypes(prioritizedSteps, dataset, excludeEventSteps, onlyIncludeRequestedStep)
+            );
 
     long executionKey = addPipelineExecution(process.getKey(), execution, user);
 
