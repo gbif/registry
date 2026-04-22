@@ -42,6 +42,8 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
+
 import javax.annotation.Nullable;
 import org.apache.commons.lang3.StringUtils;
 import org.gbif.api.model.common.paging.Pageable;
@@ -311,9 +313,11 @@ public class DefaultRegistryPipelinesHistoryTrackingService
       }
     });
 
-    steps.removeAll(toBeRemoved);
-    LOG.info("Steps to run after checking levels: {}, with levels: {}", steps, level2Step);
-    return steps;
+
+    Set<StepType> stepsToTriggerNow = new HashSet<>(steps);
+    stepsToTriggerNow.removeAll(toBeRemoved);
+    LOG.info("Steps to run after checking levels: {}, with levels: {}", stepsToTriggerNow, level2Step);
+    return stepsToTriggerNow;
   }
 
   /**
@@ -434,7 +438,7 @@ public class DefaultRegistryPipelinesHistoryTrackingService
       markPipelineStatusAsAborted(lastestExecution.getKey());
     }
 
-    // Checks that the pipelines is not in RUNNING state
+//     Checks that the pipelines is not in RUNNING state
     if (!markPreviousAttemptAsFailed && status == Status.RUNNING) {
       return new RunPipelineResponse.Builder()
           .setResponseStatus(RunPipelineResponse.ResponseStatus.PIPELINE_IN_SUBMITTED)
@@ -455,14 +459,22 @@ public class DefaultRegistryPipelinesHistoryTrackingService
     // Create Rabbit messages
     Map<StepType, PipelineBasedMessage> stepsToSend = new EnumMap<>(StepType.class);
 
+    LOG.info("Requested steps: {}",  steps);
+
     // catch the case of ID,INTERPRETED
     Set<StepType> prioritizedSteps = selectCorrectVerbatimSteps(steps, dataset);
+
+    LOG.info("Prioritized steps: {}", prioritizedSteps);
+
     Set<StepType> toRunNow = getStepsToTriggerNow(prioritizedSteps, dataset);
+
+    LOG.info("Steps to send messages for now: {}",  toRunNow);
 
     for (StepType stepName : toRunNow) {
 
       Optional<? extends PipelineBasedMessage> message =
-          createStepMessage(stepName, process, prefix, interpretTypes, dataset);
+          onlyIncludeRequestedStep? createStepMessageForRequestedSteps(stepName, prioritizedSteps, process, prefix, dataset)
+            :createStepMessage(stepName, process, prefix, interpretTypes, dataset);
 
       message.ifPresent(m -> {
         LOG.info("Created message for step {} : {}", stepName, m);
@@ -488,6 +500,7 @@ public class DefaultRegistryPipelinesHistoryTrackingService
               getStepTypes(prioritizedSteps, dataset, excludeEventSteps, onlyIncludeRequestedStep)
             );
 
+    // persist to the database
     long executionKey = addPipelineExecution(process.getKey(), execution, user);
 
     for (StepType step : stepsToSend.keySet()) {
@@ -522,10 +535,10 @@ public class DefaultRegistryPipelinesHistoryTrackingService
             LOG.warn("Error sending message", ex);
             stepsFailed.add(stepType);
           }
-        });
+        }
+    );
 
-    RunPipelineResponse.Builder responseBuilder =
-        RunPipelineResponse.builder().setStepsFailed(stepsFailed);
+    RunPipelineResponse.Builder responseBuilder = RunPipelineResponse.builder().setStepsFailed(stepsFailed);
     if (stepsFailed.size() == steps.size()) {
       responseBuilder
           .setResponseStatus(RunPipelineResponse.ResponseStatus.ERROR)
@@ -556,7 +569,7 @@ public class DefaultRegistryPipelinesHistoryTrackingService
       case HDFS_VIEW:
         return createInterpretedMessage(prefix, jsonMessage, stepType, interpretTypes);
       case VERBATIM_TO_IDENTIFIER:
-        return createVerbatimIdentifierMessage(prefix, jsonMessage, interpretTypes, dataset);
+        return createVerbatimIdentifierMessage(prefix, jsonMessage, dataset);
       case VERBATIM_TO_INTERPRETED:
         return createVerbatimMessage(prefix, jsonMessage, interpretTypes, dataset);
       case DWCA_TO_VERBATIM:
@@ -575,9 +588,50 @@ public class DefaultRegistryPipelinesHistoryTrackingService
     }
   }
 
+  private Optional<? extends PipelineBasedMessage> createStepMessageForRequestedSteps(
+    StepType stepType,
+    Set<StepType> requestedSteps,
+    PipelineProcess process,
+    String prefix,
+    Dataset dataset) {
+
+    Optional<PipelineStep> latestStepOpt = getLatestSuccessfulStep(process, stepType);
+
+    if (latestStepOpt.isEmpty()) {
+      LOG.warn("Can't find latest successful ingest step for the datasetKey {}", process.getDatasetKey());
+      return Optional.empty();
+    }
+
+    LOG.info("Latest successful ingest step found: {}", latestStepOpt.get());
+    String jsonMessage = latestStepOpt.get().getMessage();
+    Set<String> requestedStepsAsStrings = requestedSteps.stream().map(StepType::name).collect(Collectors.toSet());
+    switch (stepType) {
+      case INTERPRETED_TO_INDEX:
+      case FRAGMENTER:
+        return createInterpretedMessage(prefix, jsonMessage, requestedSteps.stream().map(StepType::name).collect(Collectors.toSet()));
+      case HDFS_VIEW:
+        return createInterpretedMessage(prefix, jsonMessage, requestedStepsAsStrings);
+      case VERBATIM_TO_IDENTIFIER:
+        return createVerbatimIdentifierMessage(prefix, jsonMessage, dataset, requestedStepsAsStrings);
+      case VERBATIM_TO_INTERPRETED:
+        return createVerbatimMessage(prefix, jsonMessage, requestedStepsAsStrings);
+      case DWCA_TO_VERBATIM:
+        return deserializeMessage(jsonMessage, PipelinesDwcaMessage.class);
+      case ABCD_TO_VERBATIM:
+        return deserializeMessage(jsonMessage, PipelinesAbcdMessage.class);
+      case XML_TO_VERBATIM:
+        return deserializeMessage(jsonMessage, PipelinesXmlMessage.class);
+      case EVENTS_VERBATIM_TO_INTERPRETED:
+        return deserializeMessage(jsonMessage, PipelinesEventsMessage.class);
+      case EVENTS_INTERPRETED_TO_INDEX:
+      case EVENTS_HDFS_VIEW:
+      default:
+        return Optional.empty();
+    }
+  }
+
   private Optional<? extends PipelineBasedMessage> createVerbatimIdentifierMessage(String prefix,
                                                                                    String jsonMessage,
-                                                                                   Set<String> interpretTypes,
                                                                                    Dataset dataset) {
     PipelinesVerbatimMessage message = deserializeMessage(jsonMessage, PipelinesVerbatimMessage.class)
       .orElse(null);
@@ -605,11 +659,28 @@ public class DefaultRegistryPipelinesHistoryTrackingService
     return Optional.of(message);
   }
 
+  private Optional<? extends PipelineBasedMessage> createVerbatimIdentifierMessage(String prefix,
+                                                                                   String jsonMessage,
+                                                                                   Dataset dataset,
+                                                                                   Set<String> requestedSteps) {
+    PipelinesVerbatimMessage message = deserializeMessage(jsonMessage, PipelinesVerbatimMessage.class)
+      .orElse(null);
+
+    if (message == null) {
+      return Optional.empty();
+    }
+    Optional.ofNullable(prefix).ifPresent(message::setResetPrefix);
+    message.setPipelineSteps(requestedSteps);
+
+    return Optional.of(message);
+  }
+
   @VisibleForTesting
   protected Set<StepType> getStepTypes(
       Set<StepType> stepsToSend, Dataset dataset, boolean excludeEventSteps, boolean onlyIncludeRequestedStep) {
 
     if (onlyIncludeRequestedStep) {
+      LOG.warn("Only include requested steps {}", stepsToSend);
       return stepsToSend;
     }
 
@@ -630,6 +701,8 @@ public class DefaultRegistryPipelinesHistoryTrackingService
     if (stepsToSend.stream().noneMatch(StepType::isVerbatimType)) {
       finalSteps.remove(StepType.FRAGMENTER);
     }
+
+    LOG.warn("finalSteps {}", finalSteps);
     return finalSteps;
   }
 
@@ -685,8 +758,23 @@ public class DefaultRegistryPipelinesHistoryTrackingService
     return Optional.of(message);
   }
 
+
+  private Optional<PipelineBasedMessage> createVerbatimMessage(
+    String prefix, String jsonMessage, Set<String> requestedSteps) {
+    PipelinesVerbatimMessage message =
+      deserializeMessage(jsonMessage, PipelinesVerbatimMessage.class).orElse(null);
+    if (message == null) {
+      return Optional.empty();
+    }
+    Optional.ofNullable(prefix).ifPresent(message::setResetPrefix);
+    message.setPipelineSteps(requestedSteps);
+
+    return Optional.of(message);
+  }
+
   private Optional<PipelineBasedMessage> createInterpretedMessage(
       String prefix, String jsonMessage, StepType stepType, Set<String> interpretTypes) {
+
     PipelinesInterpretedMessage message =
         deserializeMessage(jsonMessage, PipelinesInterpretedMessage.class).orElse(null);
     if (message == null) {
@@ -698,6 +786,20 @@ public class DefaultRegistryPipelinesHistoryTrackingService
     if (interpretTypes != null && !interpretTypes.isEmpty()) {
       message.setInterpretTypes(interpretTypes);
     }
+
+    return Optional.of(message);
+  }
+
+  private Optional<PipelineBasedMessage> createInterpretedMessage(
+    String prefix, String jsonMessage, Set<String> requestedSteps) {
+
+    PipelinesInterpretedMessage message =
+      deserializeMessage(jsonMessage, PipelinesInterpretedMessage.class).orElse(null);
+    if (message == null) {
+      return Optional.empty();
+    }
+    Optional.ofNullable(prefix).ifPresent(message::setResetPrefix);
+    message.setPipelineSteps(requestedSteps);
 
     return Optional.of(message);
   }
@@ -781,6 +883,12 @@ public class DefaultRegistryPipelinesHistoryTrackingService
         .getStepsToRun()
         .forEach(
             st -> {
+
+              LOG.info(
+                  "Adding pipeline step for executionKey {}, stepType: {}, state: {}",
+                  pipelineExecution.getKey(),
+                  st,
+                  Status.SUBMITTED);
               PipelineStep step =
                   new PipelineStep()
                       .setType(st)
