@@ -304,6 +304,12 @@ public class DefaultRegistryPipelinesHistoryTrackingService
       }
     });
 
+    if (level2Step.isEmpty()) {
+      LOG.info(
+        "None of the requested steps {} are present in the selected workflow graph, returning the original set unchanged",
+        steps);
+      return new HashSet<>(steps);
+    }
     Integer lowestLevel = level2Step.values().stream().min(Integer::compareTo).get();
     LOG.info("Steps to run: {}, with levels: {}, lowest level: {}", steps, level2Step, lowestLevel);
     List<StepType> toBeRemoved =  new ArrayList<>();
