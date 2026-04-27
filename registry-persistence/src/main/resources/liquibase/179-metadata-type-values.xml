@@ -5,7 +5,7 @@
 
   <changeSet id="179" author="auzun" runInTransaction="false">
     <sql>
-      ALTER TYPE enum_metadata_type ADD VALUE IF NOT EXISTS 'COLDP';
+      ALTER TYPE enum_metadata_type ADD VALUE IF NOT EXISTS 'COL_DP';
       ALTER TYPE enum_metadata_type ADD VALUE IF NOT EXISTS 'DWC_DP';
     </sql>
   </changeSet>

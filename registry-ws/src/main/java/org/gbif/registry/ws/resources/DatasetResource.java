@@ -27,7 +27,6 @@ import org.gbif.api.model.common.search.SearchResponse;
 import org.gbif.api.model.crawler.DatasetProcessStatus;
 import org.gbif.api.model.registry.Contact;
 import org.gbif.api.model.registry.Dataset;
-import org.gbif.api.model.registry.Endpoint;
 import org.gbif.api.model.registry.Grid;
 import org.gbif.api.model.registry.Identifier;
 import org.gbif.api.model.registry.LenientEquals;
@@ -116,6 +115,7 @@ import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StreamUtils;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -683,16 +683,19 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset, DatasetL
   public Metadata insertMetadata(
       @PathVariable("key") UUID datasetKey,
       @RequestPart("document") MultipartFile document,
-      @RequestParam("contentJson") String contentJson,
-      @RequestParam(value = "metadataType", required = false) MetadataType metadataType)
+      @RequestPart(value = "contentJson", required = false) String contentJson,
+      @RequestPart(value = "metadataType", required = false) MetadataType metadataType)
     throws IOException {
-    return storeMetadata(datasetKey, document.getBytes(), contentJson, metadataType, currentUsername());
+    return storeMetadata(datasetKey, StreamUtils.copyToByteArray(document.getResource().getInputStream()), contentJson, metadataType, currentUsername());
   }
 
-  @Override
   public Metadata insertMetadata(
-      UUID datasetKey, byte[] document, @Nullable String contentJson, @Nullable MetadataType metadataType) {
-    return storeMetadata(datasetKey, document, contentJson, metadataType, currentUsername());
+      UUID datasetKey, InputStream document, @Nullable String contentJson, @Nullable MetadataType metadataType) {
+    try {
+      return storeMetadata(datasetKey, document.readAllBytes(), contentJson, metadataType, currentUsername());
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
   }
 
   private Metadata storeMetadata(
@@ -1176,15 +1179,28 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset, DatasetL
       byte[] data,
       @Nullable String normalizedContentJson,
       @Nullable MetadataType metadataTypeHint) {
+
     if (metadataTypeHint != null) {
       return metadataTypeHint;
     }
 
-    MetadataType documentType = detectMetadataTypeFromDocument(data, normalizedContentJson);
-    if (documentType != null) {
-      return documentType;
+    // 1. Always check if the byte[] data is XML (EML or DC) first.
+    // DWC_DP/COLDP archives can contain EML, and EML takes precedence.
+    try (InputStream in = new ByteArrayInputStream(data)) {
+      MetadataType xmlType = MetadataUtils.detectParserType(in);
+      if (xmlType != null) {
+        return xmlType;
+      }
+    } catch (IllegalArgumentException | IOException e) {
+      // Not a valid XML document. Ignore exception and fallback to JSON check below.
     }
 
+    // 2. If not XML, check for structured metadata JSON (DWC_DP or COLDP).
+    if (normalizedContentJson != null) {
+      return detectStructuredMetadataType(normalizedContentJson);
+    }
+
+    // 3. Fallback to dataset endpoints.
     MetadataType endpointType = detectMetadataTypeFromEndpoints(dataset);
     if (endpointType != null) {
       return endpointType;
@@ -1199,60 +1215,30 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset, DatasetL
       return null;
     }
 
-    List<Endpoint> prioritizedEndpoints = new ArrayList<>();
-    for (Endpoint endpoint : dataset.getEndpoints()) {
-      if (endpoint.getType() != null
-          && EndpointPriorityComparator.PRIORITIES.contains(endpoint.getType())) {
-        prioritizedEndpoints.add(endpoint);
-      }
-    }
-
-    prioritizedEndpoints.sort(Collections.reverseOrder(new EndpointPriorityComparator()));
-    for (Endpoint endpoint : prioritizedEndpoints) {
-      MetadataType metadataType = mapEndpointTypeToMetadataType(endpoint.getType());
-      if (metadataType != null) {
-        return metadataType;
-      }
-    }
-
-    return null;
+    return dataset.getEndpoints().stream()
+        .filter(e -> e.getType() != null && EndpointPriorityComparator.PRIORITIES.contains(e.getType()))
+        .sorted(Collections.reverseOrder(new EndpointPriorityComparator()))
+        .map(e -> mapEndpointTypeToMetadataType(e.getType()))
+        .filter(Objects::nonNull)
+        .findFirst()
+        .orElse(null);
   }
 
   @Nullable
   private MetadataType mapEndpointTypeToMetadataType(EndpointType endpointType) {
-    switch (endpointType) {
-      case COLDP:
-        return MetadataType.COLDP;
-      case DWC_DP:
-        return MetadataType.DWC_DP;
-      default:
-        return null;
+    if (endpointType == EndpointType.COLDP) {
+      return MetadataType.COL_DP;
+    } else if (endpointType == EndpointType.DWC_DP) {
+      return MetadataType.DWC_DP;
     }
-  }
-
-  private MetadataType detectMetadataTypeFromDocument(
-      byte[] data, @Nullable String normalizedContentJson) {
-    try (InputStream in = new ByteArrayInputStream(data)) {
-      MetadataType type = MetadataUtils.detectParserType(in);
-      if (type == null && normalizedContentJson != null) {
-        return detectStructuredMetadataType(normalizedContentJson);
-      }
-      return type;
-    } catch (IllegalArgumentException e) {
-      if (normalizedContentJson != null) {
-        return detectStructuredMetadataType(normalizedContentJson);
-      }
-      throw e;
-    } catch (IOException e) {
-      throw new IllegalArgumentException("Unreadable document", e);
-    }
+    return null;
   }
 
   private MetadataType detectStructuredMetadataType(String normalizedContentJson) {
     try {
       JsonNode parsedContentJson = OBJECT_MAPPER.readTree(normalizedContentJson);
       JsonNode resourcesNode = parsedContentJson.path("resources");
-      return resourcesNode.isArray() ? MetadataType.DWC_DP : MetadataType.COLDP;
+      return resourcesNode.isArray() ? MetadataType.DWC_DP : MetadataType.COL_DP;
     } catch (JsonProcessingException e) {
       throw new IllegalArgumentException("Unreadable contentJson", e);
     }
@@ -1415,7 +1401,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset, DatasetL
     if (isStructuredMetadataType(metadata.getType())) {
       return ResponseEntity.ok()
           .contentType(MediaType.APPLICATION_JSON)
-          .body(getMetadataDocumentJson(metadataKey).getBytes(StandardCharsets.UTF_8));
+          .body(metadata.getContentJson().getBytes(StandardCharsets.UTF_8));
     }
 
     byte[] content = registryDatasetService.getMetadataDocument(metadataKey);
@@ -1428,26 +1414,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset, DatasetL
   }
 
   private boolean isStructuredMetadataType(@Nullable MetadataType metadataType) {
-    return metadataType == MetadataType.COLDP || metadataType == MetadataType.DWC_DP;
-  }
-
-  public String getMetadataDocumentJson(@PathVariable("metadataKey") int metadataKey) {
-    String contentJson = getStoredMetadataContentJson(metadataKey);
-    if (contentJson == null) {
-      throw new NotFoundException(
-          "Entity not found for uri: /dataset/metadata/" + metadataKey + "/document",
-          URI.create("/dataset/metadata/{metadataKey}/document"));
-    }
-    return contentJson;
-  }
-
-  @Override
-  public String getMetadataContentJson(@PathVariable("metadataKey") int metadataKey) {
-    return getStoredMetadataContentJson(metadataKey);
-  }
-
-  private String getStoredMetadataContentJson(int metadataKey) {
-    return metadataMapper.getContentJson(metadataKey);
+    return metadataType == MetadataType.COL_DP || metadataType == MetadataType.DWC_DP;
   }
 
   @Operation(

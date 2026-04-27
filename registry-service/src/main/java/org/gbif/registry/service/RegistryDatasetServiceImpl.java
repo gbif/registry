@@ -23,10 +23,7 @@ import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Metadata;
 import org.gbif.api.model.registry.Organization;
 import org.gbif.api.util.CitationGenerator;
-import org.gbif.api.vocabulary.Language;
-import org.gbif.api.vocabulary.License;
 import org.gbif.api.vocabulary.MetadataType;
-import org.gbif.crawler.coldp.metadata.ColDpMetadata;
 import org.gbif.crawler.coldp.metadata.ColDpMetadataParser;
 import org.gbif.crawler.dwcdp.metadata.DwcDpMetadataParser;
 import org.gbif.metadata.dc.parse.DatasetDcParser;
@@ -40,10 +37,6 @@ import org.gbif.registry.persistence.mapper.handler.ByteArrayWrapper;
 import org.gbif.registry.persistence.mapper.params.DatasetListParams;
 
 import java.io.IOException;
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.ZoneOffset;
-import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -311,8 +304,8 @@ public class RegistryDatasetServiceImpl implements RegistryDatasetService {
             return DatasetEmlParser.build(metadataDocument);
           case DWC_DP:
             return DwcDpMetadataParser.build(metadataDocument);
-          case COLDP:
-            return buildDatasetFromColdpMetadata(metadataDocument);
+          case COL_DP:
+            return ColDpMetadataParser.build(metadataDocument);
         }
       } catch (IOException | IllegalArgumentException e) {
         // Not sure if we should not propagate an Exception to return a 500 instead
@@ -326,31 +319,6 @@ public class RegistryDatasetServiceImpl implements RegistryDatasetService {
   @Override
   public List<Metadata> listMetadata(UUID datasetKey, @Nullable MetadataType type) {
     return metadataMapper.list(datasetKey, type);
-  }
-
-  private Dataset buildDatasetFromColdpMetadata(byte[] metadataDocument) throws IOException {
-    Dataset dataset = ColDpMetadataParser.build(metadataDocument);
-    ColDpMetadata metadata = ColDpMetadataParser.buildMetadata(metadataDocument);
-
-    if (!Strings.isNullOrEmpty(metadata.getIssued())) {
-      dataset.setPubDate(parseStructuredMetadataDate(metadata.getIssued()));
-    }
-    if (!Strings.isNullOrEmpty(metadata.getLanguage())) {
-      dataset.setLanguage(Language.fromIsoCode(metadata.getLanguage()));
-    }
-    License.fromString(metadata.getLicense())
-        .or(() -> License.fromLicenseUrl(metadata.getLicense()))
-        .ifPresent(dataset::setLicense);
-
-    return dataset;
-  }
-
-  private java.util.Date parseStructuredMetadataDate(String value) {
-    try {
-      return java.util.Date.from(LocalDate.parse(value).atStartOfDay().toInstant(ZoneOffset.UTC));
-    } catch (DateTimeParseException e) {
-      return java.util.Date.from(Instant.parse(value));
-    }
   }
 
   @NullToNotFound

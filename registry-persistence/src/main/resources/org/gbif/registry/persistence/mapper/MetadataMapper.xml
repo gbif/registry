@@ -7,7 +7,7 @@
   </sql>
 
   <sql id="METADATA_FIELDS">
-    key,<include refid="org.gbif.registry.persistence.mapper.MetadataMapper.WRITABLE_METADATA_FIELDS"/>
+    key,<include refid="org.gbif.registry.persistence.mapper.MetadataMapper.WRITABLE_METADATA_FIELDS"/>, content_json
   </sql>
 
   <!-- Auto-mapping and eager loading of sub resources  -->

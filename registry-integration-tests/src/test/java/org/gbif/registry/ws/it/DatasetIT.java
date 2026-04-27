@@ -1474,16 +1474,16 @@ class DatasetIT extends NetworkEntityIT<Dataset> {
   public void testMetadataContentJsonPersistence(ServiceType serviceType) throws IOException {
     DatasetService service = (DatasetService) getService(serviceType);
     Dataset dataset = newAndCreate(1, serviceType);
-    List<Metadata> metadata = service.listMetadata(dataset.getKey(), MetadataType.COLDP);
+    List<Metadata> metadata = service.listMetadata(dataset.getKey(), MetadataType.COL_DP);
     assertTrue(metadata.isEmpty(), "No COLDP uploaded yet");
 
     String contentJson = coldpContentJson();
     Metadata insertedMetadata =
         service.insertMetadata(
             dataset.getKey(),
-          FileUtils.classpathStream("metadata/coldp-metadata.json").readAllBytes(),
+          FileUtils.classpathStream("metadata/coldp-metadata.json"),
             contentJson,
-            MetadataType.COLDP);
+            MetadataType.COL_DP);
 
     // Stored source document representation through /metadata/{key}/document
     String storedDocument =
@@ -1497,14 +1497,14 @@ class DatasetIT extends NetworkEntityIT<Dataset> {
 
     assertEquals(
         OBJECT_MAPPER.readTree(contentJson),
-        OBJECT_MAPPER.readTree(service.getMetadataContentJson(insertedMetadata.getKey())));
+        OBJECT_MAPPER.readTree(service.getMetadataDocument(insertedMetadata.getKey())));
 
     Metadata duplicateMetadata =
         service.insertMetadata(
             dataset.getKey(),
-            FileUtils.classpathStream("metadata/coldp-metadata.json").readAllBytes(),
+          FileUtils.classpathStream("metadata/coldp-metadata.json"),
             coldpContentJsonPretty(),
-            MetadataType.COLDP);
+            MetadataType.COL_DP);
     assertEquals(insertedMetadata.getKey(), duplicateMetadata.getKey());
   }
 
@@ -1545,13 +1545,13 @@ class DatasetIT extends NetworkEntityIT<Dataset> {
     Metadata insertedMetadata =
         service.insertMetadata(
             dataset.getKey(),
-            FileUtils.classpathStream("metadata/dwcdp-metadata.json").readAllBytes(),
+          FileUtils.classpathStream("metadata/dwcdp-metadata.json"),
             dwcdpContentJson(), MetadataType.DWC_DP);
 
     assertEquals(MetadataType.DWC_DP, insertedMetadata.getType());
     assertEquals(
         OBJECT_MAPPER.readTree(dwcdpContentJson()),
-        OBJECT_MAPPER.readTree(service.getMetadataContentJson(insertedMetadata.getKey())));
+        OBJECT_MAPPER.readTree(service.getMetadata(insertedMetadata.getKey()).getContentJson()));
   }
 
   @ParameterizedTest
@@ -1564,7 +1564,7 @@ class DatasetIT extends NetworkEntityIT<Dataset> {
     Metadata insertedMetadata =
         service.insertMetadata(
             dataset.getKey(),
-            FileUtils.classpathStream("metadata/dwcdp-metadata.json").readAllBytes(),
+          FileUtils.classpathStream("metadata/dwcdp-metadata.json"),
             dwcdpContentJsonPretty(), MetadataType.DWC_DP);
 
     assertEquals(MetadataType.DWC_DP, insertedMetadata.getType());
@@ -1572,7 +1572,7 @@ class DatasetIT extends NetworkEntityIT<Dataset> {
     Metadata duplicateMetadata =
         service.insertMetadata(
             dataset.getKey(),
-            FileUtils.classpathStream("metadata/dwcdp-metadata.json").readAllBytes(),
+          FileUtils.classpathStream("metadata/dwcdp-metadata.json"),
             dwcdpContentJson(),MetadataType.DWC_DP);
     assertEquals(insertedMetadata.getKey(), duplicateMetadata.getKey());
   }
@@ -1634,12 +1634,12 @@ class DatasetIT extends NetworkEntityIT<Dataset> {
 
     String contentJson = coldpContentJson();
     Metadata insertedMetadata =
-        service.insertMetadata(dataset.getKey(), FileUtils.classpathStream(resource).readAllBytes(), contentJson, MetadataType.COLDP);
+        service.insertMetadata(dataset.getKey(), FileUtils.classpathStream(resource), contentJson, MetadataType.COL_DP);
 
-    assertEquals(MetadataType.COLDP, insertedMetadata.getType());
+    assertEquals(MetadataType.COL_DP, insertedMetadata.getType());
     assertEquals(
         OBJECT_MAPPER.readTree(contentJson),
-        OBJECT_MAPPER.readTree(service.getMetadataContentJson(insertedMetadata.getKey())));
+        OBJECT_MAPPER.readTree(service.getMetadata(insertedMetadata.getKey()).getContentJson()));
 
     Dataset updatedDataset = service.get(dataset.getKey());
     assertEquals("ColDP Metadata Title", updatedDataset.getTitle());
@@ -1653,7 +1653,7 @@ class DatasetIT extends NetworkEntityIT<Dataset> {
     assertEquals("doi:10.1234/coldp.test", updatedDataset.getIdentifiers().get(0).getIdentifier());
 
     Metadata duplicateMetadata =
-        service.insertMetadata(dataset.getKey(), FileUtils.classpathStream(resource).readAllBytes(), coldpContentJsonPretty(), MetadataType.COLDP);
+        service.insertMetadata(dataset.getKey(), FileUtils.classpathStream(resource), coldpContentJsonPretty(), MetadataType.COL_DP);
     assertEquals(insertedMetadata.getKey(), duplicateMetadata.getKey());
   }
 
@@ -1663,9 +1663,9 @@ class DatasetIT extends NetworkEntityIT<Dataset> {
     Dataset dataset = newAndCreate(1, serviceType);
 
     Metadata insertedMetadata =
-        service.insertMetadata(dataset.getKey(), FileUtils.classpathStream(resource).readAllBytes(), coldpContentJson(), MetadataType.COLDP);
+        service.insertMetadata(dataset.getKey(), FileUtils.classpathStream(resource), coldpContentJson(), MetadataType.COL_DP);
 
-    assertEquals(MetadataType.COLDP, insertedMetadata.getType());
+    assertEquals(MetadataType.COL_DP, insertedMetadata.getType());
   }
 
   private String coldpContentJson() {

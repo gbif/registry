@@ -136,12 +136,13 @@ public interface DatasetClient extends NetworkEntityClient<Dataset>, DatasetServ
   Metadata insertMetadata(@PathVariable("key") UUID key, @RequestBody byte[] bytes);
 
   @Override
-  default Metadata insertMetadata(
-      UUID key, byte[] bytes, String contentJson, MetadataType metadataType) {
-    if (contentJson != null) {
-      return insertMetadata(key, new BytesMultipartFile(bytes), contentJson, metadataType);
+  default Metadata insertMetadata(UUID key, InputStream document, String contentJson, MetadataType metadataType) {
+    try {
+      MultipartFile multipartFile = new BytesMultipartFile(org.apache.commons.io.IOUtils.toByteArray(document));
+      return insertMetadata(key, multipartFile, contentJson, metadataType);
+    } catch (IOException e) {
+      throw new IllegalArgumentException("Unreadable document", e);
     }
-    return insertMetadata(key, bytes);
   }
 
   @RequestMapping(
@@ -153,8 +154,8 @@ public interface DatasetClient extends NetworkEntityClient<Dataset>, DatasetServ
   Metadata insertMetadata(
       @PathVariable("key") UUID key,
       @RequestPart("document") MultipartFile document,
-      @RequestParam("contentJson") String contentJson,
-      @RequestParam(value = "metadataType", required = false) MetadataType metadataType);
+      @RequestPart(value = "contentJson", required = false) String contentJson,
+      @RequestPart(value = "metadataType", required = false) MetadataType metadataType);
 
   @Override
   default InputStream getMetadataDocument(UUID key) {
@@ -178,7 +179,7 @@ public interface DatasetClient extends NetworkEntityClient<Dataset>, DatasetServ
   default InputStream getMetadataDocument(int key) {
     Metadata metadata = getMetadata(key);
     if (metadata != null
-        && (metadata.getType() == MetadataType.COLDP || metadata.getType() == MetadataType.DWC_DP)) {
+        && (metadata.getType() == MetadataType.COL_DP || metadata.getType() == MetadataType.DWC_DP)) {
       JsonNode json = getMetadataDocumentJson(key);
       return json == null
           ? null
@@ -201,12 +202,6 @@ public interface DatasetClient extends NetworkEntityClient<Dataset>, DatasetServ
       produces = MediaType.APPLICATION_JSON_VALUE)
   @ResponseBody
   JsonNode getMetadataDocumentJson(@PathVariable("key") int key);
-
-  @Override
-  default String getMetadataContentJson(int key) {
-    JsonNode json = getMetadataDocumentJson(key);
-    return json == null ? null : json.toString();
-  }
 
   @RequestMapping(
       method = RequestMethod.GET,
