@@ -32,7 +32,6 @@ import org.gbif.ws.json.JacksonJsonObjectMapperProvider;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
@@ -48,7 +47,6 @@ import org.apache.parquet.avro.AvroParquetReader;
 import org.apache.parquet.hadoop.ParquetReader;
 import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.conf.Configuration;
-// removed AvroFSInput import - reading Parquet instead of Avro
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.LocatedFileStatus;
 import org.apache.hadoop.fs.RemoteIterator;
