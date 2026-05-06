@@ -31,4 +31,6 @@ public class IssuesConfig {
   @NotEmpty private String githubPassword;
   @NotEmpty public String hdfsSiteConfig;
   @NotEmpty public String hdfsPrefix = "hdfs://gbif-hdfs";
+  @NotEmpty public String ingestDirectoryBasePath = "/data/ingest";
+  @NotEmpty public String environment = "";
 }

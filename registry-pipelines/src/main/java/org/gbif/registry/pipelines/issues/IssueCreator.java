@@ -42,13 +42,11 @@ import java.util.stream.Collectors;
 
 import jakarta.validation.constraints.NotNull;
 
-import org.apache.avro.file.DataFileReader;
-import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericRecord;
-import org.apache.avro.io.DatumReader;
+import org.apache.parquet.avro.AvroParquetReader;
+import org.apache.parquet.hadoop.ParquetReader;
 import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.AvroFSInput;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.LocatedFileStatus;
 import org.apache.hadoop.fs.RemoteIterator;
@@ -86,6 +84,7 @@ public class IssueCreator {
   private static final String ATTEMPT_LABEL_TEMPLATE = "Attempt %s";
   private static final String PUBLISHER_LABEL_TEMPLATE = "pub: %s";
   private static final String INSTALLATION_LABEL_TEMPLATE = "inst: %s";
+  private static final String ENVIRONMENT_LABEL_TEMPLATE = "env: %s";
   private static final UnaryOperator<String> PORTAL_URL_NORMALIZER =
       url -> {
         if (url != null && url.endsWith("/")) {
@@ -164,8 +163,24 @@ public class IssueCreator {
         organizationMapper.getLightweight(dataset.getPublishingOrganizationKey());
     Installation installation = installationMapper.getLightweight(dataset.getInstallationKey());
 
-    List<String> newIds = readIdentifiersFromAvro(datasetKey, attempt);
-    List<String> oldIds = readIdentifiersFromES(datasetKey);
+    boolean errorLoadingNewIds = false;
+    boolean errorLoadingExistingIds = false;
+    List<String> newIds = new ArrayList<>();
+    List<String> oldIds = new ArrayList<>();
+
+    try {
+      newIds = readIdentifiersFromAvro(datasetKey, attempt);
+    } catch (Exception e) {
+      errorLoadingNewIds = true;
+      log.error("Error reading identifiers from avro dataset", e);
+    }
+
+    try {
+      oldIds = readIdentifiersFromES(datasetKey);
+    }  catch (Exception e) {
+      errorLoadingExistingIds = true;
+      log.error("Error reading identifiers from ES dataset", e);
+    }
 
     String body =
         buildIssueBody(
@@ -178,7 +193,9 @@ public class IssueCreator {
             organization,
             installation,
             newIds,
-            oldIds);
+            oldIds,
+            errorLoadingNewIds,
+            errorLoadingExistingIds);
     return Issue.builder()
         .title(String.format(IDS_VALIDATION_FAILED_TITLE, dataset.getTitle()))
         .body(body)
@@ -189,6 +206,7 @@ public class IssueCreator {
                 String.format(COUNTRY_LABEL_TEMPLATE, organization.getCountry()),
                 String.format(PUBLISHER_LABEL_TEMPLATE, organization.getKey()),
                 String.format(INSTALLATION_LABEL_TEMPLATE, installation.getKey()),
+                String.format(ENVIRONMENT_LABEL_TEMPLATE, issuesConfig.environment),
                 getCurrentTimestamp()))
         .build();
   }
@@ -204,7 +222,10 @@ public class IssueCreator {
       Organization organization,
       Installation installation,
       List<String> newIds,
-      List<String> oldIds) {
+      List<String> oldIds,
+      boolean errorLoadingNewIds,
+      boolean errorLoadingExistingIds
+      ) {
 
     long occCount =
         cubeWsClient.get(new LinkedMultiValueMap<>(Collections.singletonMap("datasetKey", Collections.singletonList(datasetKey.toString()))));
@@ -259,6 +280,13 @@ public class IssueCreator {
                 datasetKey.toString()))
         .append(".");
 
+    if (errorLoadingNewIds) {
+      body.append(NEW_LINE).append(NEW_LINE).append("**WARNING - Error loading new identifiers from Parquet files.**");
+    }
+    if (errorLoadingExistingIds) {
+      body.append(NEW_LINE).append(NEW_LINE).append("**WARNING - Error loading new identifiers from Elastic.**");
+    }
+
     return body.toString();
   }
 
@@ -270,8 +298,23 @@ public class IssueCreator {
       throw new IllegalArgumentException(DATASET_NOT_FOUND_FOR_KEY + datasetKey);
     }
 
-    List<String> newIds = readIdentifiersFromAvro(datasetKey, attempt);
-    List<String> oldIds = readIdentifiersFromES(datasetKey);
+    boolean errorLoadingNewIds = false;
+    boolean errorLoadingExistingIds = false;
+    List<String> newIds = new ArrayList<>();
+    List<String> oldIds = new ArrayList<>();
+
+    try {
+      newIds = readIdentifiersFromAvro(datasetKey, attempt);
+    } catch (Exception e) {
+      errorLoadingNewIds = true;
+      log.error("Error reading identifiers from Avro dataset", e);
+    }
+    try {
+      oldIds = readIdentifiersFromES(datasetKey);
+    }  catch (Exception e) {
+      errorLoadingExistingIds = true;
+      log.error("Error reading identifiers from ES dataset", e);
+    }
 
     Organization organization =
         organizationMapper.getLightweight(dataset.getPublishingOrganizationKey());
@@ -288,7 +331,9 @@ public class IssueCreator {
             organization,
             installation,
             newIds,
-            oldIds);
+            oldIds,
+            errorLoadingNewIds,
+            errorLoadingExistingIds);
 
     return GithubApiClient.IssueComment.builder().body(body).build();
   }
@@ -381,49 +426,68 @@ public class IssueCreator {
 
   @SneakyThrows
   private List<String> readIdentifiersFromAvro(UUID datasetKey, int attempt) {
-    FileSystem fs =
-        FileSystem.get(
-            URI.create(issuesConfig.hdfsPrefix), getHdfsConfiguration(issuesConfig.hdfsSiteConfig));
-
-    org.apache.hadoop.fs.Path identifiersPath =
-        new org.apache.hadoop.fs.Path(
-            issuesConfig.hdfsPrefix
-                + "/data/ingest/"
-                + datasetKey
-                + "/"
-                + attempt
-                + "/occurrence/identifier");
 
     List<String> identifiers = new ArrayList<>();
-    try {
-      RemoteIterator<LocatedFileStatus> iterator = fs.listFiles(identifiersPath, false);
-      while (iterator.hasNext() && identifiers.size() < NUM_SAMPLE_IDS) {
-        LocatedFileStatus fileStatus = iterator.next();
-        if (fileStatus.isFile()) {
+    FileSystem fs =
+      FileSystem.get(
+        URI.create(issuesConfig.hdfsPrefix), getHdfsConfiguration(issuesConfig.hdfsSiteConfig));
 
-          DatumReader<GenericRecord> datumReader = new GenericDatumReader<>();
-          try (DataFileReader<GenericRecord> dataFileReader =
-              new DataFileReader<>(
-                  new AvroFSInput(
-                      fs.open(fileStatus.getPath()),
-                      fs.getContentSummary(fileStatus.getPath()).getLength()),
-                  datumReader)) {
+    org.apache.hadoop.fs.Path absentIdentifiersPath =
+      new org.apache.hadoop.fs.Path(
+        issuesConfig.hdfsPrefix
+          + issuesConfig.ingestDirectoryBasePath
+          + "/"
+          + datasetKey
+          + "/"
+          + attempt
+          + "/identifiers_absent");
 
-            GenericRecord genericRecord = null;
-            while (dataFileReader.hasNext() && identifiers.size() < NUM_SAMPLE_IDS) {
-              genericRecord = dataFileReader.next(genericRecord);
-              if (genericRecord.get("id") != null) {
-                identifiers.add(genericRecord.get("id").toString());
+    org.apache.hadoop.fs.Path invalidIdentifiersPath =
+      new org.apache.hadoop.fs.Path(
+        issuesConfig.hdfsPrefix
+          + issuesConfig.ingestDirectoryBasePath
+          + "/"
+          + datasetKey
+          + "/"
+          + attempt
+          + "/identifiers_invalid");
+
+    org.apache.hadoop.fs.Path validIdentifiersPath =
+      new org.apache.hadoop.fs.Path(
+        issuesConfig.hdfsPrefix
+          + issuesConfig.ingestDirectoryBasePath
+          + "/"
+          + datasetKey
+          + "/"
+          + attempt
+          + "/identifiers_valid");
+
+    for (org.apache.hadoop.fs.Path identifiersPath :
+      List.of(absentIdentifiersPath, invalidIdentifiersPath, validIdentifiersPath)) {
+      try {
+        RemoteIterator<LocatedFileStatus> iterator = fs.listFiles(identifiersPath, false);
+        while (iterator.hasNext() && identifiers.size() < NUM_SAMPLE_IDS) {
+          LocatedFileStatus fileStatus = iterator.next();
+          if (fileStatus.isFile() && fileStatus.getPath().getName().endsWith(".parquet")) {
+            // Use AvroParquetReader to read parquet files containing Avro GenericRecords
+            org.apache.hadoop.fs.Path parquetPath = fileStatus.getPath();
+            try (ParquetReader<GenericRecord> reader =
+                   AvroParquetReader.<GenericRecord>builder(parquetPath).withConf(fs.getConf()).build()) {
+              GenericRecord record;
+              while ((record = reader.read()) != null && identifiers.size() < NUM_SAMPLE_IDS) {
+                if (record.get("id") != null) {
+                  identifiers.add(record.get("id").toString());
+                }
               }
             }
           }
         }
+      } catch (FileNotFoundException ex) {
+        throw new IllegalArgumentException(
+          "Identifier parquet files not found for dataset " + datasetKey + " and attempt " + attempt
+            + ". Error " + ex.getMessage(), ex);
       }
-    } catch (FileNotFoundException ex) {
-      throw new IllegalArgumentException(
-          "Identifier avro files not found for dataset " + datasetKey + " and attempt " + attempt);
     }
-
     return identifiers;
   }
 
