@@ -30,6 +30,7 @@ import org.gbif.registry.doi.util.RegistryDoiUtils;
 import org.gbif.registry.domain.ws.DerivedDatasetUsage;
 import org.gbif.registry.persistence.mapper.DatasetMapper;
 import org.gbif.registry.persistence.mapper.MetadataMapper;
+import org.gbif.registry.persistence.mapper.NetworkMapper;
 import org.gbif.registry.persistence.mapper.OrganizationMapper;
 import org.gbif.registry.persistence.mapper.handler.ByteArrayWrapper;
 import org.gbif.registry.persistence.mapper.params.DatasetListParams;
@@ -83,6 +84,7 @@ public class RegistryDatasetServiceImpl implements RegistryDatasetService {
 
   public RegistryDatasetServiceImpl(
       MetadataMapper metadataMapper,
+      NetworkMapper networkMapper,
       OrganizationMapper organizationMapper,
       DatasetMapper datasetMapper) {
     this.metadataMapper = metadataMapper;
@@ -104,11 +106,7 @@ public class RegistryDatasetServiceImpl implements RegistryDatasetService {
                 new CacheLoader<UUID, Set<UUID>>() {
                   @Override
                   public Set<UUID> load(UUID key) {
-                    return datasetMapper
-                        .list(DatasetListParams.builder().networkKey(key).build())
-                        .stream()
-                        .map(Dataset::getKey)
-                        .collect(Collectors.toSet());
+                    return new HashSet<>(networkMapper.listConstituentsBrief(key));
                   }
                 });
   }
