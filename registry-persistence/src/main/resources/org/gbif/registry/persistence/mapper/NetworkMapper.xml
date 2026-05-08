@@ -426,4 +426,16 @@
     )
     ORDER BY LOWER(n.title)
   </select>
+
+  <!-- All not-deleted datasets in a network. -->
+  <select id="listConstituentsBrief" resultType="java.util.UUID">
+    SELECT d.key
+    FROM network n
+    INNER JOIN dataset_network dn ON n.key = dn.network_key
+    INNER JOIN dataset d ON dn.dataset_key = d.key AND d.deleted IS NULL
+    WHERE
+      n.deleted IS NULL AND
+      network_key = #{networkKey,jdbcType=OTHER}
+    ORDER BY d.key
+  </select>
 </mapper>
