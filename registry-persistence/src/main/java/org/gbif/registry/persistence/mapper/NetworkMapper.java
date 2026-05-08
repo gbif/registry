@@ -49,4 +49,9 @@ public interface NetworkMapper extends BaseNetworkEntityMapper<Network> {
    * @return The list of networks, with only their key and title populated.
    */
   List<IptNetworkBriefResponse> listNetworksBrief();
+
+  /**
+   * @return The datasets (key only) within a network.
+   */
+  List<UUID> listConstituentsBrief(@Param("networkKey") UUID networkKey);
 }
