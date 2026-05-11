@@ -52,6 +52,14 @@
             <groupId>org.gbif</groupId>
             <artifactId>gbif-api</artifactId>
         </dependency>
+      <dependency>
+        <groupId>org.gbif</groupId>
+        <artifactId>gbif-metadata-profile-dwcdp</artifactId>
+      </dependency>
+        <dependency>
+            <groupId>org.gbif</groupId>
+            <artifactId>gbif-metadata-profile-coldp</artifactId>
+        </dependency>
         <dependency>
             <groupId>org.gbif</groupId>
             <artifactId>gbif-metadata-profile-eml</artifactId>

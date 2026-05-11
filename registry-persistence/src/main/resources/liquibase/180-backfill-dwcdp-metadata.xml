@@ -1,0 +1,40 @@
+<databaseChangeLog
+  xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+  <changeSet id="180" author="auzun" runInTransaction="false" ignore="true">
+    <sql splitStatements="false" stripComments="true">
+      <![CDATA[
+        -- Manual migration script: backfill DWC-DP records from dp_dataset into metadata.
+        -- This is intentionally ignore=true and should be run manually where needed.
+        INSERT INTO metadata (
+          dataset_key,
+          type,
+          created,
+          created_by,
+          modified,
+          modified_by,
+          content,
+          content_json
+        )
+        SELECT
+          dp.dataset_key,
+          'DWC_DP'::enum_metadata_type,
+          COALESCE(dp.modified, now()),
+          'SYSTEM',
+          COALESCE(dp.modified, now()),
+          'SYSTEM',
+          convert_to(dp.metadata::text, 'UTF8'),
+          dp.metadata
+        FROM dp_dataset dp
+        WHERE NOT EXISTS (
+          SELECT 1
+          FROM metadata m
+          WHERE m.dataset_key = dp.dataset_key
+            AND m.type = 'DWC_DP'::enum_metadata_type
+        );
+      ]]>
+    </sql>
+  </changeSet>
+</databaseChangeLog>

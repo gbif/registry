@@ -32,7 +32,6 @@ import org.gbif.api.model.occurrence.SqlDownloadRequest;
 import org.gbif.api.model.pipelines.PipelineExecution;
 import org.gbif.api.model.pipelines.PipelineProcess;
 import org.gbif.api.model.pipelines.PipelineStep;
-import org.gbif.api.model.predicate.Predicate;
 import org.gbif.api.model.registry.*;
 import org.gbif.api.model.registry.metasync.MetasyncHistory;
 import org.gbif.api.vocabulary.Country;
@@ -248,10 +247,10 @@ public class MyBatisConfiguration {
       configuration
         .getTypeAliasRegistry()
         .registerAlias("DwcA", Dataset.DwcA.class);
-
       configuration
         .getTypeAliasRegistry()
         .registerAlias("DataPackage", Dataset.DataPackage.class);
+
     };
   }
 }

@@ -43,8 +43,19 @@ public interface MetadataMapper {
    */
   ByteArrayWrapper getDocument(@Param("key") int key);
 
+  /**
+   * Return the structured JSON content of a metadata entry.
+   *
+   * @param key of the metadata record to fetch
+   * @return the JSON content as text, or {@code null} if it couldn't be found
+   */
+  String getContentJson(@Param("key") int key);
+
   /** Stores a new metadata document with its source document as a byte array exactly as it was. */
-  int create(@Param("meta") Metadata metadata, @Param("data") byte[] content);
+  int create(
+      @Param("meta") Metadata metadata,
+      @Param("data") byte[] content,
+      @Param("contentJson") @Nullable String contentJson);
 
   void delete(@Param("key") int key);
 

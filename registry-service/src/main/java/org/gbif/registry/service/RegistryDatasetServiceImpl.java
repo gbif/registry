@@ -24,6 +24,8 @@ import org.gbif.api.model.registry.Metadata;
 import org.gbif.api.model.registry.Organization;
 import org.gbif.api.util.CitationGenerator;
 import org.gbif.api.vocabulary.MetadataType;
+import org.gbif.crawler.coldp.metadata.ColDpMetadataParser;
+import org.gbif.crawler.dwcdp.metadata.DwcDpMetadataParser;
 import org.gbif.metadata.dc.parse.DatasetDcParser;
 import org.gbif.metadata.eml.parse.DatasetEmlParser;
 import org.gbif.registry.doi.util.RegistryDoiUtils;
@@ -298,6 +300,10 @@ public class RegistryDatasetServiceImpl implements RegistryDatasetService {
             return DatasetDcParser.build(metadataDocument);
           case EML:
             return DatasetEmlParser.build(metadataDocument);
+          case DWC_DP:
+            return DwcDpMetadataParser.build(metadataDocument);
+          case COL_DP:
+            return ColDpMetadataParser.build(metadataDocument);
         }
       } catch (IOException | IllegalArgumentException e) {
         // Not sure if we should not propagate an Exception to return a 500 instead

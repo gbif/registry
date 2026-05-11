@@ -14,8 +14,8 @@
 package org.gbif.registry.ws.client;
 
 import org.gbif.api.annotation.Trim;
-import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.common.paging.PageableBase;
+import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.service.registry.DatasetDataPackageService;
 
@@ -34,7 +34,6 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 @RequestMapping("dataset")
 public interface DatasetDataPackageClient extends DatasetDataPackageService {
-
 
   @PostMapping(value = "{datasetKey}/datapackage", consumes = MediaType.APPLICATION_JSON_VALUE)
   @Override
@@ -68,5 +67,4 @@ public interface DatasetDataPackageClient extends DatasetDataPackageService {
   @ResponseBody
   @Override
   PagingResponse<Dataset.DataPackage> list(@SpringQueryMap PageableBase params);
-
 }

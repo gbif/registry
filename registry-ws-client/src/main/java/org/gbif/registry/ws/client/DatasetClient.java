@@ -28,12 +28,14 @@ import org.gbif.api.vocabulary.MetadataType;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.UUID;
 
 import jakarta.validation.constraints.NotNull;
 
 import org.apache.commons.io.IOUtils;
+import com.fasterxml.jackson.databind.JsonNode;
 import org.springframework.cloud.openfeign.SpringQueryMap;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -43,7 +45,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.multipart.MultipartFile;
 
 @RequestMapping("dataset")
 public interface DatasetClient extends NetworkEntityClient<Dataset>, DatasetService {
@@ -132,6 +136,28 @@ public interface DatasetClient extends NetworkEntityClient<Dataset>, DatasetServ
   Metadata insertMetadata(@PathVariable("key") UUID key, @RequestBody byte[] bytes);
 
   @Override
+  default Metadata insertMetadata(UUID key, InputStream document, String contentJson, MetadataType metadataType) {
+    try {
+      MultipartFile multipartFile = new BytesMultipartFile(org.apache.commons.io.IOUtils.toByteArray(document));
+      return insertMetadata(key, multipartFile, contentJson, metadataType);
+    } catch (IOException e) {
+      throw new IllegalArgumentException("Unreadable document", e);
+    }
+  }
+
+  @RequestMapping(
+      method = RequestMethod.POST,
+      value = "{key}/document",
+      consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+      produces = MediaType.APPLICATION_JSON_VALUE)
+  @ResponseBody
+  Metadata insertMetadata(
+      @PathVariable("key") UUID key,
+      @RequestPart("document") MultipartFile document,
+      @RequestPart(value = "contentJson", required = false) String contentJson,
+      @RequestPart(value = "metadataType", required = false) MetadataType metadataType);
+
+  @Override
   default InputStream getMetadataDocument(UUID key) {
     byte[] bytes = getMetadataDocumentAsBytes(key);
 
@@ -142,18 +168,40 @@ public interface DatasetClient extends NetworkEntityClient<Dataset>, DatasetServ
     return null;
   }
 
-  @RequestMapping(method = RequestMethod.GET, value = "{key}/document")
+  @RequestMapping(
+      method = RequestMethod.GET,
+      value = "{key}/document",
+      produces = MediaType.APPLICATION_XML_VALUE)
   @ResponseBody
   byte[] getMetadataDocumentAsBytes(@PathVariable("key") UUID key);
 
   @Override
   default InputStream getMetadataDocument(int key) {
-    return new ByteArrayInputStream(getMetadataDocumentAsBytes(key));
+    Metadata metadata = getMetadata(key);
+    if (metadata != null
+        && (metadata.getType() == MetadataType.COL_DP || metadata.getType() == MetadataType.DWC_DP)) {
+      JsonNode json = getMetadataDocumentJson(key);
+      return json == null
+          ? null
+          : new ByteArrayInputStream(json.toString().getBytes(StandardCharsets.UTF_8));
+    }
+    byte[] bytes = getMetadataDocumentAsBytes(key);
+    return bytes == null ? null : new ByteArrayInputStream(bytes);
   }
 
-  @RequestMapping(method = RequestMethod.GET, value = "metadata/{key}/document")
+  @RequestMapping(
+      method = RequestMethod.GET,
+      value = "metadata/{key}/document",
+      produces = MediaType.APPLICATION_XML_VALUE)
   @ResponseBody
   byte[] getMetadataDocumentAsBytes(@PathVariable("key") int key);
+
+  @RequestMapping(
+      method = RequestMethod.GET,
+      value = "metadata/{key}/document",
+      produces = MediaType.APPLICATION_JSON_VALUE)
+  @ResponseBody
+  JsonNode getMetadataDocumentJson(@PathVariable("key") int key);
 
   @RequestMapping(
       method = RequestMethod.GET,
