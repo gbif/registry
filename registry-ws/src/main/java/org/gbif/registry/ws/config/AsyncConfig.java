@@ -13,10 +13,16 @@
  */
 package org.gbif.registry.ws.config;
 
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+import org.springframework.beans.factory.annotation.Qualifier;
+import java.util.concurrent.Executor;
+import io.micrometer.core.instrument.MeterRegistry;
 
 @Profile("!test")
 @Configuration
@@ -25,5 +31,35 @@ public class AsyncConfig {
 
   public AsyncConfig() {
     SecurityContextHolder.setStrategyName(SecurityContextHolder.MODE_INHERITABLETHREADLOCAL);
+  }
+
+  @Value("${registry.async.corePoolSize:10}")
+  private int corePoolSize;
+
+  @Value("${registry.async.maxPoolSize:50}")
+  private int maxPoolSize;
+
+  @Value("${registry.async.queueCapacity:500}")
+  private int queueCapacity;
+
+  @Bean
+  @Qualifier("boundedTaskExecutor")
+  public Executor boundedTaskExecutor(@org.springframework.beans.factory.annotation.Autowired(required = false) MeterRegistry registry) {
+    ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+    executor.setCorePoolSize(corePoolSize);
+    executor.setMaxPoolSize(maxPoolSize);
+    executor.setQueueCapacity(queueCapacity);
+    executor.setThreadNamePrefix("gbif-dataset-async-");
+    executor.initialize();
+
+    // register gauges to monitor executor
+    java.util.concurrent.ThreadPoolExecutor pool = executor.getThreadPoolExecutor();
+    if (pool != null && registry != null) {
+      registry.gauge("registry.async.executor.active", pool, p -> (double) p.getActiveCount());
+      registry.gauge("registry.async.executor.poolSize", pool, p -> (double) p.getPoolSize());
+      registry.gauge("registry.async.executor.queueSize", pool.getQueue(), q -> (double) q.size());
+    }
+
+    return executor;
   }
 }

@@ -24,7 +24,7 @@ import org.gbif.api.service.registry.DatasetSearchService;
 import java.util.Collections;
 import java.util.List;
 
-public class DatasetSearchServiceStub implements DatasetSearchService {
+public class DatasetSearchServiceStub implements DatasetSearchService, org.gbif.registry.search.dataset.service.AsyncDatasetSearchService {
 
   @Override
   public SearchResponse<DatasetSearchResult, DatasetSearchParameter> search(
@@ -38,5 +38,17 @@ public class DatasetSearchServiceStub implements DatasetSearchService {
   @Override
   public List<DatasetSuggestResult> suggest(DatasetSuggestRequest datasetSuggestRequest) {
     return Collections.emptyList();
+  }
+
+  @Override
+  public java.util.concurrent.CompletableFuture<SearchResponse<DatasetSearchResult, DatasetSearchParameter>> searchAsync(
+      DatasetSearchRequest datasetSearchRequest) {
+    return java.util.concurrent.CompletableFuture.completedFuture(search(datasetSearchRequest));
+  }
+
+  @Override
+  public java.util.concurrent.CompletableFuture<java.util.List<DatasetSuggestResult>> suggestAsync(
+      DatasetSuggestRequest datasetSuggestRequest) {
+    return java.util.concurrent.CompletableFuture.completedFuture(suggest(datasetSuggestRequest));
   }
 }
