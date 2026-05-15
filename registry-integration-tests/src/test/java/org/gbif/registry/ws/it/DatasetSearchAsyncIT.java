@@ -1,5 +1,6 @@
 package org.gbif.registry.ws.it;
 
+import org.gbif.registry.search.dataset.service.AsyncDatasetSearchService;
 import org.gbif.registry.search.test.ElasticsearchTestContainerConfiguration;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 import org.gbif.api.model.registry.search.DatasetSuggestRequest;
@@ -18,12 +19,14 @@ public class DatasetSearchAsyncIT extends BaseItTest {
 
   @Autowired
   @Qualifier("datasetSearchServiceEs")
-  private org.gbif.registry.search.dataset.service.AsyncDatasetSearchService asyncSearchService;
+  private AsyncDatasetSearchService asyncSearchService;
 
+  @Autowired
   public DatasetSearchAsyncIT(SimplePrincipalProvider simplePrincipalProvider,
-      ElasticsearchTestContainerConfiguration elasticsearchTestContainer) {
+    ElasticsearchTestContainerConfiguration elasticsearchTestContainer) {
     super(simplePrincipalProvider, elasticsearchTestContainer);
   }
+
 
   @Test
   public void testSuggestAsyncReturns() throws Exception {
