@@ -13,6 +13,9 @@
  */
 package org.gbif.registry.ws.config;
 
+import java.util.concurrent.ThreadPoolExecutor;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -44,7 +47,7 @@ public class AsyncConfig {
 
   @Bean
   @Qualifier("boundedTaskExecutor")
-  public Executor boundedTaskExecutor(@org.springframework.beans.factory.annotation.Autowired(required = false) MeterRegistry registry) {
+  public Executor boundedTaskExecutor(@Autowired(required = false) MeterRegistry registry) {
     ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
     executor.setCorePoolSize(corePoolSize);
     executor.setMaxPoolSize(maxPoolSize);
@@ -53,8 +56,8 @@ public class AsyncConfig {
     executor.initialize();
 
     // register gauges to monitor executor
-    java.util.concurrent.ThreadPoolExecutor pool = executor.getThreadPoolExecutor();
-    if (pool != null && registry != null) {
+    ThreadPoolExecutor pool = executor.getThreadPoolExecutor();
+    if (registry != null) {
       registry.gauge("registry.async.executor.active", pool, p -> (double) p.getActiveCount());
       registry.gauge("registry.async.executor.poolSize", pool, p -> (double) p.getPoolSize());
       registry.gauge("registry.async.executor.queueSize", pool.getQueue(), q -> (double) q.size());

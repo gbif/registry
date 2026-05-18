@@ -66,6 +66,7 @@ import org.gbif.registry.persistence.mapper.params.DatasetListParams;
 import org.gbif.registry.persistence.mapper.params.NetworkListParams;
 import org.gbif.registry.persistence.mapper.pipelines.PipelineProcessMapper;
 import org.gbif.registry.persistence.service.MapperServiceLocator;
+import org.gbif.registry.search.dataset.service.AsyncDatasetSearchService;
 import org.gbif.registry.service.RegistryDatasetService;
 import org.gbif.registry.service.WithMyBatis;
 import org.gbif.registry.service.collections.utils.Vocabularies;
@@ -191,7 +192,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset, DatasetL
 
   private final RegistryDatasetService registryDatasetService;
   private final DatasetSearchService searchService;
-  private final org.gbif.registry.search.dataset.service.AsyncDatasetSearchService asyncSearchService;
+  private final AsyncDatasetSearchService asyncSearchService;
   private final MetadataMapper metadataMapper;
   private final DatasetMapper datasetMapper;
   private final ContactMapper contactMapper;
@@ -427,16 +428,16 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset, DatasetL
   @ApiResponse(responseCode = "400", description = "Invalid search query provided")
   @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("search")
-  public java.util.concurrent.CompletableFuture<SearchResponse<DatasetSearchResult, DatasetSearchParameter>> search(
+  public CompletableFuture<SearchResponse<DatasetSearchResult, DatasetSearchParameter>> search(
       DatasetSearchRequest searchRequest) {
     // Prefer async service to avoid blocking servlet threads. Falls back to sync service if async not available.
     if (asyncSearchService != null) {
       return asyncSearchService.searchAsync(searchRequest);
     }
     if (asyncExecutor != null) {
-      return java.util.concurrent.CompletableFuture.supplyAsync(() -> searchService.search(searchRequest), asyncExecutor);
+      return CompletableFuture.supplyAsync(() -> searchService.search(searchRequest), asyncExecutor);
     }
-    return java.util.concurrent.CompletableFuture.supplyAsync(() -> searchService.search(searchRequest));
+    return CompletableFuture.supplyAsync(() -> searchService.search(searchRequest));
   }
 
   @Operation(
@@ -492,9 +493,9 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset, DatasetL
       return asyncSearchService.suggestAsync(suggestRequest);
     }
     if (asyncExecutor != null) {
-      return java.util.concurrent.CompletableFuture.supplyAsync(() -> searchService.suggest(suggestRequest), asyncExecutor);
+      return CompletableFuture.supplyAsync(() -> searchService.suggest(suggestRequest), asyncExecutor);
     }
-    return java.util.concurrent.CompletableFuture.supplyAsync(() -> searchService.suggest(suggestRequest));
+    return CompletableFuture.supplyAsync(() -> searchService.suggest(suggestRequest));
   }
 
   @Operation(

@@ -13,6 +13,8 @@
  */
 package org.gbif.registry.ws.resources.external;
 
+import java.util.concurrent.Executor;
+
 import org.gbif.api.annotation.NullToNotFound;
 import org.gbif.api.model.collections.AlternativeCode;
 import org.gbif.api.vocabulary.Country;
@@ -37,6 +39,8 @@ import java.util.stream.Collectors;
 import jakarta.annotation.Nullable;
 
 import org.jetbrains.annotations.NotNull;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -61,9 +65,9 @@ public class IDigBioExternalResource {
   private final java.util.concurrent.Executor asyncExecutor;
 
   public IDigBioExternalResource(IDigBioMapper idigBioMapper,
-      @org.springframework.beans.factory.annotation.Autowired(required = false)
-          @org.springframework.beans.factory.annotation.Qualifier("boundedTaskExecutor")
-          java.util.concurrent.Executor asyncExecutor) {
+          @Autowired(required = false)
+          @Qualifier("boundedTaskExecutor")
+          Executor asyncExecutor) {
     this.idigBioMapper = idigBioMapper;
     this.asyncExecutor = asyncExecutor;
   }

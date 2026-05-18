@@ -35,6 +35,7 @@ import co.elastic.clients.elasticsearch.core.SearchRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import lombok.extern.slf4j.Slf4j;
@@ -81,21 +82,7 @@ public class DatasetSearchServiceEs implements DatasetSearchService, AsyncDatase
     } catch (Exception ex) {
       // If the thread was interrupted while waiting on the low-level future, restore the
       // interrupt flag and provide a clearer error.
-      Throwable cause = ex instanceof RuntimeException ? ex.getCause() : ex;
-      if (cause instanceof InterruptedException) {
-        Thread.currentThread().interrupt();
-        log.warn("Search was interrupted", ex);
-        throw new RuntimeException("Search was interrupted", ex);
-      }
-
-      log.error("Error while searching datasets: {} - {}", ex.getClass().getName(), ex.getMessage());
-      Throwable cause2 = ex.getCause();
-      int depth2 = 0;
-      while (cause2 != null && depth2 < 10) {
-        log.error("cause[{}]: {} - {}", depth2, cause2.getClass().getName(), cause2.getMessage());
-        cause2 = cause2.getCause();
-        depth2++;
-      }
+      this.handleInterruptedException(ex);
       throw new RuntimeException(ex);
     }
   }
@@ -104,6 +91,7 @@ public class DatasetSearchServiceEs implements DatasetSearchService, AsyncDatase
    * Asynchronous version of search that returns a CompletableFuture. Useful to avoid blocking
    * request threads and to surface more detailed errors upstream.
    */
+  @Async("boundedTaskExecutor")
   public CompletableFuture<SearchResponse<DatasetSearchResult, DatasetSearchParameter>> searchAsync(
       DatasetSearchRequest datasetSearchRequest) {
     if (elasticsearchAsyncClient == null) {
@@ -119,22 +107,10 @@ public class DatasetSearchServiceEs implements DatasetSearchService, AsyncDatase
           elasticsearchAsyncClient.search(searchRequest, ObjectNode.class);
 
       return esFuture.thenApply(response -> esResponseParser.buildSearchResponse(response, datasetSearchRequest))
-          .exceptionally(ex -> {
-            // If interrupted, restore flag
-            Throwable cause = ex instanceof RuntimeException ? ex.getCause() : ex;
-            if (cause instanceof InterruptedException) {
-              Thread.currentThread().interrupt();
-            }
-            log.error("Async search failed: {} - {}", ex.getClass().getName(), ex.getMessage());
-            Throwable nested = ex.getCause();
-            int d = 0;
-            while (nested != null && d < 10) {
-              log.error("cause[{}]: {} - {}", d, nested.getClass().getName(), nested.getMessage());
-              nested = nested.getCause();
-              d++;
-            }
-            throw new RuntimeException("Async search failed", ex);
-          });
+        .exceptionally(ex -> {
+          this.handleInterruptedException(ex);
+          throw new RuntimeException("Async suggest failed", ex);
+        });
     } catch (Exception ex) {
       return CompletableFuture.failedFuture(ex);
     }
@@ -143,6 +119,7 @@ public class DatasetSearchServiceEs implements DatasetSearchService, AsyncDatase
   /**
    * Asynchronous version of suggest that returns a CompletableFuture of the suggestion results.
    */
+  @Async("boundedTaskExecutor")
   public CompletableFuture<java.util.List<DatasetSuggestResult>> suggestAsync(
       DatasetSuggestRequest datasetSuggestRequest) {
     if (elasticsearchAsyncClient == null) {
@@ -176,22 +153,26 @@ public class DatasetSearchServiceEs implements DatasetSearchService, AsyncDatase
             esResponseParser.buildSearchAutocompleteResponse(response, modifiedRequest);
         return autocompleteResponse.getResults();
       }).exceptionally(ex -> {
-        Throwable cause = ex instanceof RuntimeException ? ex.getCause() : ex;
-        if (cause instanceof InterruptedException) {
-          Thread.currentThread().interrupt();
-        }
-        log.error("Async suggest failed: {} - {}", ex.getClass().getName(), ex.getMessage());
-        Throwable nested = ex.getCause();
-        int d = 0;
-        while (nested != null && d < 10) {
-          log.error("cause[{}]: {} - {}", d, nested.getClass().getName(), nested.getMessage());
-          nested = nested.getCause();
-          d++;
-        }
+        this.handleInterruptedException(ex);
         throw new RuntimeException("Async suggest failed", ex);
       });
     } catch (Exception ex) {
       return CompletableFuture.failedFuture(ex);
+    }
+  }
+
+  private void handleInterruptedException(Throwable ex) {
+    Throwable cause = ex instanceof RuntimeException ? ex.getCause() : ex;
+    if (cause instanceof InterruptedException) {
+      Thread.currentThread().interrupt();
+    }
+    log.error("Async suggest failed: {} - {}", ex.getClass().getName(), ex.getMessage());
+    Throwable nested = ex.getCause();
+    int d = 0;
+    while (nested != null && d < 10) {
+      log.error("cause[{}]: {} - {}", d, nested.getClass().getName(), nested.getMessage());
+      nested = nested.getCause();
+      d++;
     }
   }
 
