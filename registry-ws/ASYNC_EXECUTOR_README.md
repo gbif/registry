@@ -17,9 +17,9 @@ The executor can be tuned via the following configuration keys (defaults shown):
 # Tune the bounded task executor
 registry:
   async:
-    corePoolSize: 20
-    maxPoolSize: 100
-    queueCapacity: 1000
+    corePoolSize: 10
+    maxPoolSize: 50
+    queueCapacity: 500
 ```
 
 If you use Spring Boot, these configuration keys can also be set as environment variables by converting the property path to uppercase with dots replaced by underscores, e.g. `REGISTRY_ASYNC_COREPOOLSIZE`.
