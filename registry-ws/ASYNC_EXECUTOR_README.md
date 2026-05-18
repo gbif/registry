@@ -107,7 +107,7 @@ Next steps / suggestions
 Location
 --------
 This README was added at:
-`/Users/xrc439/dev/gbif/registry/registry-ws/ASYNC_EXECUTOR_README.md`
+`registry-ws/ASYNC_EXECUTOR_README.md`
 
 
 If you want any edits to this README (more Prometheus/Grafana examples, JSON error body samples, or a sample Alertmanager rule for saturated executor), tell me which items to add and I'll update the file.
