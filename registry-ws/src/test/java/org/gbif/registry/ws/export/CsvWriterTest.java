@@ -39,7 +39,9 @@ import java.io.StringWriter;
 import java.math.BigDecimal;
 import java.net.URI;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
 import java.time.OffsetDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
@@ -59,6 +61,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class CsvWriterTest {
+
+  private static final DateTimeFormatter CSV_DATE_FORMAT =
+      DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
   /** Functional interface to test a single line. */
   private interface AssertElement<T> {
@@ -131,12 +136,20 @@ public class CsvWriterTest {
     datasetSearchResult.setPublishingOrganizationKey(UUID.randomUUID());
     datasetSearchResult.setPublishingOrganizationTitle("PublishingOrganizationTitle" + consecutive);
     datasetSearchResult.setPublishingCountry(Country.COSTA_RICA);
+    datasetSearchResult.setPublicationDate(
+        Date.from(LocalDate.of(2020, 1, consecutive).atStartOfDay(ZoneOffset.UTC).toInstant()));
+    datasetSearchResult.setModified(
+        Date.from(LocalDate.of(2021, 6, consecutive).atStartOfDay(ZoneOffset.UTC).toInstant()));
     datasetSearchResult.setEndorsingNodeKey(UUID.randomUUID());
     datasetSearchResult.setNetworkKeys(Arrays.asList(UUID.randomUUID(), UUID.randomUUID()));
     datasetSearchResult.setProjectIdentifier("project" + consecutive);
     datasetSearchResult.setRecordCount(consecutive);
     datasetSearchResult.setNameUsagesCount(consecutive);
     return datasetSearchResult;
+  }
+
+  private static String formatCsvDate(Date date) {
+    return CSV_DATE_FORMAT.format(date.toInstant().atOffset(ZoneOffset.UTC));
   }
 
   /** Test one DatasetSearchResult against its expected exported data. */
@@ -153,19 +166,21 @@ public class CsvWriterTest {
     assertEquals(datasetSearchResult.getPublishingOrganizationKey().toString(), line[9]);
     assertEquals(datasetSearchResult.getPublishingOrganizationTitle(), line[10]);
     assertEquals(datasetSearchResult.getPublishingCountry().getIso2LetterCode(), line[11]);
-    assertEquals(datasetSearchResult.getEndorsingNodeKey().toString(), line[12]);
+    assertEquals(formatCsvDate(datasetSearchResult.getPublicationDate()), line[12]);
+    assertEquals(formatCsvDate(datasetSearchResult.getModified()), line[13]);
+    assertEquals(datasetSearchResult.getEndorsingNodeKey().toString(), line[14]);
     assertTrue(
         datasetSearchResult
             .getNetworkKeys()
             .containsAll(
-                Arrays.stream(line[13].split(CsvWriter.ARRAY_DELIMITER))
+                Arrays.stream(line[15].split(CsvWriter.ARRAY_DELIMITER))
                     .map(UUID::fromString)
                     .collect(Collectors.toList())));
-    assertEquals(datasetSearchResult.getProjectIdentifier(), line[14]);
-    assertEquals(datasetSearchResult.getRecordCount(), Integer.parseInt(line[15]));
+    assertEquals(datasetSearchResult.getProjectIdentifier(), line[16]);
+    assertEquals(datasetSearchResult.getRecordCount(), Integer.parseInt(line[17]));
     // Last characters has carriage return \r
     assertEquals(
-        datasetSearchResult.getNameUsagesCount(), Integer.parseInt(line[16].replace("\r", "")));
+        datasetSearchResult.getNameUsagesCount(), Integer.parseInt(line[18].replace("\r", "")));
   }
 
   @Test
