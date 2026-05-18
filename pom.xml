@@ -179,7 +179,7 @@
     <!-- Plugin versions -->
     <spring-boot-maven-plugin.version>${spring-boot.version}</spring-boot-maven-plugin.version>
     <maven-shade-plugin.version>3.6.1</maven-shade-plugin.version>
-    <parquet.version>1.12.3</parquet.version>
+    <parquet.version>1.15.2</parquet.version>
   </properties>
 
   <dependencyManagement>
