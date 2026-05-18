@@ -62,6 +62,7 @@ public class LegacyResourceConstants {
   public static final String CAMTRAP_DP_SERVICE_TYPE_1 = "CAMTRAP_DP";
   public static final String CAMTRAP_DP_SERVICE_TYPE_2 = "CAMTRAP-DP";
   public static final String COLDP_SERVICE_TYPE = "COLDP";
+  public static final String DWCDP_SERVICE_TYPE = "DWC-DP";
 
   // web service paging request size
   public static final int WS_PAGE_SIZE = 100;

@@ -771,6 +771,12 @@ public class LegacyDataset extends Dataset implements LegacyEntity {
             }
             // only 1 is expected
             break;
+          } else if (LegacyResourceConstants.DWCDP_SERVICE_TYPE.equals(type)) {
+            Endpoint endpoint = createEndpoint(url, EndpointType.DWC_DP);
+            if (endpoint != null) {
+              dataPackageEndpoint = endpoint;
+            }
+            break;
           }
         }
       }
@@ -779,7 +785,8 @@ public class LegacyDataset extends Dataset implements LegacyEntity {
 
   /**
    * Creates a new Endpoint, or retrieves an existing Endpoint from the dataset. This method assumes
-   * that the dataset only has 1 endpoint for each type: EML, DWC_ARCHIVE, CAMTRAP_DP or COLDP.
+   * that the dataset only has 1 endpoint for each type: EML, DWC_ARCHIVE, CAMTRAP_DP, COLDP or
+   * DWC_DP.
    *
    * @param url Endpoint URL
    * @param type Endpoint type
@@ -808,12 +815,12 @@ public class LegacyDataset extends Dataset implements LegacyEntity {
   }
 
   /**
-   * Return the DatasetType from the Dataset's endpoints, defaulting to type METADATA if type
-   * OCCURRENCE, CHECKLIST or SAMPLING_EVENT could not be resolved.
+   * Resolves {@link DatasetType} from legacy IPT service type parameters.
    *
-   * @return the DatasetType, defaulting to type METADATA if type OCCURRENCE, CHECKLIST or
-   *     SAMPLING_EVENT could not be resolved
+   * @return resolved type, {@code null} for DWC-DP-only resources, or {@link DatasetType#METADATA}
+   *     when no known service type is present
    */
+  @Nullable
   public DatasetType resolveType() {
     if (serviceTypes != null) {
       if (serviceTypes.contains(LegacyResourceConstants.CHECKLIST_SERVICE_TYPE_1)
@@ -827,6 +834,8 @@ public class LegacyDataset extends Dataset implements LegacyEntity {
         return DatasetType.OCCURRENCE;
       } else if (serviceTypes.contains(LegacyResourceConstants.SAMPLING_EVENT_SERVICE_TYPE)) {
         return DatasetType.SAMPLING_EVENT;
+      } else if (serviceTypes.contains(LegacyResourceConstants.DWCDP_SERVICE_TYPE)) {
+        return null;
       }
     }
     return DatasetType.METADATA;
