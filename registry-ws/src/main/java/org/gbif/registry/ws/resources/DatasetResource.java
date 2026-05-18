@@ -217,7 +217,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset, DatasetL
       EventManager eventManager,
       RegistryDatasetService registryDatasetService,
       @Qualifier("datasetSearchServiceEs") DatasetSearchService searchService,
-      @Qualifier("datasetSearchServiceEs") org.gbif.registry.search.dataset.service.AsyncDatasetSearchService asyncSearchService,
+      @Autowired(required = false) @Qualifier("datasetSearchServiceEs") org.gbif.registry.search.dataset.service.AsyncDatasetSearchService asyncSearchService,
       DatasetDoiDataCiteHandlingService doiDataCiteHandlingService,
       DataCiteMetadataBuilderService metadataBuilderService,
       DoiIssuingService doiIssuingService,
