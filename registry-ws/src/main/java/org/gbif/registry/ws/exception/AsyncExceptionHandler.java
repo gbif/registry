@@ -63,11 +63,5 @@ public class AsyncExceptionHandler {
     String message = cause == null ? ex.getMessage() : cause.getMessage();
     return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(message);
   }
-
-  @ExceptionHandler(IllegalArgumentException.class)
-  public ResponseEntity<String> handleIllegalArgument(IllegalArgumentException ex) {
-    meterRegistry.counter("registry.async.exceptions", "type", "illegal_argument", "cause", ex.getClass().getSimpleName(), "status", "400").increment();
-    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
-  }
 }
 
