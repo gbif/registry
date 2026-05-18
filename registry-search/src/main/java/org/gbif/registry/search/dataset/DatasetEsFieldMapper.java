@@ -150,6 +150,8 @@ public class DatasetEsFieldMapper implements EsFieldMapper<DatasetSearchParamete
       "publishingOrganizationKey",
       "publishingOrganizationTitle",
       "publishingCountry",
+      "pubDate",
+      "modified",
       "endorsingNodeKey",
       "hostingOrganizationKey",
       "hostingOrganizationTitle",

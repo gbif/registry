@@ -44,6 +44,7 @@ import org.gbif.api.vocabulary.Language;
 import org.gbif.api.vocabulary.License;
 import org.gbif.api.vocabulary.MaintenanceUpdateFrequency;
 import org.gbif.api.vocabulary.MetadataType;
+import org.gbif.registry.identity.service.IdentityService;
 import org.gbif.registry.search.dataset.indexing.DatasetRealtimeIndexer;
 import org.gbif.registry.search.test.DatasetSearchUpdateUtils;
 import org.gbif.registry.search.test.ElasticsearchTestContainerConfiguration;
@@ -54,6 +55,8 @@ import org.gbif.registry.ws.client.DatasetClient;
 import org.gbif.registry.ws.client.InstallationClient;
 import org.gbif.registry.ws.client.NodeClient;
 import org.gbif.registry.ws.client.OrganizationClient;
+import org.gbif.registry.ws.it.fixtures.RequestTestFixture;
+import org.gbif.registry.ws.it.fixtures.TestConstants;
 import org.gbif.registry.ws.resources.DatasetResource;
 import org.gbif.utils.file.FileUtils;
 import org.gbif.ws.NotFoundException;
@@ -84,12 +87,14 @@ import org.apache.commons.beanutils.BeanUtils;
 import org.apache.ibatis.io.Resources;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.test.web.servlet.ResultActions;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.CharStreams;
@@ -103,6 +108,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
  * This is parameterized to run the same test routines for the following:
@@ -129,6 +135,8 @@ class DatasetIT extends NetworkEntityIT<Dataset> {
   private final DatasetRealtimeIndexer datasetRealtimeIndexer;
   private final TestDataFactory testDataFactory;
   private final ElasticsearchTestContainerConfiguration elasticsearchTestContainer;
+  private final IdentityService identityService;
+  private final RequestTestFixture requestTestFixture;
 
   @RegisterExtension
   BaseElasticsearchTest.ElasticsearchRefreshExtension elasticsearchRefreshExtension;
@@ -141,6 +149,8 @@ class DatasetIT extends NetworkEntityIT<Dataset> {
       NodeService nodeResource,
       InstallationService installationResource,
       DatasetRealtimeIndexer datasetRealtimeIndexer,
+      IdentityService identityService,
+      RequestTestFixture requestTestFixture,
       @Nullable SimplePrincipalProvider principalProvider,
       TestDataFactory testDataFactory,
       ElasticsearchTestContainerConfiguration elasticsearchTestContainer,
@@ -162,6 +172,8 @@ class DatasetIT extends NetworkEntityIT<Dataset> {
     this.installationResource = installationResource;
     this.installationClient = prepareClient(localServerPort, keyStore, InstallationClient.class);
     this.datasetRealtimeIndexer = datasetRealtimeIndexer;
+    this.identityService = identityService;
+    this.requestTestFixture = requestTestFixture;
     this.testDataFactory = testDataFactory;
     this.elasticsearchTestContainer = elasticsearchTestContainer;
     this.elasticsearchRefreshExtension = new BaseElasticsearchTest.ElasticsearchRefreshExtension(elasticsearchTestContainer);
@@ -214,6 +226,68 @@ class DatasetIT extends NetworkEntityIT<Dataset> {
   @Override
   protected UUID keyForCreateAsEditorTest(Dataset entity) {
     return organizationResource.get(entity.getPublishingOrganizationKey()).getEndorsingNodeKey();
+  }
+
+  @Test
+  public void testCreateAsEditorWithPublishingOrganizationRightAndForeignInstallation()
+      throws Exception {
+    UUID publisherNodeKey = nodeResource.create(testDataFactory.newNode());
+    Organization publisherOrg = testDataFactory.newOrganization(publisherNodeKey);
+    UUID publisherOrgKey = organizationResource.create(publisherOrg);
+
+    Installation publisherInstallation = testDataFactory.newInstallation(publisherOrgKey);
+    UUID publisherInstallationKey = installationResource.create(publisherInstallation);
+
+    UUID foreignNodeKey = nodeResource.create(testDataFactory.newNode());
+    Organization foreignOrg = testDataFactory.newOrganization(foreignNodeKey);
+    UUID foreignOrgKey = organizationResource.create(foreignOrg);
+
+    Installation foreignInstallation = testDataFactory.newInstallation(foreignOrgKey);
+    UUID foreignInstallationKey = installationResource.create(foreignInstallation);
+
+    identityService.addEditorRight(TestConstants.TEST_EDITOR, publisherOrgKey);
+
+    Dataset matchingDataset = testDataFactory.newDataset(publisherOrgKey, publisherInstallationKey);
+    ResultActions matchingResponse =
+        requestTestFixture
+            .postSignedRequest(TestConstants.TEST_EDITOR, matchingDataset, "/dataset")
+            .andExpect(status().isCreated());
+
+    UUID matchingKey =
+        UUID.fromString(requestTestFixture.extractResponse(matchingResponse).replace("\"", ""));
+    Dataset createdMatching = getService(ServiceType.RESOURCE).get(matchingKey);
+    assertEquals(publisherOrgKey, createdMatching.getPublishingOrganizationKey());
+    assertEquals(publisherInstallationKey, createdMatching.getInstallationKey());
+
+    Dataset crossOrgDataset = testDataFactory.newDataset(publisherOrgKey, foreignInstallationKey);
+    ResultActions crossOrgResponse =
+        requestTestFixture
+            .postSignedRequest(TestConstants.TEST_EDITOR, crossOrgDataset, "/dataset")
+            .andExpect(status().isCreated());
+
+    UUID crossOrgKey =
+        UUID.fromString(requestTestFixture.extractResponse(crossOrgResponse).replace("\"", ""));
+    Dataset createdCrossOrg = getService(ServiceType.RESOURCE).get(crossOrgKey);
+    assertEquals(publisherOrgKey, createdCrossOrg.getPublishingOrganizationKey());
+    assertEquals(foreignInstallationKey, createdCrossOrg.getInstallationKey());
+    assertEquals(
+        foreignOrgKey,
+        installationResource.get(createdCrossOrg.getInstallationKey()).getOrganizationKey());
+  }
+
+  @Test
+  public void testCreateAsEditorWithoutPublishingOrganizationRightIsForbidden() throws Exception {
+    UUID publisherNodeKey = nodeResource.create(testDataFactory.newNode());
+    Organization publisherOrg = testDataFactory.newOrganization(publisherNodeKey);
+    UUID publisherOrgKey = organizationResource.create(publisherOrg);
+
+    Installation publisherInstallation = testDataFactory.newInstallation(publisherOrgKey);
+    UUID publisherInstallationKey = installationResource.create(publisherInstallation);
+
+    Dataset dataset = testDataFactory.newDataset(publisherOrgKey, publisherInstallationKey);
+    requestTestFixture
+        .postSignedRequest(TestConstants.TEST_EDITOR, dataset, "/dataset")
+        .andExpect(status().isForbidden());
   }
 
   @ParameterizedTest

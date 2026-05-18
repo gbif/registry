@@ -72,6 +72,8 @@ public class DatasetSearchResultConverter
     getHighlightOrStringValue(fields, hit.highlight(), "publishingOrganizationTitle")
         .ifPresent(d::setPublishingOrganizationTitle);
     getCountryValue(fields, "publishingCountry").ifPresent(d::setPublishingCountry);
+    getDateValue(fields, "pubDate").ifPresent(d::setPublicationDate);
+    getDateValue(fields, "modified").ifPresent(d::setModified);
     getUuidValue(fields, "endorsingNodeKey").ifPresent(d::setEndorsingNodeKey);
 
     getUuidValue(fields, "hostingOrganizationKey").ifPresent(d::setHostingOrganizationKey);
