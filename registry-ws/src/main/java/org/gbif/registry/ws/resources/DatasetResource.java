@@ -66,6 +66,7 @@ import org.gbif.registry.persistence.mapper.params.DatasetListParams;
 import org.gbif.registry.persistence.mapper.params.NetworkListParams;
 import org.gbif.registry.persistence.mapper.pipelines.PipelineProcessMapper;
 import org.gbif.registry.persistence.service.MapperServiceLocator;
+import org.gbif.registry.search.dataset.service.AsyncDatasetSearchService;
 import org.gbif.registry.service.RegistryDatasetService;
 import org.gbif.registry.service.WithMyBatis;
 import org.gbif.registry.service.collections.utils.Vocabularies;
@@ -96,6 +97,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
 import java.util.function.Consumer;
 
 import jakarta.annotation.Nullable;
@@ -175,7 +177,7 @@ import static org.gbif.registry.security.UserRoles.IPT_ROLE;
 @RestController
 @RequestMapping(value = "dataset", produces = MediaType.APPLICATION_JSON_VALUE)
 public class DatasetResource extends BaseNetworkEntityResource<Dataset, DatasetListParams>
-    implements DatasetService, DatasetSearchService, DatasetProcessStatusService {
+    implements DatasetService, DatasetProcessStatusService {
 
   private static final Logger LOG = LoggerFactory.getLogger(DatasetResource.class);
 
@@ -190,6 +192,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset, DatasetL
 
   private final RegistryDatasetService registryDatasetService;
   private final DatasetSearchService searchService;
+  private final AsyncDatasetSearchService asyncSearchService;
   private final MetadataMapper metadataMapper;
   private final DatasetMapper datasetMapper;
   private final ContactMapper contactMapper;
@@ -207,12 +210,14 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset, DatasetL
   // The messagePublisher can be optional
   private final MessagePublisher messagePublisher;
   private final ConceptClient conceptClient;
+  private final Executor asyncExecutor;
 
   public DatasetResource(
       MapperServiceLocator mapperServiceLocator,
       EventManager eventManager,
       RegistryDatasetService registryDatasetService,
       @Qualifier("datasetSearchServiceEs") DatasetSearchService searchService,
+      @Autowired(required = false) @Qualifier("datasetSearchServiceEs") org.gbif.registry.search.dataset.service.AsyncDatasetSearchService asyncSearchService,
       DatasetDoiDataCiteHandlingService doiDataCiteHandlingService,
       DataCiteMetadataBuilderService metadataBuilderService,
       DoiIssuingService doiIssuingService,
@@ -220,7 +225,8 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset, DatasetL
       WithMyBatis withMyBatis,
       @Autowired(required = false) MessagePublisher messagePublisher,
       ConceptClient conceptClient,
-      jakarta.validation.Validator validator) {
+      jakarta.validation.Validator validator,
+      @Autowired(required = false) @Qualifier("boundedTaskExecutor") Executor asyncExecutor) {
     super(
         mapperServiceLocator.getDatasetMapper(),
         mapperServiceLocator,
@@ -230,6 +236,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset, DatasetL
         validator);
     this.registryDatasetService = registryDatasetService;
     this.searchService = searchService;
+    this.asyncSearchService = asyncSearchService;
     this.metadataMapper = mapperServiceLocator.getMetadataMapper();
     this.datasetMapper = mapperServiceLocator.getDatasetMapper();
     this.contactMapper = mapperServiceLocator.getContactMapper();
@@ -245,6 +252,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset, DatasetL
     this.withMyBatis = withMyBatis;
     this.emlWriter = EMLWriter.newInstance(false);
     this.conceptClient = conceptClient;
+    this.asyncExecutor = asyncExecutor;
   }
 
   @Target({ElementType.METHOD, ElementType.TYPE})
@@ -420,10 +428,16 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset, DatasetL
   @ApiResponse(responseCode = "400", description = "Invalid search query provided")
   @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("search")
-  @Override
-  public SearchResponse<DatasetSearchResult, DatasetSearchParameter> search(
+  public CompletableFuture<SearchResponse<DatasetSearchResult, DatasetSearchParameter>> search(
       DatasetSearchRequest searchRequest) {
-    return searchService.search(searchRequest);
+    // Prefer async service to avoid blocking servlet threads. Falls back to sync service if async not available.
+    if (asyncSearchService != null) {
+      return asyncSearchService.searchAsync(searchRequest);
+    }
+    if (asyncExecutor != null) {
+      return CompletableFuture.supplyAsync(() -> searchService.search(searchRequest), asyncExecutor);
+    }
+    return CompletableFuture.supplyAsync(() -> searchService.search(searchRequest));
   }
 
   @Operation(
@@ -473,9 +487,15 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset, DatasetL
   @ApiResponse(responseCode = "400", description = "Invalid search query provided")
   @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("suggest")
-  @Override
-  public List<DatasetSuggestResult> suggest(DatasetSuggestRequest suggestRequest) {
-    return searchService.suggest(suggestRequest);
+  public java.util.concurrent.CompletableFuture<java.util.List<DatasetSuggestResult>> suggest(
+      DatasetSuggestRequest suggestRequest) {
+    if (asyncSearchService != null) {
+      return asyncSearchService.suggestAsync(suggestRequest);
+    }
+    if (asyncExecutor != null) {
+      return CompletableFuture.supplyAsync(() -> searchService.suggest(suggestRequest), asyncExecutor);
+    }
+    return CompletableFuture.supplyAsync(() -> searchService.suggest(suggestRequest));
   }
 
   @Operation(
@@ -1538,11 +1558,20 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset, DatasetL
   public void crawlAll(
       @RequestParam(value = "platform", required = false) String platform,
       @Nullable CrawlAllParams crawlAllParams) {
-    CompletableFuture.runAsync(
-        () ->
-            doOnAllOccurrenceDatasets(
-                dataset -> crawl(dataset.getKey(), platform),
-                crawlAllParams != null ? crawlAllParams.datasetsToExclude : null));
+    if (asyncExecutor != null) {
+      CompletableFuture.runAsync(
+          () ->
+              doOnAllOccurrenceDatasets(
+                  dataset -> crawl(dataset.getKey(), platform),
+                  crawlAllParams != null ? crawlAllParams.datasetsToExclude : null),
+          asyncExecutor);
+    } else {
+      CompletableFuture.runAsync(
+          () ->
+              doOnAllOccurrenceDatasets(
+                  dataset -> crawl(dataset.getKey(), platform),
+                  crawlAllParams != null ? crawlAllParams.datasetsToExclude : null));
+    }
   }
 
   /**

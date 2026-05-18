@@ -29,7 +29,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
  * Stub class used to simplify binding, e.g. when this class must be bound but isn't actually used.
  */
 @Qualifier("datasetSearchServiceEs")
-public class SearchServiceStub implements DatasetSearchService {
+public class SearchServiceStub implements DatasetSearchService, org.gbif.registry.search.dataset.service.AsyncDatasetSearchService {
 
   @Override
   public SearchResponse<DatasetSearchResult, DatasetSearchParameter> search(
@@ -40,5 +40,17 @@ public class SearchServiceStub implements DatasetSearchService {
   @Override
   public List<DatasetSuggestResult> suggest(DatasetSuggestRequest datasetSuggestRequest) {
     return null;
+  }
+
+  @Override
+  public java.util.concurrent.CompletableFuture<org.gbif.api.model.common.search.SearchResponse<DatasetSearchResult, DatasetSearchParameter>> searchAsync(
+      DatasetSearchRequest datasetSearchRequest) {
+    return java.util.concurrent.CompletableFuture.completedFuture(search(datasetSearchRequest));
+  }
+
+  @Override
+  public java.util.concurrent.CompletableFuture<java.util.List<DatasetSuggestResult>> suggestAsync(
+      DatasetSuggestRequest datasetSuggestRequest) {
+    return java.util.concurrent.CompletableFuture.completedFuture(suggest(datasetSuggestRequest));
   }
 }

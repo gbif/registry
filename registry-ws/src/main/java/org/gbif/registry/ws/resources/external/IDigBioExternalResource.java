@@ -13,6 +13,8 @@
  */
 package org.gbif.registry.ws.resources.external;
 
+import java.util.concurrent.Executor;
+
 import org.gbif.api.annotation.NullToNotFound;
 import org.gbif.api.model.collections.AlternativeCode;
 import org.gbif.api.vocabulary.Country;
@@ -37,6 +39,8 @@ import java.util.stream.Collectors;
 import jakarta.annotation.Nullable;
 
 import org.jetbrains.annotations.NotNull;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -58,9 +62,14 @@ import io.swagger.v3.oas.annotations.Hidden;
 public class IDigBioExternalResource {
 
   private final IDigBioMapper idigBioMapper;
+  private final java.util.concurrent.Executor asyncExecutor;
 
-  public IDigBioExternalResource(IDigBioMapper idigBioMapper) {
+  public IDigBioExternalResource(IDigBioMapper idigBioMapper,
+          @Autowired(required = false)
+          @Qualifier("boundedTaskExecutor")
+          Executor asyncExecutor) {
     this.idigBioMapper = idigBioMapper;
+    this.asyncExecutor = asyncExecutor;
   }
 
   @NullToNotFound
@@ -74,11 +83,17 @@ public class IDigBioExternalResource {
     }
 
     CompletableFuture<List<MachineTagDto>> machineTagsDtoFuture =
-        CompletableFuture.supplyAsync(() -> idigBioMapper.getIDigBioMachineTags(collectionKeys));
+        asyncExecutor != null
+            ? CompletableFuture.supplyAsync(() -> idigBioMapper.getIDigBioMachineTags(collectionKeys), asyncExecutor)
+            : CompletableFuture.supplyAsync(() -> idigBioMapper.getIDigBioMachineTags(collectionKeys));
     CompletableFuture<List<IdentifierDto>> identifiersDtoFuture =
-        CompletableFuture.supplyAsync(() -> idigBioMapper.getIdentifiers(collectionKeys));
+        asyncExecutor != null
+            ? CompletableFuture.supplyAsync(() -> idigBioMapper.getIdentifiers(collectionKeys), asyncExecutor)
+            : CompletableFuture.supplyAsync(() -> idigBioMapper.getIdentifiers(collectionKeys));
     CompletableFuture<List<IDigBioCollectionDto>> collectionsDtoFuture =
-        CompletableFuture.supplyAsync(() -> idigBioMapper.getCollections(collectionKeys));
+        asyncExecutor != null
+            ? CompletableFuture.supplyAsync(() -> idigBioMapper.getCollections(collectionKeys), asyncExecutor)
+            : CompletableFuture.supplyAsync(() -> idigBioMapper.getCollections(collectionKeys));
 
     CompletableFuture.allOf(collectionsDtoFuture, machineTagsDtoFuture, identifiersDtoFuture)
         .join();
@@ -145,14 +160,23 @@ public class IDigBioExternalResource {
     UUID collectionKey = collections.iterator().next();
 
     CompletableFuture<List<IDigBioCollectionDto>> collectionsDtoFuture =
-        CompletableFuture.supplyAsync(
-            () -> idigBioMapper.getCollections(Collections.singleton(collectionKey)));
+        asyncExecutor != null
+            ? CompletableFuture.supplyAsync(
+                () -> idigBioMapper.getCollections(Collections.singleton(collectionKey)), asyncExecutor)
+            : CompletableFuture.supplyAsync(
+                () -> idigBioMapper.getCollections(Collections.singleton(collectionKey)));
     CompletableFuture<List<MachineTagDto>> machineTagsDtoFuture =
-        CompletableFuture.supplyAsync(
-            () -> idigBioMapper.getIDigBioMachineTags(Collections.singleton(collectionKey)));
+        asyncExecutor != null
+            ? CompletableFuture.supplyAsync(
+                () -> idigBioMapper.getIDigBioMachineTags(Collections.singleton(collectionKey)), asyncExecutor)
+            : CompletableFuture.supplyAsync(
+                () -> idigBioMapper.getIDigBioMachineTags(Collections.singleton(collectionKey)));
     CompletableFuture<List<IdentifierDto>> identifiersDtoFuture =
-        CompletableFuture.supplyAsync(
-            () -> idigBioMapper.getIdentifiers(Collections.singleton(collectionKey)));
+        asyncExecutor != null
+            ? CompletableFuture.supplyAsync(
+                () -> idigBioMapper.getIdentifiers(Collections.singleton(collectionKey)), asyncExecutor)
+            : CompletableFuture.supplyAsync(
+                () -> idigBioMapper.getIdentifiers(Collections.singleton(collectionKey)));
 
     CompletableFuture.allOf(collectionsDtoFuture, machineTagsDtoFuture, identifiersDtoFuture)
         .join();
