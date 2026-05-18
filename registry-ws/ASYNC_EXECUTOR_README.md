@@ -44,7 +44,7 @@ Exposed metric names and labels (as registered by the code):
 These are simple numeric gauges and are useful to detect saturation: growing `queueSize` + `active` near `maxPoolSize` indicates executor is overloaded.
 
 2) Async exception counters:
-- `registry.async.exceptions{type="completion|execution|illegalargument", cause="<ExceptionClass>", status="<http-status>"}`
+- `registry.async.exceptions{type="completion|execution|illegal_argument", cause="<ExceptionClass>", status="<http-status>"}`
 
 Examples of metric labels:
 - `registry.async.exceptions{type="completion",cause="NullPointerException",status="503"}`
