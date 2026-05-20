@@ -129,10 +129,6 @@ public final class LegacyResourceUtils {
       LOG.error("Dataset is missing mandatory field language, key={}", dataset.getKey());
       return false;
     }
-    if (dataset.getType() == null) {
-      LOG.error("Dataset is missing mandatory field type, key={}", dataset.getKey());
-      return false;
-    }
     try {
       if (dataset.getPublishingOrganizationKey() == null) {
         LOG.error(

@@ -249,7 +249,8 @@ public class DatasetJsonConverter {
                 .setScale(scale, RoundingMode.HALF_UP)
                 .doubleValue()));
 
-    if (DatasetType.CHECKLIST.name().equals(dataset.get("type").asText())) {
+    if (dataset.hasNonNull("type")
+        && DatasetType.CHECKLIST.name().equals(dataset.get("type").asText())) {
       DatasetMetrics datasetMetrics = gbifWsClient.getDatasetSpeciesMetrics(datasetKey);
 
       if (Objects.nonNull(datasetMetrics)) {

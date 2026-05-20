@@ -358,7 +358,9 @@ public class OaipmhItemRepository implements ItemRepository {
 
     List<Set> sets = new ArrayList<>();
     sets.add(new Set(INSTALLATION.getSubsetPrefix() + dataset.getInstallationKey().toString()));
-    sets.add(new Set(DATASET_TYPE.getSubsetPrefix() + dataset.getType().toString()));
+    if (dataset.getType() != null) {
+      sets.add(new Set(DATASET_TYPE.getSubsetPrefix() + dataset.getType().name()));
+    }
     if (publishingCountry != null) {
       sets.add(new Set(COUNTRY.getSubsetPrefix() + publishingCountry.getIso2LetterCode()));
     }
