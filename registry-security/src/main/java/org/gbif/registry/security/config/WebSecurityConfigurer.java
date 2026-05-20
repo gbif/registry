@@ -165,8 +165,17 @@ public class WebSecurityConfigurer {
       .csrf(AbstractHttpConfigurer::disable)
       .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
       .authorizeHttpRequests(authz -> authz
-        .requestMatchers("/actuator/health", "/actuator/health/**", "/actuator/prometheus", "/actuator/metrics/**", "/actuator/info").permitAll()
-        .requestMatchers("/actuator/**").hasRole(UserRoles.ACTUATOR_ROLE)
+        // Protect only sensitive actuator endpoints; allow the rest to be called anonymously
+        .requestMatchers(
+            "/actuator/shutdown",
+            "/actuator/env",
+            "/actuator/heapdump",
+            "/actuator/refresh",
+            "/actuator/restart",
+            "/actuator/loggers/**",
+            "/actuator/threaddump"
+        ).hasRole(UserRoles.ACTUATOR_ROLE)
+        .requestMatchers("/actuator/**").permitAll()
       );
     return http.build();
   }
