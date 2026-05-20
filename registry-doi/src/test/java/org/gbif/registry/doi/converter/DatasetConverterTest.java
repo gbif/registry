@@ -18,6 +18,7 @@ import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Organization;
 import org.gbif.doi.metadata.datacite.DataCiteMetadata;
 import org.gbif.doi.metadata.datacite.NameIdentifier;
+import org.gbif.doi.metadata.datacite.ResourceType;
 import org.gbif.doi.service.datacite.DataCiteValidator;
 
 import java.util.Collections;
@@ -30,6 +31,7 @@ import org.xmlunit.matchers.CompareMatcher;
 import static org.gbif.registry.doi.converter.DataCiteConverterTestCommon.getXmlMetadataFromFile;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 public class DatasetConverterTest {
 
@@ -67,6 +69,18 @@ public class DatasetConverterTest {
     assertThat(
         actualMetadataXml,
         CompareMatcher.isIdenticalTo(expectedMetadataXml).ignoreWhitespace().normalizeWhitespace());
+  }
+
+  @Test
+  void testConvertDatasetWithNullTypeOmitsResourceTypeValue() {
+    Organization publisher = preparePublisher();
+    Dataset dataset = DatasetTestDataProvider.prepareSimpleDataset(new DOI("10.1234/5679"));
+    dataset.setType(null);
+
+    DataCiteMetadata metadata = DatasetConverter.convert(dataset, publisher);
+
+    assertEquals(ResourceType.DATASET, metadata.getResourceType().getResourceTypeGeneral());
+    assertNull(metadata.getResourceType().getValue());
   }
 
   @Test

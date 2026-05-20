@@ -324,11 +324,13 @@ public final class DatasetConverter {
   }
 
   private static void convertResourceType(DataCiteMetadata.Builder<Void> builder, Dataset dataset) {
-    builder.withResourceType(
+    DataCiteMetadata.ResourceType.Builder<Void> resourceTypeBuilder =
         DataCiteMetadata.ResourceType.builder()
-            .withResourceTypeGeneral(ResourceType.DATASET)
-            .withValue(dataset.getType().name())
-            .build());
+            .withResourceTypeGeneral(ResourceType.DATASET);
+    if (dataset.getType() != null) {
+      resourceTypeBuilder.withValue(dataset.getType().name());
+    }
+    builder.withResourceType(resourceTypeBuilder.build());
   }
 
   private static void convertPublicationYear(
