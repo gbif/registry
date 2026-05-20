@@ -175,7 +175,8 @@ public class WebSecurityConfigurer {
             "/actuator/loggers/**",
             "/actuator/threaddump"
         ).hasRole(UserRoles.ACTUATOR_ROLE)
-        .requestMatchers("/actuator/**").permitAll()
+        // ensure both root paths are covered (some proxies/requests include trailing slash)
+        .requestMatchers("/actuator", "/actuator/", "/actuator/**").permitAll()
       );
     return http.build();
   }
