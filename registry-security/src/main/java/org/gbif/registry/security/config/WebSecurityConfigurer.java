@@ -155,18 +155,14 @@ public class WebSecurityConfigurer {
    */
   @Bean
   @org.springframework.core.annotation.Order(1)
-  public SecurityFilterChain actuatorSecurityFilterChain(
-      HttpSecurity http,
-      @Qualifier("actuatorAuthenticationProvider") DaoAuthenticationProvider authProvider) throws Exception {
+  public SecurityFilterChain actuatorSecurityFilterChain(HttpSecurity http) throws Exception {
     http
       .securityMatcher("/actuator/**")
-      .authenticationProvider(authProvider)
-      .httpBasic(basic -> {})
+      // Make actuator endpoints publicly accessible (no authentication required)
       .csrf(AbstractHttpConfigurer::disable)
       .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
       .authorizeHttpRequests(authz -> authz
-        .requestMatchers("/actuator/health", "/actuator/health/**", "/actuator/prometheus", "/actuator/metrics/**", "/actuator/info").permitAll()
-        .requestMatchers("/actuator/**").hasRole(UserRoles.ACTUATOR_ROLE)
+        .requestMatchers("/actuator/**").permitAll()
       );
     return http.build();
   }
