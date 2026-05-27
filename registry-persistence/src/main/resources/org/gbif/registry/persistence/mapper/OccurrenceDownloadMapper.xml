@@ -69,6 +69,11 @@
         <case value="SQL_TSV_ZIP" resultType="org.gbif.api.model.occurrence.SqlDownloadRequest">
           <result property="sql" column="filter" />
         </case>
+        <case value="FASTA_ARCHIVE" resultType="org.gbif.api.model.occurrence.PredicateDownloadRequest">
+          <result property="predicate" column="filter" typeHandler="org.gbif.registry.persistence.mapper.handler.OccurrencePredicateTypeHandler" />
+          <result property="verbatimExtensions" column="verbatim_extensions" typeHandler="ExtensionArrayTypeHandler"/>
+          <result property="interpretedExtensions" column="interpreted_extensions" typeHandler="ExtensionArrayTypeHandler"/>
+        </case>
       </discriminator>
     </association>
   </resultMap>
