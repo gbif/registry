@@ -60,6 +60,7 @@ import org.gbif.api.util.comparators.EndpointPriorityComparator;
 import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.api.vocabulary.EndpointType;
 import org.gbif.common.messaging.api.MessagePublisher;
+import org.gbif.common.messaging.api.messages.DwcDpNfsToHdfsMessage;
 import org.gbif.common.messaging.api.messages.PipelineBasedMessage;
 import org.gbif.common.messaging.api.messages.PipelinesAbcdMessage;
 import org.gbif.common.messaging.api.messages.PipelinesBalancerMessage;
@@ -286,44 +287,26 @@ public class DefaultRegistryPipelinesHistoryTrackingService
     return steps;
   }
 
-  private Set<StepType> getStepsToTriggerNow(Set<StepType> steps, Dataset dataset){
-
+  private Set<StepType> getStepsToTriggerNow(Set<StepType> steps, Dataset dataset) {
     PipelinesWorkflow.Graph<StepType> workflowGraph =
       dataset.getType() == DatasetType.SAMPLING_EVENT
         ? PipelinesWorkflow.getEventOccurrenceWorkflow()
-         : PipelinesWorkflow.getOccurrenceWorkflow();
+        : PipelinesWorkflow.getOccurrenceWorkflow();
 
-    // check each all steps are at the same level, if there is a difference only return
-    // the lowest
-    Map<StepType, Integer> level2Step = new HashMap<>();
+    Set<StepType> stepsInGraph = steps.stream()
+      .filter(workflowGraph.getAllNodes()::contains)
+      .collect(Collectors.toSet());
 
-    steps.forEach(step -> {
-      if (workflowGraph.getAllNodes().contains(step)) {
-        int level = workflowGraph.getLevel(step);
-        level2Step.put(step, level);
-      }
-    });
-
-    if (level2Step.isEmpty()) {
+    if (stepsInGraph.isEmpty()) {
       LOG.info(
         "None of the requested steps {} are present in the selected workflow graph, returning the original set unchanged",
         steps);
       return new HashSet<>(steps);
     }
-    Integer lowestLevel = level2Step.values().stream().min(Integer::compareTo).get();
-    LOG.info("Steps to run: {}, with levels: {}, lowest level: {}", steps, level2Step, lowestLevel);
-    List<StepType> toBeRemoved =  new ArrayList<>();
-    level2Step.forEach((step, level) -> {
-      if (level > lowestLevel) {
-        toBeRemoved.add(step);
-      }
-    });
 
-
-    Set<StepType> stepsToTriggerNow = new HashSet<>(steps);
-    stepsToTriggerNow.removeAll(toBeRemoved);
-    LOG.info("Steps to run after checking levels: {}, with levels: {}", stepsToTriggerNow, level2Step);
-    return stepsToTriggerNow;
+    Set<StepType> rootNodes = workflowGraph.getRootNodesFor(stepsInGraph);
+    LOG.info("Steps to run after checking graph roots: {}", rootNodes);
+    return rootNodes;
   }
 
   /**
@@ -580,6 +563,8 @@ public class DefaultRegistryPipelinesHistoryTrackingService
         return createVerbatimMessage(prefix, jsonMessage, interpretTypes, dataset);
       case DWCA_TO_VERBATIM:
         return deserializeMessage(jsonMessage, PipelinesDwcaMessage.class);
+      case DWCDP_TO_VERBATIM:
+        return deserializeMessage(jsonMessage, DwcDpNfsToHdfsMessage.class);
       case ABCD_TO_VERBATIM:
         return deserializeMessage(jsonMessage, PipelinesAbcdMessage.class);
       case XML_TO_VERBATIM:
@@ -675,6 +660,7 @@ public class DefaultRegistryPipelinesHistoryTrackingService
     if (message == null) {
       return Optional.empty();
     }
+
     Optional.ofNullable(prefix).ifPresent(message::setResetPrefix);
     message.setPipelineSteps(requestedSteps);
 
