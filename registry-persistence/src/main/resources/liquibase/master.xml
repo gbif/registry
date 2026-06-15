@@ -188,4 +188,5 @@
   <include file="liquibase/180-backfill-dwcdp-metadata.xml" />
   <include file="liquibase/181-drop-data-package-table.xml" />
   <include file="liquibase/182-dataset-dataset-type-nullable.xml" />
+  <include file="/liquibase/183-pipelines-event-types-dwcdp.xml" />
 </databaseChangeLog>

@@ -1,3 +1,4 @@
+# Generated
 *.class
 *.iml
 .idea
@@ -10,3 +11,6 @@ target/
 *.war
 *.ear
 /HELP.md
+
+# Maven generated
+**/dependency-reduced-pom.xml
