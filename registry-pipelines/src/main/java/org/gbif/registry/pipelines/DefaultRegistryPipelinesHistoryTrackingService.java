@@ -61,6 +61,7 @@ import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.api.vocabulary.EndpointType;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.DwcDpNfsToHdfsMessage;
+import org.gbif.common.messaging.api.messages.DwcDpToVerbatimMessage;
 import org.gbif.common.messaging.api.messages.PipelineBasedMessage;
 import org.gbif.common.messaging.api.messages.PipelinesAbcdMessage;
 import org.gbif.common.messaging.api.messages.PipelinesBalancerMessage;
@@ -565,8 +566,10 @@ public class DefaultRegistryPipelinesHistoryTrackingService
         return createVerbatimMessage(prefix, jsonMessage, interpretTypes, dataset);
       case DWCA_TO_VERBATIM:
         return deserializeMessage(jsonMessage, PipelinesDwcaMessage.class);
-      case DWCDP_TO_VERBATIM:
+      case NFS_TO_HDFS:
         return deserializeMessage(jsonMessage, DwcDpNfsToHdfsMessage.class);
+      case DWCDP_TO_VERBATIM:
+        return deserializeMessage(jsonMessage, DwcDpToVerbatimMessage.class);
       case ABCD_TO_VERBATIM:
         return deserializeMessage(jsonMessage, PipelinesAbcdMessage.class);
       case XML_TO_VERBATIM:
