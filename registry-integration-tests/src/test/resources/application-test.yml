@@ -119,6 +119,10 @@ directory:
   ws:
     url: @directory.ws.url@
 
+taxonapi:
+  root:
+    url: https://api.gbif-test.org/v2/experimental/
+
 api:
   root:
     url: http://api.gbif-dev.org/v1/
