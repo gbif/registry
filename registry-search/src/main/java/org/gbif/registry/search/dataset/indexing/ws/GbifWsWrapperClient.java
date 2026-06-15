@@ -13,10 +13,9 @@
  */
 package org.gbif.registry.search.dataset.indexing.ws;
 
-import org.gbif.api.model.checklistbank.DatasetMetrics;
-import org.gbif.api.model.checklistbank.search.NameUsageSearchParameter;
-import org.gbif.api.model.checklistbank.search.NameUsageSearchRequest;
-import org.gbif.api.model.checklistbank.search.NameUsageSearchResult;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.common.search.SearchResponse;
@@ -31,8 +30,6 @@ import org.gbif.api.service.registry.DatasetService;
 import org.gbif.api.service.registry.InstallationService;
 import org.gbif.api.service.registry.NetworkService;
 import org.gbif.api.service.registry.OrganizationService;
-import org.gbif.checklistbank.ws.client.DatasetMetricsClient;
-import org.gbif.checklistbank.ws.client.SpeciesResourceClient;
 import org.gbif.metrics.ws.client.CubeWsClient;
 import org.gbif.occurrence.ws.client.OccurrenceWsSearchClient;
 
@@ -42,8 +39,13 @@ import java.util.UUID;
 
 import org.cache2k.Cache;
 import org.cache2k.Cache2kBuilder;
+
+
+import org.gbif.registry.search.dataset.indexing.ws.taxon.TaxonApiClient;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.util.LinkedMultiValueMap;
 
@@ -51,6 +53,8 @@ import org.springframework.util.LinkedMultiValueMap;
 @Component
 @Lazy
 public class GbifWsWrapperClient implements GbifWsClient {
+
+  private static final ObjectMapper MAPPER = new ObjectMapper();
 
   // Uses a cache for installations to avoid too many external calls
   Cache<String, Installation> installationCache =
@@ -75,10 +79,9 @@ public class GbifWsWrapperClient implements GbifWsClient {
   private final DatasetService datasetService;
   private final NetworkService networkService;
   private final OccurrenceWsSearchClient occurrenceWsSearchClient;
-  private final SpeciesResourceClient speciesResourceClient;
+  private final TaxonApiClient taxonApiClient;
   private final CubeWsClient cubeWsClient;
 
-  private final DatasetMetricsClient datasetMetricsClient;
 
   /**
    * Factory method, only need the api base url.
@@ -92,17 +95,15 @@ public class GbifWsWrapperClient implements GbifWsClient {
       DatasetService datasetService,
       NetworkService networkService,
       OccurrenceWsSearchClient occurrenceWsSearchClient,
-      SpeciesResourceClient speciesResourceClient,
       CubeWsClient cubeWsClient,
-      DatasetMetricsClient datasetMetricsClient) {
+      TaxonApiClient taxonApiClient) {
     this.installationService = installationService;
     this.organizationService = organizationService;
     this.datasetService = datasetService;
     this.networkService = networkService;
     this.occurrenceWsSearchClient = occurrenceWsSearchClient;
-    this.speciesResourceClient = speciesResourceClient;
+    this.taxonApiClient = taxonApiClient;
     this.cubeWsClient = cubeWsClient;
-    this.datasetMetricsClient = datasetMetricsClient;
   }
 
   @Override
@@ -180,14 +181,21 @@ public class GbifWsWrapperClient implements GbifWsClient {
   }
 
   @Override
-  public DatasetMetrics getDatasetSpeciesMetrics(String datasetKey) {
-    return datasetMetricsClient.get(UUID.fromString(datasetKey));
+  public Long getChecklistMetricsNameCount(String datasetKey) {
+    ResponseEntity<JsonNode> response = taxonApiClient.getMetrics(UUID.fromString(datasetKey));
+    if (response.getStatusCode().is2xxSuccessful()) {
+      return response.getBody().get("nameCount").asLong();
+    }
+    throw new RuntimeException("Taxon search returned status " + response.getStatusCode());
   }
 
   @Override
-  public SearchResponse<NameUsageSearchResult, NameUsageSearchParameter> speciesSearch(
-      NameUsageSearchRequest searchRequest) {
-    return speciesResourceClient.search(searchRequest);
+  public Long taxonSearchCount() {
+    ResponseEntity<JsonNode> response = taxonApiClient.search(MAPPER.createObjectNode());
+    if (response.getStatusCode().is2xxSuccessful()) {
+      return response.getBody().get("count").asLong();
+    }
+    throw new RuntimeException("Taxon search returned status " + response.getStatusCode());
   }
 
   @Override

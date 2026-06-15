@@ -114,9 +114,9 @@ public class DatasetJsonConverter {
 
   private Long getNameUsagesCount() {
     if (nameUsagesCount == null) {
-      nameUsagesCount = gbifWsClient.speciesSearch(new NameUsageSearchRequest(0, 0)).getCount();
+      nameUsagesCount = gbifWsClient.taxonSearchCount();
     }
-    return Optional.ofNullable(nameUsagesCount).orElse(1L);
+    return Optional.of(nameUsagesCount).orElse(1L);
   }
 
   @Autowired
@@ -251,15 +251,15 @@ public class DatasetJsonConverter {
 
     if (dataset.hasNonNull("type")
         && DatasetType.CHECKLIST.name().equals(dataset.get("type").asText())) {
-      DatasetMetrics datasetMetrics = gbifWsClient.getDatasetSpeciesMetrics(datasetKey);
+      Long nameCount = gbifWsClient.getChecklistMetricsNameCount(datasetKey);
 
-      if (Objects.nonNull(datasetMetrics)) {
-        nameUsagesPercentage = datasetMetrics.getUsagesCount() / getNameUsagesCount().doubleValue();
+      if (Objects.nonNull(nameCount)) {
+        nameUsagesPercentage = nameCount / getNameUsagesCount().doubleValue();
         nameUsagesPercentage =
           Double.isInfinite(nameUsagesPercentage) || Double.isNaN(nameUsagesPercentage)
             ? 0D
             : nameUsagesPercentage;
-        dataset.put("nameUsagesCount", datasetMetrics.getUsagesCount());
+        dataset.put("nameUsagesCount", nameCount);
       } else {
         dataset.put("nameUsagesCount", 0);
       }

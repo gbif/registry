@@ -13,10 +13,8 @@
  */
 package org.gbif.registry.search.dataset.indexing.ws;
 
-import org.gbif.api.model.checklistbank.DatasetMetrics;
-import org.gbif.api.model.checklistbank.search.NameUsageSearchParameter;
-import org.gbif.api.model.checklistbank.search.NameUsageSearchRequest;
-import org.gbif.api.model.checklistbank.search.NameUsageSearchResult;
+import com.fasterxml.jackson.databind.JsonNode;
+
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.common.search.SearchResponse;
@@ -61,10 +59,9 @@ public interface GbifWsClient {
 
   Long getOccurrenceRecordCount();
 
-  DatasetMetrics getDatasetSpeciesMetrics(String datasetKey);
+  Long getChecklistMetricsNameCount(String datasetKey);
 
-  SearchResponse<NameUsageSearchResult, NameUsageSearchParameter> speciesSearch(
-      NameUsageSearchRequest searchRequest);
+  Long taxonSearchCount();
 
   SearchResponse<Occurrence, OccurrenceSearchParameter> occurrenceSearch(
       OccurrenceSearchRequest searchRequest);

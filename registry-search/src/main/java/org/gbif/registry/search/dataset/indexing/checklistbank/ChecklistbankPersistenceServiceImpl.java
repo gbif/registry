@@ -42,7 +42,7 @@ public class ChecklistbankPersistenceServiceImpl implements ChecklistbankPersist
     this.dataSource = dataSource;
   }
 
-  /** Pages over all datasets and adds them to SOLR. */
+  /** Pages over all datasets and adds them to Elasticsearch. */
   @Override
   public Integer[] getTaxonKeys(String datasetKey) {
 

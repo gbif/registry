@@ -30,6 +30,7 @@ import org.gbif.metrics.ws.client.CubeWsClient;
 import org.gbif.occurrence.ws.client.OccurrenceWsSearchClient;
 import org.gbif.registry.search.dataset.indexing.ws.GbifWsClient;
 import org.gbif.registry.search.dataset.indexing.ws.GbifWsWrapperClient;
+import org.gbif.registry.search.dataset.indexing.ws.taxon.TaxonApiClient;
 import org.gbif.registry.search.test.DatasetElasticsearchConfiguration;
 import org.gbif.registry.surety.OrganizationEmailTemplateManagerIT;
 import org.gbif.registry.test.mocks.ConceptClientMock;
@@ -241,17 +242,15 @@ public class RegistryIntegrationTestsConfiguration {
       DatasetService datasetService,
       NetworkService networkService,
       OccurrenceWsSearchClient occurrenceWsSearchClient,
-      SpeciesResourceClient speciesResourceClient,
       CubeWsClient cubeWsClient,
-      DatasetMetricsClient datasetMetricsClient) {
+      TaxonApiClient taxonApiClient) {
     return new GbifWsWrapperClient(installationService,
                                     organizationService,
                                     datasetService,
                                     networkService,
                                     occurrenceWsSearchClient,
-                                    speciesResourceClient,
                                     cubeWsClient,
-                                    datasetMetricsClient);
+                                    taxonApiClient);
   }
 
   public static void main(String[] args) {
