@@ -479,8 +479,10 @@ public class DefaultRegistryPipelinesHistoryTrackingService
     for (StepType stepName : toRunNow) {
 
       Optional<? extends PipelineBasedMessage> message =
-          onlyIncludeRequestedStep? createStepMessageForRequestedSteps(stepName, prioritizedSteps, process, prefix, dataset)
-            :createStepMessage(stepName, process, prefix, interpretTypes, dataset);
+          onlyIncludeRequestedStep
+              ? createStepMessageForRequestedSteps(
+                  stepName, prioritizedSteps, process, prefix, interpretTypes, dataset)
+              : createStepMessage(stepName, process, prefix, interpretTypes, dataset);
 
       message.ifPresent(m -> {
         LOG.info("Created message for step {} : {}", stepName, m);
@@ -595,11 +597,12 @@ public class DefaultRegistryPipelinesHistoryTrackingService
   }
 
   private Optional<? extends PipelineBasedMessage> createStepMessageForRequestedSteps(
-    StepType stepType,
-    Set<StepType> requestedSteps,
-    PipelineProcess process,
-    String prefix,
-    Dataset dataset) {
+      StepType stepType,
+      Set<StepType> requestedSteps,
+      PipelineProcess process,
+      String prefix,
+      Set<String> interpretTypes,
+      Dataset dataset) {
 
     Optional<PipelineStep> latestStepOpt = getLatestSuccessfulStep(process, stepType);
 
@@ -610,17 +613,18 @@ public class DefaultRegistryPipelinesHistoryTrackingService
 
     LOG.info("Latest successful ingest step found: {}", latestStepOpt.get());
     String jsonMessage = latestStepOpt.get().getMessage();
-    Set<String> requestedStepsAsStrings = requestedSteps.stream().map(StepType::name).collect(Collectors.toSet());
+    Set<String> requestedStepsAsStrings =
+        requestedSteps.stream().map(StepType::name).collect(Collectors.toSet());
     switch (stepType) {
       case INTERPRETED_TO_INDEX:
       case FRAGMENTER:
-        return createInterpretedMessage(prefix, jsonMessage, requestedSteps.stream().map(StepType::name).collect(Collectors.toSet()));
+        return createInterpretedMessage(prefix, jsonMessage, requestedSteps, Set.of());
       case HDFS_VIEW:
-        return createInterpretedMessage(prefix, jsonMessage, requestedStepsAsStrings);
+        return createInterpretedMessage(prefix, jsonMessage, requestedSteps, Set.of());
       case VERBATIM_TO_IDENTIFIER:
         return createVerbatimIdentifierMessage(prefix, jsonMessage, dataset, requestedStepsAsStrings);
       case VERBATIM_TO_INTERPRETED:
-        return createVerbatimMessage(prefix, jsonMessage, requestedStepsAsStrings);
+        return createVerbatimMessage(prefix, jsonMessage, requestedStepsAsStrings, interpretTypes);
       case DWCA_TO_VERBATIM:
         return deserializeMessage(jsonMessage, PipelinesDwcaMessage.class);
       case ABCD_TO_VERBATIM:
@@ -766,14 +770,17 @@ public class DefaultRegistryPipelinesHistoryTrackingService
 
 
   private Optional<PipelineBasedMessage> createVerbatimMessage(
-    String prefix, String jsonMessage, Set<String> requestedSteps) {
+      String prefix, String jsonMessage, Set<String> requestedSteps, Set<String> interpretTypes) {
     PipelinesVerbatimMessage message =
-      deserializeMessage(jsonMessage, PipelinesVerbatimMessage.class).orElse(null);
+        deserializeMessage(jsonMessage, PipelinesVerbatimMessage.class).orElse(null);
     if (message == null) {
       return Optional.empty();
     }
     Optional.ofNullable(prefix).ifPresent(message::setResetPrefix);
     message.setPipelineSteps(requestedSteps);
+    if (interpretTypes != null && !interpretTypes.isEmpty()) {
+      message.setInterpretTypes(interpretTypes);
+    }
 
     return Optional.of(message);
   }
@@ -797,15 +804,18 @@ public class DefaultRegistryPipelinesHistoryTrackingService
   }
 
   private Optional<PipelineBasedMessage> createInterpretedMessage(
-    String prefix, String jsonMessage, Set<String> requestedSteps) {
+      String prefix, String jsonMessage, Set<StepType> requestedSteps, Set<String> interpretTypes) {
 
     PipelinesInterpretedMessage message =
-      deserializeMessage(jsonMessage, PipelinesInterpretedMessage.class).orElse(null);
+        deserializeMessage(jsonMessage, PipelinesInterpretedMessage.class).orElse(null);
     if (message == null) {
       return Optional.empty();
     }
     Optional.ofNullable(prefix).ifPresent(message::setResetPrefix);
-    message.setPipelineSteps(requestedSteps);
+    message.setPipelineSteps(requestedSteps.stream().map(StepType::name).collect(Collectors.toSet()));
+    if (interpretTypes != null && !interpretTypes.isEmpty()) {
+      message.setInterpretTypes(interpretTypes);
+    }
 
     return Optional.of(message);
   }
