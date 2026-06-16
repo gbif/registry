@@ -67,7 +67,7 @@ pipeline {
       when {
           allOf {
               expression { params.RELEASE };
-              branch 'master';
+              branch 'hotfix-v4.2.19.1';
           }
       }
       environment {
