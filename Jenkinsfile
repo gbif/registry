@@ -80,7 +80,10 @@ pipeline {
              configFileProvider([
                 configFile(fileId: 'org.jenkinsci.plugins.configfiles.custom.CustomConfig1389220396351', variable: 'APPKEYS_TESTFILE')
                 ]) {
-                  git 'https://github.com/gbif/registry.git'
+                  git(
+                      url: 'https://github.com/gbif/registry.git',
+                      branch: 'hotfix-v4.2.19.1'
+                  )
                   sh '''
                     mvn -B \
                         release:prepare release:perform -Darguments="-Djetty.port=$HTTP_PORT -Dappkeys.testfile=$APPKEYS_TESTFILE" \
