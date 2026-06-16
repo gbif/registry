@@ -116,7 +116,7 @@ public class DatasetJsonConverter {
     if (nameUsagesCount == null) {
       nameUsagesCount = gbifWsClient.taxonSearchCount();
     }
-    return Optional.of(nameUsagesCount).orElse(1L);
+    return Optional.ofNullable(nameUsagesCount).orElse(1L);
   }
 
   @Autowired

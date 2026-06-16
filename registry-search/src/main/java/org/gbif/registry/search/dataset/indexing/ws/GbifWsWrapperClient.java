@@ -43,6 +43,8 @@ import org.cache2k.Cache2kBuilder;
 
 import org.gbif.registry.search.dataset.indexing.ws.taxon.TaxonApiClient;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.http.ResponseEntity;
@@ -54,6 +56,7 @@ import org.springframework.util.LinkedMultiValueMap;
 @Lazy
 public class GbifWsWrapperClient implements GbifWsClient {
 
+  private static final Logger LOG = LoggerFactory.getLogger(GbifWsWrapperClient.class);
   private static final ObjectMapper MAPPER = new ObjectMapper();
 
   // Uses a cache for installations to avoid too many external calls
@@ -182,20 +185,32 @@ public class GbifWsWrapperClient implements GbifWsClient {
 
   @Override
   public Long getChecklistMetricsNameCount(String datasetKey) {
-    ResponseEntity<JsonNode> response = taxonApiClient.getMetrics(UUID.fromString(datasetKey));
-    if (response.getStatusCode().is2xxSuccessful()) {
-      return response.getBody().get("nameCount").asLong();
+    try {
+      ResponseEntity<JsonNode> response = taxonApiClient.getMetrics(UUID.fromString(datasetKey));
+      if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+        JsonNode nameCountNode = response.getBody().get("nameCount");
+        return nameCountNode != null ? nameCountNode.asLong() : null;
+      }
+      LOG.warn("Could not get checklist metrics for dataset {}, status {}", datasetKey, response.getStatusCode());
+    } catch (Exception e) {
+      LOG.warn("Failed to get checklist metrics for dataset {}", datasetKey, e);
     }
-    throw new RuntimeException("Taxon search returned status " + response.getStatusCode());
+    return null;
   }
 
   @Override
   public Long taxonSearchCount() {
-    ResponseEntity<JsonNode> response = taxonApiClient.search(MAPPER.createObjectNode());
-    if (response.getStatusCode().is2xxSuccessful()) {
-      return response.getBody().get("count").asLong();
+    try {
+      ResponseEntity<JsonNode> response = taxonApiClient.search(MAPPER.createObjectNode());
+      if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+        JsonNode countNode = response.getBody().get("count");
+        return countNode != null ? countNode.asLong() : null;
+      }
+      LOG.warn("Could not get taxon search count, status {}", response.getStatusCode());
+    } catch (Exception e) {
+      LOG.warn("Failed to get taxon search count", e);
     }
-    throw new RuntimeException("Taxon search returned status " + response.getStatusCode());
+    return null;
   }
 
   @Override
