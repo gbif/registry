@@ -51,6 +51,10 @@
 
     <!-- Third party dependencies -->
     <dependency>
+      <groupId>org.reflections</groupId>
+      <artifactId>reflections</artifactId>
+    </dependency>
+    <dependency>
       <groupId>io.github.openfeign</groupId>
       <artifactId>feign-jackson</artifactId>
     </dependency>

@@ -437,6 +437,11 @@
 
       <!-- Third party dependencies -->
       <dependency>
+        <groupId>org.reflections</groupId>
+        <artifactId>reflections</artifactId>
+        <version>${reflections.version}</version>
+      </dependency>
+      <dependency>
         <groupId>org.codehaus.woodstox</groupId>
         <artifactId>woodstox-core-asl</artifactId>
         <version>${woodstox.version}</version>
@@ -942,11 +947,6 @@
         <scope>test</scope>
       </dependency>
 
-      <dependency>
-        <groupId>org.reflections</groupId>
-        <artifactId>reflections</artifactId>
-        <version>${reflections.version}</version>
-      </dependency>
     </dependencies>
   </dependencyManagement>
 
