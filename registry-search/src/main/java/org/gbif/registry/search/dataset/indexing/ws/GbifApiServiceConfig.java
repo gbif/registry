@@ -14,10 +14,9 @@
 package org.gbif.registry.search.dataset.indexing.ws;
 
 
-import org.gbif.checklistbank.ws.client.DatasetMetricsClient;
-import org.gbif.checklistbank.ws.client.SpeciesResourceClient;
 import org.gbif.metrics.ws.client.CubeWsClient;
 import org.gbif.occurrence.ws.client.OccurrenceWsSearchClient;
+import org.gbif.registry.search.dataset.indexing.ws.taxon.TaxonApiClient;
 import org.gbif.ws.client.ClientBuilder;
 
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -52,22 +51,12 @@ public class GbifApiServiceConfig {
   }
 
   @Bean
-  public DatasetMetricsClient datasetMetricsClient(
-    @Value("${api.root.url}") String apiBaseUrl,
-    @Qualifier("apiMapper") ObjectMapper objectMapper) {
+  public TaxonApiClient taxonApiClient(
+      @Value("${taxonapi.root.url}") String apiBaseUrl,
+      @Qualifier("apiMapper") ObjectMapper objectMapper) {
     return new ClientBuilder()
       .withObjectMapper(objectMapper)
       .withUrl(apiBaseUrl)
-      .build(DatasetMetricsClient.class);
-  }
-
-  @Bean
-  public SpeciesResourceClient speciesResourceClient(
-    @Value("${api.root.url}") String apiBaseUrl,
-    @Qualifier("apiMapper") ObjectMapper objectMapper) {
-    return new ClientBuilder()
-      .withObjectMapper(objectMapper)
-      .withUrl(apiBaseUrl)
-      .build(SpeciesResourceClient.class);
+      .build(TaxonApiClient.class);
   }
 }

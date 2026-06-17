@@ -30,6 +30,10 @@ public class DatasetIndexConfiguration {
   @NotNull
   private String apiRootUrl;
 
+  @Parameter(names = "--taxon-api-url")
+  @NotNull
+  private String taxonApiUrl;
+
   @Parameter(names = "--registry-ws-url")
   private String registryWsUrl;
 

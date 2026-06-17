@@ -145,11 +145,13 @@
       <groupId>org.postgresql</groupId>
       <artifactId>postgresql</artifactId>
     </dependency>
+    <!--
     <dependency>
       <groupId>org.jvnet.mock-javamail</groupId>
       <artifactId>mock-javamail</artifactId>
       <scope>test</scope>
     </dependency>
+    <-->
     <!-- JJWT 0.12+: split modules for tests -->
     <dependency>
       <groupId>io.jsonwebtoken</groupId>

@@ -130,6 +130,7 @@ public class SpringContextBuilder {
                 "ManagedProperties",
                 new ImmutableMap.Builder<String, Object>()
                     .put("api.root.url", configuration.getApiRootUrl())
+                    .put("taxonapi.root.url", configuration.getTaxonApiUrl())
                     .put(
                         "elasticsearch.occurrence.index",
                         configuration.getOccurrenceEs().getAlias())
@@ -215,6 +216,21 @@ public class SpringContextBuilder {
           configuration.getRegistryWsUrl() != null
               ? configuration.getRegistryWsUrl()
               : configuration.getApiRootUrl());
+      return clientBuilder;
+    }
+
+    @Bean
+    public ClientBuilder taxonClientBuilder(DatasetIndexConfiguration configuration) {
+      ClientBuilder clientBuilder = new ClientBuilder();
+
+      ObjectMapper objectMapper =
+          JacksonJsonObjectMapperProvider.getObjectMapperWithBuilderSupport();
+      SimpleModule simpleModule = new SimpleModule();
+      simpleModule.addDeserializer(Date.class, new CustomDateDeserializer());
+      objectMapper.registerModule(simpleModule);
+
+      clientBuilder.withObjectMapper(objectMapper);
+      clientBuilder.withUrl(configuration.getTaxonApiUrl());
       return clientBuilder;
     }
 
