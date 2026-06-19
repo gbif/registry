@@ -93,7 +93,7 @@
     <gbif-httputils.version>0.10</gbif-httputils.version>
     <gbif-metadata-profile.version>3.0</gbif-metadata-profile.version>
     <gbif-parsers.version>0.67</gbif-parsers.version>
-    <gbif-postal-service.version>2.1.8</gbif-postal-service.version>
+    <gbif-postal-service.version>2.1.10</gbif-postal-service.version>
     <xoai.version>4.1.0-gbif-4</xoai.version>
     <gbif-occurrence.version>1.1.18</gbif-occurrence.version>
     <gbif-vocabulary.version>2.0.2</gbif-vocabulary.version>
@@ -436,6 +436,11 @@
       </dependency>
 
       <!-- Third party dependencies -->
+      <dependency>
+        <groupId>org.reflections</groupId>
+        <artifactId>reflections</artifactId>
+        <version>${reflections.version}</version>
+      </dependency>
       <dependency>
         <groupId>org.codehaus.woodstox</groupId>
         <artifactId>woodstox-core-asl</artifactId>
@@ -942,11 +947,6 @@
         <scope>test</scope>
       </dependency>
 
-      <dependency>
-        <groupId>org.reflections</groupId>
-        <artifactId>reflections</artifactId>
-        <version>${reflections.version}</version>
-      </dependency>
     </dependencies>
   </dependencyManagement>
 
