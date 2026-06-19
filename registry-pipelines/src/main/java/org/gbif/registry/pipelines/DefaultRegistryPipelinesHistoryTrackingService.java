@@ -196,8 +196,7 @@ public class DefaultRegistryPipelinesHistoryTrackingService
 
     Optional<Integer> attempt =
         useLastSuccessful
-            ? mapper.getLastSuccessfulAttempt(
-                datasetKey, selectCorrectVerbatimSteps(steps, datasetKey).iterator().next())
+            ? mapper.getLastSuccessfulAttempt(datasetKey, selectCorrectVerbatimSteps(steps, datasetKey).iterator().next())
             : mapper.getLastAttempt(datasetKey);
 
     return attempt.orElseThrow(
@@ -216,8 +215,7 @@ public class DefaultRegistryPipelinesHistoryTrackingService
       Set<String> interpretTypes,
       boolean excludeEventSteps,
       boolean onlyIncludeRequestedStep) {
-    String prefix =
-        OffsetDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ofPattern("yyyyMMddHHmm"));
+    String prefix = OffsetDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ofPattern("yyyyMMddHHmm"));
     CompletableFuture.runAsync(
         () ->
             doOnAllDatasets(
@@ -303,8 +301,9 @@ public class DefaultRegistryPipelinesHistoryTrackingService
             ? PipelinesWorkflow.getEventOccurrenceWorkflow()
             : PipelinesWorkflow.getOccurrenceWorkflow();
 
-    Set<StepType> stepsInGraph =
-        steps.stream().filter(workflowGraph.getAllNodes()::contains).collect(Collectors.toSet());
+    Set<StepType> stepsInGraph = steps.stream()
+      .filter(workflowGraph.getAllNodes()::contains)
+      .collect(Collectors.toSet());
 
     if (stepsInGraph.isEmpty()) {
       LOG.info(
@@ -356,6 +355,7 @@ public class DefaultRegistryPipelinesHistoryTrackingService
    * @return the calculated status of a {@link PipelineProcess}
    */
   private Status getStatus(PipelineExecution execution) {
+    // Collects the latest steps per type.
     Set<Status> statuses = new HashSet<>();
     for (StepType stepType : StepType.values()) {
       execution.getSteps().stream()
@@ -364,9 +364,11 @@ public class DefaultRegistryPipelinesHistoryTrackingService
           .ifPresent(step -> statuses.add(step.getState()));
     }
 
+    // Only has one states, it could mean that all steps have the same status
     if (statuses.size() == 1) {
       return statuses.iterator().next();
     } else {
+      // Checks the states by priority
       if (statuses.contains(Status.FAILED) || statuses.contains(Status.ABORTED)) {
         return Status.FAILED;
       } else if (statuses.contains(Status.RUNNING)
@@ -383,7 +385,10 @@ public class DefaultRegistryPipelinesHistoryTrackingService
   public PagingResponse<PipelineProcess> history(Pageable pageable) {
     long count = mapper.count(null, null);
     List<PipelineProcess> statuses = mapper.list(null, null, pageable);
+
+    // add needed fields for the view
     statuses.forEach(this::setDatasetTitle);
+
     return new PagingResponse<>(pageable, count, statuses);
   }
 
@@ -393,7 +398,10 @@ public class DefaultRegistryPipelinesHistoryTrackingService
 
     long count = mapper.count(datasetKey, null);
     List<PipelineProcess> statuses = mapper.list(datasetKey, null, pageable);
+
+    // add needed fields for the view
     statuses.forEach(this::setDatasetTitle);
+
     return new PagingResponse<>(pageable, count, statuses);
   }
 
@@ -427,6 +435,7 @@ public class DefaultRegistryPipelinesHistoryTrackingService
       markPipelineStatusAsAborted(lastestExecution.getKey());
     }
 
+//     Checks that the pipelines is not in RUNNING state
     if (!markPreviousAttemptAsFailed && status == Status.RUNNING) {
       return new RunPipelineResponse.Builder()
           .setResponseStatus(RunPipelineResponse.ResponseStatus.PIPELINE_IN_SUBMITTED)
@@ -434,6 +443,7 @@ public class DefaultRegistryPipelinesHistoryTrackingService
           .build();
     }
 
+    // Performs the messaging and updates the status once the message has been sent
     Dataset dataset = datasetService.get(datasetKey);
 
     if (dataset == null) {
@@ -443,10 +453,12 @@ public class DefaultRegistryPipelinesHistoryTrackingService
           .build();
     }
 
+    // Create Rabbit messages
     Map<StepType, PipelineBasedMessage> stepsToSend = new EnumMap<>(StepType.class);
 
     LOG.info("Requested steps: {}", steps);
 
+    // catch the case of ID,INTERPRETED
     Set<StepType> prioritizedSteps = selectCorrectVerbatimSteps(steps, dataset);
 
     LOG.info("Prioritized steps: {}", prioritizedSteps);
@@ -456,14 +468,14 @@ public class DefaultRegistryPipelinesHistoryTrackingService
     LOG.info("Steps to send messages for now: {}", toRunNow);
 
     for (StepType stepName : toRunNow) {
+
       Optional<? extends PipelineBasedMessage> message =
           onlyIncludeRequestedStep
               ? createStepMessageForRequestedSteps(
                   stepName, prioritizedSteps, process, prefix, interpretTypes, dataset)
               : createStepMessage(stepName, process, prefix, interpretTypes, dataset);
 
-      message.ifPresent(
-          m -> {
+      message.ifPresent(m -> {
             LOG.info("Created message for step {} : {}", stepName, m);
             stepsToSend.put(stepName, m);
           });
@@ -478,6 +490,7 @@ public class DefaultRegistryPipelinesHistoryTrackingService
           .build();
     }
 
+    // create pipelines execution
     PipelineExecution execution =
         new PipelineExecution()
             .setCreatedBy(user)
@@ -490,15 +503,18 @@ public class DefaultRegistryPipelinesHistoryTrackingService
                     excludeEventSteps,
                     onlyIncludeRequestedStep));
 
+    // persist to the database
     long executionKey = addPipelineExecution(process.getKey(), execution, user);
 
     for (StepType step : stepsToSend.keySet()) {
       LOG.info("Outgoing messages to send: {}, message: {}", step, stepsToSend.get(step));
     }
 
+    // send messages
     Set<StepType> stepsFailed = new HashSet<>(stepsToSend.size());
     stepsToSend.forEach(
         (stepType, message) -> {
+
           if (excludeEventSteps) {
             message.getPipelineSteps().removeAll(EVENT_STEP_TYPES);
           }
@@ -508,13 +524,11 @@ public class DefaultRegistryPipelinesHistoryTrackingService
             if (message instanceof PipelinesInterpretedMessage
                 || message instanceof PipelinesVerbatimMessage
                 || message instanceof PipelinesEventsInterpretedMessage
-                || message instanceof PipelinesEventsMessage) {
+                || message instanceof PipelinesEventsMessage
+            ) {
               String nextMessageClassName = message.getClass().getSimpleName();
               String messagePayload = message.toString();
-              LOG.info(
-                  "Sending message to balancer: {}, message: {}",
-                  nextMessageClassName,
-                  messagePayload);
+              LOG.info("Sending message to balancer: {}, message: {}", nextMessageClassName, messagePayload);
               publisher.send(new PipelinesBalancerMessage(nextMessageClassName, messagePayload));
             } else {
               LOG.info("Sending message directly: {}", message);
@@ -524,10 +538,10 @@ public class DefaultRegistryPipelinesHistoryTrackingService
             LOG.warn("Error sending message", ex);
             stepsFailed.add(stepType);
           }
-        });
+        }
+    );
 
-    RunPipelineResponse.Builder responseBuilder =
-        RunPipelineResponse.builder().setStepsFailed(stepsFailed);
+    RunPipelineResponse.Builder responseBuilder = RunPipelineResponse.builder().setStepsFailed(stepsFailed);
     if (stepsFailed.size() == steps.size()) {
       responseBuilder
           .setResponseStatus(RunPipelineResponse.ResponseStatus.ERROR)
@@ -540,18 +554,12 @@ public class DefaultRegistryPipelinesHistoryTrackingService
   }
 
   private Optional<? extends PipelineBasedMessage> createStepMessage(
-      StepType stepType,
-      PipelineProcess process,
-      String prefix,
-      Set<String> interpretTypes,
-      Dataset dataset) {
+      StepType stepType, PipelineProcess process, String prefix, Set<String> interpretTypes, Dataset dataset) {
 
     Optional<PipelineStep> latestStepOpt = getLatestSuccessfulStep(process, stepType);
 
     if (latestStepOpt.isEmpty()) {
-      LOG.warn(
-          "Can't find latest successful ingest step for the datasetKey {}",
-          process.getDatasetKey());
+      LOG.warn("Can't find latest successful ingest step for the datasetKey {}", process.getDatasetKey());
       return Optional.empty();
     }
 
@@ -598,9 +606,7 @@ public class DefaultRegistryPipelinesHistoryTrackingService
     Optional<PipelineStep> latestStepOpt = getLatestSuccessfulStep(process, stepType);
 
     if (latestStepOpt.isEmpty()) {
-      LOG.warn(
-          "Can't find latest successful ingest step for the datasetKey {}",
-          process.getDatasetKey());
+      LOG.warn("Can't find latest successful ingest step for the datasetKey {}", process.getDatasetKey());
       return Optional.empty();
     }
 
@@ -634,10 +640,11 @@ public class DefaultRegistryPipelinesHistoryTrackingService
     }
   }
 
-  private Optional<? extends PipelineBasedMessage> createVerbatimIdentifierMessage(
-      String prefix, String jsonMessage, Dataset dataset) {
-    PipelinesVerbatimMessage message =
-        deserializeMessage(jsonMessage, PipelinesVerbatimMessage.class).orElse(null);
+  private Optional<? extends PipelineBasedMessage> createVerbatimIdentifierMessage(String prefix,
+                                                                                   String jsonMessage,
+                                                                                   Dataset dataset) {
+    PipelinesVerbatimMessage message = deserializeMessage(jsonMessage, PipelinesVerbatimMessage.class)
+      .orElse(null);
 
     if (message == null) {
       return Optional.empty();
@@ -662,10 +669,12 @@ public class DefaultRegistryPipelinesHistoryTrackingService
     return Optional.of(message);
   }
 
-  private Optional<? extends PipelineBasedMessage> createVerbatimIdentifierMessage(
-      String prefix, String jsonMessage, Dataset dataset, Set<String> requestedSteps) {
-    PipelinesVerbatimMessage message =
-        deserializeMessage(jsonMessage, PipelinesVerbatimMessage.class).orElse(null);
+  private Optional<? extends PipelineBasedMessage> createVerbatimIdentifierMessage(String prefix,
+                                                                                   String jsonMessage,
+                                                                                   Dataset dataset,
+                                                                                   Set<String> requestedSteps) {
+    PipelinesVerbatimMessage message = deserializeMessage(jsonMessage, PipelinesVerbatimMessage.class)
+      .orElse(null);
 
     if (message == null) {
       return Optional.empty();
@@ -745,6 +754,7 @@ public class DefaultRegistryPipelinesHistoryTrackingService
     return Optional.of(message);
   }
 
+
   private Optional<PipelineBasedMessage> createVerbatimMessage(
       String prefix, String jsonMessage, Set<String> requestedSteps, Set<String> interpretTypes) {
     PipelinesVerbatimMessage message =
@@ -763,6 +773,7 @@ public class DefaultRegistryPipelinesHistoryTrackingService
 
   private Optional<PipelineBasedMessage> createInterpretedMessage(
       String prefix, String jsonMessage, StepType stepType, Set<String> interpretTypes) {
+
     PipelinesInterpretedMessage message =
         deserializeMessage(jsonMessage, PipelinesInterpretedMessage.class).orElse(null);
     if (message == null) {
@@ -780,17 +791,18 @@ public class DefaultRegistryPipelinesHistoryTrackingService
 
   private Optional<PipelineBasedMessage> createInterpretedMessage(
       String prefix, String jsonMessage, Set<StepType> requestedSteps, Set<String> interpretTypes) {
+
     PipelinesInterpretedMessage message =
         deserializeMessage(jsonMessage, PipelinesInterpretedMessage.class).orElse(null);
     if (message == null) {
       return Optional.empty();
     }
     Optional.ofNullable(prefix).ifPresent(message::setResetPrefix);
-    message.setPipelineSteps(
-        requestedSteps.stream().map(StepType::name).collect(Collectors.toSet()));
+    message.setPipelineSteps(requestedSteps.stream().map(StepType::name).collect(Collectors.toSet()));
     if (interpretTypes != null && !interpretTypes.isEmpty()) {
       message.setInterpretTypes(interpretTypes);
     }
+
     return Optional.of(message);
   }
 
@@ -819,8 +831,11 @@ public class DefaultRegistryPipelinesHistoryTrackingService
   @Override
   public PipelineProcess get(UUID datasetKey, int attempt) {
     Objects.requireNonNull(datasetKey, DATASET_KEY_CANNOT_BE_NULL);
+
     PipelineProcess process = mapper.getByDatasetAndAttempt(datasetKey, attempt);
+
     setDatasetTitle(process);
+
     return process;
   }
 
@@ -832,6 +847,7 @@ public class DefaultRegistryPipelinesHistoryTrackingService
     if (count > 0) {
       running = mapper.getRunningPipelineProcess(stepType, stepRunner, pageable);
     }
+
     return new PagingResponse<>(pageable, count, running);
   }
 
@@ -862,12 +878,14 @@ public class DefaultRegistryPipelinesHistoryTrackingService
     Preconditions.checkArgument(StringUtils.isNotEmpty(creator), "creator can't be null");
 
     pipelineExecution.setCreatedBy(creator);
+
     mapper.addPipelineExecution(pipelineProcessKey, pipelineExecution);
 
     pipelineExecution
         .getStepsToRun()
         .forEach(
             st -> {
+
               LOG.info(
                   "Adding pipeline step for executionKey {}, stepType: {}, state: {}",
                   pipelineExecution.getKey(),
@@ -879,6 +897,7 @@ public class DefaultRegistryPipelinesHistoryTrackingService
                       .setState(Status.SUBMITTED)
                       .setStarted(OffsetDateTime.now(ZoneOffset.UTC))
                       .setCreatedBy(creator);
+
               mapper.addPipelineStep(pipelineExecution.getKey(), step);
             });
 
@@ -981,6 +1000,7 @@ public class DefaultRegistryPipelinesHistoryTrackingService
   @Deprecated
   @Override
   public void sendAbsentIndentifiersEmail(UUID datasetKey, int attempt, String message) {
+
     try {
       String datasetName = datasetService.get(datasetKey).getTitle();
 
@@ -1004,6 +1024,7 @@ public class DefaultRegistryPipelinesHistoryTrackingService
   public void notifyAbsentIdentifiers(
       UUID datasetKey, int attempt, long executionKey, String message) {
     try {
+      // check if there is an open issue for this dataset
       List<IssueResult> existingIssues =
           githubApiClient.listIssues(
               Collections.singletonList(datasetKey.toString()), "open", 1, 1);
@@ -1015,6 +1036,7 @@ public class DefaultRegistryPipelinesHistoryTrackingService
             attempt,
             message);
 
+        // create new one
         Issue issue =
             issueCreator.createIdsValidationFailedIssue(datasetKey, attempt, executionKey, message);
         githubApiClient.createIssue(issue);
@@ -1028,11 +1050,13 @@ public class DefaultRegistryPipelinesHistoryTrackingService
             attempt,
             message);
 
+        // add comment with new cause
         IssueComment issueComment =
             issueCreator.createIdsValidationFailedIssueComment(
                 datasetKey, attempt, executionKey, message);
         githubApiClient.addIssueComment(existing.getNumber(), issueComment);
 
+        // add labels to the existing issue
         githubApiClient.updateIssueLabels(
             existing.getNumber(),
             GithubApiClient.IssueLabels.builder()
@@ -1064,6 +1088,7 @@ public class DefaultRegistryPipelinesHistoryTrackingService
 
   public void allowAbsentIdentifiersCommon(UUID datasetKey, Integer attempt) {
     try {
+      // GET History messages
       Integer latestAttempt =
           Optional.ofNullable(attempt).orElse(mapper.getLastAttempt(datasetKey).get());
       PipelineProcess process = mapper.getByDatasetAndAttempt(datasetKey, latestAttempt);
@@ -1081,6 +1106,7 @@ public class DefaultRegistryPipelinesHistoryTrackingService
             && identifierStep.get().getMessage() != null
             && !identifierStep.get().getMessage().isEmpty()) {
 
+          // Update and mark identier as OK
           PipelineStep pipelineStep = identifierStep.get();
           pipelineStep.setState(Status.COMPLETED);
           mapper.updatePipelineStep(pipelineStep);
@@ -1100,6 +1126,7 @@ public class DefaultRegistryPipelinesHistoryTrackingService
 
           mapper.markPipelineExecutionAsRunning(pipelineExecution.getKey());
 
+          // Send message to interpretaton
           PipelinesVerbatimMessage message =
               objectMapper.readValue(pipelineStep.getMessage(), PipelinesVerbatimMessage.class);
           message.getPipelineSteps().remove(StepType.ABCD_TO_VERBATIM.name());
@@ -1136,20 +1163,26 @@ public class DefaultRegistryPipelinesHistoryTrackingService
    * @see EndpointPriorityComparator
    */
   private Optional<Endpoint> getEndpointToCrawl(Dataset dataset) {
+    // Are any of the endpoints eligible to be crawled
     List<Endpoint> sortedEndpoints = prioritySortEndpoints(dataset.getEndpoints());
     if (sortedEndpoints.isEmpty()) {
       return Optional.empty();
     }
-    return Optional.ofNullable(sortedEndpoints.get(0));
+    Endpoint ep = sortedEndpoints.get(0);
+    return Optional.ofNullable(ep);
   }
 
   private List<Endpoint> prioritySortEndpoints(List<Endpoint> endpoints) {
+
+    // Filter out all Endpoints that we can't crawl
     List<Endpoint> result = Lists.newArrayList();
     for (Endpoint endpoint : endpoints) {
       if (EndpointPriorityComparator.PRIORITIES.contains(endpoint.getType())) {
         result.add(endpoint);
       }
     }
+
+    // Sort the remaining ones
     result.sort(ENDPOINT_COMPARATOR);
     return result;
   }
