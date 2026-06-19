@@ -63,7 +63,7 @@ public class PipelineWorkflowResolver {
    * to the full reachable set in the appropriate workflow graph.
    *
    * <p>If {@code onlyIncludeRequestedStep} is true, returns {@code stepsToSend} unchanged.
-   * {@link StepType#FRAGMENTER} is removed unless a verbatim step is in the requested set.
+   * Otherwise, {@link StepType#FRAGMENTER} is removed unless a verbatim step is in the requested set.
    */
   public Set<StepType> resolveStepTypes(
     Set<StepType> stepsToSend,
@@ -105,12 +105,19 @@ public class PipelineWorkflowResolver {
     if (isDwcDpSteps(stepsToSend)) {
       return resolveDwcDpWorkflow(process);
     }
-    if (stepsToSend.stream().anyMatch(StepType::isEventType)) {
+
+    boolean hasEventSteps = stepsToSend.stream().anyMatch(StepType::isEventType);
+    boolean hasOccurrenceOrVerbatimSteps =
+      stepsToSend.stream().anyMatch(StepType::isOccurrenceType)
+        || stepsToSend.stream().anyMatch(StepType::isVerbatimType);
+
+    if (hasEventSteps && hasOccurrenceOrVerbatimSteps) {
+      return PipelinesWorkflow.getEventOccurrenceWorkflow();
+    }
+    if (hasEventSteps) {
       return PipelinesWorkflow.getEventWorkflow();
     }
-    if (!excludeEventSteps
-      && dataset != null
-      && dataset.getType() == DatasetType.SAMPLING_EVENT) {
+    if (!excludeEventSteps && dataset != null && dataset.getType() == DatasetType.SAMPLING_EVENT) {
       return PipelinesWorkflow.getEventOccurrenceWorkflow();
     }
     return PipelinesWorkflow.getOccurrenceWorkflow();
