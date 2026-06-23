@@ -21,9 +21,12 @@ import org.gbif.api.model.pipelines.StepType;
 import java.time.OffsetDateTime;
 import java.util.Set;
 
+import org.gbif.registry.pipelines.service.PipelineWorkflowResolver;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -33,11 +36,15 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @ExtendWith(MockitoExtension.class)
 class RegistryPipelinesHistoryTrackingServiceTest {
 
+  // Workflow resolution logic is tested independently in PipelineWorkflowResolverTest.
+  // These tests cover the service's own concerns: getLatestSuccessfulStep and the
+  // delegation from getStepTypes to PipelineWorkflowResolver.
+  @Spy private PipelineWorkflowResolver workflowResolver =
+    new PipelineWorkflowResolver(new com.fasterxml.jackson.databind.ObjectMapper());
   @InjectMocks private DefaultRegistryPipelinesHistoryTrackingService trackingService;
 
   @Test
-  void getLatestSuccesfulStepTest() {
-
+  void getLatestSuccessfulStep_returnsStepWithMessage() {
     PipelineExecution execution = new PipelineExecution().setCreated(OffsetDateTime.now());
 
     PipelineStep s1 =
@@ -64,33 +71,30 @@ class RegistryPipelinesHistoryTrackingServiceTest {
     PipelineProcess process = new PipelineProcess();
     process.addExecution(execution);
 
-    PipelineStep step1 =
-        trackingService.getLatestSuccessfulStep(process, s1.getType()).get();
+    PipelineStep step1 = trackingService.getLatestSuccessfulStep(process, s1.getType()).orElseThrow();
     assertEquals(s1, step1);
   }
 
   @Test
-  void getStepTypesFragmenterTest() {
+  void getStepTypes_verbatimStep_includesFragmenter() {
     Set<StepType> result =
-        trackingService.getStepTypes(Set.of(StepType.ABCD_TO_VERBATIM), null, false, false);
+        trackingService.getStepTypes(Set.of(StepType.ABCD_TO_VERBATIM), null, null, false, false);
 
     assertTrue(result.contains(StepType.FRAGMENTER));
   }
 
   @Test
-  void getStepTypesTest() {
-
+  void getStepTypes_nonVerbatimStep_excludesFragmenter() {
     Set<StepType> result =
-        trackingService.getStepTypes(Set.of(StepType.VERBATIM_TO_INTERPRETED), null, false, false);
+        trackingService.getStepTypes(Set.of(StepType.VERBATIM_TO_INTERPRETED), null, null, false, false);
 
     assertFalse(result.contains(StepType.FRAGMENTER));
   }
 
   @Test
-  void getStepTypesEventTest() {
-
+  void getStepTypes_eventStep_returnsEventSteps() {
     Set<StepType> result =
-        trackingService.getStepTypes(Set.of(StepType.EVENTS_VERBATIM_TO_INTERPRETED), null, false, false);
+        trackingService.getStepTypes(Set.of(StepType.EVENTS_VERBATIM_TO_INTERPRETED), null, null, false, false);
 
     assertTrue(result.contains(StepType.EVENTS_VERBATIM_TO_INTERPRETED));
     assertTrue(result.contains(StepType.EVENTS_HDFS_VIEW));
