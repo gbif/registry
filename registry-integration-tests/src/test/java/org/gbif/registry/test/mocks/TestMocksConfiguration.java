@@ -18,7 +18,6 @@ import org.gbif.occurrence.query.TitleLookupService;
 import org.gbif.registry.directory.Augmenter;
 import org.gbif.registry.mail.EmailSender;
 import org.gbif.registry.mail.config.OrganizationSuretyMailConfigurationProperties;
-import org.gbif.registry.search.dataset.indexing.checklistbank.ChecklistbankPersistenceService;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -78,15 +77,5 @@ public class TestMocksConfiguration {
     urlTemplateProperties.setOrganization("organization");
     configurationProperties.setUrlTemplate(urlTemplateProperties);
     return configurationProperties;
-  }
-
-  @Bean
-  public ChecklistbankPersistenceService checklistbankPersistenceService() {
-    return new ChecklistbankPersistenceService() {
-      @Override
-      public Integer[] getTaxonKeys(String datasetKey) {
-        return new Integer[0];
-      }
-    };
   }
 }

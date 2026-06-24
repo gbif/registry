@@ -13,8 +13,6 @@
  */
 package org.gbif.registry.search.dataset.indexing;
 
-import org.gbif.api.model.checklistbank.DatasetMetrics;
-import org.gbif.api.model.checklistbank.search.NameUsageSearchRequest;
 import org.gbif.api.model.common.search.SearchResponse;
 import org.gbif.api.model.occurrence.Occurrence;
 import org.gbif.api.model.occurrence.search.OccurrenceSearchParameter;
@@ -30,7 +28,6 @@ import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.api.vocabulary.License;
 import org.gbif.api.vocabulary.MaintenanceUpdateFrequency;
-import org.gbif.registry.search.dataset.indexing.checklistbank.ChecklistbankPersistenceService;
 import org.gbif.registry.search.dataset.indexing.ws.GbifWsClient;
 import org.gbif.registry.search.dataset.indexing.ws.JacksonObjectMapper;
 import org.gbif.vocabulary.client.ConceptClient;
@@ -89,8 +86,6 @@ public class DatasetJsonConverter {
 
   private final List<Consumer<ObjectNode>> consumers = new ArrayList<>();
 
-  private ChecklistbankPersistenceService checklistbankPersistenceService;
-
   private final GbifWsClient gbifWsClient;
 
   private final ConceptClient conceptClient;
@@ -123,13 +118,11 @@ public class DatasetJsonConverter {
   private DatasetJsonConverter(
       GbifWsClient gbifWsClient,
       ConceptClient conceptClient,
-      @Autowired(required = false) ChecklistbankPersistenceService checklistbankPersistenceService,
       @Qualifier("apiMapper") ObjectMapper mapper,
       @Qualifier("occurrenceEsClient") ElasticsearchClient occurrenceEsClient,
       @Value("${elasticsearch.occurrence.index}") String occurrenceIndex) {
     this.gbifWsClient = gbifWsClient;
     this.conceptClient = conceptClient;
-    this.checklistbankPersistenceService = checklistbankPersistenceService;
     this.mapper = mapper;
     this.occurrenceEsClient = occurrenceEsClient;
     this.occurrenceIndex = occurrenceIndex;
@@ -142,13 +135,11 @@ public class DatasetJsonConverter {
   public static DatasetJsonConverter create(
       GbifWsClient gbifWsClient,
       ConceptClient conceptClient,
-      ChecklistbankPersistenceService checklistbankPersistenceService,
       ElasticsearchClient occurrenceEsClient,
       String occurrenceIndex) {
     return new DatasetJsonConverter(
         gbifWsClient,
         conceptClient,
-        checklistbankPersistenceService,
         JacksonObjectMapper.get(),
         occurrenceEsClient,
         occurrenceIndex);
@@ -162,9 +153,6 @@ public class DatasetJsonConverter {
     addCountryCoverage(dataset, datasetAsJson);
     addNetworks(dataset, datasetAsJson);
     addCategoriesWithParents(dataset, datasetAsJson);
-    if (checklistbankPersistenceService != null) {
-      addTaxonKeys(dataset, datasetAsJson);
-    }
     addMachineTags(dataset, datasetAsJson);
     return datasetAsJson;
   }
@@ -385,19 +373,6 @@ public class DatasetJsonConverter {
                 facet.getCounts().forEach(count -> yearNode.add(count.getName()));
               }
             });
-  }
-
-  private void addTaxonKeys(Dataset dataset, ObjectNode datasetObjectNode) {
-    if (DatasetType.CHECKLIST == dataset.getType()) {
-      ArrayNode taxonKeyNode =
-          datasetObjectNode.has("taxonKey")
-              ? (ArrayNode) datasetObjectNode.get("taxonKey")
-              : datasetObjectNode.putArray("taxonKey");
-      for (Integer taxonKey :
-          checklistbankPersistenceService.getTaxonKeys(dataset.getKey().toString())) {
-        taxonKeyNode.add(new IntNode(taxonKey));
-      }
-    }
   }
 
   private void addCategoriesWithParents(Dataset dataset, ObjectNode datasetJsonNode) {

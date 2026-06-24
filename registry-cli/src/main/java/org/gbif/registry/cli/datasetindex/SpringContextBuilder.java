@@ -23,7 +23,6 @@ import org.gbif.registry.cli.datasetindex.indexupdater.DatasetIndexUpdaterConfig
 import org.gbif.registry.pipelines.issues.GithubApiClient;
 import org.gbif.registry.search.dataset.indexing.DatasetJsonConverter;
 import org.gbif.registry.search.dataset.indexing.EsDatasetRealtimeIndexer;
-import org.gbif.registry.search.dataset.indexing.checklistbank.ChecklistbankPersistenceServiceImpl;
 import org.gbif.registry.search.dataset.indexing.es.EsClient;
 import org.gbif.registry.search.dataset.indexing.es.EsConfiguration;
 import org.gbif.registry.search.dataset.indexing.ws.GbifApiServiceConfig;
@@ -99,10 +98,6 @@ public class SpringContextBuilder {
     ctx.register(EsClient.class);
     ctx.register(DatasetJsonConverter.class);
 
-    if (configuration.isIndexClb()) {
-      ctx.register(ChecklistbankPersistenceServiceImpl.class);
-    }
-
     ctx.registerBean(
         "registryEsClientConfig",
         EsClient.EsClientConfiguration.class,
@@ -135,25 +130,6 @@ public class SpringContextBuilder {
                         "elasticsearch.occurrence.index",
                         configuration.getOccurrenceEs().getAlias())
                     .put("elasticsearch.registry.index", configuration.getDatasetEs().getAlias())
-                    .put(
-                        "indexing.datasource.checklistbank.url",
-                        "jdbc:postgresql://"
-                            + configuration.getClbDb().getServerName()
-                            + "/"
-                            + configuration.getClbDb().getDatabaseName())
-                    .put(
-                        "indexing.datasource.checklistbank.username",
-                        configuration.getClbDb().getUser())
-                    .put(
-                        "indexing.datasource.checklistbank.password",
-                        configuration.getClbDb().getPassword())
-                    .put(
-                        "indexing.datasource.checklistbank.hikari.maxPoolSize",
-                        configuration.getClbDb().getMaximumPoolSize())
-                    .put("indexing.datasource.checklistbank.hikari.minimumIdle", 1)
-                    .put(
-                        "indexing.datasource.checklistbank.hikari.connectionTimeout",
-                        configuration.getClbDb().getConnectionTimeout())
                     .put("indexing.stopAfter", configuration.getStopAfter())
                     .put("indexing.pageSize", configuration.getPageSize())
                     .put("spring.cloud.compatibility-verifier.enabled", "false")
@@ -172,34 +148,6 @@ public class SpringContextBuilder {
       })
   @EnableConfigurationProperties
   static class ApplicationConfig {
-
-    @Bean
-    @Primary
-    public DataSourceProperties clbDataSourceProperties(DatasetIndexConfiguration configuration) {
-      DataSourceProperties dataSourceProperties = new DataSourceProperties();
-      dataSourceProperties.setPassword(configuration.getClbDb().getPassword());
-      dataSourceProperties.setUsername(configuration.getClbDb().getUser());
-      dataSourceProperties.setUrl(
-          "jdbc:postgresql://"
-              + configuration.getClbDb().getServerName()
-              + "/"
-              + configuration.getClbDb().getDatabaseName());
-      dataSourceProperties.setGenerateUniqueName(true);
-      return dataSourceProperties;
-    }
-
-    @Bean(name = "clb_datasource")
-    @Primary
-    public HikariDataSource clbDataSource(DatasetIndexConfiguration configuration) {
-      HikariDataSource hikariDataSource =
-          clbDataSourceProperties(configuration)
-              .initializeDataSourceBuilder()
-              .type(HikariDataSource.class)
-              .build();
-      hikariDataSource.setMaximumPoolSize(configuration.getClbDb().getMaximumPoolSize());
-      hikariDataSource.setMinimumIdle(1);
-      return hikariDataSource;
-    }
 
     @Bean
     public ClientBuilder clientBuilder(DatasetIndexConfiguration configuration) {

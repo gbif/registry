@@ -37,13 +37,9 @@ public class DatasetIndexConfiguration {
   @Parameter(names = "--registry-ws-url")
   private String registryWsUrl;
 
-  @ParametersDelegate @Valid @NotNull private DbConfiguration clbDb;
-
   @ParametersDelegate @Valid @NotNull private ElasticsearchConfig datasetEs;
 
   @ParametersDelegate @Valid @NotNull private ElasticsearchConfig occurrenceEs;
-
-  private boolean indexClb = true;
 
   private Integer stopAfter = -1;
 

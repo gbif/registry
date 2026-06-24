@@ -14,7 +14,6 @@
 package org.gbif.registry.cli.datasetindex.batchindexer;
 
 import org.gbif.registry.cli.datasetindex.ElasticsearchConfig;
-import org.gbif.registry.cli.util.EmbeddedPostgresTestUtils;
 import org.gbif.registry.database.BaseDBTest;
 import org.gbif.registry.search.dataset.indexing.es.IndexingConstants;
 
@@ -94,10 +93,6 @@ public class DatasetBatchIndexerIT extends BaseDBTest {
     configuration.setOccurrenceEs(elasticsearchConfigOccurrence);
 
     configuration.setApiRootUrl(API_URL);
-
-    configuration.setIndexClb(false);
-
-    configuration.setClbDb(EmbeddedPostgresTestUtils.toDbConfig(PG_CONTAINER));
 
     // Only 10 dataset must be indexed
     configuration.setStopAfter(DATASETS_TO_INDEX);

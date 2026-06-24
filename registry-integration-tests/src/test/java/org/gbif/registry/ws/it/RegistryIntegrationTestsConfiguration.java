@@ -22,10 +22,7 @@ import org.gbif.registry.doi.config.TitleLookupConfiguration;
 import org.gbif.registry.events.config.VarnishPurgeConfiguration;
 import org.gbif.registry.mail.EmailSenderImpl;
 import org.gbif.registry.mail.config.OrganizationSuretyMailConfigurationProperties;
-import org.gbif.registry.search.dataset.indexing.checklistbank.ChecklistbankPersistenceServiceImpl;
 import org.gbif.registry.search.dataset.indexing.es.EsConfiguration;
-import org.gbif.checklistbank.ws.client.DatasetMetricsClient;
-import org.gbif.checklistbank.ws.client.SpeciesResourceClient;
 import org.gbif.metrics.ws.client.CubeWsClient;
 import org.gbif.occurrence.ws.client.OccurrenceWsSearchClient;
 import org.gbif.registry.search.dataset.indexing.ws.GbifWsClient;
@@ -134,7 +131,6 @@ import com.zaxxer.hikari.HikariDataSource;
             VarnishPurgeConfiguration.class,
             TitleLookupConfiguration.class,
             OrganizationSuretyMailConfigurationProperties.class,
-            ChecklistbankPersistenceServiceImpl.class,
             EsConfiguration.class,
             DataSourcesConfiguration.class,
             OrganizationEmailTemplateManagerIT.OrganizationEmailTemplateManagerTestConfiguration
