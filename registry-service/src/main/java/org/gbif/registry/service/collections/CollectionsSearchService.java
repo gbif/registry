@@ -79,7 +79,7 @@ public class CollectionsSearchService {
   public CollectionsSearchService(
       CollectionsSearchMapper searchMapper,
       ConceptClient conceptClient,
-      @Value("${grscicoll.defaultChecklistKey}") String defaultChecklistKey) {
+      @Value("${defaultChecklistKey}") String defaultChecklistKey) {
     this.searchMapper = searchMapper;
     this.conceptClient = conceptClient;
     this.defaultChecklistKey = defaultChecklistKey;

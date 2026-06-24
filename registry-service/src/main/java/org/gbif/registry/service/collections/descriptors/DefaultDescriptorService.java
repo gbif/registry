@@ -100,7 +100,7 @@ public class DefaultDescriptorService implements DescriptorsService {
       CollectionService collectionService,
       ConceptClient conceptClient,
       @Value("${grscicoll.checklistKeys}") List<String> checklistKeys,
-      @Value("${grscicoll.defaultChecklistKey}") String defaultChecklistKey,
+      @Value("${defaultChecklistKey}") String defaultChecklistKey,
       @Value("${grscicoll.reinterpretThreads:6}") int reinterpretThreads) {
     this.nameUsageMatchingService = nameUsageMatchingService;
     this.descriptorsMapper = descriptorsMapper;

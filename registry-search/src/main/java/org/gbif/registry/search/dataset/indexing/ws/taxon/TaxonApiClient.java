@@ -21,10 +21,10 @@ public interface TaxonApiClient {
   JsonNode getMetrics(@PathVariable("datasetKey") UUID datasetKey);
 
   @RequestMapping(
-    value = "taxon/{datasetKey}/search",
+    value = "taxon/search/{datasetKey}",
     method = RequestMethod.GET,
     produces = MediaType.APPLICATION_JSON_VALUE)
   @ResponseBody
-  JsonNode search(@RequestBody JsonNode payload);
+  JsonNode search(@PathVariable("datasetKey") String datasetKey,@RequestBody JsonNode payload);
 
 }

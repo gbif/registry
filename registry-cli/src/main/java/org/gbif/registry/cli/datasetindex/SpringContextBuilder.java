@@ -133,6 +133,7 @@ public class SpringContextBuilder {
                     .put("indexing.stopAfter", configuration.getStopAfter())
                     .put("indexing.pageSize", configuration.getPageSize())
                     .put("spring.cloud.compatibility-verifier.enabled", "false")
+                    .put("defaultChecklistKey", configuration.getDefaultChecklistKey())
                     .build()));
     ctx.refresh();
     ctx.start();

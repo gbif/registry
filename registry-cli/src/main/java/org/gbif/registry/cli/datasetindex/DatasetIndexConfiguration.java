@@ -44,4 +44,7 @@ public class DatasetIndexConfiguration {
   private Integer stopAfter = -1;
 
   private Integer pageSize = 50;
+
+  @Parameter(names = "--default-checklist-key", description = "Default checklist key to use when indexing datasets without a checklist")
+  private String defaultChecklistKey;
 }

@@ -13,10 +13,6 @@
  */
 package org.gbif.registry.search.dataset.indexing;
 
-import org.gbif.api.model.common.search.SearchResponse;
-import org.gbif.api.model.occurrence.Occurrence;
-import org.gbif.api.model.occurrence.search.OccurrenceSearchParameter;
-import org.gbif.api.model.occurrence.search.OccurrenceSearchRequest;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Installation;
 import org.gbif.api.model.registry.MachineTag;
@@ -100,6 +96,8 @@ public class DatasetJsonConverter {
 
   private Long nameUsagesCount;
 
+  private final String defaultChecklistKey;
+
   private Long getOccurrenceCount() {
     if (occurrenceCount == null) {
       occurrenceCount = gbifWsClient.getOccurrenceRecordCount();
@@ -109,7 +107,7 @@ public class DatasetJsonConverter {
 
   private Long getNameUsagesCount() {
     if (nameUsagesCount == null) {
-      nameUsagesCount = gbifWsClient.taxonSearchCount();
+      nameUsagesCount = gbifWsClient.taxonSearchCount(defaultChecklistKey);
     }
     return Optional.ofNullable(nameUsagesCount).orElse(1L);
   }
@@ -120,12 +118,14 @@ public class DatasetJsonConverter {
       ConceptClient conceptClient,
       @Qualifier("apiMapper") ObjectMapper mapper,
       @Qualifier("occurrenceEsClient") ElasticsearchClient occurrenceEsClient,
-      @Value("${elasticsearch.occurrence.index}") String occurrenceIndex) {
+      @Value("${elasticsearch.occurrence.index}") String occurrenceIndex,
+      @Value("${defaultChecklistKey}") String defaultChecklistKey) {
     this.gbifWsClient = gbifWsClient;
     this.conceptClient = conceptClient;
     this.mapper = mapper;
     this.occurrenceEsClient = occurrenceEsClient;
     this.occurrenceIndex = occurrenceIndex;
+    this.defaultChecklistKey = defaultChecklistKey;
     consumers.add(this::maintenanceFieldsTransforms);
     consumers.add(this::addTitles);
     consumers.add(this::enumTransforms);
@@ -136,13 +136,15 @@ public class DatasetJsonConverter {
       GbifWsClient gbifWsClient,
       ConceptClient conceptClient,
       ElasticsearchClient occurrenceEsClient,
-      String occurrenceIndex) {
+      String occurrenceIndex,
+      String defaultChecklistKey) {
     return new DatasetJsonConverter(
         gbifWsClient,
         conceptClient,
         JacksonObjectMapper.get(),
         occurrenceEsClient,
-        occurrenceIndex);
+        occurrenceIndex,
+        defaultChecklistKey);
   }
 
   public ObjectNode convert(Dataset dataset) {
@@ -336,43 +338,6 @@ public class DatasetJsonConverter {
       log.warn("Dataset {} with 0 count", datasetKey);
     }
     addRecordCounts(datasetJsonNode, count);
-  }
-
-  private void addFacetsData(ObjectNode datasetJsonNode) {
-    String datasetKey = datasetJsonNode.get("key").textValue();
-    Set<OccurrenceSearchParameter> facets =
-        Set.of(
-            OccurrenceSearchParameter.COUNTRY, OccurrenceSearchParameter.CONTINENT,
-            OccurrenceSearchParameter.TAXON_KEY, OccurrenceSearchParameter.YEAR);
-    OccurrenceSearchRequest occurrenceSearchRequest = new OccurrenceSearchRequest();
-    occurrenceSearchRequest.setLimit(0);
-    occurrenceSearchRequest.setOffset(0);
-    occurrenceSearchRequest.setFacetMultiSelect(false);
-    occurrenceSearchRequest.setFacetLimit(MAX_FACET_LIMIT);
-    occurrenceSearchRequest.setFacetMinCount(1);
-    occurrenceSearchRequest.setFacets(facets);
-    occurrenceSearchRequest.addParameter(OccurrenceSearchParameter.DATASET_KEY, datasetKey);
-    SearchResponse<Occurrence, OccurrenceSearchParameter> response =
-        gbifWsClient.occurrenceSearch(occurrenceSearchRequest);
-    addRecordCounts(datasetJsonNode, response.getCount());
-    ArrayNode countryNode = datasetJsonNode.putArray("country");
-    ArrayNode continentNode = datasetJsonNode.putArray("continent");
-    ArrayNode taxonKeyNode = datasetJsonNode.putArray("taxonKey");
-    ArrayNode yearNode = datasetJsonNode.putArray("year");
-    response
-        .getFacets()
-        .forEach(
-            facet -> {
-              if (OccurrenceSearchParameter.COUNTRY == facet.getField()) {
-                facet.getCounts().forEach(count -> countryNode.add(count.getName()));
-              } else if (OccurrenceSearchParameter.CONTINENT == facet.getField()) {
-                facet.getCounts().forEach(count -> continentNode.add(count.getName()));
-              } else if (OccurrenceSearchParameter.TAXON_KEY == facet.getField()) {
-                facet.getCounts().forEach(count -> taxonKeyNode.add(count.getName()));
-              } else if (OccurrenceSearchParameter.YEAR == facet.getField()) {
-                facet.getCounts().forEach(count -> yearNode.add(count.getName()));
-              }
-            });
   }
 
   private void addCategoriesWithParents(Dataset dataset, ObjectNode datasetJsonNode) {

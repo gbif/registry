@@ -61,7 +61,7 @@ public interface GbifWsClient {
 
   Long getChecklistMetricsNameCount(String datasetKey);
 
-  Long taxonSearchCount();
+  Long taxonSearchCount(String datasetKey);
 
   SearchResponse<Occurrence, OccurrenceSearchParameter> occurrenceSearch(
       OccurrenceSearchRequest searchRequest);
