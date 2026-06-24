@@ -43,20 +43,4 @@ public class DataSourcesConfiguration {
         .type(HikariDataSource.class)
         .build();
   }
-
-  @Bean
-  @ConfigurationProperties("indexing.datasource.checklistbank")
-  public DataSourceProperties clbDataSourceProperties() {
-    return new DataSourceProperties();
-  }
-
-  /** Datasource required for dataset indexing. */
-  @Bean(name = "clb_datasource")
-  @ConfigurationProperties("indexing.datasource.checklistbank.hikari")
-  public HikariDataSource clbDataSource() {
-    return clbDataSourceProperties()
-        .initializeDataSourceBuilder()
-        .type(HikariDataSource.class)
-        .build();
-  }
 }
