@@ -47,7 +47,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.util.LinkedMultiValueMap;
 
@@ -186,12 +185,11 @@ public class GbifWsWrapperClient implements GbifWsClient {
   @Override
   public Long getChecklistMetricsNameCount(String datasetKey) {
     try {
-      ResponseEntity<JsonNode> response = taxonApiClient.getMetrics(UUID.fromString(datasetKey));
-      if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
-        JsonNode nameCountNode = response.getBody().get("nameCount");
+      JsonNode response = taxonApiClient.getMetrics(UUID.fromString(datasetKey));
+      if (response != null) {
+        JsonNode nameCountNode = response.get("nameCount");
         return nameCountNode != null ? nameCountNode.asLong() : null;
       }
-      LOG.warn("Could not get checklist metrics for dataset {}, status {}", datasetKey, response.getStatusCode());
     } catch (Exception e) {
       LOG.warn("Failed to get checklist metrics for dataset {}", datasetKey, e);
     }
@@ -201,12 +199,11 @@ public class GbifWsWrapperClient implements GbifWsClient {
   @Override
   public Long taxonSearchCount() {
     try {
-      ResponseEntity<JsonNode> response = taxonApiClient.search(MAPPER.createObjectNode());
-      if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
-        JsonNode countNode = response.getBody().get("count");
+      JsonNode response = taxonApiClient.search(MAPPER.createObjectNode());
+      if (response != null) {
+        JsonNode countNode = response.get("count");
         return countNode != null ? countNode.asLong() : null;
       }
-      LOG.warn("Could not get taxon search count, status {}", response.getStatusCode());
     } catch (Exception e) {
       LOG.warn("Failed to get taxon search count", e);
     }
