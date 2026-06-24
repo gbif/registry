@@ -56,6 +56,7 @@ pipeline {
         allOf {
           not { expression { params.RELEASE } };
           branch 'dev';
+          branch '4.2.24-index-dataset-category-SNAPSHOT'
         }
       }
       steps {
