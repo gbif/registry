@@ -199,7 +199,7 @@ public class GbifWsWrapperClient implements GbifWsClient {
   @Override
   public Long taxonSearchCount(String datasetKey) {
     try {
-      JsonNode response = taxonApiClient.search(datasetKey, MAPPER.createObjectNode());
+      JsonNode response = taxonApiClient.search(datasetKey, new LinkedMultiValueMap<>());
       if (response != null) {
         JsonNode countNode = response.get("count");
         return countNode != null ? countNode.asLong() : null;
