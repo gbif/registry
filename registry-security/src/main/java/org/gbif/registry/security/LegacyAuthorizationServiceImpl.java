@@ -30,8 +30,6 @@ import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.UUID;
 
-import jakarta.servlet.http.HttpServletRequest;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
@@ -40,6 +38,8 @@ import org.springframework.stereotype.Service;
 
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 /** Class providing temporary authorization for legacy web service requests (GBRDS/IPT). */
 @Service

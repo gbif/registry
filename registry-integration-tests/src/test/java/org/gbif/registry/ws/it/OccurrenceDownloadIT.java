@@ -59,8 +59,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.UUID;
 
-import jakarta.validation.ValidationException;
-
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -71,6 +69,8 @@ import org.springframework.boot.test.web.server.LocalServerPort;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
+import jakarta.validation.ValidationException;
 
 import static org.gbif.registry.ws.it.fixtures.TestConstants.TEST_ADMIN;
 import static org.gbif.registry.ws.it.fixtures.TestConstants.TEST_USER;

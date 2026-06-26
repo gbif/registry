@@ -44,10 +44,10 @@ import org.gbif.ws.client.filter.SimplePrincipalProvider;
 import java.util.Collections;
 import java.util.UUID;
 
-import jakarta.validation.ValidationException;
-
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+
+import jakarta.validation.ValidationException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;

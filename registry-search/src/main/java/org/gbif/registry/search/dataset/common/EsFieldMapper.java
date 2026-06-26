@@ -15,8 +15,8 @@ package org.gbif.registry.search.dataset.common;
 
 import org.gbif.api.model.common.search.SearchParameter;
 
-import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 import co.elastic.clients.elasticsearch._types.SortOptions;
+import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 
 public interface EsFieldMapper<P extends SearchParameter> {
 

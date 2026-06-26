@@ -13,24 +13,6 @@
  */
 package org.gbif.registry.ws.resources;
 
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.Parameters;
-import io.swagger.v3.oas.annotations.enums.ParameterIn;
-import io.swagger.v3.oas.annotations.extensions.Extension;
-import io.swagger.v3.oas.annotations.extensions.ExtensionProperty;
-import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import java.io.IOException;
-import java.time.LocalDateTime;
-import java.util.Date;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
-import jakarta.servlet.http.HttpServletResponse;
-import jakarta.validation.constraints.NotNull;
-
 import org.gbif.api.annotation.Experimental;
 import org.gbif.api.annotation.NullToNotFound;
 import org.gbif.api.model.common.export.ExportFormat;
@@ -53,6 +35,14 @@ import org.gbif.registry.persistence.mapper.DatasetEventDownloadMapper;
 import org.gbif.registry.persistence.mapper.DownloadStatisticsMapper;
 import org.gbif.registry.persistence.mapper.EventDownloadMapper;
 import org.gbif.registry.ws.provider.PartialDate;
+
+import java.io.IOException;
+import java.time.LocalDateTime;
+import java.util.Date;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -63,6 +53,18 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.Parameters;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
+import io.swagger.v3.oas.annotations.extensions.Extension;
+import io.swagger.v3.oas.annotations.extensions.ExtensionProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.constraints.NotNull;
 
 /** Event download resource/web service. */
 @Experimental

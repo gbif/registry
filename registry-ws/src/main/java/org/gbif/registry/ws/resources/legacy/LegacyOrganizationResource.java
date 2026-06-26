@@ -31,8 +31,6 @@ import org.gbif.ws.util.CommonWsUtils;
 import java.util.List;
 import java.util.UUID;
 
-import jakarta.servlet.http.HttpServletResponse;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.CacheControl;
@@ -48,6 +46,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.fasterxml.jackson.databind.util.JSONPObject;
 
 import io.swagger.v3.oas.annotations.Hidden;
+import jakarta.servlet.http.HttpServletResponse;
 
 /** Handle all legacy web service Organization requests, previously handled by the GBRDS. */
 @Hidden

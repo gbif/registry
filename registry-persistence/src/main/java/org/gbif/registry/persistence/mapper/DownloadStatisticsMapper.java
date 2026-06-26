@@ -13,20 +13,19 @@
  */
 package org.gbif.registry.persistence.mapper;
 
-import java.util.Date;
-import java.util.List;
-import java.util.UUID;
-
-import org.apache.ibatis.annotations.Param;
-
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.search.Facet;
 import org.gbif.api.model.occurrence.DownloadStatistics;
 import org.gbif.api.model.occurrence.DownloadType;
 
-import org.springframework.stereotype.Repository;
+import java.util.Date;
+import java.util.List;
+import java.util.UUID;
 
 import javax.annotation.Nullable;
+
+import org.apache.ibatis.annotations.Param;
+import org.springframework.stereotype.Repository;
 
 /** Mapper that perform operations on occurrence downloads. */
 @Repository

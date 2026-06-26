@@ -32,9 +32,9 @@ import org.gbif.registry.ws.client.DatasetClient;
 import org.gbif.registry.ws.client.InstallationClient;
 import org.gbif.registry.ws.client.NetworkClient;
 import org.gbif.registry.ws.client.OrganizationClient;
+import org.gbif.vocabulary.client.ConceptClient;
 import org.gbif.ws.client.ClientBuilder;
 import org.gbif.ws.json.JacksonJsonObjectMapperProvider;
-import org.gbif.vocabulary.client.ConceptClient;
 
 import java.io.IOException;
 import java.util.Date;
@@ -42,13 +42,11 @@ import java.util.Date;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.freemarker.FreeMarkerAutoConfiguration;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
-import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
 import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Primary;
 import org.springframework.core.env.MapPropertySource;
 
 import com.fasterxml.jackson.core.JsonParser;
@@ -58,7 +56,6 @@ import com.fasterxml.jackson.databind.deser.std.DateDeserializers;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.google.common.collect.ImmutableMap;
-import com.zaxxer.hikari.HikariDataSource;
 
 public class SpringContextBuilder {
 

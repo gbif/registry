@@ -43,14 +43,14 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.UUID;
 
-import jakarta.validation.ConstraintViolationException;
-import jakarta.validation.ValidationException;
-
 import org.geojson.FeatureCollection;
 import org.geojson.Point;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+
+import jakarta.validation.ConstraintViolationException;
+import jakarta.validation.ValidationException;
 
 import static org.junit.jupiter.api.Assertions.*;
 

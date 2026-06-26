@@ -22,10 +22,10 @@ import org.gbif.registry.persistence.mapper.params.NodeListParams;
 import java.util.List;
 import java.util.UUID;
 
-import jakarta.annotation.Nullable;
-
 import org.apache.ibatis.annotations.Param;
 import org.springframework.stereotype.Repository;
+
+import jakarta.annotation.Nullable;
 
 /**
  * For simplicity we keep ContactableMapper part of the BaseNetworkEntityMapper, but this NodeMapper

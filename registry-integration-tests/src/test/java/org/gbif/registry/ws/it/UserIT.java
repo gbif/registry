@@ -25,12 +25,12 @@ import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
 import java.util.stream.Collectors;
 
-import jakarta.annotation.Nullable;
-
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.web.servlet.ResultActions;
+
+import jakarta.annotation.Nullable;
 
 import static org.gbif.registry.ws.it.fixtures.UserTestFixture.EMAIL;
 import static org.gbif.registry.ws.it.fixtures.UserTestFixture.PASSWORD;

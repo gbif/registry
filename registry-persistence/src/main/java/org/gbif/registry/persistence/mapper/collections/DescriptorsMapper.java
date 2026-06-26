@@ -23,10 +23,10 @@ import org.gbif.registry.persistence.mapper.collections.params.DescriptorParams;
 
 import java.util.List;
 
+import javax.annotation.Nullable;
+
 import org.apache.ibatis.annotations.Param;
 import org.springframework.stereotype.Repository;
-
-import javax.annotation.Nullable;
 
 @Repository
 public interface DescriptorsMapper {

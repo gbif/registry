@@ -44,8 +44,6 @@ import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
-import jakarta.validation.constraints.NotNull;
-
 import org.dspace.xoai.dataprovider.exceptions.IdDoesNotExistException;
 import org.dspace.xoai.dataprovider.filter.ScopedFilter;
 import org.dspace.xoai.dataprovider.handlers.results.ListItemIdentifiersResult;
@@ -61,6 +59,8 @@ import org.springframework.util.LinkedMultiValueMap;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+
+import jakarta.validation.constraints.NotNull;
 
 import static org.gbif.registry.oaipmh.OaipmhSetRepository.SetType.COUNTRY;
 import static org.gbif.registry.oaipmh.OaipmhSetRepository.SetType.DATASET_TYPE;

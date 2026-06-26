@@ -13,13 +13,13 @@
  */
 package org.gbif.registry.ws.provider.networkEntitiesList;
 
-import java.util.Arrays;
-import java.util.stream.Collectors;
-
 import org.gbif.api.model.registry.search.DatasetRequestSearchParams;
 import org.gbif.api.util.VocabularyUtils;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.DatasetType;
+
+import java.util.Arrays;
+import java.util.stream.Collectors;
 
 import org.springframework.core.MethodParameter;
 import org.springframework.web.bind.support.WebDataBinderFactory;

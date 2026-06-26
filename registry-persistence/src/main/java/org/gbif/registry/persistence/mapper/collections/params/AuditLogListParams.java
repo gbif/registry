@@ -19,7 +19,6 @@ import java.util.Date;
 import java.util.UUID;
 
 import jakarta.annotation.Nullable;
-
 import lombok.Builder;
 import lombok.Getter;
 

@@ -13,11 +13,11 @@
  */
 package org.gbif.registry.ws.it;
 
+import org.gbif.api.model.registry.search.DatasetSuggestRequest;
+import org.gbif.api.model.registry.search.DatasetSuggestResult;
 import org.gbif.registry.search.dataset.service.AsyncDatasetSearchService;
 import org.gbif.registry.search.test.ElasticsearchTestContainerConfiguration;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
-import org.gbif.api.model.registry.search.DatasetSuggestRequest;
-import org.gbif.api.model.registry.search.DatasetSuggestResult;
 
 import java.util.List;
 
@@ -51,4 +51,3 @@ public class DatasetSearchAsyncIT extends BaseItTest {
     assertNotNull(results);
   }
 }
-

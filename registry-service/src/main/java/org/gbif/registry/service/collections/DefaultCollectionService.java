@@ -47,13 +47,6 @@ import org.gbif.vocabulary.client.ConceptClient;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import jakarta.validation.ConstraintViolation;
-import jakarta.validation.ConstraintViolationException;
-import jakarta.validation.Valid;
-import jakarta.validation.Validator;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.groups.Default;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.stereotype.Service;
@@ -63,6 +56,13 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Strings;
+
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.ConstraintViolationException;
+import jakarta.validation.Valid;
+import jakarta.validation.Validator;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.groups.Default;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static org.gbif.registry.security.UserRoles.*;

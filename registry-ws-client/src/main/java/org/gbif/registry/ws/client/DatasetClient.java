@@ -32,10 +32,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.UUID;
 
-import jakarta.validation.constraints.NotNull;
-
 import org.apache.commons.io.IOUtils;
-import com.fasterxml.jackson.databind.JsonNode;
 import org.springframework.cloud.openfeign.SpringQueryMap;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -48,6 +45,10 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
+
+import com.fasterxml.jackson.databind.JsonNode;
+
+import jakarta.validation.constraints.NotNull;
 
 @RequestMapping("dataset")
 public interface DatasetClient extends NetworkEntityClient<Dataset>, DatasetService {

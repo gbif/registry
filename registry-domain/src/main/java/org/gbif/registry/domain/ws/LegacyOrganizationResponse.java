@@ -23,15 +23,14 @@ import org.gbif.registry.domain.ws.util.LegacyResourceConstants;
 
 import java.util.Optional;
 
-import jakarta.validation.constraints.NotNull;
-import jakarta.xml.bind.annotation.XmlElement;
-import jakarta.xml.bind.annotation.XmlRootElement;
-
 import com.google.common.base.Joiner;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.base.Strings;
 
+import jakarta.validation.constraints.NotNull;
+import jakarta.xml.bind.annotation.XmlElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
 import lombok.Setter;
 
 /**

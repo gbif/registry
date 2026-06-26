@@ -13,8 +13,6 @@
  */
 package org.gbif.registry.ws.resources.external;
 
-import java.util.concurrent.Executor;
-
 import org.gbif.api.annotation.NullToNotFound;
 import org.gbif.api.model.collections.AlternativeCode;
 import org.gbif.api.vocabulary.Country;
@@ -34,9 +32,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
 import java.util.stream.Collectors;
-
-import jakarta.annotation.Nullable;
 
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,6 +46,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import io.swagger.v3.oas.annotations.Hidden;
+import jakarta.annotation.Nullable;
 
 /**
  * This endpoint exists only to provide a custom feed for the iDigBio portal visible on

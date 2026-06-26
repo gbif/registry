@@ -26,7 +26,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
-import jakarta.xml.bind.JAXBElement;
 import javax.xml.transform.stream.StreamSource;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,6 +43,8 @@ import org.springframework.web.bind.annotation.RequestMethod;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
+import jakarta.xml.bind.JAXBElement;
 
 import static org.gbif.registry.ws.it.fixtures.TestConstants.IT_APP_KEY;
 import static org.gbif.registry.ws.it.fixtures.TestConstants.TEST_PASSWORD;

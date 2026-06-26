@@ -13,17 +13,16 @@
  */
 package org.gbif.registry.mail.config;
 
+import org.gbif.registry.mail.EmailCategory;
+
 import java.util.Collections;
 import java.util.Set;
 
-import lombok.Getter;
-
-import lombok.Setter;
-
-import org.gbif.registry.mail.EmailCategory;
-
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
+
+import lombok.Getter;
+import lombok.Setter;
 
 @Component
 @ConfigurationProperties(prefix = "mail")

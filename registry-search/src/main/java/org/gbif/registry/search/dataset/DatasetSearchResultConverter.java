@@ -36,12 +36,11 @@ import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import co.elastic.clients.elasticsearch.core.search.Hit;
-
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import co.elastic.clients.elasticsearch.core.search.Hit;
 import lombok.extern.slf4j.Slf4j;
 
 import static org.gbif.registry.search.dataset.indexing.es.EsQueryUtils.STRING_TO_DATE;

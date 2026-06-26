@@ -17,14 +17,14 @@ import org.gbif.api.model.common.GbifUser;
 import org.gbif.api.service.common.IdentityAccessService;
 import org.gbif.registry.persistence.mapper.UserMapper;
 
-import jakarta.annotation.Nullable;
-
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import com.google.common.base.Strings;
+
+import jakarta.annotation.Nullable;
 
 import static org.gbif.registry.identity.util.IdentityUtils.NORMALIZE_EMAIL_FCT;
 import static org.gbif.registry.identity.util.IdentityUtils.NORMALIZE_USERNAME_FCT;

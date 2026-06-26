@@ -13,19 +13,6 @@
  */
 package org.gbif.registry.search.dataset.common;
 
-import co.elastic.clients.elasticsearch._types.FieldValue;
-import co.elastic.clients.elasticsearch._types.query_dsl.Query;
-import co.elastic.clients.elasticsearch._types.SortOptions;
-import co.elastic.clients.elasticsearch._types.SortOrder;
-import co.elastic.clients.elasticsearch._types.aggregations.Aggregation;
-import co.elastic.clients.elasticsearch._types.aggregations.TermsAggregation;
-import co.elastic.clients.elasticsearch.core.SearchRequest;
-
-import co.elastic.clients.elasticsearch.core.search.Highlight;
-import co.elastic.clients.elasticsearch.core.search.HighlightField;
-import co.elastic.clients.elasticsearch.core.search.HighlighterEncoder;
-import co.elastic.clients.json.JsonData;
-
 import org.gbif.api.model.common.search.FacetedSearchRequest;
 import org.gbif.api.model.common.search.SearchConstants;
 import org.gbif.api.model.common.search.SearchParameter;
@@ -45,6 +32,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.IntUnaryOperator;
 import java.util.stream.Collectors;
+
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.LineString;
@@ -56,6 +44,18 @@ import org.locationtech.jts.io.WKTReader;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
+
+import co.elastic.clients.elasticsearch._types.FieldValue;
+import co.elastic.clients.elasticsearch._types.SortOptions;
+import co.elastic.clients.elasticsearch._types.SortOrder;
+import co.elastic.clients.elasticsearch._types.aggregations.Aggregation;
+import co.elastic.clients.elasticsearch._types.aggregations.TermsAggregation;
+import co.elastic.clients.elasticsearch._types.query_dsl.Query;
+import co.elastic.clients.elasticsearch.core.SearchRequest;
+import co.elastic.clients.elasticsearch.core.search.Highlight;
+import co.elastic.clients.elasticsearch.core.search.HighlightField;
+import co.elastic.clients.elasticsearch.core.search.HighlighterEncoder;
+import co.elastic.clients.json.JsonData;
 
 import static org.gbif.api.util.SearchTypeValidator.isDateRange;
 import static org.gbif.api.util.SearchTypeValidator.isNumericRange;

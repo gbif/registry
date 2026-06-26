@@ -16,10 +16,10 @@ package org.gbif.registry.cli.common;
 import java.net.URI;
 import java.util.StringJoiner;
 
-import jakarta.validation.constraints.NotNull;
-
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.internal.Nullable;
+
+import jakarta.validation.constraints.NotNull;
 
 /** A configuration for the DataCite service. */
 @SuppressWarnings("PublicField")

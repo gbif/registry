@@ -15,10 +15,9 @@ package org.gbif.registry.cli.common;
 
 import java.util.StringJoiner;
 
-import jakarta.validation.constraints.NotNull;
-
 import com.beust.jcommander.Parameter;
 
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 /** Holds configuration for the registry or identity database. */

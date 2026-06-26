@@ -16,14 +16,14 @@ package org.gbif.registry.ws.exception;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutionException;
 
-import io.micrometer.core.instrument.MeterRegistry;
-import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.springframework.beans.factory.annotation.Autowired;
-
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 
 /**
  * Global handler for exceptions propagated from async controller methods returning CompletableFuture.
@@ -64,4 +64,3 @@ public class AsyncExceptionHandler {
     return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(message);
   }
 }
-

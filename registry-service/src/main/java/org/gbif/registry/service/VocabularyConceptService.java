@@ -13,8 +13,6 @@
  */
 package org.gbif.registry.service;
 
-import java.util.Arrays;
-
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.registry.persistence.mapper.GrScicollVocabConceptMapper;
@@ -26,11 +24,12 @@ import org.gbif.vocabulary.client.ConceptClient;
 import org.gbif.vocabulary.model.Concept;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.HashSet;
-import java.util.Set;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 

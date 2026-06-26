@@ -18,11 +18,11 @@ import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.vocabulary.ContactType;
 import org.gbif.registry.domain.ws.util.LegacyResourceConstants;
 
+import com.google.common.base.Strings;
+
 import jakarta.validation.constraints.NotNull;
 import jakarta.xml.bind.annotation.XmlElement;
 import jakarta.xml.bind.annotation.XmlRootElement;
-
-import com.google.common.base.Strings;
 
 /**
  * Class used to generate responses for legacy (GBRDS/IPT) API. </br> JAXB annotations allow the

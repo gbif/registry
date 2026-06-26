@@ -28,11 +28,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import jakarta.annotation.Nullable;
-
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 
+import jakarta.annotation.Nullable;
 import lombok.experimental.UtilityClass;
 
 import static org.gbif.registry.search.dataset.indexing.ws.WebserviceParameter.DEFAULT_SEARCH_PARAM_VALUE;

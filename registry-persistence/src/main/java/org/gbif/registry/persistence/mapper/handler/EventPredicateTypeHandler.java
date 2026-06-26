@@ -13,20 +13,23 @@
  */
 package org.gbif.registry.persistence.mapper.handler;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.module.SimpleModule;
-import com.google.common.base.Strings;
+import org.gbif.api.model.common.search.SearchParameter;
+import org.gbif.api.model.event.search.EventSearchParameter;
+import org.gbif.api.model.predicate.Predicate;
+
 import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
+
 import org.apache.ibatis.type.JdbcType;
 import org.apache.ibatis.type.TypeHandler;
-import org.gbif.api.model.common.search.SearchParameter;
-import org.gbif.api.model.event.search.EventSearchParameter;
-import org.gbif.api.model.predicate.Predicate;
+
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.module.SimpleModule;
+import com.google.common.base.Strings;
 
 /** Serializes/deserializes {@link Predicate} objects into/from a JSON string. */
 public class EventPredicateTypeHandler implements TypeHandler<Predicate> {

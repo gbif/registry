@@ -24,11 +24,6 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.UUID;
 
-import jakarta.servlet.FilterChain;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,6 +35,11 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
+
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 /**
  * A filter that will intercept legacy web service requests to /registry/* and perform

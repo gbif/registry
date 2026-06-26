@@ -23,8 +23,6 @@ import org.gbif.registry.service.collections.lookup.LookupService;
 
 import java.util.UUID;
 
-import jakarta.annotation.Nullable;
-
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -38,6 +36,7 @@ import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.extensions.ExtensionProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import jakarta.annotation.Nullable;
 
 @io.swagger.v3.oas.annotations.tags.Tag(
   name = "Lookup institutions and collections",

@@ -13,7 +13,6 @@
  */
 package org.gbif.registry.search.dataset.indexing.ws;
 
-import com.fasterxml.jackson.databind.JsonNode;
 
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;

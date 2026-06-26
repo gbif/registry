@@ -13,15 +13,13 @@
  */
 package org.gbif.registry.persistence.mapper.params;
 
-import java.util.Set;
-
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.DatasetType;
 
+import java.util.Set;
 import java.util.UUID;
 
 import jakarta.annotation.Nullable;
-
 import lombok.Getter;
 import lombok.experimental.SuperBuilder;
 

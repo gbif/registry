@@ -23,17 +23,17 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.UUID;
 
-import jakarta.annotation.Nullable;
-import jakarta.validation.constraints.NotNull;
-import jakarta.xml.bind.annotation.XmlElement;
-import jakarta.xml.bind.annotation.XmlRootElement;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.base.Strings;
+
+import jakarta.annotation.Nullable;
+import jakarta.validation.constraints.NotNull;
+import jakarta.xml.bind.annotation.XmlElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 /**
  * Class used to create or update an Endpoint for legacy (GBRDS/IPT) API. Previously known as a

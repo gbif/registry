@@ -22,10 +22,10 @@ import org.gbif.registry.persistence.mapper.collections.params.InstitutionListPa
 import java.util.List;
 import java.util.UUID;
 
-import jakarta.annotation.Nullable;
-
 import org.apache.ibatis.annotations.Param;
 import org.springframework.stereotype.Repository;
+
+import jakarta.annotation.Nullable;
 
 /** Mapper for {@link Institution} entities. */
 @Repository

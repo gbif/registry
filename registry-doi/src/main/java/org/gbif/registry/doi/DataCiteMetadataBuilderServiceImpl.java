@@ -37,12 +37,12 @@ import org.gbif.registry.persistence.mapper.OrganizationMapper;
 
 import java.util.List;
 
-import jakarta.annotation.Nullable;
-
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import com.google.common.collect.Lists;
+
+import jakarta.annotation.Nullable;
 
 @Service
 public class DataCiteMetadataBuilderServiceImpl implements DataCiteMetadataBuilderService {
