@@ -26,15 +26,15 @@ import org.gbif.registry.search.dataset.common.EsFieldMapper;
 import java.util.List;
 import java.util.Map;
 
-import co.elastic.clients.elasticsearch._types.SortOptions;
-import co.elastic.clients.elasticsearch._types.SortOrder;
-import co.elastic.clients.elasticsearch._types.query_dsl.Query;
-import co.elastic.clients.elasticsearch._types.query_dsl.FieldValueFactorModifier;
-import co.elastic.clients.elasticsearch._types.query_dsl.FunctionBoostMode;
-
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+
+import co.elastic.clients.elasticsearch._types.SortOptions;
+import co.elastic.clients.elasticsearch._types.SortOrder;
+import co.elastic.clients.elasticsearch._types.query_dsl.FieldValueFactorModifier;
+import co.elastic.clients.elasticsearch._types.query_dsl.FunctionBoostMode;
+import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 
 public class DatasetEsFieldMapper implements EsFieldMapper<DatasetSearchParameter> {
 

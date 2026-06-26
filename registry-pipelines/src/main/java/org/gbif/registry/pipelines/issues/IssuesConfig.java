@@ -13,11 +13,10 @@
  */
 package org.gbif.registry.pipelines.issues;
 
-import jakarta.validation.constraints.NotEmpty;
-
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
+import jakarta.validation.constraints.NotEmpty;
 import lombok.Getter;
 import lombok.Setter;
 

@@ -15,8 +15,6 @@ package org.gbif.registry.ws.advice;
 
 import java.util.Optional;
 
-import jakarta.validation.constraints.NotNull;
-
 import org.springframework.core.MethodParameter;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -26,6 +24,8 @@ import org.springframework.http.server.ServerHttpResponse;
 import org.springframework.http.server.ServletServerHttpResponse;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseBodyAdvice;
+
+import jakarta.validation.constraints.NotNull;
 
 /**
  * A class that exists to overwrite 401 response codes with a 403 if the client instructs it to by

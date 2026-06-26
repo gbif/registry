@@ -35,13 +35,13 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 
-import jakarta.annotation.Nullable;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import com.google.common.collect.Sets;
+
+import jakarta.annotation.Nullable;
 
 /**
  * Main logic Only a limited set of fields are updated see {@link #shouldUpdateRegistryNode} and

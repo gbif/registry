@@ -17,11 +17,10 @@ import org.gbif.api.model.pipelines.PipelineExecution;
 import org.gbif.api.model.pipelines.PipelineProcess;
 import org.gbif.api.model.pipelines.PipelineStep;
 import org.gbif.api.model.pipelines.StepType;
+import org.gbif.registry.pipelines.service.PipelineWorkflowResolver;
 
 import java.time.OffsetDateTime;
 import java.util.Set;
-
-import org.gbif.registry.pipelines.service.PipelineWorkflowResolver;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

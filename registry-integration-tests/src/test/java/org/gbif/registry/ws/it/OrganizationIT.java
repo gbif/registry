@@ -43,8 +43,6 @@ import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.UUID;
 
-import jakarta.annotation.Nullable;
-
 import org.apache.commons.beanutils.BeanUtils;
 import org.geojson.Feature;
 import org.geojson.FeatureCollection;
@@ -55,6 +53,8 @@ import org.junit.jupiter.params.provider.EnumSource;
 import org.locationtech.jts.util.Assert;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.web.server.LocalServerPort;
+
+import jakarta.annotation.Nullable;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;

@@ -15,8 +15,6 @@ package org.gbif.registry.cli.vocabularysynchronizer;
 
 import org.gbif.common.messaging.DefaultMessageRegistry;
 import org.gbif.common.messaging.MessageListener;
-import org.gbif.registry.cli.vocabularysynchronizer.SpringContextBuilder;
-
 import org.gbif.registry.service.VocabularyPostProcessor;
 
 import java.util.List;

@@ -13,25 +13,21 @@
  */
 package org.gbif.registry.ws.resources;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-
-import io.swagger.v3.oas.annotations.Hidden;
-import io.swagger.v3.oas.annotations.extensions.Extension;
-import io.swagger.v3.oas.annotations.extensions.ExtensionProperty;
-
-import lombok.SneakyThrows;
-import lombok.extern.slf4j.Slf4j;
-
 import org.gbif.api.annotation.Experimental;
 import org.gbif.api.annotation.Trim;
 import org.gbif.api.model.common.paging.PageableBase;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.Dataset;
-import org.gbif.api.service.registry.DatasetService;
 import org.gbif.api.service.registry.DatasetDataPackageService;
+import org.gbif.api.service.registry.DatasetService;
 import org.gbif.registry.persistence.mapper.DatasetDataPackageMapper;
+
+import java.io.ByteArrayInputStream;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+
 import org.springframework.context.annotation.Primary;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.annotation.Secured;
@@ -39,11 +35,15 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
-import java.io.ByteArrayInputStream;
-import java.nio.charset.StandardCharsets;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+
+import io.swagger.v3.oas.annotations.Hidden;
+import io.swagger.v3.oas.annotations.extensions.Extension;
+import io.swagger.v3.oas.annotations.extensions.ExtensionProperty;
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 
 import static org.gbif.registry.security.UserRoles.ADMIN_ROLE;
 

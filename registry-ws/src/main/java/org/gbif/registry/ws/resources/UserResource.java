@@ -27,9 +27,6 @@ import org.gbif.registry.security.jwt.JwtUtils;
 
 import java.util.Optional;
 
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.validation.constraints.NotNull;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.CacheControl;
@@ -49,6 +46,8 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import io.swagger.v3.oas.annotations.Hidden;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.constraints.NotNull;
 
 import static org.gbif.registry.security.SecurityContextCheck.ensureGbifScheme;
 import static org.gbif.registry.security.SecurityContextCheck.ensureNotGbifScheme;

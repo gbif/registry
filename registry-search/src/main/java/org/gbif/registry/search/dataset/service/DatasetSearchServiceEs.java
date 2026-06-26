@@ -13,8 +13,6 @@
  */
 package org.gbif.registry.search.dataset.service;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
-
 import org.gbif.api.model.common.search.SearchResponse;
 import org.gbif.api.model.registry.search.DatasetSearchParameter;
 import org.gbif.api.model.registry.search.DatasetSearchRequest;
@@ -27,17 +25,19 @@ import org.gbif.registry.search.dataset.DatasetEsResponseParser;
 import org.gbif.registry.search.dataset.common.EsSearchRequestBuilder;
 
 import java.util.List;
-
-import co.elastic.clients.elasticsearch.ElasticsearchClient;
-import co.elastic.clients.elasticsearch.ElasticsearchAsyncClient;
 import java.util.concurrent.CompletableFuture;
-import co.elastic.clients.elasticsearch.core.SearchRequest;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
+import co.elastic.clients.elasticsearch.ElasticsearchAsyncClient;
+import co.elastic.clients.elasticsearch.ElasticsearchClient;
+import co.elastic.clients.elasticsearch.core.SearchRequest;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j

@@ -13,8 +13,6 @@
  */
 package org.gbif.registry.ws.it.collections.service.merge;
 
-import java.io.IOException;
-
 import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.Institution;
 import org.gbif.api.model.collections.descriptors.DescriptorGroup;
@@ -26,6 +24,8 @@ import org.gbif.api.service.collections.DescriptorsService;
 import org.gbif.api.service.collections.InstitutionService;
 import org.gbif.registry.service.collections.merge.CollectionMergeService;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
+
+import java.io.IOException;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

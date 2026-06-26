@@ -13,10 +13,6 @@
  */
 package org.gbif.registry.ws.it.collections.service.descriptors;
 
-import static org.junit.jupiter.api.Assertions.*;
-
-import java.util.*;
-import lombok.SneakyThrows;
 import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.MasterSourceMetadata;
 import org.gbif.api.model.collections.descriptors.Descriptor;
@@ -34,12 +30,19 @@ import org.gbif.registry.database.TestCaseDatabaseInitializer;
 import org.gbif.registry.test.mocks.NameUsageMatchingServiceMock;
 import org.gbif.registry.ws.it.collections.service.BaseServiceIT;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
+
+import java.util.*;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.util.StreamUtils;
+
+import lombok.SneakyThrows;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 /** Tests the {@link CollectionService}. */
 public class DescriptorsServiceIT extends BaseServiceIT {

@@ -29,7 +29,6 @@ import org.gbif.registry.doi.DoiInteractionService;
 import org.gbif.registry.doi.registration.DoiRegistration;
 import org.gbif.registry.domain.doi.DoiType;
 import org.gbif.registry.search.test.ElasticsearchTestContainerConfiguration;
-import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.ws.client.DoiInteractionClient;
 import org.gbif.registry.ws.it.fixtures.TestConstants;
 import org.gbif.registry.ws.it.fixtures.UserTestFixture;

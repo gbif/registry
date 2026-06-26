@@ -72,11 +72,11 @@ import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
-import jakarta.validation.ConstraintViolationException;
-import jakarta.validation.ValidationException;
-
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+
+import jakarta.validation.ConstraintViolationException;
+import jakarta.validation.ValidationException;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;

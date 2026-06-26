@@ -23,13 +23,12 @@ import org.gbif.registry.pipelines.RegistryIngestionHistoryService;
 import java.util.List;
 import java.util.UUID;
 
-import jakarta.annotation.Nullable;
-
 import org.springframework.http.MediaType;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import io.swagger.v3.oas.annotations.Hidden;
+import jakarta.annotation.Nullable;
 
 @Hidden // TODO: Document?
 @RestController

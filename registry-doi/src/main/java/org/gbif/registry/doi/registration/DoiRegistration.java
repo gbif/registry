@@ -17,11 +17,10 @@ import org.gbif.api.annotation.Generated;
 import org.gbif.api.model.common.DOI;
 import org.gbif.registry.domain.doi.DoiType;
 
-import jakarta.annotation.Nullable;
-
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 
+import jakarta.annotation.Nullable;
 import lombok.Getter;
 import lombok.Setter;
 

@@ -13,8 +13,6 @@
  */
 package org.gbif.registry.service;
 
-import java.util.Set;
-
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Metadata;
@@ -23,6 +21,7 @@ import org.gbif.registry.domain.ws.DerivedDatasetUsage;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import jakarta.annotation.Nullable;

@@ -13,14 +13,16 @@
  */
 package org.gbif.registry.persistence.mapper.collections.params;
 
-import jakarta.annotation.Nullable;
+import org.gbif.api.vocabulary.Country;
+import org.gbif.api.vocabulary.collections.CollectionFacetParameter;
+
 import java.time.LocalDate;
 import java.util.List;
+
+import jakarta.annotation.Nullable;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
-import org.gbif.api.vocabulary.Country;
-import org.gbif.api.vocabulary.collections.CollectionFacetParameter;
 
 @Getter
 @Setter

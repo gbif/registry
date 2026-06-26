@@ -18,9 +18,6 @@ import org.gbif.registry.domain.ws.util.LegacyResourceConstants;
 
 import java.io.IOException;
 
-import jakarta.validation.constraints.NotNull;
-import jakarta.xml.bind.annotation.XmlElement;
-import jakarta.xml.bind.annotation.XmlRootElement;
 import javax.xml.namespace.QName;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -31,6 +28,9 @@ import com.fasterxml.jackson.dataformat.xml.ser.ToXmlGenerator;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 
+import jakarta.validation.constraints.NotNull;
+import jakarta.xml.bind.annotation.XmlElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
 import lombok.Setter;
 
 /**

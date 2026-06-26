@@ -29,10 +29,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
-import jakarta.annotation.Nullable;
-
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+
+import jakarta.annotation.Nullable;
 
 /**
  * Class that implements an in-memory users store. This class is intended to be use in IT and unit

@@ -13,9 +13,6 @@
  */
 package org.gbif.registry.search.dataset.indexing.ws;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.common.search.SearchResponse;
@@ -32,6 +29,7 @@ import org.gbif.api.service.registry.NetworkService;
 import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.metrics.ws.client.CubeWsClient;
 import org.gbif.occurrence.ws.client.OccurrenceWsSearchClient;
+import org.gbif.registry.search.dataset.indexing.ws.taxon.TaxonApiClient;
 
 import java.io.InputStream;
 import java.util.List;
@@ -39,16 +37,15 @@ import java.util.UUID;
 
 import org.cache2k.Cache;
 import org.cache2k.Cache2kBuilder;
-
-
-import org.gbif.registry.search.dataset.indexing.ws.taxon.TaxonApiClient;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 import org.springframework.util.LinkedMultiValueMap;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 /** Retrofit {@link GbifApiService} client. */
 @Component

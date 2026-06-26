@@ -21,10 +21,10 @@ import org.gbif.registry.persistence.mapper.params.NetworkListParams;
 import java.util.List;
 import java.util.UUID;
 
-import jakarta.annotation.Nullable;
-
 import org.apache.ibatis.annotations.Param;
 import org.springframework.stereotype.Repository;
+
+import jakarta.annotation.Nullable;
 
 @Repository
 public interface NetworkMapper extends BaseNetworkEntityMapper<Network> {

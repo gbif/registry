@@ -41,14 +41,13 @@ import org.gbif.vocabulary.client.ConceptClient;
 import java.util.List;
 import java.util.UUID;
 
-import jakarta.validation.ConstraintViolationException;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.google.common.base.Throwables;
 import com.google.common.eventbus.Subscribe;
 
+import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 
 import static com.google.common.base.Preconditions.checkArgument;

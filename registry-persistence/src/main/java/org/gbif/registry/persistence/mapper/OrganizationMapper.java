@@ -26,11 +26,11 @@ import org.gbif.registry.persistence.mapper.params.OrganizationListParams;
 import java.util.List;
 import java.util.UUID;
 
-import jakarta.annotation.Nullable;
-
 import org.apache.ibatis.annotations.Param;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Repository;
+
+import jakarta.annotation.Nullable;
 
 @Qualifier("organizationChallengeCodeSupportMapper")
 @Repository

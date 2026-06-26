@@ -13,15 +13,14 @@
  */
 package org.gbif.registry.persistence.mapper;
 
-import org.apache.ibatis.annotations.Param;
-
 import org.gbif.api.model.common.paging.PageableBase;
 import org.gbif.api.model.registry.Dataset;
 
-import org.springframework.stereotype.Repository;
-
 import java.util.List;
 import java.util.UUID;
+
+import org.apache.ibatis.annotations.Param;
+import org.springframework.stereotype.Repository;
 
 @Repository
 public interface DatasetDataPackageMapper {

@@ -47,12 +47,12 @@ import java.net.URI;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import jakarta.validation.ConstraintViolationException;
-import jakarta.validation.ValidationException;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+
+import jakarta.validation.ConstraintViolationException;
+import jakarta.validation.ValidationException;
 
 import static org.junit.jupiter.api.Assertions.*;
 

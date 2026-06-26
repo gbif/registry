@@ -13,16 +13,19 @@
  */
 package org.gbif.registry.persistence.mapper;
 
-import java.time.LocalDateTime;
-import java.util.Date;
-import java.util.List;
-import java.util.Set;
-import javax.annotation.Nullable;
-import org.apache.ibatis.annotations.Param;
 import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.occurrence.Download;
 import org.gbif.api.vocabulary.License;
+
+import java.time.LocalDateTime;
+import java.util.Date;
+import java.util.List;
+import java.util.Set;
+
+import javax.annotation.Nullable;
+
+import org.apache.ibatis.annotations.Param;
 
 /** Mapper that perform operations on occurrence downloads. */
 public interface DownloadMapper {

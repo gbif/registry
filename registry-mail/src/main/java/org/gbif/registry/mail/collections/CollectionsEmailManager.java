@@ -33,8 +33,6 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 
-import jakarta.annotation.Nullable;
-
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -42,6 +40,7 @@ import org.springframework.stereotype.Service;
 import com.google.common.base.Strings;
 
 import freemarker.template.TemplateException;
+import jakarta.annotation.Nullable;
 
 import static com.google.common.base.Preconditions.checkArgument;
 

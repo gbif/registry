@@ -13,13 +13,15 @@
  */
 package org.gbif.registry.persistence.mapper.collections.params;
 
-import jakarta.annotation.Nullable;
-import java.time.LocalDate;
-import java.util.List;
-import lombok.Builder;
-import lombok.Getter;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.vocabulary.Country;
+
+import java.time.LocalDate;
+import java.util.List;
+
+import jakarta.annotation.Nullable;
+import lombok.Builder;
+import lombok.Getter;
 
 @Getter
 @Builder

@@ -13,9 +13,9 @@
  */
 package org.gbif.registry.domain.ws;
 
-import jakarta.annotation.Nullable;
-
 import com.google.common.base.Strings;
+
+import jakarta.annotation.Nullable;
 
 public interface LegacyEntity {
 

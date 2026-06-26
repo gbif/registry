@@ -13,11 +13,6 @@
  */
 package org.gbif.registry.persistence.mapper;
 
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-import javax.annotation.Nullable;
-import org.apache.ibatis.annotations.Param;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.registry.CountryOccurrenceDownloadUsage;
 import org.gbif.api.model.registry.DatasetOccurrenceDownloadUsage;
@@ -26,7 +21,14 @@ import org.gbif.api.vocabulary.CountryUsageSortField;
 import org.gbif.api.vocabulary.DatasetUsageSortField;
 import org.gbif.api.vocabulary.OrganizationUsageSortField;
 import org.gbif.api.vocabulary.SortOrder;
-import org.springframework.stereotype.Repository;
+
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
+import javax.annotation.Nullable;
+
+import org.apache.ibatis.annotations.Param;
 
 /** Mapper that perform operations on dataset usages in occurrence downloads. */
 public interface DatasetDownloadMapper {

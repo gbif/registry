@@ -18,11 +18,11 @@ import org.gbif.registry.cli.common.DirectoryConfiguration;
 
 import java.util.StringJoiner;
 
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotNull;
-
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParametersDelegate;
+
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 
 /** A configuration exclusively for DirectoryUpdater. */
 public class DirectoryUpdateConfiguration {

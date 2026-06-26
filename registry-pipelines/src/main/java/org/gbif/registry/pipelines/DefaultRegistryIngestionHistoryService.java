@@ -30,9 +30,9 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import jakarta.annotation.Nullable;
-
 import org.springframework.stereotype.Service;
+
+import jakarta.annotation.Nullable;
 
 @Service
 public class DefaultRegistryIngestionHistoryService implements RegistryIngestionHistoryService {

@@ -21,11 +21,11 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 
-import jakarta.annotation.Nullable;
-
 import org.apache.ibatis.type.JdbcType;
 import org.apache.ibatis.type.MappedTypes;
 import org.apache.ibatis.type.TypeHandler;
+
+import jakarta.annotation.Nullable;
 
 /**
  * A converter for DOI objects to the database representation using the DOI name. Nulls are passed

@@ -13,9 +13,9 @@
  */
 package org.gbif.registry.search.dataset.common;
 
-import co.elastic.clients.elasticsearch.core.search.Hit;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
+
+import co.elastic.clients.elasticsearch.core.search.Hit;
 
 public interface SearchResultConverter<T, S> {
 

@@ -51,8 +51,6 @@ import java.lang.annotation.Target;
 import java.util.List;
 import java.util.UUID;
 
-import jakarta.servlet.http.HttpServletResponse;
-
 import org.geojson.FeatureCollection;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ContentDisposition;
@@ -70,6 +68,7 @@ import io.swagger.v3.oas.annotations.extensions.ExtensionProperty;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import jakarta.servlet.http.HttpServletResponse;
 
 /**
  * Class that acts both as the WS endpoint for {@link Institution} entities and also provides an *

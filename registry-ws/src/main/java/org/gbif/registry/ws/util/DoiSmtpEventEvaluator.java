@@ -13,10 +13,11 @@
  */
 package org.gbif.registry.ws.util;
 
+import org.slf4j.Marker;
+
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.boolex.EventEvaluatorBase;
-import org.slf4j.Marker;
 
 /**
  * Custom event evaluator for DOI SMTP appender filtering.
