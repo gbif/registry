@@ -152,7 +152,7 @@
     <!-- Test -->
     <mockito.version>5.20.0</mockito.version>
     <xmlunit.version>2.11.0</xmlunit.version>
-    <testcontainers.version>2.0.2</testcontainers.version>
+    <testcontainers.version>2.0.5</testcontainers.version>
     <mock-javamail.version>2.2</mock-javamail.version>
     <mybatis-spring-boot-starter-test.version>3.0.5</mybatis-spring-boot-starter-test.version>
     <reflections.version>0.10.2</reflections.version>
