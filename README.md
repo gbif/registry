@@ -12,6 +12,25 @@ As a distributed network, the registry serves a central coordination mechanism, 
 * PR are preferred for complex functionality. **Please target the dev branch**.
 * Simple changes can be committed without review.
 
+## Local Development
+
+### Building
+```mvn clean package```
+
+### Running unit tests
+```mvn verify```
+
+### Running integration tests
+Integration tests require Docker (Testcontainers for PostgreSQL and Elasticsearch).
+
+```mvn verify -Pintegration-tests```
+
+For development against real GBIF infrastructure (GBIF staff only), add the
+`registry-local` profile from [**registry-ws**](registry-ws/README.md) to your `~/.m2/settings.xml`
+and run:
+
+```mvn verify -Pintegration-tests,registry-local```
+
 ## Code style
 
 The registry uses the spotless-maven-plugin (import order, license header).
