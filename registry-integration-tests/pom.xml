@@ -286,6 +286,12 @@
             <exclude>**/*Tests.java</exclude>
           </excludes>
         </configuration>
+        <executions>
+          <execution>
+            <id>default</id>
+            <phase>none</phase>  <!-- Do not run Integration tests during normal `mvn verify` -->
+          </execution>
+        </executions>
       </plugin>
 
       <plugin>
@@ -324,4 +330,29 @@
     </plugins>
   </build>
 
+  <!--
+    Activating the integration-test profile, will include Integration tests
+  -->
+  <profiles>
+    <profile>
+      <id>integration-tests</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-failsafe-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>integration-tests</id>
+                <goals>
+                  <goal>integration-test</goal>
+                  <goal>verify</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
 </project>

@@ -1,22 +1,31 @@
 # GBIF Registry Integration Tests
 
-This module includes integration tests for all the registry modules.
-Internally using [JUnit](https://junit.org/junit5/),
-[Mockito](https://site.mockito.org/) and
-testcontainers.
+Integration tests for all registry modules using JUnit 5, Mockito, and
+Testcontainers (PostgreSQL + Elasticsearch — Docker required).
 
- ## Run tests by maven
+## Running
 
- ```mvn clean verify```
+### Unit tests only (no Docker, no external dependencies)
+```mvn verify```
 
- ## Run by Intellij IDEA
+### Integration tests (requires Docker)
+```mvn verify -Pintegration-tests```
 
- Right click on java directory -> Run 'All Tests'
+### Against real GBIF infrastructure (GBIF staff only)
+Add the `registry-local` profile to `~/.m2/settings.xml` (see `registry-ws/README.md`),
+then:
+```mvn verify -Pintegration-tests,registry-local```
 
- Right click on specific test class -> Run 'ThisIT'
+## Configuration
 
- ## Configuration
+Test properties are in `src/test/resources/application-test.yml`.
 
- Test properties can be configured in file [application-test.yml](src/test/resources/application-test.yml).
+Safe default values for all properties are provided automatically via the
+`registry-test-defaults` Maven profile in the root pom. No `settings.xml`
+configuration is needed to run tests locally.
 
-[Parent](../README.md)
+## IntelliJ IDEA
+
+Right click `src/test/java` → Run 'All Tests'
+
+Right click a specific test class → Run 'TestClassNameIT'
