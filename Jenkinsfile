@@ -59,7 +59,7 @@ pipeline {
                   ]) {
                     sh '''
                        mvn -B -Denforcer.skip=true -Dappkeys.testfile=$APPKEYS_TESTFILE clean install deploy verify -T 1C \
-                           -Dparallel=classes -DuseUnlimitedThreads=true -Pgbif-dev,registry-cli-it,secrets-dev -U
+                           -Dparallel=classes -DuseUnlimitedThreads=true -Pgbif-dev,registry-cli-it,secrets-dev,integration-test -U
                       '''
                   }
             }
