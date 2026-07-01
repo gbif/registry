@@ -39,6 +39,7 @@ import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.UUID;
 import java.util.function.BiFunction;
 
@@ -55,7 +56,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
-import java.util.Base64;
 
 import com.google.common.collect.Sets;
 

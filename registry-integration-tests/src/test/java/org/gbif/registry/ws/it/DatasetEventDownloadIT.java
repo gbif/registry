@@ -13,12 +13,6 @@
  */
 package org.gbif.registry.ws.it;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.occurrence.Download;
 import org.gbif.api.model.registry.Dataset;
@@ -37,11 +31,19 @@ import org.gbif.registry.ws.client.DatasetEventDownloadUsageClient;
 import org.gbif.registry.ws.client.EventDownloadClient;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 import org.gbif.ws.security.KeyStore;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.web.server.LocalServerPort;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * Runs tests for the {@link OccurrenceDownloadService} event implementations. This is parameterized

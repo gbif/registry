@@ -16,9 +16,9 @@ package org.gbif.registry.security.authorization;
 import org.gbif.api.model.registry.Organization;
 import org.gbif.registry.security.SecurityContextCheck;
 
-import jakarta.annotation.Nullable;
-
 import org.springframework.security.core.Authentication;
+
+import jakarta.annotation.Nullable;
 
 import static org.gbif.registry.security.UserRoles.ADMIN_ROLE;
 

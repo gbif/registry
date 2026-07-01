@@ -13,10 +13,6 @@
  */
 package org.gbif.registry.service.collections.descriptors;
 
-import lombok.Getter;
-
-import lombok.Setter;
-
 import org.gbif.api.model.collections.descriptors.DescriptorGroup;
 import org.gbif.api.model.collections.descriptors.DescriptorValidationResult;
 import org.gbif.registry.persistence.mapper.collections.DescriptorsMapper;
@@ -41,6 +37,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 /**

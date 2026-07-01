@@ -46,9 +46,9 @@ import org.gbif.api.vocabulary.MaintenanceUpdateFrequency;
 import org.gbif.api.vocabulary.MetadataType;
 import org.gbif.registry.identity.service.IdentityService;
 import org.gbif.registry.search.dataset.indexing.DatasetRealtimeIndexer;
+import org.gbif.registry.search.test.BaseElasticsearchTest;
 import org.gbif.registry.search.test.DatasetSearchUpdateUtils;
 import org.gbif.registry.search.test.ElasticsearchTestContainerConfiguration;
-import org.gbif.registry.search.test.BaseElasticsearchTest;
 import org.gbif.registry.test.Datasets;
 import org.gbif.registry.test.TestDataFactory;
 import org.gbif.registry.ws.client.DatasetClient;
@@ -79,10 +79,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
-import jakarta.annotation.Nullable;
-import jakarta.validation.ConstraintViolationException;
-import jakarta.validation.ValidationException;
-
 import org.apache.commons.beanutils.BeanUtils;
 import org.apache.ibatis.io.Resources;
 import org.junit.jupiter.api.BeforeEach;
@@ -96,9 +92,13 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.test.web.servlet.ResultActions;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Charsets;
 import com.google.common.io.CharStreams;
-import com.fasterxml.jackson.databind.ObjectMapper;
+
+import jakarta.annotation.Nullable;
+import jakarta.validation.ConstraintViolationException;
+import jakarta.validation.ValidationException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.gbif.registry.test.Datasets.buildExpectedProcessedProperties;

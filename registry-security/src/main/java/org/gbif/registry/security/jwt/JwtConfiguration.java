@@ -13,10 +13,10 @@
  */
 package org.gbif.registry.security.jwt;
 
-import jakarta.validation.constraints.NotNull;
-
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
+
+import jakarta.validation.constraints.NotNull;
 
 @Component
 @ConfigurationProperties(prefix = "jwt")

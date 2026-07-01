@@ -13,8 +13,6 @@
  */
 package org.gbif.registry.service;
 
-import java.util.Set;
-
 import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
@@ -22,6 +20,7 @@ import org.gbif.registry.domain.ws.DerivedDataset;
 import org.gbif.registry.domain.ws.DerivedDatasetUsage;
 
 import java.util.List;
+import java.util.Set;
 
 public interface RegistryDerivedDatasetService {
 

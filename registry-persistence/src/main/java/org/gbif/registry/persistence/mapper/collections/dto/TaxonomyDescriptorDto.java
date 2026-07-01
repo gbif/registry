@@ -13,9 +13,11 @@
  */
 package org.gbif.registry.persistence.mapper.collections.dto;
 
-import java.util.List;
-import lombok.Data;
 import org.gbif.api.v2.RankedName;
+
+import java.util.List;
+
+import lombok.Data;
 
 @Data
 public class TaxonomyDescriptorDto {

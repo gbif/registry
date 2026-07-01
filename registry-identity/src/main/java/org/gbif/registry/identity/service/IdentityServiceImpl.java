@@ -33,11 +33,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
-import jakarta.annotation.Nullable;
-import jakarta.validation.ConstraintViolation;
-import jakarta.validation.Validator;
-import jakarta.validation.groups.Default;
-
 import org.apache.commons.lang3.Range;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -46,6 +41,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.google.common.base.Strings;
+
+import jakarta.annotation.Nullable;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.Validator;
+import jakarta.validation.groups.Default;
 
 import static org.gbif.registry.identity.model.UserModelMutationResult.withError;
 import static org.gbif.registry.identity.model.UserModelMutationResult.withSingleConstraintViolation;

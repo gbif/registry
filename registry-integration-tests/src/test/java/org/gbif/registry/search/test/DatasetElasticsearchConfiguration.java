@@ -13,9 +13,6 @@
  */
 package org.gbif.registry.search.test;
 
-import co.elastic.clients.elasticsearch.ElasticsearchClient;
-import co.elastic.clients.elasticsearch.ElasticsearchAsyncClient;
-
 import org.gbif.registry.search.dataset.indexing.es.EsClient;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,9 +20,12 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Scope;
 import org.springframework.context.annotation.Primary;
+import org.springframework.context.annotation.Scope;
 import org.springframework.core.io.ResourceLoader;
+
+import co.elastic.clients.elasticsearch.ElasticsearchAsyncClient;
+import co.elastic.clients.elasticsearch.ElasticsearchClient;
 
 /**
  * Test-specific Elasticsearch configuration that provides the same beans as EsConfiguration

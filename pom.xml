@@ -11,7 +11,7 @@
 
   <groupId>org.gbif.registry</groupId>
   <artifactId>registry-parent</artifactId>
-  <version>4.2.24-SNAPSHOT</version>
+  <version>4.2.24-validation-report-SNAPSHOT</version>
   <name>GBIF Registry Parent</name>
   <description>GBIF Registry project</description>
 
@@ -152,7 +152,7 @@
     <!-- Test -->
     <mockito.version>5.20.0</mockito.version>
     <xmlunit.version>2.11.0</xmlunit.version>
-    <testcontainers.version>2.0.2</testcontainers.version>
+    <testcontainers.version>2.0.5</testcontainers.version>
     <mock-javamail.version>2.2</mock-javamail.version>
     <mybatis-spring-boot-starter-test.version>3.0.5</mybatis-spring-boot-starter-test.version>
     <reflections.version>0.10.2</reflections.version>
@@ -1027,5 +1027,30 @@
       </plugins>
     </pluginManagement>
   </build>
+
+  <!--
+    Circumvent Integration test blocking normal unit test, profile will automatically be disabled if any other
+    profile is activated using `mvn verify -Pregistry-cli-it` or similar.
+  -->
+  <profiles>
+    <profile>
+      <id>registry-test-defaults</id>
+      <activation>
+        <activeByDefault>true</activeByDefault>
+      </activation>
+      <properties>
+        <mail.cc></mail.cc>
+        <mail.bcc></mail.bcc>
+        <mail.from>test@example.com</mail.from>
+        <mail.helpdesk>test@example.com</mail.helpdesk>
+        <directory.app.key>gbif.app.it</directory.app.key>
+        <directory.app.secret>fake</directory.app.secret>
+        <directory.ws.url>http://localhost/directory/</directory.ws.url>
+        <validation.client.username>test</validation.client.username>
+        <validation.client.password>fake</validation.client.password>
+        <appkeys.testfile>${project.basedir}/src/test/resources/appkeys-test.properties</appkeys.testfile>
+      </properties>
+    </profile>
+  </profiles>
 
 </project>

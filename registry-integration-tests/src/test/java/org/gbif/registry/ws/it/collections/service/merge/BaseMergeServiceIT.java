@@ -13,8 +13,6 @@
  */
 package org.gbif.registry.ws.it.collections.service.merge;
 
-import java.io.IOException;
-
 import org.gbif.api.model.collections.*;
 import org.gbif.api.model.collections.Address;
 import org.gbif.api.model.collections.Contact;
@@ -32,6 +30,7 @@ import org.gbif.registry.service.collections.merge.MergeService;
 import org.gbif.registry.ws.it.collections.service.BaseServiceIT;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
+import java.io.IOException;
 import java.util.Collections;
 import java.util.UUID;
 

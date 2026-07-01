@@ -15,10 +15,6 @@ package org.gbif.registry.ws.resources;
 
 
 
-import static org.gbif.registry.security.UserRoles.ADMIN_ROLE;
-import static org.gbif.registry.security.UserRoles.EDITOR_ROLE;
-import static org.gbif.registry.security.UserRoles.IPT_ROLE;
-
 import org.gbif.api.annotation.NullToNotFound;
 import org.gbif.api.annotation.Trim;
 import org.gbif.api.documentation.CommonParameters;
@@ -50,8 +46,6 @@ import org.gbif.registry.service.WithMyBatis;
 import java.util.List;
 import java.util.UUID;
 
-import jakarta.annotation.Nullable;
-
 import org.springframework.context.annotation.Primary;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.annotation.Secured;
@@ -71,6 +65,11 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.extensions.Extension;
 import io.swagger.v3.oas.annotations.extensions.ExtensionProperty;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import jakarta.annotation.Nullable;
+
+import static org.gbif.registry.security.UserRoles.ADMIN_ROLE;
+import static org.gbif.registry.security.UserRoles.EDITOR_ROLE;
+import static org.gbif.registry.security.UserRoles.IPT_ROLE;
 
 @io.swagger.v3.oas.annotations.tags.Tag(
     name = "Participant nodes",

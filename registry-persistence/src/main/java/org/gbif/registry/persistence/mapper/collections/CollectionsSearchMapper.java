@@ -23,9 +23,9 @@ import org.gbif.registry.persistence.mapper.collections.params.InstitutionListPa
 
 import java.util.List;
 
-import jakarta.annotation.Nullable;
-
 import org.apache.ibatis.annotations.Param;
+
+import jakarta.annotation.Nullable;
 
 public interface CollectionsSearchMapper {
 

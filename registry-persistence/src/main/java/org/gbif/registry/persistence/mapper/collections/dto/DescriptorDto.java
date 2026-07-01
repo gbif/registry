@@ -14,10 +14,12 @@
 package org.gbif.registry.persistence.mapper.collections.dto;
 
 
+import org.gbif.api.vocabulary.Country;
+
 import java.util.Date;
 import java.util.List;
+
 import lombok.Data;
-import org.gbif.api.vocabulary.Country;
 
 @Data
 public class DescriptorDto {

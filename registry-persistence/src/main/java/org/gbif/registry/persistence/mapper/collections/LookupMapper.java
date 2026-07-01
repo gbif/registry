@@ -18,9 +18,9 @@ import org.gbif.registry.persistence.mapper.collections.dto.EntityMatchedDto;
 import java.util.List;
 import java.util.UUID;
 
-import jakarta.annotation.Nullable;
-
 import org.apache.ibatis.annotations.Param;
+
+import jakarta.annotation.Nullable;
 
 public interface LookupMapper<T extends EntityMatchedDto> {
 

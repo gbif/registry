@@ -18,7 +18,6 @@ import org.gbif.api.vocabulary.Country;
 import java.util.List;
 
 import jakarta.annotation.Nullable;
-
 import lombok.Builder;
 import lombok.Data;
 

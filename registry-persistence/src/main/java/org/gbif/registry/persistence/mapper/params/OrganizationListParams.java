@@ -19,7 +19,6 @@ import org.gbif.api.vocabulary.Country;
 import java.util.UUID;
 
 import jakarta.annotation.Nullable;
-
 import lombok.Getter;
 import lombok.experimental.SuperBuilder;
 

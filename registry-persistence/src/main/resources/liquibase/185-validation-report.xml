@@ -1,0 +1,19 @@
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+  <changeSet id="185" author="nreibke" runInTransaction="false">
+    <sql splitStatements="false" stripComments="false">
+      <![CDATA[
+      CREATE TABLE validation_report (
+                                       dataset_key UUID    NOT NULL,
+                                       attempt     INTEGER NOT NULL,
+                                       report      JSONB   NOT NULL,
+                                       created     TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT now(),
+                                       CONSTRAINT validation_report_pkey PRIMARY KEY (dataset_key, attempt)
+      );
+      ]]>
+    </sql>
+  </changeSet>
+</databaseChangeLog>

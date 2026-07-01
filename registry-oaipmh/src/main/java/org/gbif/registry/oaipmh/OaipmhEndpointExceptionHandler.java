@@ -18,8 +18,6 @@ import org.gbif.api.exception.ServiceUnavailableException;
 import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 
-import jakarta.servlet.http.HttpServletRequest;
-
 import org.dspace.xoai.dataprovider.builder.OAIRequestParametersBuilder;
 import org.dspace.xoai.dataprovider.exceptions.BadArgumentException;
 import org.dspace.xoai.dataprovider.handlers.ErrorHandler;
@@ -33,6 +31,8 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 import static org.dspace.xoai.dataprovider.parameters.OAIRequest.Parameter.From;
 import static org.dspace.xoai.dataprovider.parameters.OAIRequest.Parameter.Identifier;

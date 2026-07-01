@@ -13,20 +13,18 @@
  */
 package org.gbif.registry.ws.jwt;
 
-import io.jsonwebtoken.io.Decoders;
-
 import org.gbif.registry.security.jwt.JwtConfiguration;
 
 import java.util.Date;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.ws.rs.core.HttpHeaders;
-
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.ws.rs.core.HttpHeaders;
 
 public class JwtUtils {
 

@@ -18,7 +18,6 @@ import org.gbif.api.vocabulary.IdentifierType;
 import java.util.UUID;
 
 import jakarta.annotation.Nullable;
-
 import lombok.Builder;
 import lombok.Data;
 

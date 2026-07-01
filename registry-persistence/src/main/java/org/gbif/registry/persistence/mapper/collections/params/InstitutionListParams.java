@@ -18,7 +18,6 @@ import org.gbif.api.vocabulary.collections.InstitutionFacetParameter;
 import java.util.List;
 
 import jakarta.annotation.Nullable;
-
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;

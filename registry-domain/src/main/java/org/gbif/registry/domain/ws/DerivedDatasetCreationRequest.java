@@ -25,8 +25,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.StringJoiner;
 
-import jakarta.validation.constraints.NotNull;
-
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.ObjectCodec;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -37,6 +35,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.exc.MismatchedInputException;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotNull;
 
 public class DerivedDatasetCreationRequest implements Serializable {
 

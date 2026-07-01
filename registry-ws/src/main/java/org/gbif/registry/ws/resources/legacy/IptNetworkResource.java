@@ -21,8 +21,6 @@ import org.gbif.registry.persistence.mapper.params.NetworkListParams;
 import java.util.List;
 import java.util.UUID;
 
-import jakarta.servlet.http.HttpServletResponse;
-
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,6 +34,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import io.swagger.v3.oas.annotations.Hidden;
+import jakarta.servlet.http.HttpServletResponse;
 
 /**
  * Handle all web service Network requests from IPT.

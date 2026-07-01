@@ -14,9 +14,6 @@
 package org.gbif.registry.search.dataset.common;
 
 
-import lombok.SneakyThrows;
-import com.fasterxml.jackson.core.JsonProcessingException;
-
 import org.gbif.api.model.common.search.Facet;
 import org.gbif.api.model.common.search.FacetedSearchRequest;
 import org.gbif.api.model.common.search.SearchParameter;
@@ -29,16 +26,20 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import co.elastic.clients.elasticsearch.core.search.Hit;
+import com.fasterxml.jackson.core.JsonProcessingException;
+
 import co.elastic.clients.elasticsearch._types.aggregations.Aggregate;
 import co.elastic.clients.elasticsearch._types.aggregations.Aggregation;
-import co.elastic.clients.elasticsearch._types.aggregations.StringTermsAggregate;
-import co.elastic.clients.elasticsearch._types.aggregations.LongTermsAggregate;
 import co.elastic.clients.elasticsearch._types.aggregations.DoubleTermsAggregate;
 import co.elastic.clients.elasticsearch._types.aggregations.FilterAggregate;
+import co.elastic.clients.elasticsearch._types.aggregations.LongTermsAggregate;
+import co.elastic.clients.elasticsearch._types.aggregations.StringTermsAggregate;
+import co.elastic.clients.elasticsearch.core.search.Hit;
+import lombok.SneakyThrows;
 
 import static org.gbif.registry.search.dataset.indexing.es.EsQueryUtils.extractFacetLimit;
 import static org.gbif.registry.search.dataset.indexing.es.EsQueryUtils.extractFacetOffset;

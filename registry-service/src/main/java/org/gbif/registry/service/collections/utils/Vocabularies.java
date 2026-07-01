@@ -16,12 +16,12 @@ package org.gbif.registry.service.collections.utils;
 import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.CollectionEntity;
 import org.gbif.api.model.collections.Institution;
+import org.gbif.api.model.collections.descriptors.DescriptorValidationResult;
 import org.gbif.api.model.collections.request.CollectionDescriptorsSearchRequest;
 import org.gbif.api.model.collections.request.CollectionSearchRequest;
 import org.gbif.api.model.collections.request.InstitutionSearchRequest;
 import org.gbif.api.model.collections.request.SearchRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
-import org.gbif.api.model.collections.descriptors.DescriptorValidationResult;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.vocabulary.DescriptorIssue;
 import org.gbif.registry.persistence.mapper.collections.dto.DescriptorDto;
@@ -457,4 +457,3 @@ public class Vocabularies {
     BiConsumer<T, List<String>> setter;
   }
 }
-

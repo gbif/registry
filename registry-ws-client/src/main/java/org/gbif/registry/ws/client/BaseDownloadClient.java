@@ -14,11 +14,6 @@
 package org.gbif.registry.ws.client;
 
 
-import java.time.LocalDateTime;
-import java.util.Date;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
 import org.gbif.api.annotation.PartialDate;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
@@ -33,6 +28,13 @@ import org.gbif.api.vocabulary.DatasetUsageSortField;
 import org.gbif.api.vocabulary.License;
 import org.gbif.api.vocabulary.OrganizationUsageSortField;
 import org.gbif.api.vocabulary.SortOrder;
+
+import java.time.LocalDateTime;
+import java.util.Date;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+
 import org.springframework.cloud.openfeign.SpringQueryMap;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.MediaType;

@@ -13,7 +13,6 @@
  */
 package org.gbif.registry.ws.provider.networkEntitiesList;
 
-import org.apache.commons.lang3.StringUtils;
 import org.gbif.api.model.registry.search.OrganizationRequestSearchParams;
 import org.gbif.api.util.Range;
 import org.gbif.api.util.VocabularyUtils;
@@ -22,6 +21,7 @@ import org.gbif.api.vocabulary.Country;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.core.MethodParameter;
 import org.springframework.web.bind.support.WebDataBinderFactory;
 import org.springframework.web.context.request.NativeWebRequest;

@@ -43,8 +43,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Stream;
 
-import jakarta.annotation.Nullable;
-
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -52,6 +50,8 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.web.multipart.MultipartFile;
+
+import jakarta.annotation.Nullable;
 
 import static java.util.stream.Collectors.toMap;
 import static org.gbif.registry.ws.it.OccurrenceDownloadIT.getTestInstancePredicateDownload;

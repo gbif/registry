@@ -16,13 +16,12 @@ package org.gbif.registry.cli.datasetindex.indexupdater;
 import org.gbif.common.messaging.config.MessagingConfiguration;
 import org.gbif.registry.cli.datasetindex.DatasetIndexConfiguration;
 
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotNull;
-
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParametersDelegate;
 
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 

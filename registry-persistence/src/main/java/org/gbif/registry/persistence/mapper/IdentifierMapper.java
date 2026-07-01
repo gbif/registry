@@ -19,10 +19,10 @@ import org.gbif.api.vocabulary.IdentifierType;
 
 import java.util.List;
 
-import jakarta.annotation.Nullable;
-
 import org.apache.ibatis.annotations.Param;
 import org.springframework.stereotype.Repository;
+
+import jakarta.annotation.Nullable;
 
 @Repository
 public interface IdentifierMapper {

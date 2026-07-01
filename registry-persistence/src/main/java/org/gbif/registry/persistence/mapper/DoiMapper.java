@@ -22,10 +22,10 @@ import org.gbif.registry.domain.doi.DoiType;
 import java.util.List;
 import java.util.Map;
 
-import jakarta.annotation.Nullable;
-
 import org.apache.ibatis.annotations.Param;
 import org.springframework.stereotype.Repository;
+
+import jakarta.annotation.Nullable;
 
 /** MyBatis mapper to store DOIs and their status in the registry db. */
 @Repository

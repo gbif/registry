@@ -13,6 +13,8 @@
  */
 package org.gbif.registry.cli.common;
 
+import org.gbif.api.model.common.DOI;
+
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -25,9 +27,10 @@ import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import lombok.extern.slf4j.Slf4j;
+
 import org.apache.commons.lang3.StringUtils;
-import org.gbif.api.model.common.DOI;
+
+import lombok.extern.slf4j.Slf4j;
 
 /** Utility class that reads a single column from a file. */
 @Slf4j

@@ -15,13 +15,13 @@ package org.gbif.registry.service;
 
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
-import org.gbif.vocabulary.api.ConceptListParams;
-import org.gbif.vocabulary.api.ConceptView;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.registry.domain.ws.DerivedDataset;
 import org.gbif.registry.persistence.mapper.DatasetMapper;
 import org.gbif.registry.persistence.mapper.DerivedDatasetMapper;
 import org.gbif.registry.search.dataset.indexing.EsDatasetRealtimeIndexer;
+import org.gbif.vocabulary.api.ConceptListParams;
+import org.gbif.vocabulary.api.ConceptView;
 import org.gbif.vocabulary.client.ConceptClient;
 
 import java.util.ArrayList;
