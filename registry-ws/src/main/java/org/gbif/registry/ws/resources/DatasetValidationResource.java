@@ -19,7 +19,6 @@ import org.gbif.registry.persistence.mapper.DatasetValidationMapper;
 
 import java.util.UUID;
 
-import org.springframework.context.annotation.Primary;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.transaction.annotation.Transactional;
@@ -46,7 +45,6 @@ import static org.gbif.registry.security.UserRoles.ADMIN_ROLE;
         name = "Order",
         properties = @ExtensionProperty(name = "Order", value = "0101")))
 @Validated
-@Primary
 @RestController
 @RequestMapping(value = "dataset", produces = MediaType.APPLICATION_JSON_VALUE)
 @Slf4j
