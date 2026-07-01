@@ -1449,6 +1449,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset, DatasetL
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
   @DeleteMapping("metadata/{metadataKey}")
+  @Secured({ADMIN_ROLE, EDITOR_ROLE, IPT_ROLE})
   @Override
   public void deleteMetadata(@PathVariable("metadataKey") int metadataKey) {
     metadataMapper.delete(metadataKey);
