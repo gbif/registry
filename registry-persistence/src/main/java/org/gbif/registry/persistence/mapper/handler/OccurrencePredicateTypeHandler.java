@@ -13,8 +13,6 @@
  */
 package org.gbif.registry.persistence.mapper.handler;
 
-import org.gbif.api.model.common.search.SearchParameter;
-import org.gbif.api.model.occurrence.search.OccurrenceSearchParameter;
 import org.gbif.api.model.predicate.Predicate;
 
 import java.sql.CallableStatement;
@@ -28,28 +26,19 @@ import org.apache.ibatis.type.TypeHandler;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.google.common.base.Strings;
 
-/** Serializes/deserializes {@link Predicate} objects into/from a JSON string. */
+/**
+ * Serializes/deserializes {@link Predicate} objects stored on {@code occurrence_download}.
+ *
+ * <p>Filters may use both occurrence and event search parameters, including Humboldt event fields on
+ * occurrence downloads.
+ */
 public class OccurrencePredicateTypeHandler implements TypeHandler<Predicate> {
 
   private final ObjectMapper objectMapper =
       new ObjectMapper()
-          .registerModule(
-              new SimpleModule()
-                  .addKeyDeserializer(
-                      SearchParameter.class,
-                      new OccurrenceSearchParameter.OccurrenceSearchParameterKeyDeserializer())
-                  .addDeserializer(
-                      SearchParameter.class,
-                      new OccurrenceSearchParameter.OccurrenceSearchParameterDeserializer())
-                  .addKeyDeserializer(
-                      OccurrenceSearchParameter.class,
-                      new OccurrenceSearchParameter.OccurrenceSearchParameterKeyDeserializer())
-                  .addDeserializer(
-                      OccurrenceSearchParameter.class,
-                      new OccurrenceSearchParameter.OccurrenceSearchParameterDeserializer()))
+          .registerModule(OccurrenceDownloadSearchParameterDeserializers.module())
           .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
   @Override
