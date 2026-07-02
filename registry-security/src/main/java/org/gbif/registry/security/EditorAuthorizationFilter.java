@@ -155,7 +155,8 @@ public class EditorAuthorizationFilter extends OncePerRequestFilter {
               Pattern.CASE_INSENSITIVE),
           Pattern.compile(
               "^DELETE /(organization|dataset|installation|node|network)/([a-f0-9-]+)/identifier/[0-9]+$",
-              Pattern.CASE_INSENSITIVE));
+              Pattern.CASE_INSENSITIVE),
+          Pattern.compile("^DELETE /(dataset)/metadata/([0-9]+)$", Pattern.CASE_INSENSITIVE));
 
   public static final String PIPELINES = "pipelines";
   public static final String MACHINE_TAG = "machineTag";
@@ -291,6 +292,10 @@ public class EditorAuthorizationFilter extends OncePerRequestFilter {
     // pipelines requests
     if (PIPELINES.equals(resourceName)) {
       ensurePipelinesRunRequest(username, resourceKey);
+    }
+    // metadata delete requests
+    else if (path.contains("/metadata/")) {
+      ensureMetadataDeleteRequest(username, resourceKey);
     }
     // machine tag requests
     else if (path.contains(MACHINE_TAG)) {
@@ -435,6 +440,31 @@ public class EditorAuthorizationFilter extends OncePerRequestFilter {
     } else {
       LOG.debug("User {} is allowed to run pipelines for the dataset {}", username, resourceKey);
     }
+  }
+
+  /**
+   * Ensure metadata delete request is allowed for the user.
+   * If so do nothing, if not throw {@link WebApplicationException}.
+   *
+   * @param username    username
+   * @param metadataKey metadata document key
+   */
+  private void ensureMetadataDeleteRequest(String username, String metadataKey) {
+    if (isNotInt(metadataKey)) {
+      LOG.debug(
+          "Invalid metadata delete request. username [{}], metadataKey [{}]", username, metadataKey);
+      return;
+    }
+
+    if (!userAuthService.allowedToModifyMetadata(username, Integer.parseInt(metadataKey))) {
+      LOG.warn("User {} is not allowed to delete metadata {}", username, metadataKey);
+      throw new WebApplicationException(
+          MessageFormat.format(
+              "User {0} is not allowed to delete metadata {1}", username, metadataKey),
+          HttpStatus.FORBIDDEN);
+    }
+
+    LOG.debug("User {} is allowed to delete metadata {}", username, metadataKey);
   }
 
   /**

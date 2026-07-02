@@ -148,4 +148,13 @@ public interface EditorAuthorizationService {
    * @return true if the passed installation is allowed to be modified by the user.
    */
   boolean allowedToModifyInstallation(@Nullable String name, @Nullable Installation installation);
+
+  /**
+   * Checks whether a given user is allowed to modify metadata belonging to a dataset they can edit.
+   *
+   * @param name name from the security context
+   * @param metadataKey key of the metadata document in question
+   * @return true if the passed metadata is allowed to be modified by the user.
+   */
+  boolean allowedToModifyMetadata(@Nullable String name, int metadataKey);
 }

@@ -86,4 +86,9 @@ public class EditorAuthorizationServiceStub implements EditorAuthorizationServic
   public boolean allowedToModifyInstallation(String name, Installation installation) {
     return false;
   }
+
+  @Override
+  public boolean allowedToModifyMetadata(String name, int metadataKey) {
+    return false;
+  }
 }

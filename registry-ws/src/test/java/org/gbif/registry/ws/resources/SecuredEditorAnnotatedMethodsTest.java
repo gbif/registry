@@ -143,6 +143,9 @@ public class SecuredEditorAnnotatedMethodsTest {
       Pattern.compile(
           "^/(organization|dataset|installation|node|network)/[0-9a-f-]+/machineTag/[0-9]+$");
 
+  private static final Pattern DATASET_METADATA_RESOURCE_WITH_INT_KEY =
+      Pattern.compile("^/dataset/metadata/[0-9]+$");
+
   @Mock private GbifHttpServletRequestWrapper mockRequest;
   @Mock private HttpServletResponse mockResponse;
   @Mock private FilterChain mockFilterChain;
@@ -313,6 +316,9 @@ public class SecuredEditorAnnotatedMethodsTest {
     } else if (MACHINE_TAG_RESOURCE_WITH_INT_KEY.matcher(requestPath).matches()) {
       when(mockEditorAuthService.allowedToDeleteMachineTag(USERNAME, KEY, SUB_KEY_INT))
           .thenReturn(isAllowedToModify);
+    } else if (DATASET_METADATA_RESOURCE_WITH_INT_KEY.matcher(requestPath).matches()) {
+      when(mockEditorAuthService.allowedToModifyMetadata(USERNAME, SUB_KEY_INT))
+          .thenReturn(isAllowedToModify);
     } else {
       throw new IllegalStateException("mock specific for " + requestPath + " not implemented");
     }
@@ -350,6 +356,8 @@ public class SecuredEditorAnnotatedMethodsTest {
       verify(mockRequest).getContent();
     } else if (MACHINE_TAG_RESOURCE_WITH_INT_KEY.matcher(requestPath).matches()) {
       verify(mockEditorAuthService).allowedToDeleteMachineTag(USERNAME, KEY, SUB_KEY_INT);
+    } else if (DATASET_METADATA_RESOURCE_WITH_INT_KEY.matcher(requestPath).matches()) {
+      verify(mockEditorAuthService).allowedToModifyMetadata(USERNAME, SUB_KEY_INT);
     } else {
       throw new IllegalStateException("verify specific for " + requestPath + " not implemented");
     }
@@ -368,6 +376,7 @@ public class SecuredEditorAnnotatedMethodsTest {
         .replace("{executionKey}", SUB_KEY)
         .replace("{attempt}", SUB_KEY)
         .replace("{machineTagKey:[0-9]+}", SUB_KEY)
+        .replace("{metadataKey}", SUB_KEY)
         .replace("{namespace:.*[^0-9]+.*}", NAMESPACE)
         .replace("{namespace}", NAMESPACE)
         .replace("{name}", TAG_NAME);

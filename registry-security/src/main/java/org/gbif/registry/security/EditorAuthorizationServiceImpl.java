@@ -16,12 +16,14 @@ package org.gbif.registry.security;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Installation;
 import org.gbif.api.model.registry.MachineTag;
+import org.gbif.api.model.registry.Metadata;
 import org.gbif.api.model.registry.NetworkEntity;
 import org.gbif.api.model.registry.Organization;
 import org.gbif.api.vocabulary.TagNamespace;
 import org.gbif.registry.persistence.mapper.DatasetMapper;
 import org.gbif.registry.persistence.mapper.InstallationMapper;
 import org.gbif.registry.persistence.mapper.MachineTagMapper;
+import org.gbif.registry.persistence.mapper.MetadataMapper;
 import org.gbif.registry.persistence.mapper.OrganizationMapper;
 import org.gbif.registry.persistence.mapper.UserRightsMapper;
 
@@ -43,18 +45,21 @@ public class EditorAuthorizationServiceImpl implements EditorAuthorizationServic
   private final DatasetMapper datasetMapper;
   private final InstallationMapper installationMapper;
   private final MachineTagMapper machineTagMapper;
+  private final MetadataMapper metadataMapper;
 
   public EditorAuthorizationServiceImpl(
       OrganizationMapper organizationMapper,
       DatasetMapper datasetMapper,
       InstallationMapper installationMapper,
       UserRightsMapper userRightsMapper,
-      MachineTagMapper machineTagMapper) {
+      MachineTagMapper machineTagMapper,
+      MetadataMapper metadataMapper) {
     this.organizationMapper = organizationMapper;
     this.datasetMapper = datasetMapper;
     this.installationMapper = installationMapper;
     this.userRightsMapper = userRightsMapper;
     this.machineTagMapper = machineTagMapper;
+    this.metadataMapper = metadataMapper;
   }
 
   @Override
@@ -205,5 +210,17 @@ public class EditorAuthorizationServiceImpl implements EditorAuthorizationServic
     }
     // try higher organization or node rights
     return allowedToModifyOrganization(name, installation.getOrganizationKey());
+  }
+
+  @Override
+  public boolean allowedToModifyMetadata(String name, int metadataKey) {
+    if (name == null) {
+      return false;
+    }
+    Metadata metadata = metadataMapper.get(metadataKey);
+    if (metadata == null || metadata.getDatasetKey() == null) {
+      return false;
+    }
+    return allowedToModifyDataset(name, metadata.getDatasetKey());
   }
 }
