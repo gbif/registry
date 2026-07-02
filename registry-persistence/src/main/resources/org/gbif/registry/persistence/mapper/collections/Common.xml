@@ -214,4 +214,9 @@
     </if>
   </sql>
 
+  <sql id="SUGGEST_TSQUERY">
+    to_tsquery('english', CASE WHEN trim(regexp_replace(unaccent(trim(${query})), '[^A-Za-z0-9@.\-\s]+', '', 'g')) = '' THEN 'false'
+    ELSE regexp_replace(trim(regexp_replace(unaccent(trim(${query})), '[^A-Za-z0-9@.\-\s]+', '', 'g')), '\s+', ':* &amp; ', 'g') || ':*' END)
+  </sql>
+
 </mapper>

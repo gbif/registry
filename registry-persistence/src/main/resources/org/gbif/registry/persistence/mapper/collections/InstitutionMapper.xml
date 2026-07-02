@@ -576,9 +576,10 @@
       SELECT key, code, name
       FROM (
         SELECT key, code, name,
-        to_tsvector('english', code || ' ' || name) AS document,
-        to_tsquery('english', CASE WHEN trim(regexp_replace(unaccent(trim(#{q})), '[^A-Za-z0-9@.\-\s]+', '', 'g')) = '' THEN 'false'
-        ELSE regexp_replace(trim(regexp_replace(unaccent(trim(#{q})), '[^A-Za-z0-9@.\-\s]+', '', 'g')), '\s+', ':* &amp; ', 'g') || ':*' END)  AS query
+        to_tsvector('english', unaccent(code || ' ' || name)) AS document,
+        <include refid="org.gbif.registry.persistence.mapper.collections.Common.SUGGEST_TSQUERY">
+          <property name="query" value="#{q}"/>
+        </include> AS query
         FROM institution
         WHERE deleted IS NULL
       ) AS subquery

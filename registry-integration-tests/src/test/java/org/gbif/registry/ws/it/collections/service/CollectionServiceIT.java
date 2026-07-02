@@ -1094,6 +1094,30 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
     assertEquals(2, collectionService.suggest("CC").size());
     assertEquals(1, collectionService.suggest("CC2").size());
     assertEquals(1, collectionService.suggest("name2").size());
+
+    Collection diacriticCollection = testData.newEntity();
+    diacriticCollection.setCode("VM");
+    diacriticCollection.setName("Vänersborgs museum");
+    UUID diacriticKey = collectionService.create(diacriticCollection);
+
+    assertEquals(1, collectionService.suggest("Vänersborgs museum").size());
+    assertEquals(1, collectionService.suggest("Vanersborgs museum").size());
+    assertEquals(1, collectionService.suggest("VM").size());
+    assertEquals(
+        diacriticKey, collectionService.suggest("Vänersborgs museum").get(0).getKey());
+    assertEquals(
+        diacriticKey,
+        collectionService
+            .list(
+                CollectionSearchRequest.builder()
+                    .q("Vänersborgs museum")
+                    .limit(DEFAULT_PAGE.getLimit())
+                    .offset(DEFAULT_PAGE.getOffset())
+                    .build())
+            .getResults()
+            .get(0)
+            .getCollection()
+            .getKey());
   }
 
   @Test

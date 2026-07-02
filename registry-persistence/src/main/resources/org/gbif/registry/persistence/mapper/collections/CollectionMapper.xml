@@ -598,8 +598,10 @@
       SELECT key, code, name
       FROM (
       SELECT key, code, name,
-      to_tsvector('english', code || ' ' || name) AS document,
-      to_tsquery('english', unaccent(regexp_replace(#{q} || ':*', ' ', '&amp;', 'g'))) AS query
+      to_tsvector('english', unaccent(code || ' ' || name)) AS document,
+      <include refid="org.gbif.registry.persistence.mapper.collections.Common.SUGGEST_TSQUERY">
+        <property name="query" value="#{q}"/>
+      </include> AS query
       FROM collection
       WHERE deleted IS NULL
       ) AS subquery

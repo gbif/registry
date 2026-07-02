@@ -697,6 +697,30 @@ public class InstitutionServiceIT extends BaseCollectionEntityServiceIT<Institut
     assertEquals(1, institutionService.suggest("name2").size());
     assertEquals(1, institutionService.suggest("Institution name2").size());
     assertDoesNotThrow(() -> institutionService.suggest(""));
+
+    Institution diacriticInstitution = testData.newEntity();
+    diacriticInstitution.setCode("VM");
+    diacriticInstitution.setName("Vänersborgs museum");
+    UUID diacriticKey = institutionService.create(diacriticInstitution);
+
+    assertEquals(1, institutionService.suggest("Vänersborgs museum").size());
+    assertEquals(1, institutionService.suggest("Vanersborgs museum").size());
+    assertEquals(1, institutionService.suggest("VM").size());
+    assertEquals(
+        diacriticKey,
+        institutionService.suggest("Vänersborgs museum").get(0).getKey());
+    assertEquals(
+        diacriticKey,
+        institutionService
+            .list(
+                InstitutionSearchRequest.builder()
+                    .q("Vänersborgs museum")
+                    .limit(DEFAULT_PAGE.getLimit())
+                    .offset(DEFAULT_PAGE.getOffset())
+                    .build())
+            .getResults()
+            .get(0)
+            .getKey());
   }
 
   @Test
