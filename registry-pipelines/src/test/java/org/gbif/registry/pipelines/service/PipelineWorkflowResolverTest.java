@@ -19,7 +19,7 @@ import org.gbif.api.model.pipelines.PipelineStep;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.vocabulary.DatasetType;
-import org.gbif.common.messaging.api.messages.DwcDpNfsToHdfsMessage;
+import org.gbif.common.messaging.api.messages.DwcDpStageMessage;
 import org.gbif.common.messaging.api.messages.DwcDpToVerbatimMessage;
 
 import java.time.OffsetDateTime;
@@ -153,15 +153,15 @@ class PipelineWorkflowResolverTest {
   }
 
   @Test
-  void resolveStepTypes_nfsToHdfs_readsNfsMessageFlags() throws Exception {
+  void resolveStepTypes_dwcdpStage_readsNfsMessageFlags() throws Exception {
     PipelineProcess process = processWith(
-      StepType.NFS_TO_HDFS, nfsToHdfsJson(true, true));
+        StepType.DWCDP_STAGE, dwcdpStageJson(true, true));
 
     Set<StepType> result =
       resolver.resolveStepTypes(
-        Set.of(StepType.NFS_TO_HDFS), null, process, false, false);
+        Set.of(StepType.DWCDP_STAGE), null, process, false, false);
 
-    assertTrue(result.contains(StepType.NFS_TO_HDFS));
+    assertTrue(result.contains(StepType.DWCDP_STAGE));
     assertTrue(result.contains(StepType.DWCDP_TO_VERBATIM));
     assertTrue(result.contains(StepType.VERBATIM_TO_IDENTIFIER));
     assertTrue(result.contains(StepType.EVENTS_VERBATIM_TO_INTERPRETED));
@@ -224,7 +224,7 @@ class PipelineWorkflowResolverTest {
 
   @Test
   void deserializeDwcDpMessage_nfsMessage_adaptedCorrectly() throws Exception {
-    String json = nfsToHdfsJson(false, true);
+    String json = dwcdpStageJson(false, true);
     DwcDpToVerbatimMessage result = resolver.deserializeDwcDpMessage(json).orElseThrow();
     assertFalse(result.isContainsOccurrences());
     assertTrue(result.isContainsEvents());
@@ -245,10 +245,10 @@ class PipelineWorkflowResolverTest {
         containsOccurrences, containsEvents, false));
   }
 
-  private String nfsToHdfsJson(boolean containsOccurrences, boolean containsEvents)
+  private String dwcdpStageJson(boolean containsOccurrences, boolean containsEvents)
     throws Exception {
     return mapper.writeValueAsString(
-      new DwcDpNfsToHdfsMessage(
+      new DwcDpStageMessage(
         UUID.randomUUID(), 1, Set.of(), null,
         containsOccurrences, containsEvents));
   }

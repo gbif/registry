@@ -6,7 +6,7 @@
   <changeSet id="183" author="nreibke" runInTransaction="false">
     <sql splitStatements="false" stripComments="false">
       <![CDATA[
-        ALTER TYPE pipeline_step_type ADD VALUE IF NOT EXISTS 'NFS_TO_HDFS';
+        ALTER TYPE pipeline_step_type ADD VALUE IF NOT EXISTS 'DWCDP_STAGE';
         ALTER TYPE pipeline_step_type ADD VALUE IF NOT EXISTS 'DWCDP_TO_VERBATIM';
       ]]>
     </sql>
