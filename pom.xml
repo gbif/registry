@@ -11,7 +11,7 @@
 
   <groupId>org.gbif.registry</groupId>
   <artifactId>registry-parent</artifactId>
-  <version>4.2.24-SNAPSHOT</version>
+  <version>4.2.24</version>
   <name>GBIF Registry Parent</name>
   <description>GBIF Registry project</description>
 
@@ -19,7 +19,7 @@
     <connection>scm:git:git@github.com:gbif/registry.git</connection>
     <url>https://github.com/gbif/registry</url>
     <developerConnection>scm:git:git@github.com:gbif/registry.git</developerConnection>
-    <tag>HEAD</tag>
+    <tag>registry-parent-4.2.24</tag>
   </scm>
 
   <repositories>
@@ -1039,8 +1039,8 @@
         <activeByDefault>true</activeByDefault>
       </activation>
       <properties>
-        <mail.cc></mail.cc>
-        <mail.bcc></mail.bcc>
+        <mail.cc />
+        <mail.bcc />
         <mail.from>test@example.com</mail.from>
         <mail.helpdesk>test@example.com</mail.helpdesk>
         <directory.app.key>gbif.app.it</directory.app.key>
