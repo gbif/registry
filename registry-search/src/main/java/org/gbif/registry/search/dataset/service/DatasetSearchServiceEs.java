@@ -27,7 +27,7 @@ import org.gbif.registry.search.dataset.common.EsSearchRequestBuilder;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.EnumMap;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -305,11 +305,10 @@ public class DatasetSearchServiceEs implements DatasetSearchService, AsyncDatase
       copy.setFacets(new HashSet<>(request.getFacets()));
     }
     if (request.getFacetPages() != null) {
-      copy.setFacetPages(new EnumMap<>(request.getFacetPages()));
+      copy.setFacetPages(new HashMap<>(request.getFacetPages()));
     }
     if (request.getParameters() != null) {
-      Map<DatasetSearchParameter, Set<String>> parameters =
-          new EnumMap<>(DatasetSearchParameter.class);
+      Map<DatasetSearchParameter, Set<String>> parameters = new HashMap<>();
       request
           .getParameters()
           .forEach(
