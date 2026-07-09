@@ -20,6 +20,7 @@ import org.gbif.api.vocabulary.DatasetSubtype;
 import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.api.vocabulary.EndpointType;
 import org.gbif.api.vocabulary.Extension;
+import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.api.vocabulary.License;
 import org.gbif.registry.search.dataset.common.EsFieldMapper;
 
@@ -37,6 +38,46 @@ import co.elastic.clients.elasticsearch._types.query_dsl.FunctionBoostMode;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 
 public class DatasetEsFieldMapper implements EsFieldMapper<DatasetSearchParameter> {
+
+  // Denormalized machine tag fields; queryable parts are flat keyword arrays, correlated
+  // namespace/name/value filters use compound tokens.
+  public static final String MACHINE_TAG_NAMESPACES_FIELD = "machineTagNamespaces";
+  public static final String MACHINE_TAG_NAMES_FIELD = "machineTagNames";
+  public static final String MACHINE_TAG_VALUES_FIELD = "machineTagValues";
+  public static final String MACHINE_TAG_TOKENS_FIELD = "machineTagTokens";
+
+  private static final String MACHINE_TAG_TOKEN_DELIMITER = ":";
+
+  /**
+   * Builds the compound token stored in {@link #MACHINE_TAG_TOKENS_FIELD}. Absent dimensions are
+   * passed as null; at least two dimensions are required (single dimensions use the flat arrays).
+   */
+  public static String machineTagToken(String namespace, String name, String value) {
+    if (namespace != null && name != null && value != null) {
+      return namespace + MACHINE_TAG_TOKEN_DELIMITER + name + MACHINE_TAG_TOKEN_DELIMITER + value;
+    }
+    if (namespace != null && name != null) {
+      return namespace + MACHINE_TAG_TOKEN_DELIMITER + name;
+    }
+    if (namespace != null && value != null) {
+      return namespace + MACHINE_TAG_TOKEN_DELIMITER + MACHINE_TAG_TOKEN_DELIMITER + value;
+    }
+    if (name != null && value != null) {
+      return MACHINE_TAG_TOKEN_DELIMITER + name + MACHINE_TAG_TOKEN_DELIMITER + value;
+    }
+    throw new IllegalArgumentException("Machine tag token requires at least two dimensions");
+  }
+
+  // Denormalized identifier fields; queryable parts are flat keyword arrays, correlated
+  // type/identifier filters use compound tokens.
+  public static final String IDENTIFIER_TYPES_FIELD = "identifierTypes";
+  public static final String IDENTIFIER_VALUES_FIELD = "identifierValues";
+  public static final String IDENTIFIER_TOKENS_FIELD = "identifierTokens";
+
+  /** Builds the compound token stored in {@link #IDENTIFIER_TOKENS_FIELD}. */
+  public static String identifierToken(String type, String identifier) {
+    return type + MACHINE_TAG_TOKEN_DELIMITER + identifier;
+  }
 
   private static final ImmutableBiMap<DatasetSearchParameter, String> SEARCH_TO_ES_MAPPING =
       ImmutableBiMap.<DatasetSearchParameter, String>builder()
@@ -68,6 +109,8 @@ public class DatasetEsFieldMapper implements EsFieldMapper<DatasetSearchParamete
           .put(DatasetSearchParameter.DWCA_CORE_TYPE, "dwca.coreType")
           .put(DatasetSearchParameter.CONTACT_USER_ID, "contacts.userId.keyword")
           .put(DatasetSearchParameter.CONTACT_EMAIL, "contacts.email.keyword")
+          .put(DatasetSearchParameter.MACHINE_TAG_NAMESPACE, MACHINE_TAG_NAMESPACES_FIELD)
+          .put(DatasetSearchParameter.IDENTIFIER_TYPE, IDENTIFIER_TYPES_FIELD)
           .build();
 
   public static final Map<String, Integer> CARDINALITIES =
@@ -80,6 +123,7 @@ public class DatasetEsFieldMapper implements EsFieldMapper<DatasetSearchParamete
           .put("subtype", DatasetSubtype.values().length)
           .put("endpoints.type", EndpointType.values().length)
           .put("dwcaExtensions", Extension.values().length)
+          .put("identifierTypes", IdentifierType.values().length)
           .build();
 
   private static final String[] EXCLUDE_FIELDS = new String[] {"all"};

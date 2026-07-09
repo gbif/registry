@@ -14,6 +14,7 @@
 package org.gbif.registry.search.dataset.indexing;
 
 import org.gbif.api.model.registry.Dataset;
+import org.gbif.api.model.registry.Identifier;
 import org.gbif.api.model.registry.Installation;
 import org.gbif.api.model.registry.MachineTag;
 import org.gbif.api.model.registry.Network;
@@ -22,8 +23,10 @@ import org.gbif.api.model.registry.Tag;
 import org.gbif.api.model.registry.eml.KeywordCollection;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.DatasetType;
+import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.api.vocabulary.License;
 import org.gbif.api.vocabulary.MaintenanceUpdateFrequency;
+import org.gbif.registry.search.dataset.DatasetEsFieldMapper;
 import org.gbif.registry.search.dataset.indexing.ws.GbifWsClient;
 import org.gbif.registry.search.dataset.indexing.ws.JacksonObjectMapper;
 import org.gbif.vocabulary.client.ConceptClient;
@@ -34,6 +37,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -156,6 +160,8 @@ public class DatasetJsonConverter {
     addNetworks(dataset, datasetAsJson);
     addCategoriesWithParents(dataset, datasetAsJson);
     addMachineTags(dataset, datasetAsJson);
+    addMachineTagSearchFields(dataset, datasetAsJson);
+    addIdentifierSearchFields(dataset, datasetAsJson);
     return datasetAsJson;
   }
 
@@ -381,6 +387,67 @@ public class DatasetJsonConverter {
                 log.error("Error reading machine tag value", ex);
               }
             });
+  }
+
+  /**
+   * Adds denormalized machine tag fields used by search: flat keyword arrays for single-dimension
+   * filters and compound tokens for correlated namespace/name/value filters.
+   */
+  private void addMachineTagSearchFields(Dataset dataset, ObjectNode datasetObjectNode) {
+    Set<String> namespaces = new LinkedHashSet<>();
+    Set<String> names = new LinkedHashSet<>();
+    Set<String> values = new LinkedHashSet<>();
+    Set<String> tokens = new LinkedHashSet<>();
+
+    for (MachineTag machineTag : dataset.getMachineTags()) {
+      String namespace = machineTag.getNamespace();
+      String name = machineTag.getName();
+      String value = machineTag.getValue();
+
+      namespaces.add(namespace);
+      names.add(name);
+      values.add(value);
+      tokens.add(DatasetEsFieldMapper.machineTagToken(namespace, name, value));
+      tokens.add(DatasetEsFieldMapper.machineTagToken(namespace, name, null));
+      tokens.add(DatasetEsFieldMapper.machineTagToken(namespace, null, value));
+      tokens.add(DatasetEsFieldMapper.machineTagToken(null, name, value));
+    }
+
+    putKeywordArray(datasetObjectNode, DatasetEsFieldMapper.MACHINE_TAG_NAMESPACES_FIELD, namespaces);
+    putKeywordArray(datasetObjectNode, DatasetEsFieldMapper.MACHINE_TAG_NAMES_FIELD, names);
+    putKeywordArray(datasetObjectNode, DatasetEsFieldMapper.MACHINE_TAG_VALUES_FIELD, values);
+    putKeywordArray(datasetObjectNode, DatasetEsFieldMapper.MACHINE_TAG_TOKENS_FIELD, tokens);
+  }
+
+  /**
+   * Adds denormalized identifier fields used by search: flat keyword arrays for single-dimension
+   * filters and compound tokens for correlated type/identifier filters.
+   */
+  private void addIdentifierSearchFields(Dataset dataset, ObjectNode datasetObjectNode) {
+    Set<String> types = new LinkedHashSet<>();
+    Set<String> values = new LinkedHashSet<>();
+    Set<String> tokens = new LinkedHashSet<>();
+
+    for (Identifier identifier : dataset.getIdentifiers()) {
+      IdentifierType type = identifier.getType();
+      String value = identifier.getIdentifier();
+      types.add(type.name());
+      values.add(value);
+      tokens.add(DatasetEsFieldMapper.identifierToken(type.name(), value));
+    }
+
+    putKeywordArray(datasetObjectNode, DatasetEsFieldMapper.IDENTIFIER_TYPES_FIELD, types);
+    putKeywordArray(datasetObjectNode, DatasetEsFieldMapper.IDENTIFIER_VALUES_FIELD, values);
+    putKeywordArray(datasetObjectNode, DatasetEsFieldMapper.IDENTIFIER_TOKENS_FIELD, tokens);
+  }
+
+  private static void putKeywordArray(ObjectNode node, String field, Set<String> values) {
+    if (values.isEmpty()) {
+      node.remove(field);
+      return;
+    }
+    ArrayNode arrayNode = node.putArray(field);
+    values.forEach(arrayNode::add);
   }
 
   private void addOccurrenceCoverage(Dataset dataset, ObjectNode datasetObjectNode) {

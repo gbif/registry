@@ -19,7 +19,9 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.util.Iterator;
 import java.util.Properties;
+import java.util.Set;
 
 import org.apache.http.HttpHost;
 import org.elasticsearch.client.RestClient;
@@ -33,6 +35,9 @@ import org.springframework.core.io.ResourceLoader;
 import org.springframework.util.FileCopyUtils;
 import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.elasticsearch.ElasticsearchContainer;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import co.elastic.clients.elasticsearch.ElasticsearchAsyncClient;
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
@@ -181,18 +186,60 @@ public class ElasticsearchTestContainerConfiguration implements InitializingBean
   }
 
   /**
-   * Create the index if it doesn't exist.
+   * Creates the index if it doesn't exist. When the container is reused across test runs, an
+   * existing index may have been created from an older mapping file, so the index is recreated if
+   * any field declared in the mapping file is missing.
    */
   private void createIndexIfNotExists() throws IOException {
     if (!indexExists()) {
-      String settingsJson = asString(settingsFile);
-      String mappingsJson = asString(mappingFile);
-
-      elasticsearchClient.indices().create(CreateIndexRequest.of(c -> c
-          .index(indexName)
-          .settings(s -> s.withJson(new ByteArrayInputStream(settingsJson.getBytes(StandardCharsets.UTF_8))))
-          .mappings(m -> m.withJson(new ByteArrayInputStream(mappingsJson.getBytes(StandardCharsets.UTF_8))))));
+      createIndex();
+      return;
     }
+    if (!indexMappingIsUpToDate()) {
+      recreateIndex();
+    }
+  }
+
+  private void createIndex() throws IOException {
+    String settingsJson = asString(settingsFile);
+    String mappingsJson = asString(mappingFile);
+
+    elasticsearchClient
+        .indices()
+        .create(
+            CreateIndexRequest.of(
+                c ->
+                    c.index(indexName)
+                        .settings(
+                            s ->
+                                s.withJson(
+                                    new ByteArrayInputStream(
+                                        settingsJson.getBytes(StandardCharsets.UTF_8))))
+                        .mappings(
+                            m ->
+                                m.withJson(
+                                    new ByteArrayInputStream(
+                                        mappingsJson.getBytes(StandardCharsets.UTF_8))))));
+  }
+
+  private boolean indexMappingIsUpToDate() throws IOException {
+    var indexMapping = elasticsearchClient.indices().getMapping(m -> m.index(indexName)).get(indexName);
+    if (indexMapping == null
+        || indexMapping.mappings() == null
+        || indexMapping.mappings().properties() == null) {
+      return false;
+    }
+    Set<String> indexedFields = indexMapping.mappings().properties().keySet();
+
+    JsonNode expectedProperties =
+        new ObjectMapper().readTree(asString(mappingFile)).path("properties");
+    Iterator<String> expectedFields = expectedProperties.fieldNames();
+    while (expectedFields.hasNext()) {
+      if (!indexedFields.contains(expectedFields.next())) {
+        return false;
+      }
+    }
+    return true;
   }
 
   /**
@@ -216,7 +263,7 @@ public class ElasticsearchTestContainerConfiguration implements InitializingBean
    */
   public void recreateIndex() throws IOException {
     deleteIndex();
-    createIndexIfNotExists();
+    createIndex();
   }
 
   /**

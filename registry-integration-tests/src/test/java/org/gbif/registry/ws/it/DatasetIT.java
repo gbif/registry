@@ -391,6 +391,103 @@ class DatasetIT extends NetworkEntityIT<Dataset> {
 
   @ParameterizedTest
   @EnumSource(ServiceType.class)
+  public void testSearchMachineTag(ServiceType serviceType) {
+    DatasetService service = (DatasetService) getService(serviceType);
+
+    Dataset d1 = newEntity(serviceType);
+    d1.setType(DatasetType.OCCURRENCE);
+    UUID key1 = service.create(d1);
+    MachineTag mt1 = new MachineTag("search-ns.gbif.org", "indexedRecords", "42");
+    service.addMachineTag(key1, mt1);
+
+    Dataset d2 = newEntity(serviceType);
+    d2.setType(DatasetType.CHECKLIST);
+    service.create(d2);
+
+    DatasetSearchUpdateUtils.awaitUpdates(datasetRealtimeIndexer, elasticsearchTestContainer);
+
+    DatasetSearchRequest req = new DatasetSearchRequest();
+    req.addParameter(DatasetSearchParameter.MACHINE_TAG_NAMESPACE, mt1.getNamespace());
+    SearchResponse<DatasetSearchResult, DatasetSearchParameter> resp = searchService.search(req);
+    assertEquals(Long.valueOf(1), resp.getCount());
+
+    req = new DatasetSearchRequest();
+    req.addMachineTagName(mt1.getName());
+    resp = searchService.search(req);
+    assertEquals(Long.valueOf(1), resp.getCount());
+
+    req = new DatasetSearchRequest();
+    req.addParameter(DatasetSearchParameter.MACHINE_TAG_NAMESPACE, mt1.getNamespace());
+    req.addMachineTagName(mt1.getName());
+    req.addParameter(DatasetSearchParameter.MACHINE_TAG_VALUE, mt1.getValue());
+    resp = searchService.search(req);
+    assertEquals(Long.valueOf(1), resp.getCount());
+
+    req = new DatasetSearchRequest();
+    req.addFacets(DatasetSearchParameter.MACHINE_TAG_NAMESPACE);
+    resp = searchService.search(req);
+    assertEquals(1, resp.getFacets().size());
+    assertTrue(
+        resp.getFacets().get(0).getCounts().stream()
+            .anyMatch(count -> mt1.getNamespace().equals(count.getName())));
+  }
+
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  public void testSearchIdentifier(ServiceType serviceType) {
+    DatasetService service = (DatasetService) getService(serviceType);
+
+    Dataset d1 = newEntity(serviceType);
+    d1.setType(DatasetType.OCCURRENCE);
+    UUID key1 = service.create(d1);
+    Identifier id1 = new Identifier(IdentifierType.DOI, "10.1234/search-test");
+    service.addIdentifier(key1, id1);
+
+    Dataset d2 = newEntity(serviceType);
+    d2.setType(DatasetType.CHECKLIST);
+    UUID key2 = service.create(d2);
+    Identifier id2 = new Identifier(IdentifierType.URL, "http://identifier-search.test/2");
+    service.addIdentifier(key2, id2);
+
+    DatasetSearchUpdateUtils.awaitUpdates(datasetRealtimeIndexer, elasticsearchTestContainer);
+
+    // identifier value only
+    DatasetSearchRequest req = new DatasetSearchRequest();
+    req.addParameter(DatasetSearchParameter.IDENTIFIER, id1.getIdentifier());
+    SearchResponse<DatasetSearchResult, DatasetSearchParameter> resp = searchService.search(req);
+    assertEquals(Long.valueOf(1), resp.getCount());
+
+    // identifier type only
+    req = new DatasetSearchRequest();
+    req.addParameter(DatasetSearchParameter.IDENTIFIER_TYPE, IdentifierType.DOI.name());
+    resp = searchService.search(req);
+    assertEquals(Long.valueOf(1), resp.getCount());
+
+    // type and value combined on the same identifier
+    req = new DatasetSearchRequest();
+    req.addParameter(DatasetSearchParameter.IDENTIFIER_TYPE, IdentifierType.DOI.name());
+    req.addParameter(DatasetSearchParameter.IDENTIFIER, id1.getIdentifier());
+    resp = searchService.search(req);
+    assertEquals(Long.valueOf(1), resp.getCount());
+
+    // existing type combined with another identifier's value must not match
+    req = new DatasetSearchRequest();
+    req.addParameter(DatasetSearchParameter.IDENTIFIER_TYPE, IdentifierType.DOI.name());
+    req.addParameter(DatasetSearchParameter.IDENTIFIER, id2.getIdentifier());
+    resp = searchService.search(req);
+    assertEquals(Long.valueOf(0), resp.getCount());
+
+    req = new DatasetSearchRequest();
+    req.addFacets(DatasetSearchParameter.IDENTIFIER_TYPE);
+    resp = searchService.search(req);
+    assertEquals(1, resp.getFacets().size());
+    assertTrue(
+        resp.getFacets().get(0).getCounts().stream()
+            .anyMatch(count -> IdentifierType.DOI.name().equalsIgnoreCase(count.getName())));
+  }
+
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
   public void testSearchMultiCountryFacet(ServiceType serviceType) {
     Dataset d = newEntity(Country.ALGERIA, serviceType);
     d.setType(DatasetType.CHECKLIST);

@@ -75,15 +75,6 @@
       }
     },
     {
-      "machineTags": {
-        "path_match": "machineTags.*",
-        "match_mapping_type": "string",
-        "mapping": {
-          "type": "keyword"
-        }
-      }
-    },
-    {
       "keywordCollections": {
         "path_match": "keywordCollections.*",
         "match_mapping_type": "string",
@@ -189,6 +180,34 @@
         "concept": {"type": "keyword"},
         "lineage": {"type": "keyword", "copy_to": "all"}
       }
+    },
+    "machineTags": {
+      "enabled": false
+    },
+    "machineTagNamespaces": {
+      "type": "keyword"
+    },
+    "machineTagNames": {
+      "type": "keyword"
+    },
+    "machineTagValues": {
+      "type": "keyword"
+    },
+    "machineTagTokens": {
+      "type": "keyword"
+    },
+    "identifiers": {
+      "enabled": false
+    },
+    "identifierTypes": {
+      "type": "keyword"
+    },
+    "identifierValues": {
+      "type": "keyword",
+      "copy_to": "all"
+    },
+    "identifierTokens": {
+      "type": "keyword"
     }
   }
 }
