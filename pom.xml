@@ -67,23 +67,23 @@
   </modules>
 
   <properties>
-    <!-- Java -->
+    <!-- java -->
     <maven.compiler.source>17</maven.compiler.source>
     <maven.compiler.target>17</maven.compiler.target>
     <maven.compiler.parameters>true</maven.compiler.parameters>
     <java.version>17</java.version>
 
-    <!-- Spring -->
+    <!-- spring -->
     <spring-boot.version>3.5.8</spring-boot.version>
     <spring-boot-admin.version>3.5.6</spring-boot-admin.version>
     <mybatis-spring-boot-starter.version>3.0.5</mybatis-spring-boot-starter.version>
     <springdoc-openapi-ui.version>2.8.14</springdoc-openapi-ui.version>
 
-    <!-- Elasticsearch -->
+    <!-- elasticsearch -->
     <elasticsearch.version>9.0.4</elasticsearch.version>
 
-    <!-- GBIF -->
-    <gbif-api.version>2.4.13-SNAPSHOT</gbif-api.version>
+    <!-- gbif -->
+    <gbif-api.version>2.4.13-snapshot</gbif-api.version>
     <gbif-common.version>0.60</gbif-common.version>
     <gbif-common-mybatis.version>2.0.0</gbif-common-mybatis.version>
     <gbif-common-ws.version>2.1.1</gbif-common-ws.version>
@@ -102,14 +102,14 @@
     <dwc-api.version>2.1.12</dwc-api.version>
     <dwca-io.version>3.0.1</dwca-io.version>
 
-    <!-- Third party -->
+    <!-- third party -->
     <commons-digester.version>3.2</commons-digester.version>
     <commons-validator.version>1.10.1</commons-validator.version>
     <commons-lang3.version>3.20.0</commons-lang3.version>
     <commons-io.version>2.21.0</commons-io.version>
     <commons-compress.version>1.28.0</commons-compress.version>
     <commons-logging.version>1.3.5</commons-logging.version>
-    <cache2k.version>2.6.1.Final</cache2k.version>
+    <cache2k.version>2.6.1.final</cache2k.version>
     <feign.version>13.6</feign.version>
     <findbugs-jsr305.version>3.0.1</findbugs-jsr305.version>
     <guava.version>33.5.0-jre</guava.version>
@@ -140,16 +140,16 @@
     <micrometer-tracing.version>1.6.1</micrometer-tracing.version>
     <jakarta.el.version>4.0.2</jakarta.el.version>
     <jakarta-validation.version>3.1.1</jakarta-validation.version>
-    <hibernate-validator.version>9.1.0.Final</hibernate-validator.version>
+    <hibernate-validator.version>9.1.0.final</hibernate-validator.version>
     <jakarta-annotation.version>3.0.0</jakarta-annotation.version>
     <jakarta.servlet-api.version>6.1.0</jakarta.servlet-api.version>
     <spring-cloud-dependencies.version>2025.0.0</spring-cloud-dependencies.version>
     <jaxb-runtime.version>4.0.6</jaxb-runtime.version>
 
-    <!-- Hadoop -->
+    <!-- hadoop -->
     <hadoop.version>3.3.5</hadoop.version>
 
-    <!-- Test -->
+    <!-- test -->
     <mockito.version>5.20.0</mockito.version>
     <xmlunit.version>2.11.0</xmlunit.version>
     <testcontainers.version>2.0.5</testcontainers.version>
@@ -157,7 +157,7 @@
     <mybatis-spring-boot-starter-test.version>3.0.5</mybatis-spring-boot-starter-test.version>
     <reflections.version>0.10.2</reflections.version>
 
-    <!-- Configurable -->
+    <!-- configurable -->
     <datacite.api.base.url />
     <datacite.user />
     <datacite.password />
@@ -166,17 +166,17 @@
     <mail.password />
     <mail.port />
 
-    <!-- Other -->
+    <!-- other -->
     <main.basedir>${project.basedir}</main.basedir>
-    <release.tagNameBase>${project.artifactId}</release.tagNameBase>
+    <release.tagnamebase>${project.artifactid}</release.tagnamebase>
 
-    <!-- Sonar -->
-    <sonar.projectName>GBIF Registry</sonar.projectName>
-    <sonar.exclusions>**/*Stub.java</sonar.exclusions>
-    <sonar.cpd.exclusions>**/*Stub.java</sonar.cpd.exclusions>
-    <sonar.coverage.exclusions>**/*Stub.java</sonar.coverage.exclusions>
+    <!-- sonar -->
+    <sonar.projectname>gbif registry</sonar.projectname>
+    <sonar.exclusions>**/*stub.java</sonar.exclusions>
+    <sonar.cpd.exclusions>**/*stub.java</sonar.cpd.exclusions>
+    <sonar.coverage.exclusions>**/*stub.java</sonar.coverage.exclusions>
 
-    <!-- Plugin versions -->
+    <!-- plugin versions -->
     <spring-boot-maven-plugin.version>${spring-boot.version}</spring-boot-maven-plugin.version>
     <maven-shade-plugin.version>3.6.1</maven-shade-plugin.version>
     <parquet.version>1.12.3</parquet.version>

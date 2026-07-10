@@ -37,8 +37,6 @@ public class DatasetIndexConfiguration {
 
   @ParametersDelegate @Valid @NotNull private ElasticsearchConfig datasetEs;
 
-  @ParametersDelegate @Valid @NotNull private ElasticsearchConfig occurrenceEs;
-
   private Integer stopAfter = -1;
 
   private Integer pageSize = 50;
