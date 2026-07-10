@@ -15,6 +15,36 @@
     <result property="modified" column="modified"/>
   </resultMap>
 
+  <sql id="HAS_DWC_DP_ENDPOINT">
+    EXISTS (
+      SELECT 1
+      FROM dataset_endpoint de
+      INNER JOIN endpoint e ON e.key = de.endpoint_key
+      WHERE de.dataset_key = m.dataset_key
+        AND e.type = 'DWC_DP'
+    )
+  </sql>
+
+  <sql id="DWC_DP_ENDPOINT_KEY_ORDER">
+    ORDER BY
+      CASE e.type
+        WHEN 'EML' THEN 0
+        WHEN 'DIGIR_MANIS' THEN 1
+        WHEN 'DIGIR' THEN 2
+        WHEN 'BIOCASE' THEN 3
+        WHEN 'TAPIR' THEN 4
+        WHEN 'BIOCASE_XML_ARCHIVE' THEN 5
+        WHEN 'DWC_ARCHIVE' THEN 6
+        WHEN 'CAMTRAP_DP' THEN 7
+        WHEN 'DWC_DP' THEN 8
+        WHEN 'COLDP' THEN 9
+        ELSE -1
+      END DESC,
+      e.modified DESC NULLS LAST,
+      e.key DESC
+    LIMIT 1
+  </sql>
+
   <!-- Create a DataPackage metadata record -->
   <insert id="create" parameterType="map">
     INSERT INTO metadata(
@@ -57,7 +87,8 @@
         m.modified
       FROM metadata m
       WHERE m.dataset_key = #{datasetKey,jdbcType=OTHER}
-        AND m.type = 'DWC_DP'::enum_metadata_type
+        AND m.content_json IS NOT NULL
+        AND <include refid="HAS_DWC_DP_ENDPOINT"/>
       ORDER BY m.modified DESC, m.key DESC
       LIMIT 1
     )
@@ -67,10 +98,10 @@
       (
         SELECT e.key
         FROM endpoint e
-        WHERE e.dataset_key = #{datasetKey,jdbcType=OTHER}
+        INNER JOIN dataset_endpoint de ON de.endpoint_key = e.key
+        WHERE de.dataset_key = #{datasetKey,jdbcType=OTHER}
           AND e.type = 'DWC_DP'
-        ORDER BY e.modified DESC NULLS LAST, e.key DESC
-        LIMIT 1
+        <include refid="DWC_DP_ENDPOINT_KEY_ORDER"/>
       ) AS endpoint_key
     FROM latest
   </select>
@@ -79,7 +110,8 @@
     SELECT m.content_json -> 'resources'
     FROM metadata m
     WHERE m.dataset_key = #{datasetKey,jdbcType=OTHER}
-      AND m.type = 'DWC_DP'::enum_metadata_type
+      AND m.content_json IS NOT NULL
+      AND <include refid="HAS_DWC_DP_ENDPOINT"/>
     ORDER BY m.modified DESC, m.key DESC
     LIMIT 1
   </select>
@@ -89,7 +121,8 @@
       SELECT m.content_json AS metadata
       FROM metadata m
       WHERE m.dataset_key = #{datasetKey,jdbcType=OTHER}
-        AND m.type = 'DWC_DP'::enum_metadata_type
+        AND m.content_json IS NOT NULL
+        AND <include refid="HAS_DWC_DP_ENDPOINT"/>
       ORDER BY m.modified DESC, m.key DESC
       LIMIT 1
     )
@@ -105,7 +138,8 @@
       SELECT m.content_json AS metadata
       FROM metadata m
       WHERE m.dataset_key = #{datasetKey,jdbcType=OTHER}
-        AND m.type = 'DWC_DP'::enum_metadata_type
+        AND m.content_json IS NOT NULL
+        AND <include refid="HAS_DWC_DP_ENDPOINT"/>
       ORDER BY m.modified DESC, m.key DESC
       LIMIT 1
     )
@@ -115,13 +149,20 @@
   </select>
 
   <select id="list" resultMap="DP_MAP_LIST" parameterType="org.gbif.api.model.common.paging.Pageable">
-    WITH latest AS (
+    WITH dwc_datasets AS (
+      SELECT DISTINCT de.dataset_key
+      FROM dataset_endpoint de
+      INNER JOIN endpoint e ON e.key = de.endpoint_key
+      WHERE e.type = 'DWC_DP'
+    ),
+    latest AS (
       SELECT DISTINCT ON (m.dataset_key)
         m.dataset_key,
         m.content_json AS metadata,
         m.modified
       FROM metadata m
-      WHERE m.type = 'DWC_DP'::enum_metadata_type
+      INNER JOIN dwc_datasets d ON d.dataset_key = m.dataset_key
+      WHERE m.content_json IS NOT NULL
       ORDER BY m.dataset_key, m.modified DESC, m.key DESC
     )
     SELECT
@@ -129,10 +170,10 @@
       (
         SELECT e.key
         FROM endpoint e
-        WHERE e.dataset_key = latest.dataset_key
+        INNER JOIN dataset_endpoint de ON de.endpoint_key = e.key
+        WHERE de.dataset_key = latest.dataset_key
           AND e.type = 'DWC_DP'
-        ORDER BY e.modified DESC NULLS LAST, e.key DESC
-        LIMIT 1
+        <include refid="DWC_DP_ENDPOINT_KEY_ORDER"/>
       ) AS endpoint_key,
       latest.modified,
       jsonb_build_object(
@@ -150,9 +191,16 @@
   </select>
 
   <select id="count" resultType="Long">
-    SELECT count(DISTINCT dataset_key)
-    FROM metadata
-    WHERE type = 'DWC_DP'::enum_metadata_type
+    SELECT count(DISTINCT de.dataset_key)
+    FROM dataset_endpoint de
+    INNER JOIN endpoint e ON e.key = de.endpoint_key
+    WHERE e.type = 'DWC_DP'
+      AND EXISTS (
+        SELECT 1
+        FROM metadata m
+        WHERE m.dataset_key = de.dataset_key
+          AND m.content_json IS NOT NULL
+      )
   </select>
 
 </mapper>

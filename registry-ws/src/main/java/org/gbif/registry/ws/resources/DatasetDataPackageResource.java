@@ -20,6 +20,7 @@ import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.service.registry.DatasetDataPackageService;
 import org.gbif.api.service.registry.DatasetService;
+import org.gbif.api.vocabulary.MetadataType;
 import org.gbif.registry.persistence.mapper.DatasetDataPackageMapper;
 
 import java.io.ByteArrayInputStream;
@@ -156,7 +157,8 @@ public class DatasetDataPackageResource implements DatasetDataPackageService {
     }
     datasetService.insertMetadata(
         datasetKey,
-        new ByteArrayInputStream(metadataJson.getBytes(StandardCharsets.UTF_8))
-    );
+        new ByteArrayInputStream(metadataJson.getBytes(StandardCharsets.UTF_8)),
+        metadataJson,
+        MetadataType.DWC_DP);
   }
 }
