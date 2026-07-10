@@ -20,9 +20,11 @@ import org.gbif.api.model.occurrence.Occurrence;
 import org.gbif.api.model.occurrence.search.OccurrenceSearchParameter;
 import org.gbif.api.model.occurrence.search.OccurrenceSearchRequest;
 import org.gbif.api.model.registry.Dataset;
+import org.gbif.api.model.registry.Dataset.DataPackage;
 import org.gbif.api.model.registry.Installation;
 import org.gbif.api.model.registry.Network;
 import org.gbif.api.model.registry.Organization;
+import org.gbif.api.service.registry.DatasetDataPackageService;
 import org.gbif.api.service.registry.DatasetService;
 import org.gbif.api.service.registry.InstallationService;
 import org.gbif.api.service.registry.NetworkService;
@@ -53,7 +55,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 public class GbifWsWrapperClient implements GbifWsClient {
 
   private static final Logger LOG = LoggerFactory.getLogger(GbifWsWrapperClient.class);
-  private static final ObjectMapper MAPPER = new ObjectMapper();
 
   // Uses a cache for installations to avoid too many external calls
   Cache<String, Installation> installationCache =
@@ -80,6 +81,7 @@ public class GbifWsWrapperClient implements GbifWsClient {
   private final OccurrenceWsSearchClient occurrenceWsSearchClient;
   private final TaxonApiClient taxonApiClient;
   private final CubeWsClient cubeWsClient;
+  private final DatasetDataPackageService datasetDataPackageClient;
 
 
   /**
@@ -95,7 +97,8 @@ public class GbifWsWrapperClient implements GbifWsClient {
       NetworkService networkService,
       OccurrenceWsSearchClient occurrenceWsSearchClient,
       CubeWsClient cubeWsClient,
-      TaxonApiClient taxonApiClient) {
+      TaxonApiClient taxonApiClient,
+      DatasetDataPackageService datasetDataPackageClient) {
     this.installationService = installationService;
     this.organizationService = organizationService;
     this.datasetService = datasetService;
@@ -103,6 +106,7 @@ public class GbifWsWrapperClient implements GbifWsClient {
     this.occurrenceWsSearchClient = occurrenceWsSearchClient;
     this.taxonApiClient = taxonApiClient;
     this.cubeWsClient = cubeWsClient;
+    this.datasetDataPackageClient = datasetDataPackageClient;
   }
 
   @Override
@@ -216,5 +220,10 @@ public class GbifWsWrapperClient implements GbifWsClient {
   @Override
   public List<Network> getNetworks(UUID datasetKey) {
     return datasetService.listNetworks(datasetKey);
+  }
+
+  @Override
+  public DataPackage getDataPackage(UUID datasetKey) {
+    return datasetDataPackageClient.get(datasetKey);
   }
 }

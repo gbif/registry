@@ -103,14 +103,6 @@ elasticsearch:
     socketTimeOut: 0
     connectionRequestTimeOut: 0
     maxRetryTimeOut: 0
-  occurrence:
-    enabled: false
-    hosts:
-    index:
-    connectionTimeOut:
-    socketTimeOut:
-    connectionRequestTimeOut:
-    maxRetryTimeOut:
 
 directory:
   app:

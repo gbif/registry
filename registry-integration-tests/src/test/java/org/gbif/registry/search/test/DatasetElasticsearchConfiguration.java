@@ -52,8 +52,9 @@ public class DatasetElasticsearchConfiguration {
     }
   }
 
-  @Bean(name = "esOccurrenceClientConfig")
-  public EsClient.EsClientConfiguration occurrenceEsClientConfiguration(
+  @Bean(name = "registryEsClientConfig")
+  @Primary
+  public EsClient.EsClientConfiguration registryEsClientConfiguration(
       @Qualifier("elasticsearchTestContainerConfiguration") ElasticsearchTestContainerConfiguration elasticsearchTestContainer) {
     EsClient.EsClientConfiguration esClientConfiguration = new EsClient.EsClientConfiguration();
     esClientConfiguration.setConnectionTimeOut(6000);
@@ -62,13 +63,6 @@ public class DatasetElasticsearchConfiguration {
     // Use testcontainer address instead of production config
     esClientConfiguration.setHosts(elasticsearchTestContainer.getServerAddress());
     return esClientConfiguration;
-  }
-
-  @Bean(name = "registryEsClientConfig")
-  @Primary
-  public EsClient.EsClientConfiguration registryEsClientConfiguration(
-      @Qualifier("elasticsearchTestContainerConfiguration") ElasticsearchTestContainerConfiguration elasticsearchTestContainer) {
-    return occurrenceEsClientConfiguration(elasticsearchTestContainer);
   }
 
   @Bean
@@ -85,9 +79,4 @@ public class DatasetElasticsearchConfiguration {
     return EsClient.provideElasticsearchAsyncClient(esClientConfiguration);
   }
 
-  @Bean(name = "occurrenceEsClient")
-  public ElasticsearchClient occurrenceElasticsearchClient(
-      @Qualifier("esOccurrenceClientConfig") EsClient.EsClientConfiguration esClientConfiguration) {
-    return EsClient.provideElasticsearchClient(esClientConfiguration);
-  }
 }

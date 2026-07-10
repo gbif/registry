@@ -21,6 +21,7 @@ import org.gbif.api.model.occurrence.Occurrence;
 import org.gbif.api.model.occurrence.search.OccurrenceSearchParameter;
 import org.gbif.api.model.occurrence.search.OccurrenceSearchRequest;
 import org.gbif.api.model.registry.Dataset;
+import org.gbif.api.model.registry.Dataset.DataPackage;
 import org.gbif.api.model.registry.Installation;
 import org.gbif.api.model.registry.Network;
 import org.gbif.api.model.registry.Organization;
@@ -66,4 +67,6 @@ public interface GbifWsClient {
       OccurrenceSearchRequest searchRequest);
 
   List<Network> getNetworks(UUID datasetKey);
+
+  DataPackage getDataPackage(UUID datasetKey);
 }
