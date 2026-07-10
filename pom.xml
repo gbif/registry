@@ -140,7 +140,7 @@
     <micrometer-tracing.version>1.6.1</micrometer-tracing.version>
     <jakarta.el.version>4.0.2</jakarta.el.version>
     <jakarta-validation.version>3.1.1</jakarta-validation.version>
-    <hibernate-validator.version>9.1.0.final</hibernate-validator.version>
+    <hibernate-validator.version>9.1.0.Final</hibernate-validator.version>
     <jakarta-annotation.version>3.0.0</jakarta-annotation.version>
     <jakarta.servlet-api.version>6.1.0</jakarta.servlet-api.version>
     <spring-cloud-dependencies.version>2025.0.0</spring-cloud-dependencies.version>
