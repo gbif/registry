@@ -68,7 +68,7 @@ public class DatasetEsFieldMapper implements EsFieldMapper<DatasetSearchParamete
           .put(DatasetSearchParameter.DWCA_CORE_TYPE, "dwca.coreType")
           .put(DatasetSearchParameter.CONTACT_USER_ID, "contacts.userId.keyword")
           .put(DatasetSearchParameter.CONTACT_EMAIL, "contacts.email.keyword")
-          .put(DatasetSearchParameter.DWCDP_SCHEMA, "dwcdp.schemas")
+          .put(DatasetSearchParameter.DWC_DP_RESOURCE_SCHEMA, "dwcdp.resourceSchemas")
           .build();
 
   public static final Map<String, Integer> CARDINALITIES =

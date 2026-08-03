@@ -328,13 +328,13 @@ public class DatasetJsonConverter {
 
           JsonNode resourcesNode = metadata.get("resources");
           if (resourcesNode != null && resourcesNode.isArray()) {
-            ArrayNode schemasArray = dwcdpObject.putArray("schemas");
+            ArrayNode resourceSchemasArray = dwcdpObject.putArray("resourceSchemas");
             for (JsonNode resource : resourcesNode) {
               JsonNode schemaNode = resource.get("schema");
               if (schemaNode != null && schemaNode.isObject()) {
                 JsonNode urlNode = schemaNode.get("url");
                 if (urlNode != null && !urlNode.isNull()) {
-                  schemasArray.add(urlNode.asText());
+                  resourceSchemasArray.add(urlNode.asText());
                 }
               }
             }

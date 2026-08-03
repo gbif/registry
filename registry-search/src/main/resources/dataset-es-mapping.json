@@ -194,7 +194,7 @@
       "type": "object",
       "properties": {
         "profile": { "type": "keyword" },
-        "schemas": { "type": "keyword" }
+        "resourceSchemas": { "type": "keyword" }
       }
     }
   }
