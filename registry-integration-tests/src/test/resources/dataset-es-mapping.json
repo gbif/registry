@@ -181,6 +181,13 @@
         "lineage": {"type": "keyword", "copy_to": "all"}
       }
     },
+    "dwcdp": {
+      "type": "object",
+      "properties": {
+        "profile": { "type": "keyword" },
+        "schemas": { "type": "keyword" }
+      }
+    },
     "machineTags": {
       "enabled": false
     },

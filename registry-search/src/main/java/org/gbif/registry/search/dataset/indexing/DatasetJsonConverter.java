@@ -14,6 +14,7 @@
 package org.gbif.registry.search.dataset.indexing;
 
 import org.gbif.api.model.registry.Dataset;
+import org.gbif.api.model.registry.Dataset.DataPackage;
 import org.gbif.api.model.registry.Identifier;
 import org.gbif.api.model.registry.Installation;
 import org.gbif.api.model.registry.MachineTag;
@@ -23,6 +24,7 @@ import org.gbif.api.model.registry.Tag;
 import org.gbif.api.model.registry.eml.KeywordCollection;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.DatasetType;
+import org.gbif.api.vocabulary.EndpointType;
 import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.api.vocabulary.License;
 import org.gbif.api.vocabulary.MaintenanceUpdateFrequency;
@@ -162,6 +164,7 @@ public class DatasetJsonConverter {
     addMachineTags(dataset, datasetAsJson);
     addMachineTagSearchFields(dataset, datasetAsJson);
     addIdentifierSearchFields(dataset, datasetAsJson);
+    addDataPackage(dataset, datasetAsJson);
     return datasetAsJson;
   }
 
@@ -334,6 +337,39 @@ public class DatasetJsonConverter {
                   .map(Country::getIso2LetterCode)
                   .map(TextNode::valueOf)
                   .collect(Collectors.toList()));
+    }
+  }
+
+  private void addDataPackage(Dataset dataset, ObjectNode datasetJsonNode) {
+    if (dataset.getEndpoints().stream().anyMatch(e -> e.getType().equals(EndpointType.DWC_DP))) {
+      DataPackage dataPackage = gbifWsClient.getDataPackage(dataset.getKey());
+      if (dataPackage != null && dataPackage.getMetadata() != null) {
+        try {
+          JsonNode metadata = mapper.readTree(dataPackage.getMetadata());
+          ObjectNode dwcdpObject = datasetJsonNode.putObject("dwcdp");
+
+          JsonNode profileNode = metadata.get("profile");
+          if (profileNode != null && !profileNode.isNull()) {
+            dwcdpObject.put("profile", profileNode.asText());
+          }
+
+          JsonNode resourcesNode = metadata.get("resources");
+          if (resourcesNode != null && resourcesNode.isArray()) {
+            ArrayNode resourceSchemasArray = dwcdpObject.putArray("resourceSchemas");
+            for (JsonNode resource : resourcesNode) {
+              JsonNode schemaNode = resource.get("schema");
+              if (schemaNode != null && schemaNode.isObject()) {
+                JsonNode urlNode = schemaNode.get("url");
+                if (urlNode != null && !urlNode.isNull()) {
+                  resourceSchemasArray.add(urlNode.asText());
+                }
+              }
+            }
+          }
+        } catch (JsonProcessingException e) {
+          log.error("Error parsing DataPackage metadata for dataset {}", dataset.getKey(), e);
+        }
+      }
     }
   }
 

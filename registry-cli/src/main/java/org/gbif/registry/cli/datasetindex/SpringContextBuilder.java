@@ -13,6 +13,7 @@
  */
 package org.gbif.registry.cli.datasetindex;
 
+import org.gbif.api.service.registry.DatasetDataPackageService;
 import org.gbif.api.service.registry.DatasetService;
 import org.gbif.api.service.registry.InstallationService;
 import org.gbif.api.service.registry.NetworkService;
@@ -29,6 +30,7 @@ import org.gbif.registry.search.dataset.indexing.ws.GbifApiServiceConfig;
 import org.gbif.registry.search.dataset.indexing.ws.GbifWsWrapperClient;
 import org.gbif.registry.search.dataset.indexing.ws.JacksonObjectMapper;
 import org.gbif.registry.ws.client.DatasetClient;
+import org.gbif.registry.ws.client.DatasetDataPackageClient;
 import org.gbif.registry.ws.client.InstallationClient;
 import org.gbif.registry.ws.client.NetworkClient;
 import org.gbif.registry.ws.client.OrganizationClient;
@@ -100,11 +102,6 @@ public class SpringContextBuilder {
         EsClient.EsClientConfiguration.class,
         () -> toEsClientConfiguration(configuration.getDatasetEs()));
 
-    ctx.registerBean(
-        "esOccurrenceClientConfig",
-        EsClient.EsClientConfiguration.class,
-        () -> toEsClientConfiguration(configuration.getOccurrenceEs()));
-
     // Register ConceptClient bean
     ctx.registerBean("conceptClient", ConceptClient.class, () ->
         new ClientBuilder()
@@ -123,9 +120,6 @@ public class SpringContextBuilder {
                 new ImmutableMap.Builder<String, Object>()
                     .put("api.root.url", configuration.getApiRootUrl())
                     .put("taxonapi.root.url", configuration.getTaxonApiUrl())
-                    .put(
-                        "elasticsearch.occurrence.index",
-                        configuration.getOccurrenceEs().getAlias())
                     .put("elasticsearch.registry.index", configuration.getDatasetEs().getAlias())
                     .put("indexing.stopAfter", configuration.getStopAfter())
                     .put("indexing.pageSize", configuration.getPageSize())
@@ -198,6 +192,11 @@ public class SpringContextBuilder {
     @Bean
     public NetworkService networkService(ClientBuilder clientBuilder) {
       return clientBuilder.build(NetworkClient.class);
+    }
+
+    @Bean
+    public DatasetDataPackageService datasetDataPackageService(ClientBuilder clientBuilder) {
+      return clientBuilder.build(DatasetDataPackageClient.class);
     }
 
     @Bean

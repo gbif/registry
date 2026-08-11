@@ -111,6 +111,7 @@ public class DatasetEsFieldMapper implements EsFieldMapper<DatasetSearchParamete
           .put(DatasetSearchParameter.CONTACT_EMAIL, "contacts.email.keyword")
           .put(DatasetSearchParameter.MACHINE_TAG_NAMESPACE, MACHINE_TAG_NAMESPACES_FIELD)
           .put(DatasetSearchParameter.IDENTIFIER_TYPE, IDENTIFIER_TYPES_FIELD)
+          .put(DatasetSearchParameter.DWC_DP_RESOURCE_SCHEMA, "dwcdp.resourceSchemas")
           .build();
 
   public static final Map<String, Integer> CARDINALITIES =

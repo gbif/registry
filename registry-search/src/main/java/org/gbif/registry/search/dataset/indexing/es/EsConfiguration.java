@@ -57,17 +57,4 @@ public class EsConfiguration {
       RestClient restClient) {
     return EsClient.provideElasticsearchAsyncClient(esClientConfiguration, restClient);
   }
-
-  @ConfigurationProperties(prefix = "elasticsearch.occurrence")
-  @Bean("esOccurrenceClientConfig")
-  @ConditionalOnProperty("elasticsearch.occurrence.enabled")
-  public EsClient.EsClientConfiguration occurrenceEsClientConfiguration() {
-    return new EsClient.EsClientConfiguration();
-  }
-
-  @Bean(name = "occurrenceEsClient")
-  public ElasticsearchClient occurrenceElasticsearchClient(
-      @Qualifier("esOccurrenceClientConfig") EsClient.EsClientConfiguration esClientConfiguration) {
-    return EsClient.provideElasticsearchClient(esClientConfiguration);
-  }
 }

@@ -33,7 +33,7 @@ import org.gbif.api.util.comparators.EndpointPriorityComparator;
 import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.api.vocabulary.EndpointType;
 import org.gbif.common.messaging.api.MessagePublisher;
-import org.gbif.common.messaging.api.messages.DwcDpNfsToHdfsMessage;
+import org.gbif.common.messaging.api.messages.DwcDpStageMessage;
 import org.gbif.common.messaging.api.messages.DwcDpToVerbatimMessage;
 import org.gbif.common.messaging.api.messages.PipelineBasedMessage;
 import org.gbif.common.messaging.api.messages.PipelinesAbcdMessage;
@@ -582,8 +582,8 @@ public class DefaultRegistryPipelinesHistoryTrackingService
         return createVerbatimMessage(prefix, jsonMessage, interpretTypes, dataset);
       case DWCA_TO_VERBATIM:
         return deserializeMessage(jsonMessage, PipelinesDwcaMessage.class);
-      case NFS_TO_HDFS:
-        return deserializeMessage(jsonMessage, DwcDpNfsToHdfsMessage.class);
+      case DWCDP_STAGE:
+        return deserializeMessage(jsonMessage, DwcDpStageMessage.class);
       case DWCDP_TO_VERBATIM:
         return deserializeMessage(jsonMessage, DwcDpToVerbatimMessage.class);
       case ABCD_TO_VERBATIM:

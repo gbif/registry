@@ -19,7 +19,7 @@ import org.gbif.api.model.pipelines.PipelinesWorkflow;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.vocabulary.DatasetType;
-import org.gbif.common.messaging.api.messages.DwcDpNfsToHdfsMessage;
+import org.gbif.common.messaging.api.messages.DwcDpStageMessage;
 import org.gbif.common.messaging.api.messages.DwcDpToVerbatimMessage;
 
 import java.util.Comparator;
@@ -41,7 +41,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  * <p>Extracted from {@link DefaultRegistryPipelinesHistoryTrackingService} to keep workflow
  * selection logic cohesive and independently testable.
  *
- * <p>DwC-DP datasets ({@link StepType#NFS_TO_HDFS}, {@link StepType#DWCDP_TO_VERBATIM}) require
+ * <p>DwC-DP datasets ({@link StepType#DWCDP_STAGE}, {@link StepType#DWCDP_TO_VERBATIM}) require
  * special handling because their registered {@link DatasetType} may be {@code UNDEFINED}. Instead
  * of relying on the dataset type, the resolver reads {@code containsOccurrences} /
  * {@code containsEvents} flags from the latest successful step message stored in the registry,
@@ -125,13 +125,13 @@ public class PipelineWorkflowResolver {
   }
 
   boolean isDwcDpSteps(Set<StepType> steps) {
-    return steps.contains(StepType.NFS_TO_HDFS)
+    return steps.contains(StepType.DWCDP_STAGE)
       || steps.contains(StepType.DWCDP_TO_VERBATIM);
   }
 
   /**
    * Resolves the workflow graph for DwC-DP steps by reading containsOccurrences/containsEvents
-   * from the latest successful DWCDP_TO_VERBATIM or NFS_TO_HDFS step message stored in the
+   * from the latest successful DWCDP_TO_VERBATIM or DWCDP_STAGE step message stored in the
    * registry. Falls back to the EVENT_OCCURRENCE superset if no message can be found or parsed,
    * since that graph covers all possible DwC-DP step combinations.
    */
@@ -150,8 +150,8 @@ public class PipelineWorkflowResolver {
 
   /**
    * Finds the latest successful DwC-DP step message from the process history, trying
-   * DWCDP_TO_VERBATIM first then NFS_TO_HDFS as fallback. Deserializes to
-   * DwcDpToVerbatimMessage in both cases — NFS_TO_HDFS messages are adapted since they
+   * DWCDP_TO_VERBATIM first then DWCDP_STAGE as fallback. Deserializes to
+   * DwcDpToVerbatimMessage in both cases — DWCDP_STAGE messages are adapted since they
    * carry the same containsOccurrences/containsEvents flags.
    */
   Optional<DwcDpToVerbatimMessage> findDwcDpMessage(PipelineProcess process) {
@@ -160,7 +160,7 @@ public class PipelineWorkflowResolver {
     }
 
     return getLatestSuccessfulStep(process, StepType.DWCDP_TO_VERBATIM)
-      .or(() -> getLatestSuccessfulStep(process, StepType.NFS_TO_HDFS))
+      .or(() -> getLatestSuccessfulStep(process, StepType.DWCDP_STAGE))
       .flatMap(step -> deserializeDwcDpMessage(step.getMessage()));
   }
 
@@ -168,11 +168,11 @@ public class PipelineWorkflowResolver {
     try {
       return Optional.of(objectMapper.readValue(json, DwcDpToVerbatimMessage.class));
     } catch (JsonProcessingException e) {
-      LOG.debug("Could not deserialize as DwcDpToVerbatimMessage, trying NFS message");
+      LOG.debug("Could not deserialize as DwcDpToVerbatimMessage, trying DwcDpStage message");
     }
 
     try {
-      DwcDpNfsToHdfsMessage nfsMsg = objectMapper.readValue(json, DwcDpNfsToHdfsMessage.class);
+      DwcDpStageMessage nfsMsg = objectMapper.readValue(json, DwcDpStageMessage.class);
       return Optional.of(new DwcDpToVerbatimMessage(
         nfsMsg.getDatasetUuid(),
         nfsMsg.getAttempt(),

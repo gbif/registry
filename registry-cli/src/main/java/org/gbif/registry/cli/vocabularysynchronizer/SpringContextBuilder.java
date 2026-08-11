@@ -110,11 +110,6 @@ public class SpringContextBuilder {
         EsClient.EsClientConfiguration.class,
         () -> toEsClientConfiguration(configuration.getElasticsearch()));
 
-    ctx.registerBean(
-        "esOccurrenceClientConfig",
-        EsClient.EsClientConfiguration.class,
-        () -> toEsClientConfiguration(configuration.getElasticsearch()));
-
     // Register ConceptClient bean
     ctx.registerBean("conceptClient", ConceptClient.class, () ->
         new ClientBuilder()
@@ -132,9 +127,7 @@ public class SpringContextBuilder {
                 new ImmutableMap.Builder<String, Object>()
                     .put("api.root.url", configuration.getApiRootUrl())
                     .put("elasticsearch.registry.index", configuration.getElasticsearch().getIndex())
-                    .put("elasticsearch.occurrence.index", "occurrence")
                     .put("elasticsearch.registry.enabled", "true")
-                    .put("elasticsearch.occurrence.enabled", "false")
                     .put("spring.cloud.compatibility-verifier.enabled", "false")
                     .build()));
 
