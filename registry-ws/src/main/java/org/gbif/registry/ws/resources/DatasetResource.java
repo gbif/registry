@@ -396,6 +396,35 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset, DatasetL
           description = "Filter datasets by contact email address.",
           schema = @Schema(implementation = String.class),
           in = ParameterIn.QUERY),
+        @Parameter(
+            name = "machineTagNamespace",
+            description = "Filters for entities with a machine tag in the specified namespace.",
+            schema = @Schema(implementation = String.class),
+            in = ParameterIn.QUERY),
+        @Parameter(
+            name = "machineTagName",
+            description =
+                "Filters for entities with a machine tag with the specified name (use in combination with the machineTagNamespace parameter).",
+            schema = @Schema(implementation = String.class),
+            in = ParameterIn.QUERY),
+        @Parameter(
+            name = "machineTagValue",
+            description =
+                "Filters for entities with a machine tag with the specified value (use in combination with the machineTagNamespace and machineTagName parameters).",
+            schema = @Schema(implementation = String.class),
+            in = ParameterIn.QUERY),
+        @Parameter(
+            name = "identifier",
+            description =
+                "The value for this parameter can be a simple string or integer, e.g. identifier=120. (use in combination with the identifierType parameter).",
+            schema = @Schema(implementation = String.class),
+            in = ParameterIn.QUERY),
+        @Parameter(
+            name = "identifierType",
+            description =
+                "An identifier type for the identifier parameter (use in combination with the identifier parameter).",
+            schema = @Schema(implementation = IdentifierType.class),
+            in = ParameterIn.QUERY),
         @Parameter(name = "request", hidden = true),
         @Parameter(name = "searchRequest", hidden = true),
         @Parameter(name = "suggestRequest", hidden = true)

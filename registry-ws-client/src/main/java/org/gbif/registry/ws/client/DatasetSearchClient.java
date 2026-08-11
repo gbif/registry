@@ -61,7 +61,12 @@ public interface DatasetSearchClient extends DatasetSearchService {
       @RequestParam(value = "institutionKey", required = false) Set<String> institutionKey,
       @RequestParam(value = "contactUserId", required = false) Set<String> contactUserId,
       @RequestParam(value = "contactEmail", required = false) Set<String> contactEmail,
-      @RequestParam(value = "category", required = false) Set<String> category);
+      @RequestParam(value = "category", required = false) Set<String> category,
+      @RequestParam(value = "machineTagNamespace", required = false) Set<String> machineTagNamespace,
+      @RequestParam(value = "machineTagName", required = false) Set<String> machineTagName,
+      @RequestParam(value = "machineTagValue", required = false) Set<String> machineTagValue,
+      @RequestParam(value = "identifier", required = false) Set<String> identifier,
+      @RequestParam(value = "identifierType", required = false) Set<String> identifierType);
 
   @Override
   default SearchResponse<DatasetSearchResult, DatasetSearchParameter> search(
@@ -89,7 +94,12 @@ public interface DatasetSearchClient extends DatasetSearchService {
         datasetSearchRequest.getParameters().get(DatasetSearchParameter.INSTITUTION_KEY),
         datasetSearchRequest.getParameters().get(DatasetSearchParameter.CATEGORY),
         datasetSearchRequest.getParameters().get(DatasetSearchParameter.CONTACT_USER_ID),
-        datasetSearchRequest.getParameters().get(DatasetSearchParameter.CONTACT_EMAIL));
+        datasetSearchRequest.getParameters().get(DatasetSearchParameter.CONTACT_EMAIL),
+        datasetSearchRequest.getParameters().get(DatasetSearchParameter.MACHINE_TAG_NAMESPACE),
+        datasetSearchRequest.getParameters().get(DatasetSearchParameter.MACHINE_TAG_NAME),
+        datasetSearchRequest.getParameters().get(DatasetSearchParameter.MACHINE_TAG_VALUE),
+        datasetSearchRequest.getParameters().get(DatasetSearchParameter.IDENTIFIER),
+        datasetSearchRequest.getParameters().get(DatasetSearchParameter.IDENTIFIER_TYPE));
   }
 
   @RequestMapping(
