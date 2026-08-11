@@ -37,11 +37,9 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -64,11 +62,6 @@ import com.fasterxml.jackson.databind.node.IntNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 
-import co.elastic.clients.elasticsearch.ElasticsearchClient;
-import co.elastic.clients.elasticsearch._types.aggregations.Aggregate;
-import co.elastic.clients.elasticsearch._types.aggregations.HistogramBucket;
-import co.elastic.clients.elasticsearch._types.aggregations.StringTermsBucket;
-import co.elastic.clients.elasticsearch.core.SearchRequest;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
@@ -76,8 +69,6 @@ import lombok.extern.slf4j.Slf4j;
 @Component
 @Lazy
 public class DatasetJsonConverter {
-
-  private static final int MAX_FACET_LIMIT = 1200000;
 
   // Gridded datasets
   private static final String GRIDDED_DATASET_NAMESPACE = "griddedDataSet.jwaller.gbif.org";
@@ -93,10 +84,6 @@ public class DatasetJsonConverter {
   private final ConceptClient conceptClient;
 
   private final ObjectMapper mapper;
-
-  private final ElasticsearchClient occurrenceEsClient;
-
-  private final String occurrenceIndex;
 
   private Long occurrenceCount;
 
@@ -123,14 +110,10 @@ public class DatasetJsonConverter {
       GbifWsClient gbifWsClient,
       ConceptClient conceptClient,
       @Qualifier("apiMapper") ObjectMapper mapper,
-      @Qualifier("occurrenceEsClient") ElasticsearchClient occurrenceEsClient,
-      @Value("${elasticsearch.occurrence.index}") String occurrenceIndex,
       @Value("${defaultChecklistKey}") String defaultChecklistKey) {
     this.gbifWsClient = gbifWsClient;
     this.conceptClient = conceptClient;
     this.mapper = mapper;
-    this.occurrenceEsClient = occurrenceEsClient;
-    this.occurrenceIndex = occurrenceIndex;
     this.defaultChecklistKey = defaultChecklistKey;
     consumers.add(this::maintenanceFieldsTransforms);
     consumers.add(this::addTitles);
@@ -141,15 +124,11 @@ public class DatasetJsonConverter {
   public static DatasetJsonConverter create(
       GbifWsClient gbifWsClient,
       ConceptClient conceptClient,
-      ElasticsearchClient occurrenceEsClient,
-      String occurrenceIndex,
       String defaultChecklistKey) {
     return new DatasetJsonConverter(
         gbifWsClient,
         conceptClient,
         JacksonObjectMapper.get(),
-        occurrenceEsClient,
-        occurrenceIndex,
         defaultChecklistKey);
   }
 
@@ -484,106 +463,5 @@ public class DatasetJsonConverter {
     }
     ArrayNode arrayNode = node.putArray(field);
     values.forEach(arrayNode::add);
-  }
-
-  private void addOccurrenceCoverage(Dataset dataset, ObjectNode datasetObjectNode) {
-    try {
-      SearchRequest searchRequest = SearchRequest.of(s -> s
-          .index(occurrenceIndex)
-          .size(0)
-          .query(q -> q
-              .bool(b -> b
-                  .filter(f -> f
-                      .term(t -> t
-                          .field("datasetKey")
-                          .value(dataset.getKey().toString())))))
-          .aggregations("countryCode", a -> a
-              .terms(t -> t
-                  .field("countryCode")
-                  .size(200))
-              .aggregations("taxonKey", ta -> ta
-                  .terms(tt -> tt
-                      .field("gbifClassification.taxonKey")
-                      .size(120_000))
-                  .aggregations("eventDateSingle", ha -> ha
-                      .dateHistogram(dh -> dh
-                          .field("eventDateSingle")
-                          .fixedInterval(interval -> interval.time("3650d")))))));
-
-      co.elastic.clients.elasticsearch.core.SearchResponse<Void> searchResponse =
-          occurrenceEsClient.search(searchRequest, Void.class);
-
-      List<JsonNode> coverages = new ArrayList<>();
-
-      List<StringTermsBucket> countryBuckets =
-          getStringTermsBuckets(searchResponse.aggregations(), "countryCode");
-      if (!countryBuckets.isEmpty()) {
-        countryBuckets.forEach(
-            countryBucket -> {
-              List<StringTermsBucket> taxonBuckets =
-                  getStringTermsBuckets(countryBucket.aggregations(), "taxonKey");
-              if (!taxonBuckets.isEmpty()) {
-                taxonBuckets.forEach(
-                    taxonKeyBucket -> {
-                      List<HistogramBucket> decadesBuckets =
-                          getHistogramBuckets(taxonKeyBucket.aggregations(), "eventDateSingle");
-                      if (!decadesBuckets.isEmpty()) {
-                        decadesBuckets.forEach(
-                            decadeBucket -> {
-                              ObjectNode atDecadeCoverage = mapper.createObjectNode();
-                              atDecadeCoverage.set("country", toJson(countryBucket));
-                              atDecadeCoverage.set("taxonKey", toJson(taxonKeyBucket));
-                              atDecadeCoverage.set("decade", toJson(decadeBucket));
-                              coverages.add(atDecadeCoverage);
-                            });
-                      } else {
-                        ObjectNode atTaxonKeyCoverage = mapper.createObjectNode();
-                        atTaxonKeyCoverage.set("country", toJson(countryBucket));
-                        atTaxonKeyCoverage.set("taxonKey", toJson(taxonKeyBucket));
-                        coverages.add(atTaxonKeyCoverage);
-                      }
-                    });
-              } else {
-                ObjectNode atCountryCoverage = mapper.createObjectNode();
-                atCountryCoverage.set("country", toJson(countryBucket));
-                coverages.add(atCountryCoverage);
-              }
-            });
-      }
-      datasetObjectNode.putArray("occurrenceCoverage").addAll(coverages);
-
-    } catch (Exception ex) {
-      log.error("Error retrieving occurrence coverage data", ex);
-    }
-  }
-
-  private ObjectNode toJson(StringTermsBucket bucket) {
-    return mapper
-        .createObjectNode()
-        .put("value", bucket.key().stringValue())
-        .put("count", bucket.docCount());
-  }
-
-  private ObjectNode toJson(HistogramBucket bucket) {
-    return mapper
-        .createObjectNode()
-        .put("value", bucket.keyAsString())
-        .put("count", bucket.docCount());
-  }
-
-  private List<StringTermsBucket> getStringTermsBuckets(Map<String, Aggregate> aggs, String aggName) {
-    return Optional.ofNullable(aggs)
-        .map(aggregations -> aggregations.get(aggName))
-        .filter(Aggregate::isSterms)
-        .map(agg -> agg.sterms().buckets().array())
-        .orElse(Collections.emptyList());
-  }
-
-  private List<HistogramBucket> getHistogramBuckets(Map<String, Aggregate> aggs, String aggName) {
-    return Optional.ofNullable(aggs)
-        .map(aggregations -> aggregations.get(aggName))
-        .filter(Aggregate::isHistogram)
-        .map(agg -> agg.histogram().buckets().array())
-        .orElse(Collections.emptyList());
   }
 }
