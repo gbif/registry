@@ -14,6 +14,8 @@
 package org.gbif.registry.search.dataset.indexing;
 
 import org.gbif.api.model.registry.Dataset;
+import org.gbif.api.model.registry.Dataset.DataPackage;
+import org.gbif.api.model.registry.Identifier;
 import org.gbif.api.model.registry.Installation;
 import org.gbif.api.model.registry.MachineTag;
 import org.gbif.api.model.registry.Network;
@@ -22,8 +24,11 @@ import org.gbif.api.model.registry.Tag;
 import org.gbif.api.model.registry.eml.KeywordCollection;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.DatasetType;
+import org.gbif.api.vocabulary.EndpointType;
+import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.api.vocabulary.License;
 import org.gbif.api.vocabulary.MaintenanceUpdateFrequency;
+import org.gbif.registry.search.dataset.DatasetEsFieldMapper;
 import org.gbif.registry.search.dataset.indexing.ws.GbifWsClient;
 import org.gbif.registry.search.dataset.indexing.ws.JacksonObjectMapper;
 import org.gbif.vocabulary.client.ConceptClient;
@@ -32,10 +37,9 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Comparator;
+import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -58,11 +62,6 @@ import com.fasterxml.jackson.databind.node.IntNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 
-import co.elastic.clients.elasticsearch.ElasticsearchClient;
-import co.elastic.clients.elasticsearch._types.aggregations.Aggregate;
-import co.elastic.clients.elasticsearch._types.aggregations.HistogramBucket;
-import co.elastic.clients.elasticsearch._types.aggregations.StringTermsBucket;
-import co.elastic.clients.elasticsearch.core.SearchRequest;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
@@ -70,8 +69,6 @@ import lombok.extern.slf4j.Slf4j;
 @Component
 @Lazy
 public class DatasetJsonConverter {
-
-  private static final int MAX_FACET_LIMIT = 1200000;
 
   // Gridded datasets
   private static final String GRIDDED_DATASET_NAMESPACE = "griddedDataSet.jwaller.gbif.org";
@@ -87,10 +84,6 @@ public class DatasetJsonConverter {
   private final ConceptClient conceptClient;
 
   private final ObjectMapper mapper;
-
-  private final ElasticsearchClient occurrenceEsClient;
-
-  private final String occurrenceIndex;
 
   private Long occurrenceCount;
 
@@ -117,14 +110,10 @@ public class DatasetJsonConverter {
       GbifWsClient gbifWsClient,
       ConceptClient conceptClient,
       @Qualifier("apiMapper") ObjectMapper mapper,
-      @Qualifier("occurrenceEsClient") ElasticsearchClient occurrenceEsClient,
-      @Value("${elasticsearch.occurrence.index}") String occurrenceIndex,
       @Value("${defaultChecklistKey}") String defaultChecklistKey) {
     this.gbifWsClient = gbifWsClient;
     this.conceptClient = conceptClient;
     this.mapper = mapper;
-    this.occurrenceEsClient = occurrenceEsClient;
-    this.occurrenceIndex = occurrenceIndex;
     this.defaultChecklistKey = defaultChecklistKey;
     consumers.add(this::maintenanceFieldsTransforms);
     consumers.add(this::addTitles);
@@ -135,15 +124,11 @@ public class DatasetJsonConverter {
   public static DatasetJsonConverter create(
       GbifWsClient gbifWsClient,
       ConceptClient conceptClient,
-      ElasticsearchClient occurrenceEsClient,
-      String occurrenceIndex,
       String defaultChecklistKey) {
     return new DatasetJsonConverter(
         gbifWsClient,
         conceptClient,
         JacksonObjectMapper.get(),
-        occurrenceEsClient,
-        occurrenceIndex,
         defaultChecklistKey);
   }
 
@@ -156,6 +141,9 @@ public class DatasetJsonConverter {
     addNetworks(dataset, datasetAsJson);
     addCategoriesWithParents(dataset, datasetAsJson);
     addMachineTags(dataset, datasetAsJson);
+    addMachineTagSearchFields(dataset, datasetAsJson);
+    addIdentifierSearchFields(dataset, datasetAsJson);
+    addDataPackage(dataset, datasetAsJson);
     return datasetAsJson;
   }
 
@@ -331,6 +319,39 @@ public class DatasetJsonConverter {
     }
   }
 
+  private void addDataPackage(Dataset dataset, ObjectNode datasetJsonNode) {
+    if (dataset.getEndpoints().stream().anyMatch(e -> e.getType().equals(EndpointType.DWC_DP))) {
+      DataPackage dataPackage = gbifWsClient.getDataPackage(dataset.getKey());
+      if (dataPackage != null && dataPackage.getMetadata() != null) {
+        try {
+          JsonNode metadata = mapper.readTree(dataPackage.getMetadata());
+          ObjectNode dwcdpObject = datasetJsonNode.putObject("dwcdp");
+
+          JsonNode profileNode = metadata.get("profile");
+          if (profileNode != null && !profileNode.isNull()) {
+            dwcdpObject.put("profile", profileNode.asText());
+          }
+
+          JsonNode resourcesNode = metadata.get("resources");
+          if (resourcesNode != null && resourcesNode.isArray()) {
+            ArrayNode resourceSchemasArray = dwcdpObject.putArray("resourceSchemas");
+            for (JsonNode resource : resourcesNode) {
+              JsonNode schemaNode = resource.get("schema");
+              if (schemaNode != null && schemaNode.isObject()) {
+                JsonNode urlNode = schemaNode.get("url");
+                if (urlNode != null && !urlNode.isNull()) {
+                  resourceSchemasArray.add(urlNode.asText());
+                }
+              }
+            }
+          }
+        } catch (JsonProcessingException e) {
+          log.error("Error parsing DataPackage metadata for dataset {}", dataset.getKey(), e);
+        }
+      }
+    }
+  }
+
   private void addOccurrenceSpeciesCounts(ObjectNode datasetJsonNode) {
     String datasetKey = datasetJsonNode.get("key").textValue();
     Long count = gbifWsClient.getDatasetRecordCount(datasetKey);
@@ -383,104 +404,64 @@ public class DatasetJsonConverter {
             });
   }
 
-  private void addOccurrenceCoverage(Dataset dataset, ObjectNode datasetObjectNode) {
-    try {
-      SearchRequest searchRequest = SearchRequest.of(s -> s
-          .index(occurrenceIndex)
-          .size(0)
-          .query(q -> q
-              .bool(b -> b
-                  .filter(f -> f
-                      .term(t -> t
-                          .field("datasetKey")
-                          .value(dataset.getKey().toString())))))
-          .aggregations("countryCode", a -> a
-              .terms(t -> t
-                  .field("countryCode")
-                  .size(200))
-              .aggregations("taxonKey", ta -> ta
-                  .terms(tt -> tt
-                      .field("gbifClassification.taxonKey")
-                      .size(120_000))
-                  .aggregations("eventDateSingle", ha -> ha
-                      .dateHistogram(dh -> dh
-                          .field("eventDateSingle")
-                          .fixedInterval(interval -> interval.time("3650d")))))));
+  /**
+   * Adds denormalized machine tag fields used by search: flat keyword arrays for single-dimension
+   * filters and compound tokens for correlated namespace/name/value filters.
+   */
+  private void addMachineTagSearchFields(Dataset dataset, ObjectNode datasetObjectNode) {
+    Set<String> namespaces = new LinkedHashSet<>();
+    Set<String> names = new LinkedHashSet<>();
+    Set<String> values = new LinkedHashSet<>();
+    Set<String> tokens = new LinkedHashSet<>();
 
-      co.elastic.clients.elasticsearch.core.SearchResponse<Void> searchResponse =
-          occurrenceEsClient.search(searchRequest, Void.class);
+    for (MachineTag machineTag : dataset.getMachineTags()) {
+      String namespace = machineTag.getNamespace();
+      String name = machineTag.getName();
+      String value = machineTag.getValue();
 
-      List<JsonNode> coverages = new ArrayList<>();
-
-      List<StringTermsBucket> countryBuckets =
-          getStringTermsBuckets(searchResponse.aggregations(), "countryCode");
-      if (!countryBuckets.isEmpty()) {
-        countryBuckets.forEach(
-            countryBucket -> {
-              List<StringTermsBucket> taxonBuckets =
-                  getStringTermsBuckets(countryBucket.aggregations(), "taxonKey");
-              if (!taxonBuckets.isEmpty()) {
-                taxonBuckets.forEach(
-                    taxonKeyBucket -> {
-                      List<HistogramBucket> decadesBuckets =
-                          getHistogramBuckets(taxonKeyBucket.aggregations(), "eventDateSingle");
-                      if (!decadesBuckets.isEmpty()) {
-                        decadesBuckets.forEach(
-                            decadeBucket -> {
-                              ObjectNode atDecadeCoverage = mapper.createObjectNode();
-                              atDecadeCoverage.set("country", toJson(countryBucket));
-                              atDecadeCoverage.set("taxonKey", toJson(taxonKeyBucket));
-                              atDecadeCoverage.set("decade", toJson(decadeBucket));
-                              coverages.add(atDecadeCoverage);
-                            });
-                      } else {
-                        ObjectNode atTaxonKeyCoverage = mapper.createObjectNode();
-                        atTaxonKeyCoverage.set("country", toJson(countryBucket));
-                        atTaxonKeyCoverage.set("taxonKey", toJson(taxonKeyBucket));
-                        coverages.add(atTaxonKeyCoverage);
-                      }
-                    });
-              } else {
-                ObjectNode atCountryCoverage = mapper.createObjectNode();
-                atCountryCoverage.set("country", toJson(countryBucket));
-                coverages.add(atCountryCoverage);
-              }
-            });
-      }
-      datasetObjectNode.putArray("occurrenceCoverage").addAll(coverages);
-
-    } catch (Exception ex) {
-      log.error("Error retrieving occurrence coverage data", ex);
+      namespaces.add(namespace);
+      names.add(name);
+      values.add(value);
+      tokens.add(DatasetEsFieldMapper.machineTagToken(namespace, name, value));
+      tokens.add(DatasetEsFieldMapper.machineTagToken(namespace, name, null));
+      tokens.add(DatasetEsFieldMapper.machineTagToken(namespace, null, value));
+      tokens.add(DatasetEsFieldMapper.machineTagToken(null, name, value));
     }
+
+    putKeywordArray(datasetObjectNode, DatasetEsFieldMapper.MACHINE_TAG_NAMESPACES_FIELD, namespaces);
+    putKeywordArray(datasetObjectNode, DatasetEsFieldMapper.MACHINE_TAG_NAMES_FIELD, names);
+    putKeywordArray(datasetObjectNode, DatasetEsFieldMapper.MACHINE_TAG_VALUES_FIELD, values);
+    putKeywordArray(datasetObjectNode, DatasetEsFieldMapper.MACHINE_TAG_TOKENS_FIELD, tokens);
   }
 
-  private ObjectNode toJson(StringTermsBucket bucket) {
-    return mapper
-        .createObjectNode()
-        .put("value", bucket.key().stringValue())
-        .put("count", bucket.docCount());
+  /**
+   * Adds denormalized identifier fields used by search: flat keyword arrays for single-dimension
+   * filters and compound tokens for correlated type/identifier filters.
+   */
+  private void addIdentifierSearchFields(Dataset dataset, ObjectNode datasetObjectNode) {
+    Set<String> types = new LinkedHashSet<>();
+    Set<String> values = new LinkedHashSet<>();
+    Set<String> tokens = new LinkedHashSet<>();
+
+    for (Identifier identifier : dataset.getIdentifiers()) {
+      IdentifierType type = identifier.getType();
+      String value = identifier.getIdentifier();
+      types.add(type.name());
+      values.add(value);
+      tokens.add(DatasetEsFieldMapper.identifierToken(type.name(), value));
+    }
+
+    putKeywordArray(datasetObjectNode, DatasetEsFieldMapper.IDENTIFIER_TYPES_FIELD, types);
+    putKeywordArray(datasetObjectNode, DatasetEsFieldMapper.IDENTIFIER_VALUES_FIELD, values);
+    putKeywordArray(datasetObjectNode, DatasetEsFieldMapper.IDENTIFIER_TOKENS_FIELD, tokens);
   }
 
-  private ObjectNode toJson(HistogramBucket bucket) {
-    return mapper
-        .createObjectNode()
-        .put("value", bucket.keyAsString())
-        .put("count", bucket.docCount());
-  }
-
-  private List<StringTermsBucket> getStringTermsBuckets(Map<String, Aggregate> aggs, String aggName) {
-    return Optional.ofNullable(aggs)
-        .map(aggregations -> aggregations.get(aggName))
-        .filter(Aggregate::isSterms)
-        .map(agg -> agg.sterms().buckets().array())
-        .orElse(Collections.emptyList());
-  }
-
-  private List<HistogramBucket> getHistogramBuckets(Map<String, Aggregate> aggs, String aggName) {
-    return Optional.ofNullable(aggs)
-        .map(aggregations -> aggregations.get(aggName))
-        .filter(Aggregate::isHistogram)
-        .map(agg -> agg.histogram().buckets().array())
-        .orElse(Collections.emptyList());
+  private static void putKeywordArray(ObjectNode node, String field, Set<String> values) {
+    if (values.isEmpty()) {
+      node.remove(field);
+      return;
+    }
+    ArrayNode arrayNode = node.putArray(field);
+    values.forEach(arrayNode::add);
   }
 }

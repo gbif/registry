@@ -23,6 +23,9 @@ import org.gbif.registry.search.dataset.indexing.ws.GbifWsClient;
 
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -55,6 +58,10 @@ public class EsDatasetRealtimeIndexer implements DatasetRealtimeIndexer {
 
   private final ElasticsearchClient elasticsearchClient;
 
+  /** Serializes index writes per dataset key so a slower earlier write cannot overwrite a newer one. */
+  private final ConcurrentHashMap<UUID, CompletableFuture<Void>> inFlightByKey =
+      new ConcurrentHashMap<>();
+
   @Autowired
   public EsDatasetRealtimeIndexer(
     ElasticsearchAsyncClient elasticsearchAsyncClient,
@@ -70,7 +77,7 @@ public class EsDatasetRealtimeIndexer implements DatasetRealtimeIndexer {
     pendingUpdates = new AtomicInteger();
   }
 
-  private <T> IndexRequest<T> toIndexRequest(Dataset dataset) {
+  private IndexRequest<?> toIndexRequest(Dataset dataset) {
     String jsonString = datasetJsonConverter.convertAsJsonString(dataset);
     return IndexRequest.of(i -> i
       .id(dataset.getKey().toString())
@@ -80,20 +87,41 @@ public class EsDatasetRealtimeIndexer implements DatasetRealtimeIndexer {
 
   @Override
   public void index(Dataset dataset) {
+    if (dataset.getKey() == null) {
+      return;
+    }
+    UUID key = dataset.getKey();
     pendingUpdates.incrementAndGet();
     try {
-      elasticsearchAsyncClient.index(toIndexRequest(dataset))
-        .thenAccept(indexResponse -> {
-          log.info("Dataset indexed {}, result {}", dataset.getKey(), indexResponse);
-          // Refresh index to make indexed data searchable immediately
-          //refreshIndex();
-          pendingUpdates.decrementAndGet();
-        })
-        .exceptionally(ex -> {
-          log.error("Error indexing dataset {}", dataset, ex);
-          pendingUpdates.decrementAndGet();
-          return null;
-        });
+      IndexRequest<?> indexRequest = toIndexRequest(dataset);
+      CompletableFuture<Void> chain =
+          inFlightByKey.compute(
+              key,
+              (datasetKey, previous) -> {
+                CompletableFuture<Void> afterPrevious =
+                    previous != null ? previous : CompletableFuture.completedFuture(null);
+                return afterPrevious
+                    .handle((ignored, ex) -> null)
+                    .thenCompose(
+                        ignored ->
+                            elasticsearchAsyncClient
+                                .index(indexRequest)
+                                .thenAccept(
+                                    response ->
+                                        log.info("Dataset indexed {}, result {}", key, response))
+                                .exceptionally(
+                                    ex -> {
+                                      log.error("Error indexing dataset {}", dataset, ex);
+                                      return null;
+                                    })
+                                .thenApply(ignored2 -> null));
+              });
+
+      chain.whenComplete(
+          (ignored, ex) -> {
+            pendingUpdates.decrementAndGet();
+            inFlightByKey.compute(key, (datasetKey, current) -> current == chain ? null : current);
+          });
     } catch (Exception ex) {
       log.error("Error indexing dataset {}", dataset, ex);
       pendingUpdates.decrementAndGet();

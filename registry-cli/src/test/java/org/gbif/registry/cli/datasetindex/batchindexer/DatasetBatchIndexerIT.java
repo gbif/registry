@@ -45,8 +45,6 @@ public class DatasetBatchIndexerIT extends BaseDBTest {
 
   private static final int DATASETS_TO_INDEX = 5;
 
-  private static final String OCCURRENCE_INDEX_NAME = "occurrence";
-
   private static final String API_URL = "http://api.gbif-dev.org/v1/";
 
   private static final String INDEX_NAME = IndexingConstants.ALIAS + '_' + new Date().getTime();
@@ -87,11 +85,6 @@ public class DatasetBatchIndexerIT extends BaseDBTest {
     elasticsearchConfigDataset.setAlias(INDEX_ALIAS);
     elasticsearchConfigDataset.setIndex(INDEX_NAME);
     configuration.setDatasetEs(elasticsearchConfigDataset);
-
-    ElasticsearchConfig elasticsearchConfigOccurrence = new ElasticsearchConfig();
-    elasticsearchConfigOccurrence.setHosts("http://" + embeddedElastic.getHttpHostAddress());
-    elasticsearchConfigOccurrence.setAlias(OCCURRENCE_INDEX_NAME);
-    configuration.setOccurrenceEs(elasticsearchConfigOccurrence);
 
     configuration.setApiRootUrl(API_URL);
 

@@ -13,6 +13,7 @@
  */
 package org.gbif.registry.ws.it;
 
+import org.gbif.api.service.registry.DatasetDataPackageService;
 import org.gbif.api.service.registry.DatasetService;
 import org.gbif.api.service.registry.InstallationService;
 import org.gbif.api.service.registry.NetworkService;
@@ -237,14 +238,16 @@ public class RegistryIntegrationTestsConfiguration {
       NetworkService networkService,
       OccurrenceWsSearchClient occurrenceWsSearchClient,
       CubeWsClient cubeWsClient,
-      TaxonApiClient taxonApiClient) {
+      TaxonApiClient taxonApiClient,
+      DatasetDataPackageService datasetDataPackageService) {
     return new GbifWsWrapperClient(installationService,
                                     organizationService,
                                     datasetService,
                                     networkService,
                                     occurrenceWsSearchClient,
                                     cubeWsClient,
-                                    taxonApiClient);
+                                    taxonApiClient,
+                                    datasetDataPackageService);
   }
 
   public static void main(String[] args) {
