@@ -14,9 +14,7 @@
 package org.gbif.registry.search;
 
 import org.gbif.api.model.registry.Dataset;
-import org.gbif.api.model.registry.Identifier;
 import org.gbif.api.model.registry.Installation;
-import org.gbif.api.model.registry.MachineTag;
 import org.gbif.api.model.registry.Network;
 import org.gbif.api.model.registry.Organization;
 import org.gbif.api.model.registry.Tag;
@@ -112,10 +110,6 @@ public class DatasetIndexUpdateListener {
     // only fire in case of tagged datasets
     if ((event.getTargetClass().equals(Dataset.class)
             && event.getComponentClass().equals(Tag.class))
-        || (event.getTargetClass().equals(Dataset.class)
-            && event.getComponentClass().equals(MachineTag.class))
-        || (event.getTargetClass().equals(Dataset.class)
-            && event.getComponentClass().equals(Identifier.class))
         || (event.getTargetClass().equals(Network.class)
             && event.getComponentClass().equals(Dataset.class))) {
       // we only put tagged datasets onto the queue for this event type!

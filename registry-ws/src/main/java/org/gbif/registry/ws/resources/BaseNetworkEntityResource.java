@@ -468,10 +468,7 @@ public abstract class BaseNetworkEntityResource<T extends NetworkEntity, P exten
     final String nameFromContext = authentication != null ? authentication.getName() : null;
 
     machineTag.setCreatedBy(nameFromContext);
-    int key = withMyBatis.addMachineTag(machineTagMapper, mapper, targetEntityKey, machineTag);
-    eventManager.post(
-        ChangedComponentEvent.newInstance(targetEntityKey, objectClass, MachineTag.class));
-    return key;
+    return withMyBatis.addMachineTag(machineTagMapper, mapper, targetEntityKey, machineTag);
   }
 
   @Transactional
@@ -512,8 +509,6 @@ public abstract class BaseNetworkEntityResource<T extends NetworkEntity, P exten
   public void deleteMachineTag(
       @PathVariable("key") UUID targetEntityKey, @PathVariable("machineTagKey") int machineTagKey) {
     mapper.deleteMachineTag(targetEntityKey, machineTagKey);
-    eventManager.post(
-        ChangedComponentEvent.newInstance(targetEntityKey, objectClass, MachineTag.class));
   }
 
   /**
@@ -537,8 +532,6 @@ public abstract class BaseNetworkEntityResource<T extends NetworkEntity, P exten
   public void deleteMachineTags(
       @PathVariable("key") UUID targetEntityKey, @PathVariable("namespace") String namespace) {
     mapper.deleteMachineTags(targetEntityKey, namespace, null);
-    eventManager.post(
-        ChangedComponentEvent.newInstance(targetEntityKey, objectClass, MachineTag.class));
   }
 
   @Override
@@ -569,8 +562,6 @@ public abstract class BaseNetworkEntityResource<T extends NetworkEntity, P exten
       @PathVariable("namespace") String namespace,
       @PathVariable("name") String name) {
     mapper.deleteMachineTags(targetEntityKey, namespace, name);
-    eventManager.post(
-        ChangedComponentEvent.newInstance(targetEntityKey, objectClass, MachineTag.class));
   }
 
   @Override
