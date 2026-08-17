@@ -335,7 +335,7 @@
     (
     SELECT COUNT(1)
     FROM pipeline_step
-    WHERE finished IS NULL
+    WHERE (finished IS NULL OR state = 'FAILED')
     AND pipeline_execution_key = #{pipelineExecutionKey,jdbcType=BIGINT}
     ) = 0
   </update>
