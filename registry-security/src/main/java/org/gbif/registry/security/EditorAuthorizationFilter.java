@@ -213,11 +213,18 @@ public class EditorAuthorizationFilter extends OncePerRequestFilter {
 
       // validate only if user not admin and not app
       if (checkIsNotAdmin(authentication) && checkIsNotApp(authentication)) {
-        // only editors allowed to modify, because admins already excluded
-        if (checkIsNotEditor(authentication)) {
-          throw new WebApplicationException("User has no editor rights", HttpStatus.FORBIDDEN);
+        Matcher pathMatcher = pathMatcherOpt.get();
+        // Crawl may be triggered by dataset contacts (USER role) as well as editors.
+        // @Secured includes USER_ROLE for defense in depth; per-dataset ACL is here.
+        if (isDatasetCrawlRequest(pathMatcher)) {
+          ensureCrawlRequest(username, pathMatcher.group(2));
+        } else {
+          // only editors allowed to modify, because admins already excluded
+          if (checkIsNotEditor(authentication)) {
+            throw new WebApplicationException("User has no editor rights", HttpStatus.FORBIDDEN);
+          }
+          ensureRequest(username, path, pathMatcher, request);
         }
-        ensureRequest(username, path, pathMatcherOpt.get(), request);
       }
     }
 
@@ -440,6 +447,37 @@ public class EditorAuthorizationFilter extends OncePerRequestFilter {
     } else {
       LOG.debug("User {} is allowed to run pipelines for the dataset {}", username, resourceKey);
     }
+  }
+
+  /**
+   * Ensure crawl request is allowed for the user (editor rights or dataset contact email).
+   * If so do nothing, if not throw {@link WebApplicationException}.
+   *
+   * @param username    username
+   * @param resourceKey dataset key
+   */
+  private void ensureCrawlRequest(String username, String resourceKey) {
+    if (resourceKey == null || isNotUuid(resourceKey)) {
+      LOG.debug("Invalid crawl request. username [{}], resourceKey [{}]", username, resourceKey);
+      return;
+    }
+
+    if (!userAuthService.allowedToCrawlDataset(username, UUID.fromString(resourceKey))) {
+      LOG.warn("User {} is not allowed to crawl dataset {}", username, resourceKey);
+      throw new WebApplicationException(
+          MessageFormat.format("User {0} is not allowed to crawl dataset {1}", username, resourceKey),
+          HttpStatus.FORBIDDEN);
+    }
+    LOG.debug("User {} is allowed to crawl dataset {}", username, resourceKey);
+  }
+
+  /**
+   * True if the matched request is POST /dataset/{uuid}/crawl.
+   */
+  private boolean isDatasetCrawlRequest(Matcher matcher) {
+    return matcher.groupCount() == 2
+        && DATASET.equalsIgnoreCase(matcher.group(1))
+        && matcher.pattern().pattern().contains("/crawl");
   }
 
   /**

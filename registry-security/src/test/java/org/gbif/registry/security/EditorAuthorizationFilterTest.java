@@ -349,6 +349,60 @@ public class EditorAuthorizationFilterTest {
   }
 
   @Test
+  public void testDatasetCrawlUserWithContactRightsSuccess() throws Exception {
+    // GIVEN
+    when(mockAuthenticationFacade.getAuthentication()).thenReturn(mockAuthentication);
+    when(mockRequest.getRequestURI()).thenReturn("/dataset/" + KEY + "/crawl");
+    when(mockRequest.getMethod()).thenReturn("POST");
+    when(mockAuthentication.getName()).thenReturn(USERNAME);
+    doReturn(ROLES_USER_ONLY).when(mockAuthentication).getAuthorities();
+    when(mockEditorAuthService.allowedToCrawlDataset(USERNAME, KEY)).thenReturn(true);
+
+    // WHEN
+    filter.doFilter(mockRequest, mockResponse, mockFilterChain);
+
+    // THEN
+    verify(mockAuthenticationFacade).getAuthentication();
+    verify(mockRequest).getRequestURI();
+    verify(mockRequest, atLeast(2)).getMethod();
+    verify(mockAuthentication, atLeastOnce()).getName();
+    verify(mockAuthentication, atLeast(2)).getAuthorities();
+    verify(mockEditorAuthService).allowedToCrawlDataset(USERNAME, KEY);
+  }
+
+  @Test
+  public void testDatasetCrawlUserWithoutContactRightsFail() {
+    // GIVEN
+    when(mockAuthenticationFacade.getAuthentication()).thenReturn(mockAuthentication);
+    when(mockRequest.getRequestURI()).thenReturn("/dataset/" + KEY + "/crawl");
+    when(mockRequest.getMethod()).thenReturn("POST");
+    when(mockAuthentication.getName()).thenReturn(USERNAME);
+    doReturn(ROLES_USER_ONLY).when(mockAuthentication).getAuthorities();
+    when(mockEditorAuthService.allowedToCrawlDataset(USERNAME, KEY)).thenReturn(false);
+
+    // WHEN & THEN
+    assertThrows(
+        WebApplicationException.class,
+        () -> filter.doFilter(mockRequest, mockResponse, mockFilterChain));
+    verify(mockEditorAuthService).allowedToCrawlDataset(USERNAME, KEY);
+  }
+
+  @Test
+  public void testDatasetPutUserRoleStillForbidden() {
+    // GIVEN — contacts must not gain edit rights via crawl changes
+    when(mockAuthenticationFacade.getAuthentication()).thenReturn(mockAuthentication);
+    when(mockRequest.getRequestURI()).thenReturn("/dataset/" + KEY);
+    when(mockRequest.getMethod()).thenReturn("PUT");
+    when(mockAuthentication.getName()).thenReturn(USERNAME);
+    doReturn(ROLES_USER_ONLY).when(mockAuthentication).getAuthorities();
+
+    // WHEN & THEN
+    assertThrows(
+        WebApplicationException.class,
+        () -> filter.doFilter(mockRequest, mockResponse, mockFilterChain));
+  }
+
+  @Test
   public void testOrganizationEndorsementPostAnyUserSuccess() throws Exception {
     // GIVEN
     when(mockAuthenticationFacade.getAuthentication()).thenReturn(mockAuthentication);
