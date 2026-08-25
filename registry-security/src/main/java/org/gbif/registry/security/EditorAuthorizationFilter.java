@@ -477,7 +477,7 @@ public class EditorAuthorizationFilter extends OncePerRequestFilter {
   private boolean isDatasetCrawlRequest(Matcher matcher) {
     return matcher.groupCount() == 2
         && DATASET.equalsIgnoreCase(matcher.group(1))
-        && matcher.pattern().pattern().contains("/crawl");
+        && matcher.pattern().pattern().endsWith("/crawl$");
   }
 
   /**
