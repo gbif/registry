@@ -157,4 +157,15 @@ public interface EditorAuthorizationService {
    * @return true if the passed metadata is allowed to be modified by the user.
    */
   boolean allowedToModifyMetadata(@Nullable String name, int metadataKey);
+
+  /**
+   * Checks whether a given user is allowed to trigger a crawl/ingest for a dataset. True if the
+   * user has editor rights on the dataset (or a parent entity), or if the user's account email
+   * matches any email on the dataset's contacts. Does not grant edit rights.
+   *
+   * @param name name from the security context
+   * @param datasetKey key of the dataset in question
+   * @return true if the user may crawl the dataset
+   */
+  boolean allowedToCrawlDataset(@Nullable String name, @Nullable UUID datasetKey);
 }

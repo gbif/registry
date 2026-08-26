@@ -93,10 +93,11 @@ public class SecuredEditorAnnotatedMethodsTest {
   public static final String SPACE = " ";
 
   private static final Pattern DATASET_RESOURCE_WITHOUT_KEY = Pattern.compile("^/dataset$");
+  private static final Pattern DATASET_CRAWL_RESOURCE =
+      Pattern.compile("^/dataset/[0-9a-f-]+/crawl$");
   private static final List<Pattern> DATASET_RESOURCE_WITH_KEY =
       Arrays.asList(
           Pattern.compile("^/dataset/[0-9a-f-]+$"),
-          Pattern.compile("^/dataset/[0-9a-f-]+/crawl$"),
           Pattern.compile(
               "^/dataset/[0-9a-f-]+/(comment|tag|contact|endpoint|identifier|document)$"),
           Pattern.compile(
@@ -278,6 +279,9 @@ public class SecuredEditorAnnotatedMethodsTest {
           .thenReturn(isAllowedToModify);
       when(objectMapper.readValue(CONTENT, Dataset.class)).thenReturn(DATASET);
       when(mockRequest.getContent()).thenReturn(CONTENT);
+    } else if (DATASET_CRAWL_RESOURCE.matcher(requestPath).matches()) {
+      when(mockEditorAuthService.allowedToCrawlDataset(USERNAME, KEY))
+          .thenReturn(isAllowedToModify);
     } else if (DATASET_RESOURCE_WITH_KEY.stream().anyMatch(p -> p.matcher(requestPath).matches())) {
       when(mockEditorAuthService.allowedToModifyDataset(USERNAME, KEY))
           .thenReturn(isAllowedToModify);
@@ -330,6 +334,8 @@ public class SecuredEditorAnnotatedMethodsTest {
     if (DATASET_RESOURCE_WITHOUT_KEY.matcher(requestPath).matches()) {
       verify(mockEditorAuthService).allowedToModifyDataset(USERNAME, DATASET);
       verify(mockRequest).getContent();
+    } else if (DATASET_CRAWL_RESOURCE.matcher(requestPath).matches()) {
+      verify(mockEditorAuthService).allowedToCrawlDataset(USERNAME, KEY);
     } else if (DATASET_RESOURCE_WITH_KEY.stream().anyMatch(p -> p.matcher(requestPath).matches())) {
       verify(mockEditorAuthService).allowedToModifyDataset(USERNAME, KEY);
     } else if (INSTALLATION_RESOURCE_WITHOUT_KEY.matcher(requestPath).matches()) {
