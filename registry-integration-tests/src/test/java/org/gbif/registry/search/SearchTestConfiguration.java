@@ -17,10 +17,12 @@ import org.gbif.checklistbank.ws.client.DatasetMetricsClient;
 import org.gbif.checklistbank.ws.client.SpeciesResourceClient;
 import org.gbif.metrics.ws.client.CubeWsClient;
 import org.gbif.occurrence.ws.client.OccurrenceWsSearchClient;
+import org.gbif.registry.search.dataset.indexing.ws.taxon.TaxonApiClient;
 
 import org.mockito.Mockito;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 
 @Configuration(proxyBeanMethods = false)
 public class SearchTestConfiguration {
@@ -44,6 +46,12 @@ public class SearchTestConfiguration {
   @Bean
   public DatasetMetricsClient datasetMetricsClient() {
     return Mockito.mock(DatasetMetricsClient.class);
+  }
+
+  @Bean
+  @Primary
+  public TaxonApiClient taxonApiClient() {
+    return Mockito.mock(TaxonApiClient.class);
   }
 
 }
