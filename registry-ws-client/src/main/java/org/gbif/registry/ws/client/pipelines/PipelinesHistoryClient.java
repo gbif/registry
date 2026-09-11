@@ -60,6 +60,14 @@ public interface PipelinesHistoryClient extends PipelinesHistoryService {
   PipelineProcess getPipelineProcess(
       @PathVariable("datasetKey") UUID datasetKey, @PathVariable("attempt") int attempt);
 
+  @GetMapping(
+      value = "{datasetKey}/lastSuccessfulAttempt",
+      produces = MediaType.APPLICATION_JSON_VALUE)
+  @ResponseBody
+  Integer getLastSuccessfulAttempt(
+      @PathVariable("datasetKey") UUID datasetKey,
+      @RequestParam(value = "stepType", required = false) StepType stepType);
+
   @PostMapping(value = "process", consumes = MediaType.APPLICATION_JSON_VALUE)
   @Override
   long createPipelineProcess(@RequestBody PipelineProcessParameters params);
