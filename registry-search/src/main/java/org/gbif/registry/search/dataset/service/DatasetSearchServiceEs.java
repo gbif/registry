@@ -371,7 +371,7 @@ public class DatasetSearchServiceEs implements DatasetSearchService, AsyncDatase
     if (cause instanceof InterruptedException) {
       Thread.currentThread().interrupt();
     }
-    log.error("Async suggest failed: {} - {}", ex.getClass().getName(), ex.getMessage());
+    log.error("Async call failed: {} - {}", ex.getClass().getName(), ex.getMessage());
     Throwable nested = ex.getCause();
     int d = 0;
     while (nested != null && d < 10) {
