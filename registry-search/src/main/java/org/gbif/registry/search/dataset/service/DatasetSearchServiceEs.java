@@ -126,7 +126,7 @@ public class DatasetSearchServiceEs implements DatasetSearchService, AsyncDatase
       return esFuture.thenApply(response -> esResponseParser.buildSearchResponse(response, datasetSearchRequest))
         .exceptionally(ex -> {
           this.handleInterruptedException(ex);
-          throw new RuntimeException("Async suggest failed", ex);
+          throw new RuntimeException("Async search failed", ex);
         });
     } catch (Exception ex) {
       return CompletableFuture.failedFuture(ex);
