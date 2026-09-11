@@ -191,4 +191,5 @@
   <include file="liquibase/183-pipelines-event-types-dwcdp.xml" />
   <include file="liquibase/184-sql-download-types.xml" />
   <include file="liquibase/185-validation-report.xml" />
+  <include file="liquibase/186-download-created-by-index.xml" />
 </databaseChangeLog>
