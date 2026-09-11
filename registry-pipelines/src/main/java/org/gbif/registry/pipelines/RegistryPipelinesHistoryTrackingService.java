@@ -25,6 +25,7 @@ import org.gbif.api.model.pipelines.ws.SearchResult;
 
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
@@ -148,6 +149,15 @@ public interface RegistryPipelinesHistoryTrackingService {
    * @return an instance of pipelines process if exists
    */
   PipelineProcess get(UUID datasetKey, int attempt);
+
+  /**
+   * Gets the last attempt of a dataset that completed the given step successfully.
+   *
+   * @param datasetKey dataset identifier
+   * @param stepType step that must have finished with state COMPLETED
+   * @return the attempt number if any
+   */
+  Optional<Integer> getLastSuccessfulAttempt(UUID datasetKey, StepType stepType);
 
   /**
    * Gets running PipelineProcess

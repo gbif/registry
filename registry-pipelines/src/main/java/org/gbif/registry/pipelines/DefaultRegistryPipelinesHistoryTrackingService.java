@@ -845,6 +845,13 @@ public class DefaultRegistryPipelinesHistoryTrackingService
   }
 
   @Override
+  public Optional<Integer> getLastSuccessfulAttempt(UUID datasetKey, StepType stepType) {
+    Objects.requireNonNull(datasetKey, DATASET_KEY_CANNOT_BE_NULL);
+    Objects.requireNonNull(stepType, "stepType can't be null");
+    return mapper.getLastSuccessfulAttempt(datasetKey, stepType);
+  }
+
+  @Override
   public PagingResponse<PipelineProcess> getRunningPipelineProcess(
       @Nullable StepType stepType, @Nullable StepRunner stepRunner, Pageable pageable) {
     long count = mapper.getRunningPipelineProcessCount(stepType, stepRunner);
