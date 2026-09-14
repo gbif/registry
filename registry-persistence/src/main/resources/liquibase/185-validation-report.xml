@@ -13,6 +13,7 @@
                                        created     TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT now(),
                                        CONSTRAINT validation_report_pkey PRIMARY KEY (dataset_key, attempt)
       );
+      GRANT SELECT, INSERT, UPDATE ON validation_report TO registry;
       ]]>
     </sql>
   </changeSet>
