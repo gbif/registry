@@ -13,8 +13,6 @@
  */
 package org.gbif.registry.security;
 
-import org.gbif.api.model.common.GbifUser;
-import org.gbif.api.model.registry.Contact;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Installation;
 import org.gbif.api.model.registry.MachineTag;
@@ -27,14 +25,10 @@ import org.gbif.registry.persistence.mapper.InstallationMapper;
 import org.gbif.registry.persistence.mapper.MachineTagMapper;
 import org.gbif.registry.persistence.mapper.MetadataMapper;
 import org.gbif.registry.persistence.mapper.OrganizationMapper;
-import org.gbif.registry.persistence.mapper.UserMapper;
 import org.gbif.registry.persistence.mapper.UserRightsMapper;
 
-import java.util.List;
-import java.util.Objects;
 import java.util.UUID;
 
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Primary;
@@ -52,7 +46,6 @@ public class EditorAuthorizationServiceImpl implements EditorAuthorizationServic
   private final InstallationMapper installationMapper;
   private final MachineTagMapper machineTagMapper;
   private final MetadataMapper metadataMapper;
-  private final UserMapper userMapper;
 
   public EditorAuthorizationServiceImpl(
       OrganizationMapper organizationMapper,
@@ -60,15 +53,13 @@ public class EditorAuthorizationServiceImpl implements EditorAuthorizationServic
       InstallationMapper installationMapper,
       UserRightsMapper userRightsMapper,
       MachineTagMapper machineTagMapper,
-      MetadataMapper metadataMapper,
-      UserMapper userMapper) {
+      MetadataMapper metadataMapper) {
     this.organizationMapper = organizationMapper;
     this.datasetMapper = datasetMapper;
     this.installationMapper = installationMapper;
     this.userRightsMapper = userRightsMapper;
     this.machineTagMapper = machineTagMapper;
     this.metadataMapper = metadataMapper;
-    this.userMapper = userMapper;
   }
 
   @Override
@@ -231,37 +222,5 @@ public class EditorAuthorizationServiceImpl implements EditorAuthorizationServic
       return false;
     }
     return allowedToModifyDataset(name, metadata.getDatasetKey());
-  }
-
-  @Override
-  public boolean allowedToCrawlDataset(String name, UUID datasetKey) {
-    if (name == null || datasetKey == null) {
-      return false;
-    }
-    if (allowedToModifyDataset(name, datasetKey)) {
-      return true;
-    }
-    GbifUser user = userMapper.get(name);
-    if (user == null || StringUtils.isBlank(user.getEmail())) {
-      return false;
-    }
-    String userEmail = user.getEmail().trim();
-    List<Contact> contacts = datasetMapper.listContacts(datasetKey);
-    if (contacts == null || contacts.isEmpty()) {
-      return false;
-    }
-    boolean allowed =
-        contacts.stream()
-            .map(Contact::getEmail)
-            .filter(Objects::nonNull)
-            .flatMap(List::stream)
-            .filter(Objects::nonNull)
-            .anyMatch(email -> email.trim().equalsIgnoreCase(userEmail));
-    LOG.debug(
-        "User {} {} allowed to crawl dataset {} via contact email",
-        name,
-        allowed ? "is" : "is not",
-        datasetKey);
-    return allowed;
   }
 }

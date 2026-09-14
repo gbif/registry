@@ -91,9 +91,4 @@ public class EditorAuthorizationServiceStub implements EditorAuthorizationServic
   public boolean allowedToModifyMetadata(String name, int metadataKey) {
     return false;
   }
-
-  @Override
-  public boolean allowedToCrawlDataset(String name, UUID datasetKey) {
-    return false;
-  }
 }
