@@ -193,4 +193,5 @@
   <include file="liquibase/185-validation-report.xml" />
   <include file="liquibase/186-download-created-by-index.xml" />
   <include file="liquibase/187-make-dataset-type-notnull.xml" />
+  <include file="liquibase/188-grant-validation-report-to-registry.xml" />
 </databaseChangeLog>
