@@ -44,8 +44,10 @@ import org.gbif.api.vocabulary.Language;
 import org.gbif.api.vocabulary.License;
 import org.gbif.api.vocabulary.MaintenanceUpdateFrequency;
 import org.gbif.api.vocabulary.MetadataType;
+import org.gbif.metrics.ws.client.CubeWsClient;
 import org.gbif.registry.identity.service.IdentityService;
 import org.gbif.registry.search.dataset.indexing.DatasetRealtimeIndexer;
+import org.gbif.registry.search.dataset.indexing.ws.taxon.TaxonApiClient;
 import org.gbif.registry.search.test.BaseElasticsearchTest;
 import org.gbif.registry.search.test.DatasetSearchUpdateUtils;
 import org.gbif.registry.search.test.ElasticsearchTestContainerConfiguration;
@@ -91,8 +93,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.test.web.servlet.ResultActions;
+import org.springframework.util.MultiValueMap;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Charsets;
 import com.google.common.io.CharStreams;
 
@@ -108,6 +112,8 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
@@ -137,6 +143,8 @@ class DatasetIT extends NetworkEntityIT<Dataset> {
   private final ElasticsearchTestContainerConfiguration elasticsearchTestContainer;
   private final IdentityService identityService;
   private final RequestTestFixture requestTestFixture;
+  private final CubeWsClient cubeWsClient;
+  private final TaxonApiClient taxonApiClient;
 
   @RegisterExtension
   BaseElasticsearchTest.ElasticsearchRefreshExtension elasticsearchRefreshExtension;
@@ -154,6 +162,8 @@ class DatasetIT extends NetworkEntityIT<Dataset> {
       @Nullable SimplePrincipalProvider principalProvider,
       TestDataFactory testDataFactory,
       ElasticsearchTestContainerConfiguration elasticsearchTestContainer,
+      CubeWsClient cubeWsClient,
+      TaxonApiClient taxonApiClient,
       KeyStore keyStore,
       @LocalServerPort int localServerPort) {
     super(
@@ -176,6 +186,8 @@ class DatasetIT extends NetworkEntityIT<Dataset> {
     this.requestTestFixture = requestTestFixture;
     this.testDataFactory = testDataFactory;
     this.elasticsearchTestContainer = elasticsearchTestContainer;
+    this.cubeWsClient = cubeWsClient;
+    this.taxonApiClient = taxonApiClient;
     this.elasticsearchRefreshExtension = new BaseElasticsearchTest.ElasticsearchRefreshExtension(elasticsearchTestContainer);
   }
 
@@ -2100,5 +2112,34 @@ class DatasetIT extends NetworkEntityIT<Dataset> {
     assertTrue(result.getCategory().contains("Biodiversity"), "Search result should contain Biodiversity category");
     assertTrue(result.getCategory().contains("Ecology"), "Search result should contain Ecology category");
     assertTrue(result.getCategory().contains("Conservation"), "Search result should contain Conservation category");
+  }
+
+  @Test
+  void testApproximateCountsOnDetail() {
+    when(cubeWsClient.get(any(MultiValueMap.class))).thenReturn(30002L);
+    ObjectNode metrics = OBJECT_MAPPER.createObjectNode();
+    metrics.put("nameCount", 10407L);
+    when(taxonApiClient.getMetrics(any())).thenReturn(metrics);
+
+    DatasetService service = (DatasetService) getService(ServiceType.RESOURCE);
+    Dataset d = newEntity(ServiceType.RESOURCE);
+    d.setType(DatasetType.CHECKLIST);
+    d.setTitle("Approximate Counts Checklist");
+    UUID key = service.create(d);
+
+    DatasetSearchUpdateUtils.awaitUpdates(datasetRealtimeIndexer, elasticsearchTestContainer);
+
+    DatasetSearchRequest req = new DatasetSearchRequest();
+    req.setQ("Approximate Counts Checklist");
+    SearchResponse<DatasetSearchResult, DatasetSearchParameter> searchResp = searchService.search(req);
+    assertEquals(Long.valueOf(1), searchResp.getCount());
+    DatasetSearchResult searchResult = searchResp.getResults().get(0);
+    assertEquals(Integer.valueOf(30002), searchResult.getRecordCount());
+    assertEquals(Integer.valueOf(10407), searchResult.getNameUsagesCount());
+
+    Dataset detail = service.get(key);
+    assertNotNull(detail.getApproximateCounts());
+    assertEquals(Long.valueOf(30002), detail.getApproximateCounts().getOccurrenceCount());
+    assertEquals(Long.valueOf(10407), detail.getApproximateCounts().getNameUsageCount());
   }
 }

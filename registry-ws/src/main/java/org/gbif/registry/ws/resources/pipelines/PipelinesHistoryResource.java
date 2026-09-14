@@ -99,6 +99,20 @@ public class PipelinesHistoryResource implements PipelinesHistoryService {
     return historyTrackingService.get(datasetKey, attempt);
   }
 
+  /**
+   * Gets the last attempt of a dataset that completed the given step successfully, e.g. the last
+   * attempt whose data is available in HDFS.
+   */
+  @GetMapping("{datasetKey}/lastSuccessfulAttempt")
+  public ResponseEntity<Integer> getLastSuccessfulAttempt(
+      @PathVariable("datasetKey") UUID datasetKey,
+      @RequestParam(value = "stepType", defaultValue = "HDFS_VIEW") StepType stepType) {
+    return historyTrackingService
+        .getLastSuccessfulAttempt(datasetKey, stepType)
+        .map(ResponseEntity::ok)
+        .orElse(ResponseEntity.notFound().build());
+  }
+
   @GetMapping("process/running")
   @Override
   public PagingResponse<PipelineProcess> getRunningPipelineProcess(

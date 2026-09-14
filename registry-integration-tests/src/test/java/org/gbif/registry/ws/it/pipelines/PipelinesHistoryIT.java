@@ -453,6 +453,46 @@ class PipelinesHistoryIT extends BaseItTest {
     assertEquals(Status.ABORTED, stepCreated.getState());
   }
 
+  @Execution(ExecutionMode.CONCURRENT)
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  void getLastSuccessfulAttemptTest(ServiceType serviceType) {
+    PipelinesHistoryService service =
+        getService(serviceType, pipelinesHistoryResource, pipelinesHistoryClient);
+    final UUID datasetKey = createDataset();
+
+    // no attempts yet
+    assertNull(getLastSuccessfulAttempt(serviceType, datasetKey, HDFS_VIEW));
+
+    // attempt 1 with a completed HDFS_VIEW step
+    long processKey = service.createPipelineProcess(new PipelineProcessParameters(datasetKey, 1));
+    long executionKey =
+        service.addPipelineExecution(
+            processKey, new PipelineExecution().setStepsToRun(Collections.singleton(HDFS_VIEW)));
+
+    PipelineStep step =
+        service.getPipelineStepsByExecutionKey(executionKey).stream()
+            .filter(s -> s.getType() == HDFS_VIEW)
+            .findAny()
+            .orElseThrow(() -> new IllegalArgumentException("Oops!"));
+    step.setState(Status.COMPLETED);
+    service.updatePipelineStep(step);
+
+    assertEquals(Integer.valueOf(1), getLastSuccessfulAttempt(serviceType, datasetKey, HDFS_VIEW));
+    // no completed step of another type
+    assertNull(getLastSuccessfulAttempt(serviceType, datasetKey, VERBATIM_TO_INTERPRETED));
+  }
+
+  private Integer getLastSuccessfulAttempt(
+      ServiceType serviceType, UUID datasetKey, StepType stepType) {
+    return serviceType == ServiceType.RESOURCE
+        ? ((PipelinesHistoryResource) pipelinesHistoryResource)
+            .getLastSuccessfulAttempt(datasetKey, stepType)
+            .getBody()
+        : ((PipelinesHistoryClient) pipelinesHistoryClient)
+            .getLastSuccessfulAttempt(datasetKey, stepType);
+  }
+
   private UUID createDataset() {
     Node node = new Node();
     node.setTitle("node");

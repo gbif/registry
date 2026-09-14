@@ -36,6 +36,7 @@ import org.gbif.registry.persistence.mapper.NetworkMapper;
 import org.gbif.registry.persistence.mapper.OrganizationMapper;
 import org.gbif.registry.persistence.mapper.handler.ByteArrayWrapper;
 import org.gbif.registry.persistence.mapper.params.DatasetListParams;
+import org.gbif.registry.search.dataset.service.DatasetApproximateCountsService;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -51,6 +52,7 @@ import org.owasp.html.HtmlPolicyBuilder;
 import org.owasp.html.PolicyFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.google.common.base.Strings;
@@ -80,6 +82,7 @@ public class RegistryDatasetServiceImpl implements RegistryDatasetService {
 
   private final DatasetMapper datasetMapper;
   private final MetadataMapper metadataMapper;
+  private final DatasetApproximateCountsService approximateCountsService;
   private final LoadingCache<UUID, Organization> organizationCache;
   private final LoadingCache<UUID, Set<UUID>> datasetKeysInNetworkCache;
 
@@ -87,9 +90,11 @@ public class RegistryDatasetServiceImpl implements RegistryDatasetService {
       MetadataMapper metadataMapper,
       NetworkMapper networkMapper,
       OrganizationMapper organizationMapper,
-      DatasetMapper datasetMapper) {
+      DatasetMapper datasetMapper,
+      @Autowired(required = false) DatasetApproximateCountsService approximateCountsService) {
     this.metadataMapper = metadataMapper;
     this.datasetMapper = datasetMapper;
+    this.approximateCountsService = approximateCountsService;
     this.organizationCache =
         CacheBuilder.newBuilder()
             .expireAfterWrite(5, TimeUnit.MINUTES)
@@ -121,8 +126,11 @@ public class RegistryDatasetServiceImpl implements RegistryDatasetService {
     }
 
     setGeneratedCitation(dataset);
-
-    return sanitizeDataset(dataset);
+    sanitizeDataset(dataset);
+    if (approximateCountsService != null) {
+      approximateCountsService.get(key).ifPresent(dataset::setApproximateCounts);
+    }
+    return dataset;
   }
 
   /**
