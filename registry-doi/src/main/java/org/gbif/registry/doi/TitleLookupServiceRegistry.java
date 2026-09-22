@@ -29,12 +29,12 @@ public class TitleLookupServiceRegistry extends TitleLookupServiceImpl {
 
   private final DatasetMapper datasetMapper;
 
-  /**
-   * Creates a lookup instance from an existing jersey client resource pointing to the root of the
-   * API.
-   *
-   * @param apiRoot
-   */
+/**
+ * Title lookup backed by the registry database for dataset titles.
+ *
+ * @param apiRoot GBIF API root URL
+ * @param datasetMapper mapper used to fetch dataset titles from the registry database
+ */
   public TitleLookupServiceRegistry(
       @Value("${api.root.url}") String apiRoot, DatasetMapper datasetMapper) {
     super(apiRoot);
