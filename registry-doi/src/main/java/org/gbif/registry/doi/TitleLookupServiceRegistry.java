@@ -29,12 +29,12 @@ public class TitleLookupServiceRegistry extends TitleLookupServiceImpl {
 
   private final DatasetMapper datasetMapper;
 
-/**
- * Title lookup backed by the registry database for dataset titles.
- *
- * @param apiRoot GBIF API root URL
- * @param datasetMapper mapper used to fetch dataset titles from the registry database
- */
+  /**
+   * Title lookup backed by the registry database for dataset titles.
+   *
+   * @param apiRoot GBIF API root URL
+   * @param datasetMapper mapper used to fetch dataset titles from the registry database
+   */
   public TitleLookupServiceRegistry(
       @Value("${api.root.url}") String apiRoot, DatasetMapper datasetMapper) {
     super(apiRoot);
@@ -42,28 +42,26 @@ public class TitleLookupServiceRegistry extends TitleLookupServiceImpl {
   }
 
   @Override
-@Override
-public String getDatasetTitle(String datasetKey) {
-  if (datasetKey == null || datasetKey.isBlank()) {
-    return datasetKey;
-  }
-
-  try {
-    String title = datasetMapper.title(UUID.fromString(datasetKey));
-    if (title != null && !title.isBlank()) {
-      return title;
+  public String getDatasetTitle(String datasetKey) {
+    if (datasetKey == null || datasetKey.isBlank()) {
+      return datasetKey;
     }
-  } catch (IllegalArgumentException e) {
-    // Not a UUID — fall back to the default implementation.
-    log.debug("Dataset key is not a UUID: {}", datasetKey);
-  } catch (Exception e) {
-    log.warn(
-        "Cannot lookup dataset title {} in registry DB, falling back to API lookup",
-        datasetKey,
-        e);
-  }
 
-  return super.getDatasetTitle(datasetKey);
-}
+    try {
+      String title = datasetMapper.title(UUID.fromString(datasetKey));
+      if (title != null && !title.isBlank()) {
+        return title;
+      }
+    } catch (IllegalArgumentException e) {
+      // Not a UUID — fall back to the default implementation.
+      log.debug("Dataset key is not a UUID: {}", datasetKey);
+    } catch (Exception e) {
+      log.warn(
+          "Cannot lookup dataset title {} in registry DB, falling back to API lookup",
+          datasetKey,
+          e);
+    }
+
+    return super.getDatasetTitle(datasetKey);
   }
 }
