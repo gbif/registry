@@ -42,16 +42,28 @@ public class TitleLookupServiceRegistry extends TitleLookupServiceImpl {
   }
 
   @Override
-  public String getDatasetTitle(String datasetKey) {
-    try {
-      String title = datasetMapper.title(UUID.fromString(datasetKey));
-
-      if (title != null && !title.isEmpty()) {
-        return title;
-      }
-    } catch (Exception e) {
-      log.error("Cannot lookup dataset title {}", datasetKey, e);
-    }
+@Override
+public String getDatasetTitle(String datasetKey) {
+  if (datasetKey == null || datasetKey.isBlank()) {
     return datasetKey;
+  }
+
+  try {
+    String title = datasetMapper.title(UUID.fromString(datasetKey));
+    if (title != null && !title.isBlank()) {
+      return title;
+    }
+  } catch (IllegalArgumentException e) {
+    // Not a UUID — fall back to the default implementation.
+    log.debug("Dataset key is not a UUID: {}", datasetKey);
+  } catch (Exception e) {
+    log.warn(
+        "Cannot lookup dataset title {} in registry DB, falling back to API lookup",
+        datasetKey,
+        e);
+  }
+
+  return super.getDatasetTitle(datasetKey);
+}
   }
 }
