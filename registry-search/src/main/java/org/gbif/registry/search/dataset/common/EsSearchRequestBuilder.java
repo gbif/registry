@@ -49,6 +49,8 @@ import co.elastic.clients.elasticsearch._types.FieldValue;
 import co.elastic.clients.elasticsearch._types.SortOptions;
 import co.elastic.clients.elasticsearch._types.SortOrder;
 import co.elastic.clients.elasticsearch._types.aggregations.Aggregation;
+import co.elastic.clients.elasticsearch._types.aggregations.CalendarInterval;
+import co.elastic.clients.elasticsearch._types.aggregations.DateHistogramAggregation;
 import co.elastic.clients.elasticsearch._types.aggregations.TermsAggregation;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 import co.elastic.clients.elasticsearch.core.SearchRequest;
@@ -56,6 +58,7 @@ import co.elastic.clients.elasticsearch.core.search.Highlight;
 import co.elastic.clients.elasticsearch.core.search.HighlightField;
 import co.elastic.clients.elasticsearch.core.search.HighlighterEncoder;
 import co.elastic.clients.json.JsonData;
+import co.elastic.clients.util.NamedValue;
 
 import static org.gbif.api.util.SearchTypeValidator.isDateRange;
 import static org.gbif.api.util.SearchTypeValidator.isNumericRange;
@@ -381,9 +384,7 @@ public class EsSearchRequestBuilder<P extends SearchParameter> {
         ? Query.of(q -> q.matchAll(ma -> ma))
         : Query.of(q -> q.bool(b -> b.filter(filterQueries)));
 
-      // build terms aggregation
-      TermsAggregation termsAgg = buildTermsAggs(
-        "filtered_" + esField,
+      Aggregation facetAgg = buildFacetAggregation(
         esField,
         extractFacetOffset(searchRequest, facetParam),
         extractFacetLimit(searchRequest, facetParam),
@@ -392,7 +393,7 @@ public class EsSearchRequestBuilder<P extends SearchParameter> {
       // wrap in filter aggregation
       Aggregation filterAgg = Aggregation.of(a -> a
         .filter(filterQuery)
-        .aggregations("filtered_" + esField, termsAgg)
+        .aggregations("filtered_" + esField, facetAgg)
       );
 
       aggregations.put(esField, filterAgg);
@@ -408,17 +409,37 @@ public class EsSearchRequestBuilder<P extends SearchParameter> {
       if (esFieldMapper.get(facetParam) == null) continue;
 
       String esField = esFieldMapper.get(facetParam);
-      TermsAggregation aggregation = buildTermsAggs(
-        esField,
-        esField,
-        extractFacetOffset(searchRequest, facetParam),
-        extractFacetLimit(searchRequest, facetParam),
-        searchRequest.getFacetMinCount());
-
-      aggregations.put(esField, aggregation._toAggregation());
+      aggregations.put(
+          esField,
+          buildFacetAggregation(
+              esField,
+              extractFacetOffset(searchRequest, facetParam),
+              extractFacetLimit(searchRequest, facetParam),
+              searchRequest.getFacetMinCount()));
     }
 
     return aggregations;
+  }
+
+  /**
+   * Date facets are day buckets. A terms agg on the raw timestamp makes almost every count 1.
+   */
+  private Aggregation buildFacetAggregation(
+      String esField, int facetOffset, int facetLimit, Integer minCount) {
+    if (esFieldMapper.isDateField(esField)) {
+      return buildDateHistogramAgg(esField, minCount)._toAggregation();
+    }
+    return buildTermsAggs(esField, esField, facetOffset, facetLimit, minCount)._toAggregation();
+  }
+
+  private DateHistogramAggregation buildDateHistogramAgg(String esField, Integer minCount) {
+    return new DateHistogramAggregation.Builder()
+        .field(esField)
+        .calendarInterval(CalendarInterval.Day)
+        .format("yyyy-MM-dd")
+        .minDocCount(minCount != null ? minCount : 1)
+        .order(NamedValue.of("_count", SortOrder.Desc))
+        .build();
   }
 
   private TermsAggregation buildTermsAggs(

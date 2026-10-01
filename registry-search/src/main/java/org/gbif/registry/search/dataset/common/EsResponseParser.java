@@ -34,6 +34,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 
 import co.elastic.clients.elasticsearch._types.aggregations.Aggregate;
 import co.elastic.clients.elasticsearch._types.aggregations.Aggregation;
+import co.elastic.clients.elasticsearch._types.aggregations.DateHistogramBucket;
 import co.elastic.clients.elasticsearch._types.aggregations.DoubleTermsAggregate;
 import co.elastic.clients.elasticsearch._types.aggregations.FilterAggregate;
 import co.elastic.clients.elasticsearch._types.aggregations.LongTermsAggregate;
@@ -144,6 +145,10 @@ public class EsResponseParser<T, S, P extends SearchParameter> {
       return terms.buckets().array().stream()
           .map(b -> new BucketData(String.valueOf(b.key()), b.docCount()))
           .collect(Collectors.toList());
+    } else if (aggregate.isDateHistogram()) {
+      return aggregate.dateHistogram().buckets().array().stream()
+          .map(b -> new BucketData(dateBucketKey(b), b.docCount()))
+          .collect(Collectors.toList());
     } else if (aggregate.isFilter()) {
       FilterAggregate filter = aggregate.filter();
       return filter.aggregations().entrySet().stream()
@@ -158,6 +163,9 @@ public class EsResponseParser<T, S, P extends SearchParameter> {
                 } else if (agg.isDterms()) {
                   return agg.dterms().buckets().array().stream()
                       .map(b -> new BucketData(String.valueOf(b.key()), b.docCount()));
+                } else if (agg.isDateHistogram()) {
+                  return agg.dateHistogram().buckets().array().stream()
+                      .map(b -> new BucketData(dateBucketKey(b), b.docCount()));
                 } else {
                   return java.util.stream.Stream.<BucketData>empty();
                 }
@@ -166,6 +174,11 @@ public class EsResponseParser<T, S, P extends SearchParameter> {
     } else {
       throw new IllegalArgumentException(aggregate.getClass() + " aggregation not supported");
     }
+  }
+
+  /** Day-truncated ISO date from a date_histogram bucket. */
+  private static String dateBucketKey(DateHistogramBucket bucket) {
+    return bucket.keyAsString() != null ? bucket.keyAsString() : String.valueOf(bucket.key());
   }
 
   private Optional<List<Facet<P>>> parseFacets(
@@ -192,7 +205,7 @@ public class EsResponseParser<T, S, P extends SearchParameter> {
                           List<Facet.Count> counts =
                               buckets.stream()
                                   .skip(facetOffset)
-                                  .limit(facetOffset + facetLimit)
+                                  .limit(facetLimit)
                                   .map(b -> new Facet.Count(b.key, b.docCount))
                                   .collect(Collectors.toList());
 
