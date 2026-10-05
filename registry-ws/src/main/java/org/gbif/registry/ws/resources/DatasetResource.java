@@ -153,6 +153,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static org.gbif.registry.security.UserRoles.ADMIN_ROLE;
 import static org.gbif.registry.security.UserRoles.EDITOR_ROLE;
 import static org.gbif.registry.security.UserRoles.IPT_ROLE;
+import static org.gbif.registry.security.UserRoles.USER_ROLE;
 
 @SuppressWarnings("UnstableApiUsage")
 @io.swagger.v3.oas.annotations.tags.Tag(
@@ -1607,6 +1608,9 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset, DatasetL
    * This is a REST only (e.g. not part of the Java API) method that allows the registry console to
    * trigger the crawling of the dataset. This simply emits a message to rabbitmq requesting the
    * crawl, and applies necessary security.
+   *
+   * <p>USER_ROLE is included so authenticated contacts can reach method security / permission
+   * prechecks; EditorAuthorizationFilter still requires editor rights or a matching contact email.
    */
   @Operation(
       operationId = "crawlDataset",
@@ -1623,7 +1627,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset, DatasetL
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
   @PostMapping("{key}/crawl")
-  @Secured({ADMIN_ROLE, EDITOR_ROLE})
+  @Secured({ADMIN_ROLE, EDITOR_ROLE, USER_ROLE})
   public void crawl(
       @PathVariable("key") UUID datasetKey,
       @RequestParam(value = "platform", required = false) String platform) {
