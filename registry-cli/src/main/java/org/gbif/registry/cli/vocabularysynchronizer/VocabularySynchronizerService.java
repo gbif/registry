@@ -52,6 +52,9 @@ public class VocabularySynchronizerService extends AbstractIdleService {
     if (config.taxonApiUrl == null || config.taxonApiUrl.trim().isEmpty()) {
       throw new IllegalArgumentException("taxonApiUrl cannot be null or empty");
     }
+    if (config.defaultChecklistKey == null || config.defaultChecklistKey.trim().isEmpty()) {
+      throw new IllegalArgumentException("defaultChecklistKey cannot be null or empty");
+    }
     if (config.poolSize <= 0) {
       throw new IllegalArgumentException("poolSize must be positive");
     }

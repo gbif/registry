@@ -62,6 +62,13 @@ public class VocabularySynchronizerConfiguration {
   @NotNull
   public String taxonApiUrl;
 
+  @Setter
+  @Getter
+  @Parameter(names = "--default-checklist-key", description = "Default checklist key used when reindexing datasets")
+  @JsonProperty("defaultChecklistKey")
+  @NotNull
+  public String defaultChecklistKey;
+
   @ParametersDelegate @Valid @NotNull
   private ElasticsearchConfig elasticsearch = new ElasticsearchConfig();
 
@@ -78,6 +85,7 @@ public class VocabularySynchronizerConfiguration {
         ", dbConfig=" + dbConfig +
         ", apiRootUrl='" + apiRootUrl + '\'' +
         ", taxonApiUrl='" + taxonApiUrl + '\'' +
+        ", defaultChecklistKey='" + defaultChecklistKey + '\'' +
         ", elasticsearch=" + elasticsearch +
         ", vocabulariesToProcess=" + vocabulariesToProcess +
         '}';

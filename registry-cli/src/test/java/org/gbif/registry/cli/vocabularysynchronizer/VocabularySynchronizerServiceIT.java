@@ -35,6 +35,7 @@ public class VocabularySynchronizerServiceIT extends BaseDBTest {
     config.vocabulariesToProcess = Set.of("DatasetCategory", "CollectionType");
     config.apiRootUrl = "http://localhost:8080";
     config.taxonApiUrl = "http://localhost:8080/v2/experimental/";
+    config.defaultChecklistKey = "d7dddbf4-2cf0-4f39-9b2a-bb099caae36c";
     config.poolSize = 1;
     config.queueName = "vocabulary-released-registry";
 
@@ -52,6 +53,7 @@ public class VocabularySynchronizerServiceIT extends BaseDBTest {
     config.vocabulariesToProcess = Set.of("DatasetCategory");
     config.apiRootUrl = "http://localhost:8080";
     config.taxonApiUrl = "http://localhost:8080/v2/experimental/";
+    config.defaultChecklistKey = "d7dddbf4-2cf0-4f39-9b2a-bb099caae36c";
     config.poolSize = 1;
     config.queueName = "vocabulary-released-registry";
 
