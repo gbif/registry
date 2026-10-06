@@ -38,6 +38,7 @@ vocabulariesToProcess:
 
 
 apiRootUrl: "http://api.gbif-dev.org/v1"
+taxonApiUrl: "https://api.gbif-dev.org/v2/experimental/"
 
 # Elasticsearch configuration
 elasticsearch:

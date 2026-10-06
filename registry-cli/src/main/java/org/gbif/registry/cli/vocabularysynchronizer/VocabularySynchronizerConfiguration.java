@@ -55,6 +55,13 @@ public class VocabularySynchronizerConfiguration {
   @NotNull
   public String apiRootUrl;
 
+  @Setter
+  @Getter
+  @Parameter(names = "--taxon-api-url", description = "Taxon API root URL for checklist metrics during dataset reindex")
+  @JsonProperty("taxonApiUrl")
+  @NotNull
+  public String taxonApiUrl;
+
   @ParametersDelegate @Valid @NotNull
   private ElasticsearchConfig elasticsearch = new ElasticsearchConfig();
 
@@ -70,6 +77,7 @@ public class VocabularySynchronizerConfiguration {
         ", poolSize=" + poolSize +
         ", dbConfig=" + dbConfig +
         ", apiRootUrl='" + apiRootUrl + '\'' +
+        ", taxonApiUrl='" + taxonApiUrl + '\'' +
         ", elasticsearch=" + elasticsearch +
         ", vocabulariesToProcess=" + vocabulariesToProcess +
         '}';

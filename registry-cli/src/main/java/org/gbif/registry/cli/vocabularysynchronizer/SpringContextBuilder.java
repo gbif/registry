@@ -126,6 +126,7 @@ public class SpringContextBuilder {
                 "VocabularySynchronizerProperties",
                 new ImmutableMap.Builder<String, Object>()
                     .put("api.root.url", configuration.getApiRootUrl())
+                    .put("taxonapi.root.url", configuration.getTaxonApiUrl())
                     .put("elasticsearch.registry.index", configuration.getElasticsearch().getIndex())
                     .put("elasticsearch.registry.enabled", "true")
                     .put("spring.cloud.compatibility-verifier.enabled", "false")
