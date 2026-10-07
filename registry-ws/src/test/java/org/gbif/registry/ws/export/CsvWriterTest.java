@@ -144,6 +144,7 @@ public class CsvWriterTest {
     datasetSearchResult.setProjectIdentifier("project" + consecutive);
     datasetSearchResult.setRecordCount(consecutive);
     datasetSearchResult.setNameUsagesCount(consecutive);
+    datasetSearchResult.setEventCount(consecutive);
     return datasetSearchResult;
   }
 
@@ -177,9 +178,10 @@ public class CsvWriterTest {
                     .collect(Collectors.toList())));
     assertEquals(datasetSearchResult.getProjectIdentifier(), line[16]);
     assertEquals(datasetSearchResult.getRecordCount(), Integer.parseInt(line[17]));
+    assertEquals(datasetSearchResult.getNameUsagesCount(), Integer.parseInt(line[18]));
     // Last characters has carriage return \r
     assertEquals(
-        datasetSearchResult.getNameUsagesCount(), Integer.parseInt(line[18].replace("\r", "")));
+        datasetSearchResult.getEventCount(), Integer.parseInt(line[19].replace("\r", "")));
   }
 
   @Test

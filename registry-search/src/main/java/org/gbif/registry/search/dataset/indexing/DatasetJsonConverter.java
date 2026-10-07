@@ -119,6 +119,7 @@ public class DatasetJsonConverter {
     consumers.add(this::addTitles);
     consumers.add(this::enumTransforms);
     consumers.add(this::addOccurrenceSpeciesCounts);
+    consumers.add(this::addEventCount);
   }
 
   public static DatasetJsonConverter create(
@@ -359,6 +360,12 @@ public class DatasetJsonConverter {
       log.warn("Dataset {} with 0 count", datasetKey);
     }
     addRecordCounts(datasetJsonNode, count);
+  }
+
+  private void addEventCount(ObjectNode dataset) {
+    String datasetKey = dataset.get("key").textValue();
+    Long eventCount = gbifWsClient.getDatasetEventCount(datasetKey);
+    dataset.put("eventCount", Optional.ofNullable(eventCount).orElse(0L));
   }
 
   private void addCategoriesWithParents(Dataset dataset, ObjectNode datasetJsonNode) {
