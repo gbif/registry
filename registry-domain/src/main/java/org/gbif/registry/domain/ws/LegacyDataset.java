@@ -73,6 +73,7 @@ public class LegacyDataset extends Dataset implements LegacyEntity {
   private String serviceUrls;
   private DOI datasetDoi;
   private String rawSubtype;
+  private String rawDatasetType;
 
   // created from combination of fields after injection
   private Contact primaryContact;
@@ -149,6 +150,21 @@ public class LegacyDataset extends Dataset implements LegacyEntity {
   @ParamName(LegacyResourceConstants.SUBTYPE_PARAM)
   public void setRawSubtype(String rawSubtype) {
     this.rawSubtype = rawSubtype;
+  }
+
+  @XmlTransient
+  @Nullable
+  public String getRawDatasetType() {
+    return rawDatasetType;
+  }
+
+  /**
+   * Dataset type explicitly selected in the IPT. Only used for DWC-DP resources, whose type cannot
+   * be inferred from the service types.
+   */
+  @ParamName(LegacyResourceConstants.DATASET_TYPE_PARAM)
+  public void setRawDatasetType(String rawDatasetType) {
+    this.rawDatasetType = rawDatasetType;
   }
 
   /**
@@ -817,8 +833,8 @@ public class LegacyDataset extends Dataset implements LegacyEntity {
   /**
    * Resolves {@link DatasetType} from legacy IPT service type parameters.
    *
-   * @return resolved type, {@code null} for DWC-DP-only resources, or {@link DatasetType#METADATA}
-   *     when no known service type is present
+   * @return resolved type, the explicitly supplied type (or {@code null} if absent) for DWC-DP-only
+   *     resources, or {@link DatasetType#METADATA} when no known service type is present
    */
   @Nullable
   public DatasetType resolveType() {
@@ -835,10 +851,32 @@ public class LegacyDataset extends Dataset implements LegacyEntity {
       } else if (serviceTypes.contains(LegacyResourceConstants.SAMPLING_EVENT_SERVICE_TYPE)) {
         return DatasetType.SAMPLING_EVENT;
       } else if (serviceTypes.contains(LegacyResourceConstants.DWCDP_SERVICE_TYPE)) {
-        return null;
+        return resolveDwcDpType();
       }
     }
     return DatasetType.METADATA;
+  }
+
+  /**
+   * Resolves the DWC-DP dataset type from the explicitly supplied type parameter. Only occurrence
+   * and sampling event datasets are supported.
+   */
+  @Nullable
+  private DatasetType resolveDwcDpType() {
+    if (Strings.isNullOrEmpty(rawDatasetType)) {
+      LOG.warn("No datasetType provided for DwC-DP dataset. Registering as OCCURRENCE");
+      return DatasetType.OCCURRENCE;
+    }
+    try {
+      DatasetType type = VocabularyUtils.lookupEnum(rawDatasetType, DatasetType.class);
+      if (type == DatasetType.OCCURRENCE || type == DatasetType.SAMPLING_EVENT) {
+        return type;
+      }
+      LOG.warn("Unsupported dataset type for DWC-DP dataset: {}", rawDatasetType);
+    } catch (Exception e) {
+      LOG.error("Failed to resolve dataset type", e);
+    }
+    return null;
   }
 
   /**
@@ -898,7 +936,8 @@ public class LegacyDataset extends Dataset implements LegacyEntity {
         && Objects.equal(emlEndpoint, that.emlEndpoint)
         && Objects.equal(archiveEndpoint, that.archiveEndpoint)
         && Objects.equal(dataPackageEndpoint, that.dataPackageEndpoint)
-        && Objects.equal(rawSubtype, that.rawSubtype);
+        && Objects.equal(rawSubtype, that.rawSubtype)
+        && Objects.equal(rawDatasetType, that.rawDatasetType);
   }
 
   @Generated
@@ -919,7 +958,8 @@ public class LegacyDataset extends Dataset implements LegacyEntity {
         emlEndpoint,
         archiveEndpoint,
         dataPackageEndpoint,
-        rawSubtype);
+        rawSubtype,
+        rawDatasetType);
   }
 
   @Generated
@@ -940,6 +980,7 @@ public class LegacyDataset extends Dataset implements LegacyEntity {
         .add("archiveEndpoint", archiveEndpoint)
         .add("dataPackageEndpoint", dataPackageEndpoint)
         .add("rawSubtype", rawSubtype)
+        .add("rawDatasetType", rawDatasetType)
         .toString();
   }
 }
