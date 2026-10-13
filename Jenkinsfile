@@ -42,6 +42,34 @@ pipeline {
       }
     }
 
+    stage('Setup') {
+      when {
+        allOf {
+          not { expression { params.RELEASE } };
+        }
+      }
+      steps {
+        withMaven(
+            globalMavenSettingsConfig: 'org.jenkinsci.plugins.configfiles.maven.GlobalMavenSettingsConfig1387378707709',
+            mavenSettingsConfig: 'org.jenkinsci.plugins.configfiles.maven.MavenSettingsConfig1396361652540',
+            traceability: true) {
+              script {
+                // Branch-qualified version for feature branches: workspace only, never committed.
+                // dev/master keep the version as checked in, so this never touches those pom.xml files.
+                if (env.BRANCH_NAME != 'dev' && env.BRANCH_NAME != 'master') {
+                  def suffix = env.BRANCH_NAME.replaceAll('[^a-zA-Z0-9.-]', '-').toUpperCase()
+                  sh """
+                    BASE_VERSION=\$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout | sed 's/-SNAPSHOT//')
+                    mvn versions:set -DnewVersion=\${BASE_VERSION}-${suffix}-SNAPSHOT -DgenerateBackupPoms=false -DprocessAllModules=true
+                  """
+                }
+                env.VERSION = sh(returnStdout: true, script: 'mvn help:evaluate -Dexpression=project.version -q -DforceStdout').trim()
+                echo "Building version ${env.VERSION}"
+              }
+            }
+      }
+    }
+
     stage('Maven build') {
        when {
         allOf {
