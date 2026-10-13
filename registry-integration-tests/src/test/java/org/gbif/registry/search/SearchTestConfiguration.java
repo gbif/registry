@@ -17,6 +17,7 @@ import org.gbif.checklistbank.ws.client.DatasetMetricsClient;
 import org.gbif.checklistbank.ws.client.SpeciesResourceClient;
 import org.gbif.metrics.ws.client.CubeWsClient;
 import org.gbif.occurrence.ws.client.OccurrenceWsSearchClient;
+import org.gbif.registry.search.dataset.indexing.ws.event.EventApiClient;
 import org.gbif.registry.search.dataset.indexing.ws.taxon.TaxonApiClient;
 
 import org.mockito.Mockito;
@@ -52,6 +53,12 @@ public class SearchTestConfiguration {
   @Primary
   public TaxonApiClient taxonApiClient() {
     return Mockito.mock(TaxonApiClient.class);
+  }
+
+  @Bean
+  @Primary
+  public EventApiClient eventApiClient() {
+    return Mockito.mock(EventApiClient.class);
   }
 
 }

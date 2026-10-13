@@ -13,6 +13,7 @@
  */
 package org.gbif.registry.cli.vocabularysynchronizer;
 
+import org.gbif.api.service.registry.DatasetDataPackageService;
 import org.gbif.api.service.registry.DatasetService;
 import org.gbif.api.service.registry.InstallationService;
 import org.gbif.api.service.registry.NetworkService;
@@ -32,6 +33,7 @@ import org.gbif.registry.service.VocabularyConceptService;
 import org.gbif.registry.service.WithMyBatis;
 import org.gbif.registry.service.collections.descriptors.DescriptorVocabularySynchronizer;
 import org.gbif.registry.ws.client.DatasetClient;
+import org.gbif.registry.ws.client.DatasetDataPackageClient;
 import org.gbif.registry.ws.client.InstallationClient;
 import org.gbif.registry.ws.client.NetworkClient;
 import org.gbif.registry.ws.client.OrganizationClient;
@@ -126,9 +128,11 @@ public class SpringContextBuilder {
                 "VocabularySynchronizerProperties",
                 new ImmutableMap.Builder<String, Object>()
                     .put("api.root.url", configuration.getApiRootUrl())
+                    .put("taxonapi.root.url", configuration.getTaxonApiUrl())
                     .put("elasticsearch.registry.index", configuration.getElasticsearch().getIndex())
                     .put("elasticsearch.registry.enabled", "true")
                     .put("spring.cloud.compatibility-verifier.enabled", "false")
+                    .put("defaultChecklistKey", configuration.getDefaultChecklistKey())
                     .build()));
 
     ctx.refresh();
@@ -180,6 +184,11 @@ public class SpringContextBuilder {
     @Bean
     public NetworkService networkService(ClientBuilder clientBuilder) {
       return clientBuilder.build(NetworkClient.class);
+    }
+
+    @Bean
+    public DatasetDataPackageService datasetDataPackageService(ClientBuilder clientBuilder) {
+      return clientBuilder.build(DatasetDataPackageClient.class);
     }
 
     @Bean

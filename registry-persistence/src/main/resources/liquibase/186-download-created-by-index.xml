@@ -8,7 +8,11 @@
     <sql splitStatements="false" stripComments="true">
       <![CDATA[
        CREATE INDEX CONCURRENTLY IF NOT EXISTS occurrence_download_created_by_idx ON occurrence_download (created_by, created DESC, key ASC);
-       CREATE INDEX CONCURRENTLY IF NOT EXISTS event_download_created_by_idx ON event_download (created_by, created DESC, key ASC);
+      ]]>
+    </sql>
+    <sql splitStatements="false" stripComments="true">
+      <![CDATA[
+      CREATE INDEX CONCURRENTLY IF NOT EXISTS event_download_created_by_idx ON event_download (created_by, created DESC, key ASC);
       ]]>
     </sql>
   </changeSet>

@@ -50,6 +50,7 @@ public class LegacyResourceConstants {
   public static final String ACCESS_POINT_URL_PARAM = "accessPointURL";
   public static final String DOI_PARAM = "doi";
   public static final String SUBTYPE_PARAM = "subtype";
+  public static final String DATASET_TYPE_PARAM = "datasetType";
 
   // request / response value names
   public static final String ADMINISTRATIVE_CONTACT_TYPE = "administrative";

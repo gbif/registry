@@ -28,6 +28,7 @@ import org.gbif.registry.mail.config.OrganizationSuretyMailConfigurationProperti
 import org.gbif.registry.search.dataset.indexing.es.EsConfiguration;
 import org.gbif.registry.search.dataset.indexing.ws.GbifWsClient;
 import org.gbif.registry.search.dataset.indexing.ws.GbifWsWrapperClient;
+import org.gbif.registry.search.dataset.indexing.ws.event.EventApiClient;
 import org.gbif.registry.search.dataset.indexing.ws.taxon.TaxonApiClient;
 import org.gbif.registry.search.test.DatasetElasticsearchConfiguration;
 import org.gbif.registry.surety.OrganizationEmailTemplateManagerIT;
@@ -239,6 +240,7 @@ public class RegistryIntegrationTestsConfiguration {
       OccurrenceWsSearchClient occurrenceWsSearchClient,
       CubeWsClient cubeWsClient,
       TaxonApiClient taxonApiClient,
+      EventApiClient eventApiClient,
       DatasetDataPackageService datasetDataPackageService) {
     return new GbifWsWrapperClient(installationService,
                                     organizationService,
@@ -247,6 +249,7 @@ public class RegistryIntegrationTestsConfiguration {
                                     occurrenceWsSearchClient,
                                     cubeWsClient,
                                     taxonApiClient,
+                                    eventApiClient,
                                     datasetDataPackageService);
   }
 

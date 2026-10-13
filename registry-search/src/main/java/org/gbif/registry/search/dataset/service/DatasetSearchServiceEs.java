@@ -100,7 +100,7 @@ public class DatasetSearchServiceEs implements DatasetSearchService, AsyncDatase
     } catch (Exception ex) {
       // If the thread was interrupted while waiting on the low-level future, restore the
       // interrupt flag and provide a clearer error.
-      this.handleInterruptedException(ex);
+      this.handleInterruptedException(ex, datasetSearchRequest);
       throw new RuntimeException(ex);
     }
   }
@@ -125,7 +125,7 @@ public class DatasetSearchServiceEs implements DatasetSearchService, AsyncDatase
 
       return esFuture.thenApply(response -> esResponseParser.buildSearchResponse(response, datasetSearchRequest))
         .exceptionally(ex -> {
-          this.handleInterruptedException(ex);
+          this.handleInterruptedException(ex, datasetSearchRequest);
           throw new RuntimeException("Async search failed", ex);
         });
     } catch (Exception ex) {
@@ -170,7 +170,7 @@ public class DatasetSearchServiceEs implements DatasetSearchService, AsyncDatase
             esResponseParser.buildSearchAutocompleteResponse(response, modifiedRequest);
         return autocompleteResponse.getResults();
       }).exceptionally(ex -> {
-        this.handleInterruptedException(ex);
+        this.handleInterruptedException(ex, datasetSuggestRequest);
         throw new RuntimeException("Async suggest failed", ex);
       });
     } catch (Exception ex) {
@@ -366,12 +366,12 @@ public class DatasetSearchServiceEs implements DatasetSearchService, AsyncDatase
     return builder.build();
   }
 
-  private void handleInterruptedException(Throwable ex) {
+  private void handleInterruptedException(Throwable ex, Object request) {
     Throwable cause = ex instanceof RuntimeException ? ex.getCause() : ex;
     if (cause instanceof InterruptedException) {
       Thread.currentThread().interrupt();
     }
-    log.error("Async call failed: {} - {}", ex.getClass().getName(), ex.getMessage());
+    log.error("Async call with params {} failed: {} - {}", request, ex.getClass().getName(), ex.getMessage());
     Throwable nested = ex.getCause();
     int d = 0;
     while (nested != null && d < 10) {

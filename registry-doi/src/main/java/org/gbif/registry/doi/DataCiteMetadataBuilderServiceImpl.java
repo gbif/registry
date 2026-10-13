@@ -37,6 +37,7 @@ import org.gbif.registry.persistence.mapper.OrganizationMapper;
 
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -61,7 +62,7 @@ public class DataCiteMetadataBuilderServiceImpl implements DataCiteMetadataBuild
       OrganizationMapper organizationMapper,
       DatasetOccurrenceDownloadMapper datasetOccurrenceDownloadMapper,
       DatasetEventDownloadMapper datasetEventDownloadMapper,
-      TitleLookupService titleLookupService) {
+      @Qualifier("TitleLookupServiceRegistry") TitleLookupService titleLookupService) {
     this.apiRoot = apiRoot;
     this.organizationMapper = organizationMapper;
     this.datasetOccurrenceDownloadMapper = datasetOccurrenceDownloadMapper;

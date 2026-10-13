@@ -205,6 +205,7 @@ public class DatasetEsFieldMapper implements EsFieldMapper<DatasetSearchParamete
       "project.identifier",
       "nameUsagesCount",
       "occurrenceCount",
+      "eventCount",
       "keyword",
       "decade",
       "countryCoverage",

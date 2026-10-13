@@ -362,7 +362,11 @@ public class IptResource {
         // update only fields that could have changed and are not read from EML.
         // (A crawl will be triggered and EML read, unless the EML is not modified.)
         existing.setModifiedBy(user);
-        existing.setType(dataset.getType());
+        // DWC-DP datasets resolve no type unless the IPT supplies one explicitly,
+        // in that case keep the existing type instead of resetting it
+        if (dataset.getType() != null) {
+          existing.setType(dataset.getType());
+        }
         existing.setSubtype(dataset.getSubtype());
         existing.setInstallationKey(dataset.getInstallationKey());
         existing.setPublishingOrganizationKey(dataset.getPublishingOrganizationKey());

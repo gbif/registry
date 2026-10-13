@@ -70,7 +70,6 @@ import com.opencsv.CSVParserBuilder;
 import com.opencsv.CSVReader;
 import com.opencsv.CSVReaderBuilder;
 
-import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -121,7 +120,7 @@ public class DefaultDescriptorService implements DescriptorsService {
   @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_MEDIATOR_ROLE, GRSCICOLL_EDITOR_ROLE})
   @Override
   public long createDescriptorGroup(
-      @NotNull @Valid byte[] descriptorGroupFile,
+      @NotNull byte[] descriptorGroupFile,
       @NotNull ExportFormat format,
       @NotNull String title,
       String description,
@@ -163,7 +162,7 @@ public class DefaultDescriptorService implements DescriptorsService {
   }
 
   private void importDescriptorsFile(
-      @NotNull @Valid byte[] descriptorFile, ExportFormat format, long descriptorGroupKey)
+      @NotNull byte[] descriptorFile, ExportFormat format, long descriptorGroupKey)
       throws IOException {
     // csv options
     CSVParser csvParser = new CSVParserBuilder().withSeparator(format.getDelimiter()).build();
