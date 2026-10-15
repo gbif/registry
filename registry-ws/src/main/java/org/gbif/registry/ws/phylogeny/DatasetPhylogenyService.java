@@ -19,6 +19,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.attribute.FileTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -27,15 +28,23 @@ import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ExecutionException;
 import java.util.stream.Stream;
 
+import org.forester.io.parsers.IteratingPhylogenyParser;
 import org.forester.io.parsers.PhylogenyParser;
 import org.forester.io.parsers.nexus.NexusPhylogeniesParser;
 import org.forester.io.parsers.phyloxml.PhyloXmlParser;
 import org.forester.io.parsers.util.ParserUtils;
 import org.forester.phylogeny.Phylogeny;
+import org.forester.phylogeny.iterators.PhylogenyNodeIterator;
+import org.gbif.api.model.common.paging.Pageable;
+import org.gbif.api.model.common.paging.PagingResponse;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -57,12 +66,21 @@ public class DatasetPhylogenyService {
   private static final String XML_EXTENSION = "xml";
   private static final int XML_SNIFF_BYTES = 2048;
 
+  // summaries are small, parsing the files is what's expensive
+  private static final int SUMMARY_CACHE_SIZE = 1_000;
+
   private final Path datasetsDirectory;
+  private final int maxTreesPerFile;
+
+  // a modified or replaced file gets a new key, stale entries are evicted by size
+  private final Cache<FileVersion, PhylogenyFile> summaries =
+      CacheBuilder.newBuilder().maximumSize(SUMMARY_CACHE_SIZE).build();
 
   public DatasetPhylogenyService(
-      @Value("${registry.phylogeny.datasetsDirectory}")
-          String datasetsDirectory) {
+      @Value("${registry.phylogeny.datasetsDirectory}") String datasetsDirectory,
+      @Value("${registry.phylogeny.maxTreesPerFile:100}") int maxTreesPerFile) {
     this.datasetsDirectory = Paths.get(datasetsDirectory).toAbsolutePath().normalize();
+    this.maxTreesPerFile = maxTreesPerFile;
   }
 
   /** Lists and parses the phylogeny files of a dataset; empty if the dataset has no archive. */
@@ -75,7 +93,7 @@ public class DatasetPhylogenyService {
       return files
           .filter(DatasetPhylogenyService::isPhylogenyFile)
           .sorted(Comparator.comparing(p -> p.getFileName().toString()))
-          .map(DatasetPhylogenyService::read)
+          .map(this::summary)
           .toList();
     } catch (IOException e) {
       throw new IllegalStateException("Error listing files of dataset " + datasetKey, e);
@@ -109,13 +127,43 @@ public class DatasetPhylogenyService {
     if (parser == null) {
       throw new IOException("Unrecognised phylogeny format");
     }
-    Phylogeny[] phylogenies;
+    List<Phylogeny> phylogenies;
     try {
-      phylogenies = parseFile(parser, file.get());
+      phylogenies = parseFile(parser, file.get(), index + 1);
     } catch (RuntimeException e) {
       throw new IOException(e.getMessage(), e);
     }
-    return index < phylogenies.length ? Optional.ofNullable(phylogenies[index]) : Optional.empty();
+    return index < phylogenies.size() ? Optional.ofNullable(phylogenies.get(index)) : Optional.empty();
+  }
+
+  /**
+   * A page of the names of the external nodes (tips) of a tree, in tree order. Empty if the file
+   * or the tree doesn't exist.
+   *
+   * @throws IOException if the file can't be parsed
+   */
+  public Optional<PagingResponse<String>> getTipNames(
+      UUID datasetKey, String fileName, int index, Pageable page) throws IOException {
+    Optional<Phylogeny> tree = getTree(datasetKey, fileName, index);
+    if (tree.isEmpty()) {
+      return Optional.empty();
+    }
+    Phylogeny phylogeny = tree.get();
+    List<String> names = new ArrayList<>();
+    if (!phylogeny.isEmpty()) {
+      long position = 0;
+      long end = page.getOffset() + page.getLimit();
+      for (PhylogenyNodeIterator it = phylogeny.iteratorExternalForward();
+          it.hasNext() && position < end;
+          position++) {
+        String name = it.next().getName();
+        if (position >= page.getOffset()) {
+          names.add(name);
+        }
+      }
+    }
+    return Optional.of(
+        new PagingResponse<>(page, (long) phylogeny.getNumberOfExternalNodes(), names));
   }
 
   /** Detects the format of a phylogeny file. */
@@ -171,7 +219,22 @@ public class DatasetPhylogenyService {
     return PhylogenyFormat.NEWICK;
   }
 
-  private static PhylogenyFile read(Path file) {
+  private PhylogenyFile summary(Path file) {
+    FileVersion version;
+    try {
+      version = new FileVersion(file, Files.getLastModifiedTime(file), Files.size(file));
+    } catch (IOException e) {
+      // not cached, the file may be replaced while we read it
+      return read(file);
+    }
+    try {
+      return summaries.get(version, () -> read(file));
+    } catch (ExecutionException e) {
+      throw new IllegalStateException("Error reading phylogeny file " + file, e.getCause());
+    }
+  }
+
+  private PhylogenyFile read(Path file) {
     PhylogenyFile phylogenyFile = new PhylogenyFile();
     phylogenyFile.setFileName(file.getFileName().toString());
     try {
@@ -182,17 +245,22 @@ public class DatasetPhylogenyService {
         return phylogenyFile;
       }
       phylogenyFile.setFormat(format(parser));
-      Phylogeny[] phylogenies = parseFile(parser, file);
+      // one more than the maximum, to know if there are more trees
+      List<Phylogeny> phylogenies = parseFile(parser, file, maxTreesPerFile + 1);
+      if (phylogenies.size() > maxTreesPerFile) {
+        phylogenies = phylogenies.subList(0, maxTreesPerFile);
+        phylogenyFile.setTreesTruncated(true);
+      }
 
       List<PhylogenyTree> trees = new ArrayList<>();
-      for (int i = 0; i < phylogenies.length; i++) {
-        trees.add(toTree(i, phylogenies[i]));
+      for (int i = 0; i < phylogenies.size(); i++) {
+        trees.add(toTree(i, phylogenies.get(i)));
       }
       phylogenyFile.setTrees(trees);
 
       if (trees.isEmpty()) {
         phylogenyFile.setError("The file does not contain any tree");
-      } else if (Arrays.stream(phylogenies).anyMatch(p -> p == null || p.isEmpty())) {
+      } else if (phylogenies.stream().anyMatch(p -> p == null || p.isEmpty())) {
         phylogenyFile.setError("The file contains empty trees");
       } else {
         phylogenyFile.setValid(true);
@@ -204,11 +272,26 @@ public class DatasetPhylogenyService {
     return phylogenyFile;
   }
 
-  private static Phylogeny[] parseFile(PhylogenyParser parser, Path file) throws IOException {
+  /**
+   * Parses at most {@code maxTrees} trees of a file. Nexus and Newick files are parsed one tree at a
+   * time and stop there; phyloXML files are always parsed completely.
+   */
+  private static List<Phylogeny> parseFile(PhylogenyParser parser, Path file, int maxTrees)
+      throws IOException {
     // a parser instance per call, ParserBasedPhylogenyFactory is synchronized on a singleton
     parser.setSource(file.toFile());
-    Phylogeny[] phylogenies = parser.parse();
-    return phylogenies != null ? phylogenies : new Phylogeny[0];
+    List<Phylogeny> phylogenies = new ArrayList<>();
+    if (parser instanceof IteratingPhylogenyParser iterating) {
+      while (phylogenies.size() < maxTrees && iterating.hasNext()) {
+        phylogenies.add(iterating.next());
+      }
+      return phylogenies;
+    }
+    Phylogeny[] parsed = parser.parse();
+    if (parsed != null) {
+      phylogenies.addAll(Arrays.asList(parsed).subList(0, Math.min(parsed.length, maxTrees)));
+    }
+    return phylogenies;
   }
 
   private static PhylogenyTree toTree(int index, Phylogeny phylogeny) {
@@ -234,7 +317,8 @@ public class DatasetPhylogenyService {
     tree.setBranchCount(phylogeny.getNumberOfBranches());
     tree.setRootChildCount(phylogeny.getRoot().getNumberOfDescendants());
     tree.setHeight(phylogeny.getHeight());
-    tree.setExternalNodeNames(Arrays.asList(phylogeny.getAllExternalNodeNames()));
     return tree;
   }
+
+  private record FileVersion(Path file, FileTime lastModified, long size) {}
 }

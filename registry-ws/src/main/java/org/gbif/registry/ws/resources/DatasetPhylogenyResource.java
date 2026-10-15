@@ -13,6 +13,8 @@
  */
 package org.gbif.registry.ws.resources;
 
+import org.gbif.api.model.common.paging.Pageable;
+import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.registry.persistence.mapper.DatasetMapper;
 import org.gbif.registry.ws.phylogeny.DatasetPhylogenyService;
 import org.gbif.registry.ws.phylogeny.PhylogenyFile;
@@ -213,6 +215,54 @@ public class DatasetPhylogenyResource {
     } catch (IOException e) {
       throw new ResponseStatusException(
           HttpStatus.INTERNAL_SERVER_ERROR, "Error writing tree " + index + " of " + fileName, e);
+    }
+  }
+
+  @Operation(
+      operationId = "getDatasetPhylogenyTreeTips",
+      summary = "List the tip names of a tree of a phylogeny file of a dataset",
+      description =
+          "Returns a page of the names of the external nodes (tips/leaves) of one tree of a "
+              + "phylogeny file, in the order they appear in the tree.",
+      extensions =
+          @Extension(
+              name = "Order",
+              properties = @ExtensionProperty(name = "Order", value = "0603")))
+  @Docs.DefaultEntityKeyParameter
+  @Parameter(
+      name = "fileName",
+      description = "Name of the phylogeny file, as returned by the list of phylogenies",
+      in = ParameterIn.PATH)
+  @Parameter(
+      name = "index",
+      description = "Position of the tree in the file, starting at 0",
+      in = ParameterIn.PATH)
+  @Pageable.OffsetLimitParameters
+  @ApiResponse(responseCode = "200", description = "Tip names of the tree")
+  @ApiResponse(
+      responseCode = "422",
+      description = "The phylogeny file can't be parsed",
+      content = @Content)
+  @Docs.DefaultUnsuccessfulReadResponses
+  @GetMapping("{key}/phylogeny/{fileName}/{index}/tips")
+  public PagingResponse<String> getPhylogenyTreeTips(
+      @PathVariable("key") UUID datasetKey,
+      @PathVariable("fileName") String fileName,
+      @PathVariable("index") int index,
+      Pageable page) {
+    checkDatasetExists(datasetKey);
+    try {
+      return phylogenyService
+          .getTipNames(datasetKey, fileName, index, page)
+          .orElseThrow(
+              () ->
+                  new NotFoundException(
+                      "Tree " + index + " of phylogeny " + fileName + " not found for dataset "
+                          + datasetKey,
+                      URI.create("/dataset/" + datasetKey + "/phylogeny/" + fileName)));
+    } catch (IOException e) {
+      throw new ResponseStatusException(
+          HttpStatus.UNPROCESSABLE_ENTITY, "Invalid phylogeny file " + fileName, e);
     }
   }
 

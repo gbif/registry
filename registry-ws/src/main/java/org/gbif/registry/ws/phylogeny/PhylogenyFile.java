@@ -45,4 +45,10 @@ public class PhylogenyFile {
 
   @Schema(description = "Trees contained in the file. A Nexus or phyloXML file can contain several trees.")
   private List<PhylogenyTree> trees = new ArrayList<>();
+
+  @Schema(
+      description =
+          "Whether the file contains more trees than the ones listed. Only the first trees are "
+              + "listed, but all of them can be retrieved by their index.")
+  private boolean treesTruncated;
 }

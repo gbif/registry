@@ -17,6 +17,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.attribute.FileTime;
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -24,6 +26,8 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.forester.phylogeny.Phylogeny;
+import org.gbif.api.model.common.paging.PagingRequest;
+import org.gbif.api.model.common.paging.PagingResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -40,6 +44,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class DatasetPhylogenyServiceTest {
 
   private static final UUID DATASET_KEY = UUID.randomUUID();
+  private static final int MAX_TREES_PER_FILE = 2;
 
   @TempDir Path baseDirectory;
 
@@ -48,7 +53,7 @@ public class DatasetPhylogenyServiceTest {
 
   @BeforeEach
   public void setUp() throws IOException {
-    service = new DatasetPhylogenyService(baseDirectory.toString());
+    service = new DatasetPhylogenyService(baseDirectory.toString(), MAX_TREES_PER_FILE);
     datasetDirectory = Files.createDirectory(baseDirectory.resolve(DATASET_KEY.toString()));
 
     try (InputStream in =
@@ -56,6 +61,13 @@ public class DatasetPhylogenyServiceTest {
       Files.copy(in, datasetDirectory.resolve("example_tree.nex"));
     }
     Files.writeString(datasetDirectory.resolve("tree.nwk"), "((A:1,B:2)AB:3,C:4);");
+    Files.writeString(
+        datasetDirectory.resolve("posterior.trees"),
+        "#NEXUS\nBEGIN TREES;\n"
+            + "  TREE t0 = ((A:1,B:1):1,C:2);\n"
+            + "  TREE t1 = ((A:1,C:1):1,B:2);\n"
+            + "  TREE t2 = ((B:1,C:1):1,A:2);\n"
+            + "END;\n");
     Files.writeString(datasetDirectory.resolve("broken.tre"), "garbage ((( not a tree");
     Files.writeString(
         datasetDirectory.resolve("tree.xml"),
@@ -76,7 +88,7 @@ public class DatasetPhylogenyServiceTest {
         service.list(DATASET_KEY).stream()
             .collect(Collectors.toMap(PhylogenyFile::getFileName, Function.identity()));
 
-    assertEquals(4, files.size());
+    assertEquals(5, files.size());
     assertFalse(files.containsKey("eml.xml"));
     assertFalse(files.containsKey("occurrence.txt"));
 
@@ -89,13 +101,18 @@ public class DatasetPhylogenyServiceTest {
     assertTrue(tree.getRooted());
     assertEquals(9, tree.getExternalNodeCount());
     assertEquals(3, tree.getRootChildCount());
-    assertEquals("Human", tree.getExternalNodeNames().get(0));
     assertEquals(0.51, tree.getHeight(), 0.0001);
 
     PhylogenyFile newick = files.get("tree.nwk");
     assertTrue(newick.isValid());
     assertEquals(PhylogenyFormat.NEWICK, newick.getFormat());
-    assertEquals(List.of("A", "B", "C"), newick.getTrees().get(0).getExternalNodeNames());
+    assertEquals(3, newick.getTrees().get(0).getExternalNodeCount());
+    assertFalse(newick.isTreesTruncated());
+
+    PhylogenyFile posterior = files.get("posterior.trees");
+    assertTrue(posterior.isValid());
+    assertEquals(MAX_TREES_PER_FILE, posterior.getTrees().size());
+    assertTrue(posterior.isTreesTruncated());
 
     PhylogenyFile phyloXml = files.get("tree.xml");
     assertTrue(phyloXml.isValid());
@@ -120,6 +137,28 @@ public class DatasetPhylogenyServiceTest {
     assertTrue(json.get("isValid").asBoolean());
     assertFalse(json.has("valid"));
     assertEquals(3, json.get("trees").get(0).get("externalNodeCount").asInt());
+    assertFalse(json.get("trees").get(0).has("externalNodeNames"));
+  }
+
+  @Test
+  public void testListIsRefreshedWhenFileChanges() throws IOException {
+    Path file = datasetDirectory.resolve("tree.nwk");
+    assertEquals(3, newickExternalNodeCount());
+
+    Files.writeString(file, "((A:1,B:2)AB:3,(C:4,D:5):1);");
+    // the modification time can have a coarse resolution
+    Files.setLastModifiedTime(file, FileTime.from(Instant.now().plusSeconds(10)));
+    assertEquals(4, newickExternalNodeCount());
+  }
+
+  private int newickExternalNodeCount() {
+    return service.list(DATASET_KEY).stream()
+        .filter(f -> f.getFileName().equals("tree.nwk"))
+        .findFirst()
+        .orElseThrow()
+        .getTrees()
+        .get(0)
+        .getExternalNodeCount();
   }
 
   @Test
@@ -160,5 +199,33 @@ public class DatasetPhylogenyServiceTest {
     assertTrue(service.getTree(DATASET_KEY, "missing.nex", 0).isEmpty());
     assertTrue(service.getTree(DATASET_KEY, "occurrence.txt", 0).isEmpty());
     assertThrows(IOException.class, () -> service.getTree(DATASET_KEY, "broken.tre", 0));
+
+    // trees after the listing limit can be retrieved
+    assertEquals("t2", service.getTree(DATASET_KEY, "posterior.trees", 2).orElseThrow().getName());
+    assertTrue(service.getTree(DATASET_KEY, "posterior.trees", 3).isEmpty());
+  }
+
+  @Test
+  public void testGetTipNames() throws IOException {
+    PagingResponse<String> all =
+        service
+            .getTipNames(DATASET_KEY, "example_tree.nex", 0, new PagingRequest(0, 20))
+            .orElseThrow();
+    assertEquals(9, all.getCount());
+    assertEquals(9, all.getResults().size());
+    assertEquals("Human", all.getResults().get(0));
+    assertTrue(all.isEndOfRecords());
+
+    PagingResponse<String> page =
+        service.getTipNames(DATASET_KEY, "tree.nwk", 0, new PagingRequest(1, 1)).orElseThrow();
+    assertEquals(3, page.getCount());
+    assertEquals(List.of("B"), page.getResults());
+    assertFalse(page.isEndOfRecords());
+
+    assertTrue(
+        service.getTipNames(DATASET_KEY, "tree.nwk", 1, new PagingRequest(0, 20)).isEmpty());
+    assertThrows(
+        IOException.class,
+        () -> service.getTipNames(DATASET_KEY, "broken.tre", 0, new PagingRequest(0, 20)));
   }
 }

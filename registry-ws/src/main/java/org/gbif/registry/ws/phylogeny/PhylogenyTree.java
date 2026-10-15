@@ -13,8 +13,6 @@
  */
 package org.gbif.registry.ws.phylogeny;
 
-import java.util.List;
-
 import com.fasterxml.jackson.annotation.JsonInclude;
 
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -72,7 +70,4 @@ public class PhylogenyTree {
 
   @Schema(description = "Maximum distance from the root to a tip, using branch lengths.")
   private Double height;
-
-  @Schema(description = "Names of the external nodes (tips/leaves).")
-  private List<String> externalNodeNames;
 }
