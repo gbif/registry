@@ -62,7 +62,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
             properties = @ExtensionProperty(name = "Order", value = "0100")))
 @Validated
 @RestController
-@RequestMapping(value = "dataset", produces = MediaType.APPLICATION_JSON_VALUE)
+@RequestMapping(value = "experimental/dataset", produces = MediaType.APPLICATION_JSON_VALUE)
 public class DatasetPhylogenyResource {
 
   private final DatasetPhylogenyService phylogenyService;
@@ -125,7 +125,7 @@ public class DatasetPhylogenyResource {
                 () ->
                     new NotFoundException(
                         "Phylogeny " + fileName + " not found for dataset " + datasetKey,
-                        URI.create("/dataset/" + datasetKey + "/phylogeny")));
+                        URI.create("/experimental/dataset/" + datasetKey + "/phylogeny")));
 
     MediaType mediaType =
         DatasetPhylogenyService.format(file)
@@ -194,7 +194,8 @@ public class DatasetPhylogenyResource {
                       new NotFoundException(
                           "Tree " + index + " of phylogeny " + fileName + " not found for dataset "
                               + datasetKey,
-                          URI.create("/dataset/" + datasetKey + "/phylogeny/" + fileName)));
+                          URI.create(
+                              "/experimental/dataset/" + datasetKey + "/phylogeny/" + fileName)));
     } catch (IOException e) {
       throw new ResponseStatusException(
           HttpStatus.UNPROCESSABLE_ENTITY, "Invalid phylogeny file " + fileName, e);
@@ -259,7 +260,8 @@ public class DatasetPhylogenyResource {
                   new NotFoundException(
                       "Tree " + index + " of phylogeny " + fileName + " not found for dataset "
                           + datasetKey,
-                      URI.create("/dataset/" + datasetKey + "/phylogeny/" + fileName)));
+                      URI.create(
+                          "/experimental/dataset/" + datasetKey + "/phylogeny/" + fileName)));
     } catch (IOException e) {
       throw new ResponseStatusException(
           HttpStatus.UNPROCESSABLE_ENTITY, "Invalid phylogeny file " + fileName, e);
