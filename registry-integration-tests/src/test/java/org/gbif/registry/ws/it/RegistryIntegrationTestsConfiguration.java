@@ -107,6 +107,7 @@ import com.zaxxer.hikari.HikariDataSource;
       "org.gbif.registry.ws.advice",
       "org.gbif.registry.ws.config",
       "org.gbif.registry.ws.resources",
+      "org.gbif.registry.ws.phylogeny",
       "org.gbif.registry.ws.surety",
       "org.gbif.registry.ws.it.fixtures",
       "org.gbif.registry.security",

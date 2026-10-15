@@ -148,6 +148,7 @@
 
     <!-- Hadoop -->
     <hadoop.version>3.3.5</hadoop.version>
+    <forester.version>1.039</forester.version>
 
     <!-- Test -->
     <mockito.version>5.20.0</mockito.version>
@@ -666,6 +667,21 @@
           <exclusion>
             <groupId>log4j</groupId>
             <artifactId>*</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>org.biojava.thirdparty</groupId>
+        <artifactId>forester</artifactId>
+        <version>${forester.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>commons-codec</groupId>
+            <artifactId>commons-codec</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>openchart</groupId>
+            <artifactId>openchart</artifactId>
           </exclusion>
         </exclusions>
       </dependency>
