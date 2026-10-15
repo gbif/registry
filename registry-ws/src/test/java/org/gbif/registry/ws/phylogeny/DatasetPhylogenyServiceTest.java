@@ -13,6 +13,9 @@
  */
 package org.gbif.registry.ws.phylogeny;
 
+import org.gbif.api.model.common.paging.PagingRequest;
+import org.gbif.api.model.common.paging.PagingResponse;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -26,8 +29,6 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.forester.phylogeny.Phylogeny;
-import org.gbif.api.model.common.paging.PagingRequest;
-import org.gbif.api.model.common.paging.PagingResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;

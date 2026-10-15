@@ -13,6 +13,9 @@
  */
 package org.gbif.registry.ws.phylogeny;
 
+import org.gbif.api.model.common.paging.Pageable;
+import org.gbif.api.model.common.paging.PagingResponse;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -38,8 +41,6 @@ import org.forester.io.parsers.phyloxml.PhyloXmlParser;
 import org.forester.io.parsers.util.ParserUtils;
 import org.forester.phylogeny.Phylogeny;
 import org.forester.phylogeny.iterators.PhylogenyNodeIterator;
-import org.gbif.api.model.common.paging.Pageable;
-import org.gbif.api.model.common.paging.PagingResponse;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
