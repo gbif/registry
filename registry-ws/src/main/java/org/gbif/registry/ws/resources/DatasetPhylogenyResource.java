@@ -43,6 +43,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.util.UriUtils;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -194,8 +195,7 @@ public class DatasetPhylogenyResource {
                       new NotFoundException(
                           "Tree " + index + " of phylogeny " + fileName + " not found for dataset "
                               + datasetKey,
-                          URI.create(
-                              "/experimental/dataset/" + datasetKey + "/phylogeny/" + fileName)));
+                          phylogenyUri(datasetKey, fileName)));
     } catch (IOException e) {
       throw new ResponseStatusException(
           HttpStatus.UNPROCESSABLE_ENTITY, "Invalid phylogeny file " + fileName, e);
@@ -260,12 +260,20 @@ public class DatasetPhylogenyResource {
                   new NotFoundException(
                       "Tree " + index + " of phylogeny " + fileName + " not found for dataset "
                           + datasetKey,
-                      URI.create(
-                          "/experimental/dataset/" + datasetKey + "/phylogeny/" + fileName)));
+                      phylogenyUri(datasetKey, fileName)));
     } catch (IOException e) {
       throw new ResponseStatusException(
           HttpStatus.UNPROCESSABLE_ENTITY, "Invalid phylogeny file " + fileName, e);
     }
+  }
+
+  private static URI phylogenyUri(UUID datasetKey, String fileName) {
+    // the file name is decoded and can contain spaces or other characters not allowed in a URI
+    return URI.create(
+        "/experimental/dataset/"
+            + datasetKey
+            + "/phylogeny/"
+            + UriUtils.encodePathSegment(fileName, StandardCharsets.UTF_8));
   }
 
   private void checkDatasetExists(UUID datasetKey) {

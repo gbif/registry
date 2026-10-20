@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.FileTime;
@@ -128,13 +129,11 @@ public class DatasetPhylogenyService {
     if (parser == null) {
       throw new IOException("Unrecognised phylogeny format");
     }
-    List<Phylogeny> phylogenies;
     try {
-      phylogenies = parseFile(parser, file.get(), index + 1);
+      return parseTree(parser, file.get(), index);
     } catch (RuntimeException e) {
       throw new IOException(e.getMessage(), e);
     }
-    return index < phylogenies.size() ? Optional.ofNullable(phylogenies.get(index)) : Optional.empty();
   }
 
   /**
@@ -181,7 +180,8 @@ public class DatasetPhylogenyService {
   }
 
   private static boolean isPhylogenyFile(Path file) {
-    if (!Files.isRegularFile(file)) {
+    // no symbolic links, they could point to files outside the dataset directory
+    if (!Files.isRegularFile(file, LinkOption.NOFOLLOW_LINKS)) {
       return false;
     }
     String extension = extension(file);
@@ -293,6 +293,30 @@ public class DatasetPhylogenyService {
       phylogenies.addAll(Arrays.asList(parsed).subList(0, Math.min(parsed.length, maxTrees)));
     }
     return phylogenies;
+  }
+
+  /**
+   * Parses the tree at position {@code index} of a file. Nexus and Newick files are parsed one tree
+   * at a time, keeping only the requested one; phyloXML files are always parsed completely.
+   */
+  private static Optional<Phylogeny> parseTree(PhylogenyParser parser, Path file, int index)
+      throws IOException {
+    // a parser instance per call, ParserBasedPhylogenyFactory is synchronized on a singleton
+    parser.setSource(file.toFile());
+    if (parser instanceof IteratingPhylogenyParser iterating) {
+      // the preceding trees are discarded, a posterior sample can have thousands of them
+      for (int i = 0; i < index; i++) {
+        if (!iterating.hasNext()) {
+          return Optional.empty();
+        }
+        iterating.next();
+      }
+      return iterating.hasNext() ? Optional.ofNullable(iterating.next()) : Optional.empty();
+    }
+    Phylogeny[] parsed = parser.parse();
+    return parsed != null && index < parsed.length
+        ? Optional.ofNullable(parsed[index])
+        : Optional.empty();
   }
 
   private static PhylogenyTree toTree(int index, Phylogeny phylogeny) {

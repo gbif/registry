@@ -16,8 +16,11 @@ package org.gbif.registry.ws.phylogeny;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.StringReader;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.FileTime;
@@ -28,10 +31,15 @@ import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import javax.xml.parsers.DocumentBuilderFactory;
+
+import org.forester.io.parsers.phyloxml.PhyloXmlParser;
 import org.forester.phylogeny.Phylogeny;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.w3c.dom.Element;
+import org.xml.sax.InputSource;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -185,7 +193,16 @@ public class DatasetPhylogenyServiceTest {
   }
 
   @Test
-  public void testGetTree() throws IOException {
+  public void testSymbolicLinksAreIgnored() throws IOException {
+    Path outside = Files.writeString(baseDirectory.resolve("secret.txt"), "not a tree");
+    Files.createSymbolicLink(datasetDirectory.resolve("link.nwk"), outside);
+
+    assertTrue(service.getFile(DATASET_KEY, "link.nwk").isEmpty());
+    assertTrue(service.list(DATASET_KEY).stream().noneMatch(f -> f.getFileName().equals("link.nwk")));
+  }
+
+  @Test
+  public void testGetTree() throws Exception {
     Phylogeny tree = service.getTree(DATASET_KEY, "example_tree.nex", 0).orElseThrow();
     assertEquals("example_tree", tree.getName());
     assertEquals(
@@ -193,7 +210,7 @@ public class DatasetPhylogenyServiceTest {
             + "((Mouse:0.22,Rat:0.21):0.09,(Chicken:0.3,Lizard:0.28):0.11):0.1);",
         PhylogenyFormat.NEWICK.write(tree));
     assertTrue(PhylogenyFormat.NEXUS.write(tree).startsWith("#NEXUS"));
-    assertTrue(PhylogenyFormat.PHYLOXML.write(tree).contains("<name>example_tree</name>"));
+    assertPhyloXmlDocument(PhylogenyFormat.PHYLOXML.write(tree), "example_tree", 9);
 
     assertTrue(service.getTree(DATASET_KEY, "example_tree.nex", 1).isEmpty());
     assertTrue(service.getTree(DATASET_KEY, "example_tree.nex", -1).isEmpty());
@@ -204,6 +221,24 @@ public class DatasetPhylogenyServiceTest {
     // trees after the listing limit can be retrieved
     assertEquals("t2", service.getTree(DATASET_KEY, "posterior.trees", 2).orElseThrow().getName());
     assertTrue(service.getTree(DATASET_KEY, "posterior.trees", 3).isEmpty());
+  }
+
+  /** A complete phyloXML document, readable by a phyloXML parser. */
+  private static void assertPhyloXmlDocument(String xml, String name, int externalNodeCount)
+      throws Exception {
+    DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+    factory.setNamespaceAware(true);
+    Element root =
+        factory.newDocumentBuilder().parse(new InputSource(new StringReader(xml))).getDocumentElement();
+    assertEquals("phyloxml", root.getLocalName());
+    assertEquals("http://www.phyloxml.org", root.getNamespaceURI());
+
+    PhyloXmlParser parser = PhyloXmlParser.createPhyloXmlParser();
+    parser.setSource(new ByteArrayInputStream(xml.getBytes(StandardCharsets.UTF_8)));
+    Phylogeny[] parsed = parser.parse();
+    assertEquals(1, parsed.length);
+    assertEquals(name, parsed[0].getName());
+    assertEquals(externalNodeCount, parsed[0].getNumberOfExternalNodes());
   }
 
   @Test
