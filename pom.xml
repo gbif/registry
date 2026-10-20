@@ -83,11 +83,11 @@
     <elasticsearch.version>9.0.4</elasticsearch.version>
 
     <!-- GBIF -->
-    <gbif-api.version>2.4.26-SNAPSHOT</gbif-api.version>
+    <gbif-api.version>2.4.28</gbif-api.version>
     <gbif-common.version>0.60</gbif-common.version>
     <gbif-common-mybatis.version>2.0.0</gbif-common-mybatis.version>
     <gbif-common-ws.version>2.1.1</gbif-common-ws.version>
-    <gbif-directory.version>3.5</gbif-directory.version>
+    <gbif-directory.version>3.8</gbif-directory.version>
     <gbif-doi.version>3.0.3</gbif-doi.version>
     <gbif-download-query-tools.version>2.0.12</gbif-download-query-tools.version>
     <gbif-httputils.version>0.10</gbif-httputils.version>
@@ -148,6 +148,7 @@
 
     <!-- Hadoop -->
     <hadoop.version>3.3.5</hadoop.version>
+    <forester.version>1.039</forester.version>
 
     <!-- Test -->
     <mockito.version>5.20.0</mockito.version>
@@ -666,6 +667,21 @@
           <exclusion>
             <groupId>log4j</groupId>
             <artifactId>*</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>org.biojava.thirdparty</groupId>
+        <artifactId>forester</artifactId>
+        <version>${forester.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>commons-codec</groupId>
+            <artifactId>commons-codec</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>openchart</groupId>
+            <artifactId>openchart</artifactId>
           </exclusion>
         </exclusions>
       </dependency>
