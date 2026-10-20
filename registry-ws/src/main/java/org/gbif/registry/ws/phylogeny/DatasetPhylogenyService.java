@@ -18,7 +18,6 @@ import org.gbif.api.model.common.paging.PagingResponse;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
@@ -34,6 +33,11 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Stream;
+
+import javax.xml.stream.XMLInputFactory;
+import javax.xml.stream.XMLStreamConstants;
+import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.XMLStreamReader;
 
 import org.forester.io.parsers.IteratingPhylogenyParser;
 import org.forester.io.parsers.PhylogenyParser;
@@ -66,7 +70,11 @@ public class DatasetPhylogenyService {
 
   // .xml files are only trees when their root element is phyloxml (eml.xml and meta.xml are not)
   private static final String XML_EXTENSION = "xml";
-  private static final int XML_SNIFF_BYTES = 2048;
+  private static final String PHYLOXML_ROOT = "phyloxml";
+  private static final String PHYLOXML_NAMESPACE = "http://www.phyloxml.org";
+
+  // only the root element is read, DTDs and external entities are never resolved
+  private static final XMLInputFactory XML_INPUT_FACTORY = createXmlInputFactory();
 
   // summaries are small, parsing the files is what's expensive
   private static final int SUMMARY_CACHE_SIZE = 1_000;
@@ -195,14 +203,45 @@ public class DatasetPhylogenyService {
     return dot < 0 ? "" : name.substring(dot + 1).toLowerCase(Locale.ROOT);
   }
 
+  /**
+   * Whether the root element is phyloXML. The reader detects the encoding and resolves namespace
+   * prefixes; comments and processing instructions before the root are skipped.
+   */
   private static boolean isPhyloXml(Path file) {
+    XMLStreamReader reader = null;
     try (InputStream in = Files.newInputStream(file)) {
-      String head = new String(in.readNBytes(XML_SNIFF_BYTES), StandardCharsets.UTF_8);
-      return head.contains("<phyloxml");
-    } catch (IOException e) {
-      log.warn("Can't read file {}", file, e);
+      reader = XML_INPUT_FACTORY.createXMLStreamReader(in);
+      while (reader.hasNext()) {
+        if (reader.next() == XMLStreamConstants.START_ELEMENT) {
+          String namespace = reader.getNamespaceURI();
+          // files without a namespace are accepted, forester parses them too
+          return PHYLOXML_ROOT.equals(reader.getLocalName())
+              && (namespace == null
+                  || namespace.isEmpty()
+                  || PHYLOXML_NAMESPACE.equals(namespace));
+        }
+      }
       return false;
+    } catch (IOException | XMLStreamException e) {
+      log.debug("Can't read XML file {}", file, e);
+      return false;
+    } finally {
+      if (reader != null) {
+        try {
+          reader.close();
+        } catch (XMLStreamException e) {
+          log.debug("Error closing XML reader of {}", file, e);
+        }
+      }
     }
+  }
+
+  private static XMLInputFactory createXmlInputFactory() {
+    XMLInputFactory factory = XMLInputFactory.newFactory();
+    factory.setProperty(XMLInputFactory.IS_NAMESPACE_AWARE, true);
+    factory.setProperty(XMLInputFactory.SUPPORT_DTD, false);
+    factory.setProperty(XMLInputFactory.IS_SUPPORTING_EXTERNAL_ENTITIES, false);
+    return factory;
   }
 
   private static PhylogenyParser createParser(Path file) throws IOException {

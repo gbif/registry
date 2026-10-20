@@ -193,6 +193,54 @@ public class DatasetPhylogenyServiceTest {
   }
 
   @Test
+  public void testPhyloXmlDetection() throws IOException {
+    String declaration = "<?xml version=\"1.0\"?>";
+    String tree = "<phylogeny><clade><clade/><clade/></clade></phylogeny>";
+
+    Files.write(
+        datasetDirectory.resolve("utf16.xml"),
+        ("<?xml version=\"1.0\" encoding=\"UTF-16\"?>"
+                + "<phyloxml xmlns=\"http://www.phyloxml.org\">" + tree + "</phyloxml>")
+            .getBytes(StandardCharsets.UTF_16));
+    Files.writeString(
+        datasetDirectory.resolve("prefixed.xml"),
+        declaration + "<px:phyloxml xmlns:px=\"http://www.phyloxml.org\"/>");
+    Files.writeString(
+        datasetDirectory.resolve("long-comment.xml"),
+        declaration + "<!-- " + "x".repeat(4096) + " --><phyloxml>" + tree + "</phyloxml>");
+    // DTDs and external entities are not resolved
+    Files.writeString(
+        datasetDirectory.resolve("external-dtd.xml"),
+        declaration
+            + "<!DOCTYPE phyloxml SYSTEM \"http://localhost:1/phyloxml.dtd\">"
+            + "<phyloxml>" + tree + "</phyloxml>");
+    Files.writeString(
+        datasetDirectory.resolve("external-entity.xml"),
+        declaration
+            + "<!DOCTYPE phyloxml [<!ENTITY x SYSTEM \"file:///etc/passwd\">]>"
+            + "<phyloxml>&x;</phyloxml>");
+
+    // not phylogenies
+    Files.writeString(
+        datasetDirectory.resolve("commented.xml"),
+        declaration + "<!-- <phyloxml --><eml:eml xmlns:eml=\"eml://ecoinformatics.org/eml-2.1.1\"/>");
+    Files.writeString(
+        datasetDirectory.resolve("other-namespace.xml"),
+        declaration + "<phyloxml xmlns=\"http://example.org/other\"/>");
+    Files.writeString(datasetDirectory.resolve("malformed.xml"), "not xml <<< <phyloxml");
+
+    for (String fileName :
+        List.of(
+            "utf16.xml", "prefixed.xml", "long-comment.xml", "external-dtd.xml",
+            "external-entity.xml")) {
+      assertTrue(service.getFile(DATASET_KEY, fileName).isPresent(), fileName);
+    }
+    for (String fileName : List.of("commented.xml", "other-namespace.xml", "malformed.xml")) {
+      assertTrue(service.getFile(DATASET_KEY, fileName).isEmpty(), fileName);
+    }
+  }
+
+  @Test
   public void testSymbolicLinksAreIgnored() throws IOException {
     Path outside = Files.writeString(baseDirectory.resolve("secret.txt"), "not a tree");
     Files.createSymbolicLink(datasetDirectory.resolve("link.nwk"), outside);
