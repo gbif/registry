@@ -82,7 +82,7 @@ pipeline {
       when {
           allOf {
               expression { params.RELEASE };
-              branch 'master';
+              branch 'ebird';
           }
       }
       environment {
@@ -95,7 +95,7 @@ pipeline {
              configFileProvider([
                 configFile(fileId: 'org.jenkinsci.plugins.configfiles.custom.CustomConfig1389220396351', variable: 'APPKEYS_TESTFILE')
                 ]) {
-                  git 'https://github.com/gbif/registry.git'
+                  git branch: 'ebird', url: 'https://github.com/gbif/registry.git'
                   sh '''
                     mvn -B \
                         release:prepare release:perform -Darguments="-Djetty.port=$HTTP_PORT -Dappkeys.testfile=$APPKEYS_TESTFILE" \
