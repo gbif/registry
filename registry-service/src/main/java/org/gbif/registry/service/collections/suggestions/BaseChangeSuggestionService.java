@@ -758,16 +758,22 @@ public abstract class BaseChangeSuggestionService<
         T currentEntity = crudService.get(dto.getEntityKey());
         List<Change> changes = new ArrayList<>();
         suggestion.setChanges(changes);
-        for (ChangeDto changeDto : dto.getChanges()) {
+        // Changes are a set. Apply oldest first so a later edit wins — in particular, removing
+        // a contact that an earlier change in this suggestion only proposed (no key yet).
+        List<ChangeDto> orderedChanges = new ArrayList<>(dto.getChanges());
+        orderedChanges.sort(
+            Comparator.comparing(
+                ChangeDto::getCreated, Comparator.nullsFirst(Comparator.naturalOrder())));
+        for (ChangeDto changeDto : orderedChanges) {
           // set suggested contacts in the current entity
           if (changeDto.getFieldName().equals(CONTACTS_FIELD_NAME)
               && isContactPersonIndividualChange(changeDto)) {
+            if (currentEntity.getContactPersons() == null) {
+              currentEntity.setContactPersons(new ArrayList<>());
+            }
             if (changeDto.getSuggested() == null) {
               // deleted contact
-              int contactKey = ((Contact) changeDto.getPrevious()).getKey();
-              currentEntity
-                  .getContactPersons()
-                  .removeIf(c -> Objects.equals(c.getKey(), contactKey));
+              removeSuggestedContact(currentEntity, (Contact) changeDto.getPrevious());
             } else if (changeDto.getPrevious() == null) {
               // new contact
               currentEntity.getContactPersons().add((Contact) changeDto.getSuggested());
@@ -836,6 +842,22 @@ public abstract class BaseChangeSuggestionService<
     }
 
     return suggestion;
+  }
+
+  /**
+   * Drops a contact from the merge view. A contact added and then removed inside the same
+   * suggestion was never persisted, so {@link Contact#getKey()} is null and must not be unboxed.
+   */
+  private void removeSuggestedContact(T entity, Contact previous) {
+    if (previous == null || entity.getContactPersons() == null) {
+      return;
+    }
+    Integer contactKey = previous.getKey();
+    if (contactKey != null) {
+      entity.getContactPersons().removeIf(c -> Objects.equals(c.getKey(), contactKey));
+    } else {
+      entity.getContactPersons().removeIf(c -> c.getKey() == null && c.lenientEquals(previous));
+    }
   }
 
   /**

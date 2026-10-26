@@ -268,6 +268,63 @@ public abstract class BaseChangeSuggestionServiceIT<
   }
 
   @Test
+  public void updateSuggestionRemovingUnsavedContactTest() {
+    T entity = createEntity();
+
+    Address address = new Address();
+    address.setCountry(Country.DENMARK);
+    entity.setAddress(address);
+
+    UUID entityKey = collectionEntityService.create(entity);
+
+    Contact existing = new Contact();
+    existing.setFirstName("existing");
+    existing.setEmail(Collections.singletonList("aa@aa.com"));
+    entity.getContactPersons().add(existing);
+    contactService.addContactPerson(entityKey, existing);
+
+    entity = collectionEntityService.get(entityKey);
+
+    Contact added = new Contact();
+    added.setFirstName("added");
+    added.setEmail(Collections.singletonList("bb@bb.com"));
+    entity.getContactPersons().add(added);
+
+    R suggestion = createEmptyChangeSuggestion();
+    suggestion.setSuggestedEntity(entity);
+    suggestion.setType(Type.UPDATE);
+    suggestion.setEntityKey(entityKey);
+    suggestion.setProposerEmail(PROPOSER);
+    suggestion.setComments(Collections.singletonList("add contact"));
+
+    int suggKey = changeSuggestionService.createChangeSuggestion(suggestion);
+
+    suggestion = changeSuggestionService.getChangeSuggestion(suggKey);
+    suggestion
+        .getSuggestedEntity()
+        .getContactPersons()
+        .removeIf(c -> "added".equals(c.getFirstName()));
+    suggestion.getComments().add("remove contact that was never saved");
+    changeSuggestionService.updateChangeSuggestion(suggestion);
+
+    suggestion = changeSuggestionService.getChangeSuggestion(suggKey);
+    assertTrue(
+        suggestion.getSuggestedEntity().getContactPersons().stream()
+            .noneMatch(c -> "added".equals(c.getFirstName())));
+    assertTrue(
+        suggestion.getSuggestedEntity().getContactPersons().stream()
+            .anyMatch(c -> "existing".equals(c.getFirstName())));
+
+    suggestion.getComments().add("update again");
+    changeSuggestionService.updateChangeSuggestion(suggestion);
+
+    suggestion = changeSuggestionService.getChangeSuggestion(suggKey);
+    assertTrue(
+        suggestion.getSuggestedEntity().getContactPersons().stream()
+            .noneMatch(c -> "added".equals(c.getFirstName())));
+  }
+
+  @Test
   public void masterSourceSuggestionsTest() {
     // State
     T entity = createEntity();
