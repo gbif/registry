@@ -14,17 +14,22 @@
 package org.gbif.registry.security.grscicoll;
 
 import org.gbif.api.model.collections.Collection;
+import org.gbif.api.model.collections.Contactable;
 import org.gbif.api.model.collections.Institution;
+import org.gbif.api.model.collections.latimercore.ObjectGroup;
+import org.gbif.api.model.collections.latimercore.OrganisationalUnit;
 import org.gbif.api.model.collections.merge.ConvertToCollectionParams;
 import org.gbif.api.model.collections.merge.MergeParams;
 import org.gbif.api.model.registry.MachineTag;
 import org.gbif.registry.security.AuthenticationFacade;
 import org.gbif.registry.security.UserRoles;
+import org.gbif.registry.security.grscicoll.GrSciCollAuthorizationService.EntityOperationResponse;
 import org.gbif.ws.WebApplicationException;
 import org.gbif.ws.server.GbifHttpServletRequestWrapper;
 
 import java.io.IOException;
 import java.text.MessageFormat;
+import java.util.List;
 import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -78,6 +83,14 @@ public class GrSciCollEditorAuthorizationFilter extends OncePerRequestFilter {
       Pattern.compile(".*/grscicoll/(collection|institution)/([a-f0-9-]+)/merge$");
   public static final Pattern CONVERSION_PATTERN =
       Pattern.compile(".*/grscicoll/institution/([a-f0-9-]+)/convertToCollection$");
+  // latimerCore sits where ENTITY_PATTERN expects a UUID, so those writes never reached the scope check.
+  public static final Pattern LATIMER_CORE_PATTERN =
+      Pattern.compile(
+          ".*/grscicoll/(collection|institution)/latimerCore(?:/([a-fA-F0-9-]+))?/?$");
+  private static final String LATIMER_COLLECTION_KEY = "Collection GRSciColl key";
+  private static final String LATIMER_INSTITUTION_KEY = "Institution GRSciColl key";
+  private static final String LATIMER_PHYSICAL = "Physical";
+  private static final String LATIMER_MAILING = "Mailing";
   public static final String INSTITUTION = "institution";
   public static final String COLLECTION = "collection";
   private static final Logger LOG =
@@ -131,6 +144,8 @@ public class GrSciCollEditorAuthorizationFilter extends OncePerRequestFilter {
         } else if (!isBatchRequest(path)) {
           // editors cannot edit machine tags
           checkMachineTagsPermissions(request, path, authentication);
+
+          checkLatimerCorePermissions(request, path, authentication);
 
           checkInstitutionAndCollectionCreationPermissions(request, path, authentication);
 
@@ -251,6 +266,174 @@ public class GrSciCollEditorAuthorizationFilter extends OncePerRequestFilter {
     ConvertToCollectionParams conversionParams =
         readEntity(request, ConvertToCollectionParams.class);
     return conversionParams != null ? conversionParams.getInstitutionForNewCollectionKey() : null;
+  }
+
+  private void checkLatimerCorePermissions(
+      HttpServletRequest request, String path, Authentication authentication) {
+    Matcher matcher = LATIMER_CORE_PATTERN.matcher(path);
+    if (!matcher.matches()) {
+      return;
+    }
+
+    String entityType = matcher.group(1);
+    UUID pathKey = parseUuid(matcher.group(2));
+    if (matcher.group(2) != null && pathKey == null) {
+      deny(authentication, "invalid latimerCore entity key");
+    }
+
+    if (COLLECTION.equalsIgnoreCase(entityType)) {
+      ObjectGroup objectGroup = readEntity(request, ObjectGroup.class);
+      if ("POST".equals(request.getMethod()) && pathKey == null) {
+        denyUnlessAllowed(
+            authService.allowedToCreateCollection(
+                collectionFromLatimerCore(objectGroup), authentication),
+            authentication,
+            entityType);
+      } else {
+        UUID bodyKey = identifier(objectGroup == null ? null : objectGroup.getIdentifier(), LATIMER_COLLECTION_KEY);
+        requireSameKey(authentication, pathKey, bodyKey);
+        Collection collection = collectionFromLatimerCore(objectGroup);
+        if (!authService.allowedToModifyCollection(authentication, bodyKey, collection)) {
+          deny(authentication, bodyKey, entityType);
+        }
+      }
+    } else if (INSTITUTION.equalsIgnoreCase(entityType)) {
+      OrganisationalUnit organisationalUnit = readEntity(request, OrganisationalUnit.class);
+      if ("POST".equals(request.getMethod()) && pathKey == null) {
+        denyUnlessAllowed(
+            authService.allowedToCreateInstitution(
+                institutionFromLatimerCore(organisationalUnit), authentication),
+            authentication,
+            entityType);
+      } else {
+        UUID bodyKey =
+            identifier(
+                organisationalUnit == null ? null : organisationalUnit.getIdentifier(),
+                LATIMER_INSTITUTION_KEY);
+        requireSameKey(authentication, pathKey, bodyKey);
+        if (!authService.allowedToModifyInstitution(authentication, bodyKey)) {
+          deny(authentication, bodyKey, entityType);
+        }
+      }
+    }
+  }
+
+  private void requireSameKey(Authentication authentication, UUID pathKey, UUID bodyKey) {
+    if (bodyKey == null || (pathKey != null && !pathKey.equals(bodyKey))) {
+      deny(authentication, bodyKey, "latimerCore");
+    }
+  }
+
+  private void denyUnlessAllowed(
+      EntityOperationResponse response, Authentication authentication, String entityType) {
+    if (response.isAllowed()) {
+      return;
+    }
+    String errorMessage =
+        MessageFormat.format(
+            "User {0} is not allowed to create entity {1}", authentication.getName(), entityType);
+    if (response.getMessage() != null && !response.getMessage().isEmpty()) {
+      errorMessage += ". Reason: " + response.getMessage();
+    }
+    throw new WebApplicationException(errorMessage, HttpStatus.FORBIDDEN);
+  }
+
+  private void deny(Authentication authentication, UUID entityKey, String entityType) {
+    throw new WebApplicationException(
+        MessageFormat.format(
+            "User {0} is not allowed to modify entity {1} of type {2}",
+            authentication.getName(), entityKey, entityType),
+        HttpStatus.FORBIDDEN);
+  }
+
+  private void deny(Authentication authentication, String reason) {
+    throw new WebApplicationException(
+        MessageFormat.format("User {0} is not allowed to modify latimerCore entity: {1}", authentication.getName(), reason),
+        HttpStatus.FORBIDDEN);
+  }
+
+  private Collection collectionFromLatimerCore(ObjectGroup objectGroup) {
+    if (objectGroup == null) {
+      return null;
+    }
+    Collection collection = new Collection();
+    if (objectGroup.getHasOrganisationalUnit() != null
+        && !objectGroup.getHasOrganisationalUnit().isEmpty()
+        && objectGroup.getHasOrganisationalUnit().get(0) != null) {
+      // fromObjectGroup keeps the last institution key in the file
+      collection.setInstitutionKey(
+          lastIdentifier(
+              objectGroup.getHasOrganisationalUnit().get(0).getIdentifier(),
+              LATIMER_INSTITUTION_KEY));
+    }
+    copyAddresses(collection, objectGroup.getAddress());
+    return collection;
+  }
+
+  private Institution institutionFromLatimerCore(OrganisationalUnit organisationalUnit) {
+    if (organisationalUnit == null) {
+      return null;
+    }
+    Institution institution = new Institution();
+    copyAddresses(institution, organisationalUnit.getAddress());
+    return institution;
+  }
+
+  private static void copyAddresses(
+      Contactable entity, List<org.gbif.api.model.collections.latimercore.Address> addresses) {
+    if (addresses == null) {
+      return;
+    }
+    for (org.gbif.api.model.collections.latimercore.Address address : addresses) {
+      if (address == null) {
+        continue;
+      }
+      org.gbif.api.model.collections.Address converted = new org.gbif.api.model.collections.Address();
+      converted.setCountry(address.getAddressCountry());
+      if (LATIMER_PHYSICAL.equals(address.getAddressType())) {
+        entity.setAddress(converted);
+      } else if (LATIMER_MAILING.equals(address.getAddressType())) {
+        entity.setMailingAddress(converted);
+      }
+    }
+  }
+
+  private static UUID identifier(
+      List<org.gbif.api.model.collections.latimercore.Identifier> identifiers, String type) {
+    if (identifiers == null) {
+      return null;
+    }
+    for (org.gbif.api.model.collections.latimercore.Identifier identifier : identifiers) {
+      if (identifier != null && type.equals(identifier.getIdentifierType())) {
+        return parseUuid(identifier.getIdentifierValue());
+      }
+    }
+    return null;
+  }
+
+  private static UUID lastIdentifier(
+      List<org.gbif.api.model.collections.latimercore.Identifier> identifiers, String type) {
+    if (identifiers == null) {
+      return null;
+    }
+    UUID key = null;
+    for (org.gbif.api.model.collections.latimercore.Identifier identifier : identifiers) {
+      if (identifier != null && type.equals(identifier.getIdentifierType())) {
+        key = parseUuid(identifier.getIdentifierValue());
+      }
+    }
+    return key;
+  }
+
+  private static UUID parseUuid(String value) {
+    if (value == null) {
+      return null;
+    }
+    try {
+      return UUID.fromString(value);
+    } catch (IllegalArgumentException e) {
+      return null;
+    }
   }
 
   private void checkInstitutionAndCollectionCreationPermissions(
