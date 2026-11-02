@@ -358,6 +358,13 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset, DatasetL
             in = ParameterIn.QUERY,
             example = "2022-05-01,*"),
         @Parameter(
+            name = "publicationDate",
+            description =
+                "Publication date from the dataset metadata. Accepts ranges and a `*` can be used as a wildcard.",
+            schema = @Schema(implementation = String.class),
+            in = ParameterIn.QUERY,
+            example = "2022-05-01,*"),
+        @Parameter(
             name = "doi",
             description = "A DOI identifier.",
             schema = @Schema(implementation = String.class),

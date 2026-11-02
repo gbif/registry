@@ -30,10 +30,12 @@ import co.elastic.clients.elasticsearch._types.aggregations.Aggregate;
 import co.elastic.clients.elasticsearch._types.aggregations.Aggregation;
 import co.elastic.clients.elasticsearch._types.aggregations.CalendarInterval;
 import co.elastic.clients.elasticsearch._types.aggregations.DateHistogramBucket;
+import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 import co.elastic.clients.elasticsearch.core.SearchRequest;
 import co.elastic.clients.elasticsearch.core.search.TotalHitsRelation;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /** createdDate must facet by day, not by raw timestamp. */
@@ -58,6 +60,21 @@ class CreatedDateFacetTest {
             }
           },
           new DatasetEsFieldMapper());
+
+  @Test
+  void publicationDateRangeFiltersOnPubDate() {
+    DatasetSearchRequest request = new DatasetSearchRequest();
+    request.addParameter(DatasetSearchParameter.PUBLICATION_DATE, "2024-01-01,*");
+
+    SearchRequest esRequest = requestBuilder.buildSearchRequest(request, true, "dataset");
+
+    Query filter = esRequest.query().bool().filter().get(0);
+    assertTrue(filter.isRange());
+    assertTrue(filter.range().isDate());
+    assertEquals("pubDate", filter.range().date().field());
+    assertEquals("2024-01-01T00:00", filter.range().date().gte());
+    assertNull(filter.range().date().lte());
+  }
 
   @Test
   void createdDateFacetIsADayHistogram() {
