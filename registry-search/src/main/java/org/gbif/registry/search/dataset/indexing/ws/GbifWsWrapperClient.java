@@ -31,6 +31,7 @@ import org.gbif.api.service.registry.NetworkService;
 import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.metrics.ws.client.CubeWsClient;
 import org.gbif.occurrence.ws.client.OccurrenceWsSearchClient;
+import org.gbif.registry.search.dataset.indexing.ws.event.EventApiClient;
 import org.gbif.registry.search.dataset.indexing.ws.taxon.TaxonApiClient;
 
 import java.io.InputStream;
@@ -79,6 +80,7 @@ public class GbifWsWrapperClient implements GbifWsClient {
   private final NetworkService networkService;
   private final OccurrenceWsSearchClient occurrenceWsSearchClient;
   private final TaxonApiClient taxonApiClient;
+  private final EventApiClient eventApiClient;
   private final CubeWsClient cubeWsClient;
   private final DatasetDataPackageService datasetDataPackageClient;
 
@@ -97,6 +99,7 @@ public class GbifWsWrapperClient implements GbifWsClient {
       OccurrenceWsSearchClient occurrenceWsSearchClient,
       CubeWsClient cubeWsClient,
       TaxonApiClient taxonApiClient,
+      EventApiClient eventApiClient,
       DatasetDataPackageService datasetDataPackageClient) {
     this.installationService = installationService;
     this.organizationService = organizationService;
@@ -104,6 +107,7 @@ public class GbifWsWrapperClient implements GbifWsClient {
     this.networkService = networkService;
     this.occurrenceWsSearchClient = occurrenceWsSearchClient;
     this.taxonApiClient = taxonApiClient;
+    this.eventApiClient = eventApiClient;
     this.cubeWsClient = cubeWsClient;
     this.datasetDataPackageClient = datasetDataPackageClient;
   }
@@ -180,6 +184,20 @@ public class GbifWsWrapperClient implements GbifWsClient {
   @Override
   public Long getOccurrenceRecordCount() {
     return cubeWsClient.get(new LinkedMultiValueMap<>());
+  }
+
+  @Override
+  public Long getDatasetEventCount(String datasetKey) {
+    try {
+      JsonNode response = eventApiClient.search(datasetKey, 0);
+      if (response != null) {
+        JsonNode countNode = response.get("count");
+        return countNode != null ? countNode.asLong() : null;
+      }
+    } catch (Exception e) {
+      LOG.warn("Failed to get event count for dataset {}", datasetKey, e);
+    }
+    return null;
   }
 
   @Override

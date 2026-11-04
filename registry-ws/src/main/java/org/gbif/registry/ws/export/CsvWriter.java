@@ -126,7 +126,8 @@ public class CsvWriter<T> {
               "networkKeys",
               "projectIdentifier",
               "recordCount",
-              "nameUsagesCount"
+              "nameUsagesCount",
+              "eventCount"
             })
         .header(
             new String[] {
@@ -148,9 +149,9 @@ public class CsvWriter<T> {
               "network_keys",
               "project_identifier",
               "occurrence_records_count",
-              "name_usages_count"
+              "name_usages_count",
+              "event_records_count"
             })
-        //  "recordCount", "nameUsagesCount"
         .processors(
             new CellProcessor[] {
               new UUIDProcessor(), // key
@@ -171,7 +172,8 @@ public class CsvWriter<T> {
               new ListUUIDProcessor(), // networkKeys
               new CleanStringProcessor(), // projectIdentifier
               new Optional(new ParseInt()), // recordCount
-              new Optional(new ParseInt()) // nameUsagesCount
+              new Optional(new ParseInt()), // nameUsagesCount
+              new Optional(new ParseInt()) // eventCount
             })
         .preference(preference)
         .pager(pager)

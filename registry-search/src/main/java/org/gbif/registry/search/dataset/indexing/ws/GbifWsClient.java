@@ -59,6 +59,8 @@ public interface GbifWsClient {
 
   Long getOccurrenceRecordCount();
 
+  Long getDatasetEventCount(String datasetKey);
+
   Long getChecklistMetricsNameCount(String datasetKey);
 
   Long taxonSearchCount(String datasetKey);

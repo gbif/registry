@@ -96,6 +96,7 @@ public class DatasetEsFieldMapper implements EsFieldMapper<DatasetSearchParamete
           .put(DatasetSearchParameter.LICENSE, "license")
           .put(DatasetSearchParameter.MODIFIED_DATE, "modified")
           .put(DatasetSearchParameter.CREATED_DATE, "created")
+          .put(DatasetSearchParameter.PUBLICATION_DATE, "pubDate")
           .put(DatasetSearchParameter.PROJECT_ID, "project.identifier")
           .put(DatasetSearchParameter.RECORD_COUNT, "occurrenceCount")
           .put(DatasetSearchParameter.SUBTYPE, "subtype")
@@ -205,6 +206,7 @@ public class DatasetEsFieldMapper implements EsFieldMapper<DatasetSearchParamete
       "project.identifier",
       "nameUsagesCount",
       "occurrenceCount",
+      "eventCount",
       "keyword",
       "decade",
       "countryCoverage",

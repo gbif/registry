@@ -28,6 +28,7 @@ import org.gbif.registry.mail.config.OrganizationSuretyMailConfigurationProperti
 import org.gbif.registry.search.dataset.indexing.es.EsConfiguration;
 import org.gbif.registry.search.dataset.indexing.ws.GbifWsClient;
 import org.gbif.registry.search.dataset.indexing.ws.GbifWsWrapperClient;
+import org.gbif.registry.search.dataset.indexing.ws.event.EventApiClient;
 import org.gbif.registry.search.dataset.indexing.ws.taxon.TaxonApiClient;
 import org.gbif.registry.search.test.DatasetElasticsearchConfiguration;
 import org.gbif.registry.surety.OrganizationEmailTemplateManagerIT;
@@ -106,6 +107,7 @@ import com.zaxxer.hikari.HikariDataSource;
       "org.gbif.registry.ws.advice",
       "org.gbif.registry.ws.config",
       "org.gbif.registry.ws.resources",
+      "org.gbif.registry.ws.phylogeny",
       "org.gbif.registry.ws.surety",
       "org.gbif.registry.ws.it.fixtures",
       "org.gbif.registry.security",
@@ -239,6 +241,7 @@ public class RegistryIntegrationTestsConfiguration {
       OccurrenceWsSearchClient occurrenceWsSearchClient,
       CubeWsClient cubeWsClient,
       TaxonApiClient taxonApiClient,
+      EventApiClient eventApiClient,
       DatasetDataPackageService datasetDataPackageService) {
     return new GbifWsWrapperClient(installationService,
                                     organizationService,
@@ -247,6 +250,7 @@ public class RegistryIntegrationTestsConfiguration {
                                     occurrenceWsSearchClient,
                                     cubeWsClient,
                                     taxonApiClient,
+                                    eventApiClient,
                                     datasetDataPackageService);
   }
 

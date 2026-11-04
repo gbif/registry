@@ -1,0 +1,21 @@
+#NEXUS
+[Example rooted phylogenetic tree with branch lengths; same topology as the Newick and phyloXML examples.]
+
+Begin taxa;
+    Dimensions ntax=9;
+    Taxlabels Human Chimpanzee Gorilla Orangutan Gibbon Mouse Rat Chicken Lizard;
+End;
+
+Begin trees;
+    Translate
+        1 Human,
+        2 Chimpanzee,
+        3 Gorilla,
+        4 Orangutan,
+        5 Gibbon,
+        6 Mouse,
+        7 Rat,
+        8 Chicken,
+        9 Lizard;
+    Tree example_tree = [&R] ((1:0.12,2:0.10):0.08,(3:0.15,(4:0.18,5:0.20):0.07):0.06,((6:0.22,7:0.21):0.09,(8:0.30,9:0.28):0.11):0.10);
+End;

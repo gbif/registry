@@ -86,6 +86,7 @@ public class DatasetSearchResultConverter
     // Set counts
     getIntValue(fields, "nameUsagesCount").ifPresent(d::setNameUsagesCount);
     getIntValue(fields, "occurrenceCount").ifPresent(d::setRecordCount);
+    getIntValue(fields, "eventCount").ifPresent(d::setEventCount);
 
     getListValue(fields, "keyword").ifPresent(d::setKeywords);
 

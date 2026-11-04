@@ -16,6 +16,7 @@ package org.gbif.registry.search.dataset.indexing.ws;
 
 import org.gbif.metrics.ws.client.CubeWsClient;
 import org.gbif.occurrence.ws.client.OccurrenceWsSearchClient;
+import org.gbif.registry.search.dataset.indexing.ws.event.EventApiClient;
 import org.gbif.registry.search.dataset.indexing.ws.taxon.TaxonApiClient;
 import org.gbif.ws.client.ClientBuilder;
 
@@ -58,5 +59,15 @@ public class GbifApiServiceConfig {
       .withObjectMapper(objectMapper)
       .withUrl(apiBaseUrl)
       .build(TaxonApiClient.class);
+  }
+
+  @Bean
+  public EventApiClient eventApiClient(
+      @Value("${api.root.url}") String apiBaseUrl,
+      @Qualifier("apiMapper") ObjectMapper objectMapper) {
+    return new ClientBuilder()
+        .withObjectMapper(objectMapper)
+        .withUrl(apiBaseUrl)
+        .build(EventApiClient.class);
   }
 }

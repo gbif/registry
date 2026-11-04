@@ -24,6 +24,7 @@ pipeline {
   }
   environment {
     JETTY_PORT = utils.getPort()
+    POM_VERSION = readMavenPom().getVersion()
   }
   stages {
     stage('Spotless Check') {
@@ -39,6 +40,37 @@ pipeline {
                     sh 'mvn spotless:check'
                   }
             }
+      }
+    }
+
+    stage('Setup') {
+      when {
+        allOf {
+          not { expression { params.RELEASE } };
+        }
+      }
+      steps {
+        script {
+          // Branch-qualified version for feature branches: workspace only, never committed.
+          // dev/master keep the version as checked in, so this never touches those pom.xml files.
+          if (env.BRANCH_NAME != 'dev' && env.BRANCH_NAME != 'master') {
+            def suffix = env.BRANCH_NAME.replaceAll('[^a-zA-Z0-9.-]', '-').toUpperCase()
+            sh """
+              BASE_VERSION=\$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout | sed 's/-SNAPSHOT//')
+              NEW_VERSION=\${BASE_VERSION}-${suffix}-SNAPSHOT
+              mvn versions:set -DnewVersion=\${NEW_VERSION} -DgenerateBackupPoms=false -DprocessAllModules=true
+              # every module must have its parent version updated, versions:set skips the ones that don't match
+              MISSED=\$(git ls-files '*pom.xml' | xargs grep -L "<version>\${NEW_VERSION}</version>" || true)
+              if [ -n "\${MISSED}" ]; then
+                echo "Version \${NEW_VERSION} not set in: \${MISSED}"
+                exit 1
+              fi
+            """
+            env.VERSION = sh(returnStdout: true, script: 'mvn help:evaluate -Dexpression=project.version -q -DforceStdout').trim()
+          } else {
+            env.VERSION = POM_VERSION
+          }
+        }
       }
     }
 
