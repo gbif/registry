@@ -17,6 +17,8 @@ import org.gbif.api.model.collections.Address;
 import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.Institution;
 import org.gbif.api.model.collections.descriptors.DescriptorChangeSuggestion;
+import org.gbif.api.model.collections.latimercore.ObjectGroup;
+import org.gbif.api.model.collections.latimercore.OrganisationalUnit;
 import org.gbif.api.model.collections.merge.ConvertToCollectionParams;
 import org.gbif.api.model.collections.merge.MergeParams;
 import org.gbif.api.model.collections.suggestions.Type;
@@ -611,6 +613,76 @@ public class GrSciCollEditorAuthorizationFilterTest {
 
     // THEN
     assertEquals(HttpStatus.FORBIDDEN.value(), ex.getStatus());
+  }
+
+  @Test
+  public void latimerCoreCollectionUpdateWithoutScopeTest() throws JsonProcessingException {
+    mockLatimerCoreCollectionUpdate(COLL_KEY, COLL_KEY, false, false, false);
+
+    WebApplicationException ex =
+        assertThrows(
+            WebApplicationException.class,
+            () -> filter.doFilter(mockRequest, mockResponse, mockFilterChain));
+
+    assertEquals(HttpStatus.FORBIDDEN.value(), ex.getStatus());
+  }
+
+  @Test
+  public void latimerCoreCollectionUpdateWithScopeTest() throws JsonProcessingException {
+    mockLatimerCoreCollectionUpdate(COLL_KEY, COLL_KEY, true, false, false);
+
+    assertDoesNotThrow(() -> filter.doFilter(mockRequest, mockResponse, mockFilterChain));
+  }
+
+  @Test
+  public void latimerCoreCollectionUpdateMismatchedKeyTest() throws JsonProcessingException {
+    UUID otherCollection = UUID.randomUUID();
+    mockLatimerCoreCollectionUpdate(otherCollection, COLL_KEY, true, false, false);
+
+    WebApplicationException ex =
+        assertThrows(
+            WebApplicationException.class,
+            () -> filter.doFilter(mockRequest, mockResponse, mockFilterChain));
+
+    assertEquals(HttpStatus.FORBIDDEN.value(), ex.getStatus());
+  }
+
+  @Test
+  public void latimerCoreCollectionCreateWithoutScopeTest() throws JsonProcessingException {
+    mockLatimerCoreCollectionCreate(false, false);
+
+    WebApplicationException ex =
+        assertThrows(
+            WebApplicationException.class,
+            () -> filter.doFilter(mockRequest, mockResponse, mockFilterChain));
+
+    assertEquals(HttpStatus.FORBIDDEN.value(), ex.getStatus());
+  }
+
+  @Test
+  public void latimerCoreCollectionCreateWithInstitutionScopeTest() throws JsonProcessingException {
+    mockLatimerCoreCollectionCreate(true, false);
+
+    assertDoesNotThrow(() -> filter.doFilter(mockRequest, mockResponse, mockFilterChain));
+  }
+
+  @Test
+  public void latimerCoreInstitutionUpdateWithoutScopeTest() throws JsonProcessingException {
+    mockLatimerCoreInstitutionUpdate(false, false);
+
+    WebApplicationException ex =
+        assertThrows(
+            WebApplicationException.class,
+            () -> filter.doFilter(mockRequest, mockResponse, mockFilterChain));
+
+    assertEquals(HttpStatus.FORBIDDEN.value(), ex.getStatus());
+  }
+
+  @Test
+  public void latimerCoreInstitutionUpdateWithScopeTest() throws JsonProcessingException {
+    mockLatimerCoreInstitutionUpdate(true, false);
+
+    assertDoesNotThrow(() -> filter.doFilter(mockRequest, mockResponse, mockFilterChain));
   }
 
   @Test
@@ -1415,6 +1487,107 @@ public class GrSciCollEditorAuthorizationFilterTest {
     doReturn(countryRights)
         .when(mockUserRightsMapper)
         .countryExistsForUser(USERNAME, COUNTRY.getIso2LetterCode());
+  }
+
+  private void mockLatimerCoreCollectionUpdate(
+      UUID pathKey,
+      UUID bodyKey,
+      boolean collectionRights,
+      boolean institutionRights,
+      boolean countryRights)
+      throws JsonProcessingException {
+    when(mockAuthenticationFacade.getAuthentication()).thenReturn(mockAuthentication);
+    when(mockRequest.getRequestURI()).thenReturn("/grscicoll/collection/latimerCore/" + pathKey);
+    when(mockRequest.getMethod()).thenReturn("PUT");
+    when(mockRequest.getContent()).thenReturn(latimerCollection(bodyKey));
+    when(mockAuthentication.getName()).thenReturn(USERNAME);
+    doReturn(ROLES_GRSCICOLL_EDITOR_ONLY).when(mockAuthentication).getAuthorities();
+    if (pathKey.equals(bodyKey)) {
+      doReturn(COLLECTION).when(mockCollectionMapper).get(bodyKey);
+      doReturn(collectionRights).when(mockUserRightsMapper).keyExistsForUser(USERNAME, bodyKey);
+      if (!collectionRights) {
+        doReturn(countryRights)
+            .when(mockUserRightsMapper)
+            .countryExistsForUser(USERNAME, COUNTRY.getIso2LetterCode());
+        doReturn(institutionRights).when(mockUserRightsMapper).keyExistsForUser(USERNAME, INST_KEY);
+        if (!countryRights) {
+          doReturn(INSTITUTION).when(mockInstitutionMapper).get(INST_KEY);
+        }
+      }
+    }
+  }
+
+  private void mockLatimerCoreCollectionCreate(boolean institutionRights, boolean countryRights)
+      throws JsonProcessingException {
+    when(mockAuthenticationFacade.getAuthentication()).thenReturn(mockAuthentication);
+    when(mockRequest.getRequestURI()).thenReturn("/grscicoll/collection/latimerCore");
+    when(mockRequest.getMethod()).thenReturn("POST");
+    when(mockRequest.getContent()).thenReturn(latimerCollection(null));
+    when(mockAuthentication.getName()).thenReturn(USERNAME);
+    doReturn(ROLES_GRSCICOLL_EDITOR_ONLY).when(mockAuthentication).getAuthorities();
+    doReturn(institutionRights).when(mockUserRightsMapper).keyExistsForUser(USERNAME, INST_KEY);
+    doReturn(countryRights)
+        .when(mockUserRightsMapper)
+        .countryExistsForUser(USERNAME, COUNTRY.getIso2LetterCode());
+  }
+
+  private void mockLatimerCoreInstitutionUpdate(boolean institutionRights, boolean countryRights)
+      throws JsonProcessingException {
+    when(mockAuthenticationFacade.getAuthentication()).thenReturn(mockAuthentication);
+    when(mockRequest.getRequestURI()).thenReturn("/grscicoll/institution/latimerCore/" + INST_KEY);
+    when(mockRequest.getMethod()).thenReturn("PUT");
+    when(mockRequest.getContent()).thenReturn(latimerInstitution(INST_KEY));
+    when(mockAuthentication.getName()).thenReturn(USERNAME);
+    doReturn(ROLES_GRSCICOLL_EDITOR_ONLY).when(mockAuthentication).getAuthorities();
+    doReturn(INSTITUTION).when(mockInstitutionMapper).get(INST_KEY);
+    doReturn(institutionRights).when(mockUserRightsMapper).keyExistsForUser(USERNAME, INST_KEY);
+    if (!institutionRights) {
+      doReturn(countryRights)
+          .when(mockUserRightsMapper)
+          .countryExistsForUser(USERNAME, COUNTRY.getIso2LetterCode());
+    }
+  }
+
+  private String latimerCollection(UUID collectionKey) throws JsonProcessingException {
+    ObjectGroup objectGroup = new ObjectGroup();
+    if (collectionKey != null) {
+      org.gbif.api.model.collections.latimercore.Identifier identifier =
+          new org.gbif.api.model.collections.latimercore.Identifier();
+      identifier.setIdentifierType("Collection GRSciColl key");
+      identifier.setIdentifierValue(collectionKey.toString());
+      objectGroup.setIdentifier(Collections.singletonList(identifier));
+    }
+
+    OrganisationalUnit unit = new OrganisationalUnit();
+    org.gbif.api.model.collections.latimercore.Identifier institutionIdentifier =
+        new org.gbif.api.model.collections.latimercore.Identifier();
+    institutionIdentifier.setIdentifierType("Institution GRSciColl key");
+    institutionIdentifier.setIdentifierValue(INST_KEY.toString());
+    unit.setIdentifier(Collections.singletonList(institutionIdentifier));
+    objectGroup.setHasOrganisationalUnit(Collections.singletonList(unit));
+
+    org.gbif.api.model.collections.latimercore.Address address =
+        new org.gbif.api.model.collections.latimercore.Address();
+    address.setAddressType("Physical");
+    address.setAddressCountry(COUNTRY);
+    objectGroup.setAddress(Collections.singletonList(address));
+    return objectMapper.writeValueAsString(objectGroup);
+  }
+
+  private String latimerInstitution(UUID institutionKey) throws JsonProcessingException {
+    OrganisationalUnit unit = new OrganisationalUnit();
+    org.gbif.api.model.collections.latimercore.Identifier identifier =
+        new org.gbif.api.model.collections.latimercore.Identifier();
+    identifier.setIdentifierType("Institution GRSciColl key");
+    identifier.setIdentifierValue(institutionKey.toString());
+    unit.setIdentifier(Collections.singletonList(identifier));
+
+    org.gbif.api.model.collections.latimercore.Address address =
+        new org.gbif.api.model.collections.latimercore.Address();
+    address.setAddressType("Physical");
+    address.setAddressCountry(COUNTRY);
+    unit.setAddress(Collections.singletonList(address));
+    return objectMapper.writeValueAsString(unit);
   }
 
   private void mockCollectionCreation(
