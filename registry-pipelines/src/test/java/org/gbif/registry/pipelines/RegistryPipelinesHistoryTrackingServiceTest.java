@@ -17,8 +17,12 @@ import org.gbif.api.model.pipelines.PipelineExecution;
 import org.gbif.api.model.pipelines.PipelineProcess;
 import org.gbif.api.model.pipelines.PipelineStep;
 import org.gbif.api.model.pipelines.StepType;
+import org.gbif.api.model.registry.Dataset;
+import org.gbif.api.model.registry.Endpoint;
+import org.gbif.api.vocabulary.EndpointType;
 import org.gbif.registry.pipelines.service.PipelineWorkflowResolver;
 
+import java.net.URI;
 import java.time.OffsetDateTime;
 import java.util.Set;
 
@@ -72,6 +76,61 @@ class RegistryPipelinesHistoryTrackingServiceTest {
 
     PipelineStep step1 = trackingService.getLatestSuccessfulStep(process, s1.getType()).orElseThrow();
     assertEquals(s1, step1);
+  }
+
+  @Test
+  void selectCorrectVerbatimSteps_dwcDpWithEml_usesDwcDpStage() {
+    Dataset dataset = datasetWithEndpoints(EndpointType.EML, EndpointType.DWC_DP);
+
+    assertEquals(
+        Set.of(StepType.DWCDP_STAGE),
+        trackingService.selectCorrectVerbatimSteps(Set.of(StepType.TO_VERBATIM), dataset));
+  }
+
+  @Test
+  void selectCorrectVerbatimSteps_dwcDpOnly_usesDwcDpStage() {
+    Dataset dataset = datasetWithEndpoints(EndpointType.DWC_DP);
+
+    assertEquals(
+        Set.of(StepType.DWCDP_STAGE),
+        trackingService.selectCorrectVerbatimSteps(Set.of(StepType.TO_VERBATIM), dataset));
+  }
+
+  @Test
+  void selectCorrectVerbatimSteps_colDpWithEml_hasNoVerbatimStep() {
+    Dataset dataset = datasetWithEndpoints(EndpointType.EML, EndpointType.COLDP);
+
+    assertTrue(
+        trackingService.selectCorrectVerbatimSteps(Set.of(StepType.TO_VERBATIM), dataset).isEmpty());
+  }
+
+  @Test
+  void selectCorrectVerbatimSteps_dwcaWithEml_unchanged() {
+    Dataset dataset = datasetWithEndpoints(EndpointType.EML, EndpointType.DWC_ARCHIVE);
+
+    assertEquals(
+        Set.of(StepType.DWCA_TO_VERBATIM),
+        trackingService.selectCorrectVerbatimSteps(Set.of(StepType.TO_VERBATIM), dataset));
+  }
+
+  @Test
+  void selectCorrectVerbatimSteps_emlOnly_unchanged() {
+    Dataset dataset = datasetWithEndpoints(EndpointType.EML);
+
+    assertEquals(
+        Set.of(StepType.XML_TO_VERBATIM),
+        trackingService.selectCorrectVerbatimSteps(Set.of(StepType.TO_VERBATIM), dataset));
+  }
+
+  private static Dataset datasetWithEndpoints(EndpointType... types) {
+    Dataset dataset = new Dataset();
+    for (EndpointType type : types) {
+      Endpoint endpoint = new Endpoint();
+      endpoint.setType(type);
+      endpoint.setUrl(URI.create("https://example.org/" + type.name()));
+      dataset.getEndpoints().add(endpoint);
+    }
+    return dataset;
   }
 
   @Test

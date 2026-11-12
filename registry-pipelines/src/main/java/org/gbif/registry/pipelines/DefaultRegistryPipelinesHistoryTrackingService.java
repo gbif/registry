@@ -201,7 +201,9 @@ public class DefaultRegistryPipelinesHistoryTrackingService
 
     Optional<Integer> attempt =
         useLastSuccessful
-            ? mapper.getLastSuccessfulAttempt(datasetKey, selectCorrectVerbatimSteps(steps, datasetKey).iterator().next())
+            ? selectCorrectVerbatimSteps(steps, datasetKey).stream()
+                .findFirst()
+                .flatMap(step -> mapper.getLastSuccessfulAttempt(datasetKey, step))
             : mapper.getLastAttempt(datasetKey);
 
     return attempt.orElseThrow(
@@ -273,7 +275,8 @@ public class DefaultRegistryPipelinesHistoryTrackingService
                     executorService));
   }
 
-  private Set<StepType> selectCorrectVerbatimSteps(Set<StepType> steps, Dataset dataset) {
+  @VisibleForTesting
+  Set<StepType> selectCorrectVerbatimSteps(Set<StepType> steps, Dataset dataset) {
     Set<StepType> newSteps = new HashSet<>(steps);
     if (steps.contains(StepType.TO_VERBATIM)) {
       newSteps.remove(StepType.TO_VERBATIM);
@@ -284,6 +287,13 @@ public class DefaultRegistryPipelinesHistoryTrackingService
                   newSteps.add(StepType.DWCA_TO_VERBATIM);
                 } else if (EndpointType.BIOCASE_XML_ARCHIVE == endpoint.getType()) {
                   newSteps.add(StepType.ABCD_TO_VERBATIM);
+                } else if (EndpointType.DWC_DP == endpoint.getType()) {
+                  // first step reading the crawler's unpacked archive
+                  newSteps.add(StepType.DWCDP_STAGE);
+                } else if (EndpointType.COLDP == endpoint.getType()) {
+                  // COLDP is imported by ChecklistBank, not by pipelines, so there is no
+                  // pipelines verbatim step to rerun
+                  LOG.info("No pipelines verbatim step for COLDP dataset {}", dataset.getKey());
                 } else {
                   newSteps.add(StepType.XML_TO_VERBATIM);
                 }
@@ -632,6 +642,10 @@ public class DefaultRegistryPipelinesHistoryTrackingService
         return createVerbatimMessage(prefix, jsonMessage, requestedStepsAsStrings, interpretTypes);
       case DWCA_TO_VERBATIM:
         return deserializeMessage(jsonMessage, PipelinesDwcaMessage.class);
+      case DWCDP_STAGE:
+        return deserializeMessage(jsonMessage, DwcDpStageMessage.class);
+      case DWCDP_TO_VERBATIM:
+        return deserializeMessage(jsonMessage, DwcDpToVerbatimMessage.class);
       case ABCD_TO_VERBATIM:
         return deserializeMessage(jsonMessage, PipelinesAbcdMessage.class);
       case XML_TO_VERBATIM:
@@ -1181,6 +1195,17 @@ public class DefaultRegistryPipelinesHistoryTrackingService
       return Optional.empty();
     }
     Endpoint ep = sortedEndpoints.get(0);
+
+    // Same rule as the crawler: EML outranks DwC-DP and COLDP but carries no data, so the data
+    // package is what gets crawled and the EML endpoint is only used for metadata.
+    if (EndpointType.EML == ep.getType()) {
+      for (Endpoint candidate : sortedEndpoints) {
+        if (EndpointType.DWC_DP == candidate.getType()
+            || EndpointType.COLDP == candidate.getType()) {
+          return Optional.of(candidate);
+        }
+      }
+    }
     return Optional.ofNullable(ep);
   }
 
