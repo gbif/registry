@@ -644,15 +644,21 @@ abstract class BaseCollectionEntityResourceIT<
     Resource collectionsResource = new ClassPathResource("collections/collections.csv");
     batch.setResultFilePath(collectionsResource.getFile().getAbsolutePath());
 
+    batch.setCreatedBy("another_user");
+
     when(getBatchService().get(anyInt())).thenReturn(batch);
+
+    String path = "/grscicoll/" + paramType.getSimpleName().toLowerCase() + "/batch/" + batch.getKey();
+
+    // batch keys are sequential, only the creator and admins can see a batch
+    mockMvc.perform(get(path)).andExpect(status().isForbidden());
 
     mockMvc
         .perform(
-            get(
-                "/grscicoll/"
-                    + paramType.getSimpleName().toLowerCase()
-                    + "/batch/"
-                    + batch.getKey()))
+            get(path)
+                .with(
+                    httpBasic(
+                        TestConstants.TEST_GRSCICOLL_ADMIN, TestConstants.TEST_GRSCICOLL_ADMIN)))
         .andExpect(status().isOk())
         .andExpect(jsonPath("key").value(batch.getKey()))
         .andExpect(jsonPath("state").value(batch.getState().name()));
@@ -667,16 +673,26 @@ abstract class BaseCollectionEntityResourceIT<
     Resource collectionsResource = new ClassPathResource("collections/collections.csv");
     batch.setResultFilePath(collectionsResource.getFile().getAbsolutePath());
 
+    batch.setCreatedBy("another_user");
+
     when(getBatchService().get(anyInt())).thenReturn(batch);
+
+    String path =
+        "/grscicoll/"
+            + paramType.getSimpleName().toLowerCase()
+            + "/batch/"
+            + batch.getKey()
+            + "/resultFile";
+
+    // the result file has the contacts of the batch, only the creator and admins can get it
+    mockMvc.perform(get(path)).andExpect(status().isForbidden());
 
     mockMvc
         .perform(
-            get(
-                "/grscicoll/"
-                    + paramType.getSimpleName().toLowerCase()
-                    + "/batch/"
-                    + batch.getKey()
-                    + "/resultFile"))
+            get(path)
+                .with(
+                    httpBasic(
+                        TestConstants.TEST_GRSCICOLL_ADMIN, TestConstants.TEST_GRSCICOLL_ADMIN)))
         .andExpect(status().isOk())
         .andExpect(header().exists("Content-Disposition"));
   }

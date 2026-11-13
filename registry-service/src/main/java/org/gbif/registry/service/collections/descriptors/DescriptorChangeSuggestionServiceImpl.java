@@ -74,6 +74,9 @@ import static org.gbif.registry.security.UserRoles.GRSCICOLL_MEDIATOR_ROLE;
 @Service
 public class DescriptorChangeSuggestionServiceImpl implements DescriptorChangeSuggestionService {
 
+  private static final Set<String> ALLOWED_FILE_EXTENSIONS = Set.of(".csv", ".tsv", ".txt");
+
+
   @Value("${grscicoll.descriptorSuggestions.storage}")
   private String descriptorSuggestionsStoragePath;
 
@@ -441,11 +444,18 @@ public class DescriptorChangeSuggestionServiceImpl implements DescriptorChangeSu
     return collectionKey.substring(0, Math.min(8, collectionKey.length())) + "_" + timestamp + extension;
   }
 
+  /**
+   * Only known extensions are kept: the name comes from the client and could otherwise contain
+   * path separators or an extension a browser would run, e.g. .html.
+   */
   private String getFileExtension(String filename) {
     if (filename != null && filename.contains(".")) {
-      return filename.substring(filename.lastIndexOf("."));
+      String extension = filename.substring(filename.lastIndexOf(".")).toLowerCase();
+      if (ALLOWED_FILE_EXTENSIONS.contains(extension)) {
+        return extension;
+      }
     }
-    return "csv";
+    return ".csv";
   }
 
   private String getUsername() {
