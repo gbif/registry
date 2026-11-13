@@ -31,6 +31,10 @@
       <id>gbif-thirdparty</id>
       <url>https://repository.gbif.org/content/repositories/thirdparty/</url>
     </repository>
+    <repository>
+      <id>gbif-snapshot</id>
+      <url>https://repository.gbif.org/repository/snapshots/</url>
+    </repository>
   </repositories>
 
   <distributionManagement>
