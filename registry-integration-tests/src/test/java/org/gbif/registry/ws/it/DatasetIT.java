@@ -114,6 +114,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
@@ -238,6 +239,20 @@ class DatasetIT extends NetworkEntityIT<Dataset> {
   @Override
   protected UUID keyForCreateAsEditorTest(Dataset entity) {
     return organizationResource.get(entity.getPublishingOrganizationKey()).getEndorsingNodeKey();
+  }
+
+  /** Stored metadata documents are served with a sandbox CSP, so a browser runs no script. */
+  @Test
+  public void testMetadataDocumentContentSecurityPolicy() throws Exception {
+    requestTestFixture
+        .getRequest("/dataset/" + UUID.randomUUID() + "/document")
+        .andExpect(header().string("Content-Security-Policy", "default-src 'none'; sandbox"));
+    requestTestFixture
+        .getRequest("/dataset/metadata/1/document")
+        .andExpect(header().string("Content-Security-Policy", "default-src 'none'; sandbox"));
+    requestTestFixture
+        .getRequest("/dataset/" + UUID.randomUUID())
+        .andExpect(header().doesNotExist("Content-Security-Policy"));
   }
 
   @Test
