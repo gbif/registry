@@ -24,7 +24,8 @@ import org.gbif.ws.WebApplicationException;
 import org.gbif.ws.security.LegacyRequestAuthorization;
 import org.gbif.ws.util.CommonWsUtils;
 
-import java.text.MessageFormat;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.util.Base64;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
@@ -77,35 +78,51 @@ public class LegacyAuthorizationServiceImpl implements LegacyAuthorizationServic
       return null;
     }
 
-    byte[] decryptedBytes = Base64.getDecoder().decode(authentication.substring(BASIC_AUTH_HEADER.length()));
-    String decrypted = new String(decryptedBytes);
+    final String decrypted;
+    try {
+      decrypted =
+          new String(
+              Base64.getDecoder().decode(authentication.substring(BASIC_AUTH_HEADER.length())),
+              StandardCharsets.UTF_8);
+    } catch (IllegalArgumentException e) {
+      LOG.warn("Invalid Basic Authentication encoding in legacy ws request");
+      throw new WebApplicationException(
+          "Invalid Basic Authentication syntax", HttpStatus.BAD_REQUEST);
+    }
+
     Iterator<String> iter = COLON_SPLITTER.split(decrypted).iterator();
+    final UUID user;
+    final String password;
     try {
       String rawUsername = iter.next();
       if (rawUsername.startsWith(IPT_AUTH_PREFIX)) {
         rawUsername = rawUsername.substring(IPT_AUTH_PREFIX.length());
       }
-      final UUID user = UUID.fromString(rawUsername);
-      final String password = iter.next();
-
-      String organizationKeyStr =
-          CommonWsUtils.getFirst(
-              httpRequest.getParameterMap(), LegacyResourceConstants.ORGANIZATION_KEY_PARAM);
-      final UUID organizationKey =
-          organizationKeyStr != null ? UUID.fromString(organizationKeyStr) : null;
-
-      return authenticateInternal(user, password, organizationKey);
+      password = iter.next();
+      user = UUID.fromString(rawUsername);
     } catch (NoSuchElementException e) {
-      LOG.warn("Invalid Basic Authentication syntax: {}", authentication);
+      // never log the credentials
+      LOG.warn("Invalid Basic Authentication syntax in legacy ws request");
       throw new WebApplicationException(
           "Invalid Basic Authentication syntax", HttpStatus.BAD_REQUEST);
     } catch (IllegalArgumentException e) {
-      // no valid username UUID
-      LOG.warn("Invalid username, UUID required: {}", decrypted);
-      throw new WebApplicationException(
-          MessageFormat.format("Invalid username, UUID required {0}", decrypted),
-          HttpStatus.UNAUTHORIZED);
+      // no valid username UUID, never log or return the credentials
+      LOG.warn("Invalid username in legacy ws request, UUID required");
+      throw invalidCredentials();
     }
+
+    final UUID organizationKey;
+    try {
+      String organizationKeyStr =
+          CommonWsUtils.getFirst(
+              httpRequest.getParameterMap(), LegacyResourceConstants.ORGANIZATION_KEY_PARAM);
+      organizationKey = organizationKeyStr != null ? UUID.fromString(organizationKeyStr) : null;
+    } catch (IllegalArgumentException e) {
+      throw new WebApplicationException(
+          "Invalid " + LegacyResourceConstants.ORGANIZATION_KEY_PARAM, HttpStatus.BAD_REQUEST);
+    }
+
+    return authenticateInternal(user, password, organizationKey);
   }
 
   private LegacyRequestAuthorization authenticateInternal(
@@ -113,33 +130,42 @@ public class LegacyAuthorizationServiceImpl implements LegacyAuthorizationServic
     // try to validate organization key first
     Organization org = organizationMapper.get(user);
     if (org != null) {
-      if (password.equals(org.getPassword())) {
+      if (passwordMatches(password, org.getPassword())) {
         return new LegacyRequestAuthorization(user, organizationKey);
-      } else {
-        LOG.error("Organization [{}] password does not match", user);
-        throw new WebApplicationException(
-            "Organization password does not match", HttpStatus.UNAUTHORIZED);
       }
-    } else {
-      // maybe an installation?
-      Installation installation = installationMapper.get(user);
-
-      if (installation != null) {
-        if (password.equals(installation.getPassword())) {
-          return new LegacyRequestAuthorization(user, organizationKey);
-        } else {
-          LOG.error("Installation [{}] password does not match", user);
-          throw new WebApplicationException(
-              MessageFormat.format("Installation password {0} does not match", user),
-              HttpStatus.UNAUTHORIZED);
-        }
-      } else {
-        LOG.error("Organization or installation [{}] was not found", user);
-        throw new WebApplicationException(
-            MessageFormat.format("Organization or installation {0} was not found", user),
-            HttpStatus.UNAUTHORIZED);
-      }
+      LOG.warn("Organization [{}] password does not match", user);
+      throw invalidCredentials();
     }
+
+    // maybe an installation?
+    Installation installation = installationMapper.get(user);
+    if (installation != null) {
+      if (passwordMatches(password, installation.getPassword())) {
+        return new LegacyRequestAuthorization(user, organizationKey);
+      }
+      LOG.warn("Installation [{}] password does not match", user);
+      throw invalidCredentials();
+    }
+
+    LOG.warn("Organization or installation [{}] was not found", user);
+    throw invalidCredentials();
+  }
+
+  /** Constant time comparison, so the response time does not tell how much of it matched. */
+  private static boolean passwordMatches(String provided, String expected) {
+    if (provided == null || expected == null) {
+      return false;
+    }
+    return MessageDigest.isEqual(
+        provided.getBytes(StandardCharsets.UTF_8), expected.getBytes(StandardCharsets.UTF_8));
+  }
+
+  /**
+   * Same response for an unknown entity, a wrong password and an invalid user name, so the
+   * response does not tell which organization and installation keys exist.
+   */
+  private static WebApplicationException invalidCredentials() {
+    return new WebApplicationException("Invalid credentials", HttpStatus.UNAUTHORIZED);
   }
 
   /**
