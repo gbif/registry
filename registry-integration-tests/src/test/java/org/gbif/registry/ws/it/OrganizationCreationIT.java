@@ -54,6 +54,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 
 import static org.gbif.api.vocabulary.AppRole.APP;
 import static org.gbif.api.vocabulary.UserRole.REGISTRY_ADMIN;
+import static org.gbif.api.vocabulary.UserRole.REGISTRY_EDITOR;
 import static org.gbif.api.vocabulary.UserRole.USER;
 import static org.gbif.registry.ws.it.fixtures.TestConstants.IT_APP_KEY;
 import static org.gbif.registry.ws.it.fixtures.TestConstants.TEST_ADMIN;
@@ -304,6 +305,31 @@ public class OrganizationCreationIT extends BaseItTest {
         nodeResource
             .endorsedOrganizations(organization.getEndorsingNodeKey(), new PagingRequest())
             .getCount());
+  }
+
+  /** Endorsing is a node decision: rights on the organization itself are not enough. */
+  @Test
+  public void testEndorsementByEditorNeedsNodeRights() {
+    Organization organization =
+        prepareOrganization(
+            prepareNode(nodeResource, testDataFactory), organizationResource, testDataFactory);
+    UUID organizationKey = organization.getKey();
+
+    setupPrincipal(TEST_EDITOR, REGISTRY_EDITOR);
+    userMapper.addEditorRight(TEST_EDITOR, organizationKey);
+    assertEquals(
+        HttpStatus.FORBIDDEN,
+        organizationResource.confirmEndorsementEndpoint(organizationKey).getStatusCode());
+    assertEquals(
+        HttpStatus.FORBIDDEN,
+        organizationResource.revokeEndorsementEndpoint(organizationKey).getStatusCode());
+    assertFalse(organizationResource.get(organizationKey).isEndorsementApproved());
+
+    userMapper.addEditorRight(TEST_EDITOR, organization.getEndorsingNodeKey());
+    assertEquals(
+        HttpStatus.NO_CONTENT,
+        organizationResource.confirmEndorsementEndpoint(organizationKey).getStatusCode());
+    assertTrue(organizationResource.get(organizationKey).isEndorsementApproved());
   }
 
   @Test
