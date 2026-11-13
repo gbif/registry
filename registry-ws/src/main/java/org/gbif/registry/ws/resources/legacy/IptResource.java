@@ -351,11 +351,11 @@ public class IptResource {
       }
       // Dataset can only have 1 installation key, log if the hosting installation is being changed
       // Reason: IPT versions before 2.0.5 didn't supply the parameter iptKey on dataset updates
-      else if (dataset.getInstallationKey() != existing.getInstallationKey()) {
+      else if (!dataset.getInstallationKey().equals(existing.getInstallationKey())) {
         LOG.debug(
             "The dataset's technical installation is being changed from {} to {}",
-            dataset.getInstallationKey(),
-            existing.getInstallationKey());
+            existing.getInstallationKey(),
+            dataset.getInstallationKey());
       }
       // populate publishing organization from credentials
       dataset.setPublishingOrganizationKey(extractOrgKeyFromSecurity(authentication));
