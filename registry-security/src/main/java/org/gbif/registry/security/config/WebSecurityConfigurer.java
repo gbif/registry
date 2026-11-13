@@ -21,6 +21,7 @@ import org.gbif.registry.security.WebApplicationExceptionFilter;
 import org.gbif.registry.security.grscicoll.GrSciCollEditorAuthorizationFilter;
 import org.gbif.registry.security.jwt.JwtRequestFilter;
 import org.gbif.registry.security.precheck.AuthPreCheckCreationRequestFilter;
+import org.gbif.registry.security.util.RequestPathUtils;
 import org.gbif.ws.server.filter.AppIdentityFilter;
 import org.gbif.ws.server.filter.HttpServletRequestWrapperFilter;
 import org.gbif.ws.server.filter.IdentityFilter;
@@ -28,6 +29,7 @@ import org.gbif.ws.server.filter.RequestHeaderParamUpdateFilter;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.regex.Pattern;
 
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.ApplicationContext;
@@ -49,10 +51,14 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.csrf.CsrfFilter;
 import org.springframework.security.web.firewall.HttpFirewall;
 import org.springframework.security.web.firewall.StrictHttpFirewall;
+import org.springframework.security.web.header.writers.DelegatingRequestMatcherHeaderWriter;
+import org.springframework.security.web.header.writers.StaticHeadersWriter;
 import org.springframework.validation.beanvalidation.MethodValidationPostProcessor;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 import static org.springframework.security.core.context.SecurityContextHolder.MODE_INHERITABLETHREADLOCAL;
 
@@ -60,6 +66,11 @@ import static org.springframework.security.core.context.SecurityContextHolder.MO
 @EnableWebSecurity
 @EnableMethodSecurity(securedEnabled = true, jsr250Enabled = true, prePostEnabled = true)
 public class WebSecurityConfigurer {
+
+  static final String METADATA_DOCUMENT_CONTENT_SECURITY_POLICY = "default-src 'none'; sandbox";
+  private static final Pattern METADATA_DOCUMENT_PATTERN =
+      Pattern.compile("^/dataset/(metadata/)?[^/]+/document$", Pattern.CASE_INSENSITIVE);
+
 
   private final ApplicationContext context;
 
@@ -121,6 +132,13 @@ public class WebSecurityConfigurer {
       .securityMatcher(request -> !request.getRequestURI().startsWith("/actuator"))
       .httpBasic(AbstractHttpConfigurer::disable)
       .csrf(AbstractHttpConfigurer::disable)
+      // metadata documents are stored as uploaded by publishers and served as XML: a browser
+      // opening one must not run scripts it contains
+      .headers(headers -> headers.addHeaderWriter(
+        new DelegatingRequestMatcherHeaderWriter(
+          WebSecurityConfigurer::isMetadataDocumentRequest,
+          new StaticHeadersWriter(
+            "Content-Security-Policy", METADATA_DOCUMENT_CONTENT_SECURITY_POLICY))))
       .cors(cors -> cors.configurationSource(corsConfigurationSource()))
       .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
       .securityContext(securityContext -> securityContext
@@ -145,6 +163,12 @@ public class WebSecurityConfigurer {
         .addFilterAfter(context.getBean("grSciCollEditorAuthorizationFilter", GrSciCollEditorAuthorizationFilter.class), EditorAuthorizationFilter.class)
         .addFilterAfter(context.getBean("resourceNotFoundRequestFilter", ResourceNotFoundRequestFilter.class), GrSciCollEditorAuthorizationFilter.class);
     return http.build();
+  }
+
+  /** GET /dataset/{key}/document and /dataset/metadata/{key}/document. */
+  static boolean isMetadataDocumentRequest(HttpServletRequest request) {
+    return "GET".equalsIgnoreCase(request.getMethod())
+        && METADATA_DOCUMENT_PATTERN.matcher(RequestPathUtils.normalizedPath(request)).matches();
   }
 
   @Bean
