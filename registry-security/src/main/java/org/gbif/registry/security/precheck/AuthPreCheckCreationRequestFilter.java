@@ -34,6 +34,7 @@ import org.gbif.registry.persistence.mapper.collections.InstitutionMapper;
 import org.gbif.registry.persistence.mapper.params.OrganizationListParams;
 import org.gbif.registry.security.AuthenticationFacade;
 import org.gbif.registry.security.grscicoll.GrSciCollEditorAuthorizationFilter;
+import org.gbif.registry.security.util.RequestPathUtils;
 import org.gbif.ws.server.GbifHttpServletRequestWrapper;
 
 import java.io.IOException;
@@ -313,7 +314,7 @@ public class AuthPreCheckCreationRequestFilter extends OncePerRequestFilter {
 
   @VisibleForTesting
   Optional<Resource> getResourceToCreate(HttpServletRequest request) {
-    final String path = request.getRequestURI();
+    final String path = RequestPathUtils.normalizedPath(request);
 
     if (path.contains("/machineTag")) {
       return Optional.of(new Resource(MACHINE_TAG));

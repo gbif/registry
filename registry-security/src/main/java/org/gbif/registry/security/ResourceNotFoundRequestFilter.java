@@ -13,6 +13,7 @@
  */
 package org.gbif.registry.security;
 
+import org.gbif.registry.security.util.RequestPathUtils;
 import org.gbif.ws.WebApplicationException;
 
 import java.io.IOException;
@@ -40,7 +41,7 @@ public class ResourceNotFoundRequestFilter extends OncePerRequestFilter {
 
   private static final Pattern ENTITY_PATTERN =
       Pattern.compile(
-          ".*/(organization|dataset|installation|node|network|institution|collection)/([a-f0-9-]+)/.+$");
+          ".*/(organization|dataset|installation|node|network|institution|collection)/([a-fA-F0-9-]+)/.+$");
 
   private final ResourceNotFoundService resourceNotFoundService;
 
@@ -53,7 +54,7 @@ public class ResourceNotFoundRequestFilter extends OncePerRequestFilter {
       HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
       throws IOException, ServletException {
 
-    Matcher entityMatcher = ENTITY_PATTERN.matcher(request.getRequestURI());
+    Matcher entityMatcher = ENTITY_PATTERN.matcher(RequestPathUtils.normalizedPath(request));
     if (request.getMethod().equalsIgnoreCase("GET") && entityMatcher.matches()) {
       Resource resource = Resource.fromString(entityMatcher.group(1).toUpperCase());
 
