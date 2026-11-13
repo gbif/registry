@@ -99,6 +99,21 @@ public class CsvWriterTest {
     assertEquals(downloadStatistics.getMonth(), Integer.parseInt(line[4]));
   }
 
+  /** Cells that a spreadsheet would run as a formula are written as text. */
+  @Test
+  public void cleanStringFormulaTest() {
+    assertEquals("'=HYPERLINK(\"http://x\")", CsvWriter.CleanStringProcessor.cleanString("=HYPERLINK(\"http://x\")"));
+    assertEquals("'+cmd|' /C calc'!A0", CsvWriter.CleanStringProcessor.cleanString("+cmd|' /C calc'!A0"));
+    assertEquals("'-2+3+cmd|' /C calc'!A0", CsvWriter.CleanStringProcessor.cleanString("-2+3+cmd|' /C calc'!A0"));
+    assertEquals("'@SUM(1+1)", CsvWriter.CleanStringProcessor.cleanString("@SUM(1+1)"));
+    // tabs are replaced by spaces, so they cannot hide a formula either
+    assertEquals(" =1+1", CsvWriter.CleanStringProcessor.cleanString("\t=1+1"));
+    // numbers, phone numbers and ordinary text are not changed
+    assertEquals("+45 35 32 14 70", CsvWriter.CleanStringProcessor.cleanString("+45 35 32 14 70"));
+    assertEquals("-12.5", CsvWriter.CleanStringProcessor.cleanString("-12.5"));
+    assertEquals("Natural History Museum", CsvWriter.CleanStringProcessor.cleanString("Natural History Museum"));
+  }
+
   @Test
   public void downloadStatisticsTest() {
     // Test data
