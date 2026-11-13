@@ -13,13 +13,16 @@
  */
 package org.gbif.registry.ws.it.fixtures;
 
-import org.gbif.ws.security.Md5EncodeService;
+import org.gbif.ws.security.GbifAuthUtils;
 import org.gbif.ws.security.RequestDataToSign;
 import org.gbif.ws.security.SigningService;
 
 import java.io.ByteArrayInputStream;
 import java.net.URI;
+import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.time.Clock;
+import java.util.Base64;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -28,6 +31,7 @@ import java.util.stream.Collectors;
 
 import javax.xml.transform.stream.StreamSource;
 
+import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.ApplicationContext;
@@ -50,6 +54,7 @@ import static org.gbif.registry.ws.it.fixtures.TestConstants.IT_APP_KEY;
 import static org.gbif.registry.ws.it.fixtures.TestConstants.TEST_PASSWORD;
 import static org.gbif.ws.util.SecurityConstants.GBIF_SCHEME;
 import static org.gbif.ws.util.SecurityConstants.HEADER_CONTENT_MD5;
+import static org.gbif.ws.util.SecurityConstants.HEADER_GBIF_DATE;
 import static org.gbif.ws.util.SecurityConstants.HEADER_GBIF_USER;
 import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 import static org.springframework.http.HttpHeaders.CONTENT_TYPE;
@@ -76,7 +81,6 @@ public class RequestTestFixture {
 
   private MockMvc mvc;
   private SigningService signingService;
-  private Md5EncodeService md5EncodeService;
   @Qualifier("registryObjectMapper") private ObjectMapper objectMapper;
   private Jaxb2Marshaller marshaller;
 
@@ -100,10 +104,6 @@ public class RequestTestFixture {
     this.signingService = signingService;
   }
 
-  @Autowired
-  public void setMd5EncodeService(Md5EncodeService md5EncodeService) {
-    this.md5EncodeService = md5EncodeService;
-  }
 
   @Autowired
   public void setObjectMapper(@Qualifier("registryObjectMapper") ObjectMapper objectMapper) {
@@ -129,6 +129,10 @@ public class RequestTestFixture {
 
   public ResultActions postRequest(String path) throws Exception {
     return getMvc().perform(post(path));
+  }
+
+  public ResultActions deleteRequest(String path) throws Exception {
+    return getMvc().perform(delete(path));
   }
 
   public ResultActions deleteRequest(String username, String path) throws Exception {
@@ -198,6 +202,10 @@ public class RequestTestFixture {
             .contentType(APPLICATION_FORM_URLENCODED)
             .accept(responseType)
             .with(httpBasic(username.toString(), password)));
+  }
+
+  public ResultActions deleteRequestUrlEncoded(String path) throws Exception {
+    return getMvc().perform(delete(path).contentType(APPLICATION_FORM_URLENCODED));
   }
 
   public ResultActions deleteRequestUrlEncoded(Object username, String password, String path)
@@ -279,8 +287,17 @@ public class RequestTestFixture {
 
   public ResultActions getSignedRequest(String username, String path, Map<String, String> params)
       throws Exception {
+    String query =
+        params.entrySet().stream()
+            .map(
+                e ->
+                    URLEncoder.encode(e.getKey(), StandardCharsets.UTF_8)
+                        + "="
+                        + URLEncoder.encode(e.getValue(), StandardCharsets.UTF_8))
+            .collect(Collectors.joining("&"));
     HttpHeaders authHeaders =
-        prepareGbifAuthorizationHeadersNoContent(GET, path, username, IT_APP_KEY);
+        prepareGbifAuthorizationHeadersNoContent(
+            GET, query.isEmpty() ? path : path + "?" + query, username, IT_APP_KEY);
 
     Map<String, List<String>> queryParams =
         params.entrySet().stream()
@@ -328,6 +345,7 @@ public class RequestTestFixture {
     return actions.andReturn().getResponse().getHeader(header);
   }
 
+  /** Headers of a request signed with an app key, with a JSON body. */
   public HttpHeaders prepareGbifAuthorizationHeadersWithContent(
       RequestMethod method,
       String requestUrl,
@@ -336,22 +354,19 @@ public class RequestTestFixture {
       String user,
       String appKey)
       throws Exception {
-    HttpHeaders result = new HttpHeaders();
-
-    String contentAsString = objectMapper.writeValueAsString(data);
-    String contentMd5 = md5EncodeService.encode(contentAsString);
-    RequestDataToSign requestDataToSign =
-        buildStringToSign(method.name(), requestUrl, contentType.toString(), contentMd5, user);
-    String sign = signingService.buildSignature(requestDataToSign, appKey);
-
-    result.add(AUTHORIZATION, GBIF_SCHEME + " " + appKey + ":" + sign);
-    result.add(HEADER_CONTENT_MD5, contentMd5);
-    result.add(HEADER_GBIF_USER, user);
-    result.add(CONTENT_TYPE, APPLICATION_JSON_VALUE);
-
-    return result;
+    // data is the body as sent, serialize it only if it is not already a string
+    String content = data instanceof String ? (String) data : objectMapper.writeValueAsString(data);
+    return prepareGbifAuthorizationHeaders(
+        method,
+        requestUrl,
+        // MockMvc adds the charset of a String body, the signature covers the header as sent
+        APPLICATION_JSON_VALUE + ";charset=UTF-8",
+        content.getBytes(StandardCharsets.UTF_8),
+        user,
+        appKey);
   }
 
+  /** Headers of a request signed with an app key, with a plain text body. */
   public HttpHeaders prepareGbifAuthorizationHeadersWithContentAsPlainText(
       RequestMethod method,
       String requestUrl,
@@ -359,46 +374,64 @@ public class RequestTestFixture {
       Object data,
       String user,
       String appKey) {
-    HttpHeaders result = new HttpHeaders();
-
-    String contentAsString = data.toString();
-    String contentMd5 = md5EncodeService.encode(contentAsString);
-    RequestDataToSign requestDataToSign =
-        buildStringToSign(method.name(), requestUrl, contentType.toString(), contentMd5, user);
-    String sign = signingService.buildSignature(requestDataToSign, appKey);
-
-    result.add(AUTHORIZATION, GBIF_SCHEME + " " + appKey + ":" + sign);
-    result.add(HEADER_CONTENT_MD5, contentMd5);
-    result.add(HEADER_GBIF_USER, user);
-    result.add(CONTENT_TYPE, TEXT_PLAIN_VALUE);
-
-    return result;
+    return prepareGbifAuthorizationHeaders(
+        method,
+        requestUrl,
+        TEXT_PLAIN_VALUE + ";charset=UTF-8",
+        data.toString().getBytes(StandardCharsets.UTF_8),
+        user,
+        appKey);
   }
 
+  /** Headers of a request signed with an app key, without body. */
   public HttpHeaders prepareGbifAuthorizationHeadersNoContent(
       RequestMethod method, String requestUrl, String user, String appKey) {
-    HttpHeaders result = new HttpHeaders();
-
-    RequestDataToSign requestDataToSign =
-        buildStringToSign(method.name(), requestUrl, null, null, user);
-    String sign = signingService.buildSignature(requestDataToSign, appKey);
-
-    result.add(AUTHORIZATION, GBIF_SCHEME + " " + appKey + ":" + sign);
-    result.add(HEADER_GBIF_USER, user);
-
-    return result;
+    return prepareGbifAuthorizationHeaders(method, requestUrl, null, null, user, appKey);
   }
 
-  public RequestDataToSign buildStringToSign(
-      String method, String requestUrl, String contentType, String contentMd5, String user) {
+  /**
+   * Signs a request as described in gbif-common-ws' README (GBIF request signing): the canonical
+   * URL, content type, Content-MD5 of the exact body, user and date are signed.
+   *
+   * @param requestUrl path of the request, with its query string if any
+   */
+  private HttpHeaders prepareGbifAuthorizationHeaders(
+      RequestMethod method,
+      String requestUrl,
+      String contentType,
+      byte[] body,
+      String user,
+      String appKey) {
+    String path = requestUrl;
+    String query = null;
+    int queryStart = requestUrl.indexOf('?');
+    if (queryStart >= 0) {
+      path = requestUrl.substring(0, queryStart);
+      query = requestUrl.substring(queryStart + 1);
+    }
+
+    String date = GbifAuthUtils.formatDate(Clock.systemUTC());
+    String contentMd5 = body != null ? Base64.getEncoder().encodeToString(DigestUtils.md5(body)) : null;
+
     RequestDataToSign requestDataToSign = new RequestDataToSign();
-
-    requestDataToSign.setMethod(method);
-    requestDataToSign.setUrl(requestUrl);
-    requestDataToSign.setUser(user);
-    requestDataToSign.setContentType(contentType);
+    requestDataToSign.setMethod(method.name());
+    requestDataToSign.setUrl(GbifAuthUtils.getCanonicalizedUrl(path, query));
+    requestDataToSign.setContentType(contentType != null ? contentType.toLowerCase() : null);
     requestDataToSign.setContentTypeMd5(contentMd5);
+    requestDataToSign.setUser(user);
+    requestDataToSign.setDate(date);
+    String sign = signingService.buildSignature(requestDataToSign, appKey);
 
-    return requestDataToSign;
+    HttpHeaders result = new HttpHeaders();
+    result.add(AUTHORIZATION, GBIF_SCHEME + " " + appKey + ":" + sign);
+    result.add(HEADER_GBIF_USER, user);
+    result.add(HEADER_GBIF_DATE, date);
+    if (contentMd5 != null) {
+      result.add(HEADER_CONTENT_MD5, contentMd5);
+    }
+    if (contentType != null) {
+      result.add(CONTENT_TYPE, contentType);
+    }
+    return result;
   }
 }

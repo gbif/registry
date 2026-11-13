@@ -20,6 +20,7 @@ import org.gbif.api.vocabulary.collections.CollectionFacetParameter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.function.Function;
 
 import org.springframework.core.MethodParameter;
@@ -85,7 +86,11 @@ public class CollectionDescriptorsSearchRequestHandlerMethodArgumentResolver
 
     final String checklistKey = getFirstIgnoreCase(params, "checklistkey");
     if (checklistKey != null && !checklistKey.isEmpty()) {
-      searchRequest.setChecklistKey(checklistKey);
+      try {
+        searchRequest.setChecklistKey(UUID.fromString(checklistKey));
+      } catch (IllegalArgumentException e) {
+        throw new IllegalArgumentException("Invalid checklistKey, a UUID is expected: " + checklistKey);
+      }
     }
 
     String[] dateIdentifiedParams = params.get("dateIdentified".toLowerCase());

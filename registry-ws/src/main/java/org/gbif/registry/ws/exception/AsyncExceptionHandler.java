@@ -16,6 +16,8 @@ package org.gbif.registry.ws.exception;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutionException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -30,6 +32,8 @@ import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
  */
 @ControllerAdvice
 public class AsyncExceptionHandler {
+
+  private static final Logger LOG = LoggerFactory.getLogger(AsyncExceptionHandler.class);
 
   private final MeterRegistry meterRegistry;
 
@@ -47,8 +51,9 @@ public class AsyncExceptionHandler {
       return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(cause.getMessage());
     }
     meterRegistry.counter("registry.async.exceptions", "type", "completion", "cause", causeClass, "status", "503").increment();
-    String message = cause == null ? ex.getMessage() : cause.getMessage();
-    return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(message);
+    // the message of an internal error is logged, not returned
+    LOG.error("Async request failed", cause == null ? ex : cause);
+    return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body("Service unavailable");
   }
 
   @ExceptionHandler(ExecutionException.class)
@@ -60,7 +65,8 @@ public class AsyncExceptionHandler {
       return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(cause.getMessage());
     }
     meterRegistry.counter("registry.async.exceptions", "type", "execution", "cause", causeClass, "status", "503").increment();
-    String message = cause == null ? ex.getMessage() : cause.getMessage();
-    return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(message);
+    // the message of an internal error is logged, not returned
+    LOG.error("Async request failed", cause == null ? ex : cause);
+    return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body("Service unavailable");
   }
 }

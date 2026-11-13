@@ -37,6 +37,7 @@ import org.springframework.http.CacheControl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -47,6 +48,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import io.swagger.v3.oas.annotations.Hidden;
 
+import static org.gbif.registry.security.UserRoles.IPT_ROLE;
 import static org.gbif.registry.ws.util.LegacyResourceUtils.extractOrgKeyFromSecurity;
 
 /**
@@ -82,6 +84,7 @@ public class IptResource {
    * @param installation {@link LegacyInstallation} with HTTP form parameters
    * @return {@link ResponseEntity} with {@link HttpStatus#CREATED} if successful
    */
+  @Secured(IPT_ROLE)
   @PostMapping(
       value = "register",
       consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE,
@@ -146,6 +149,7 @@ public class IptResource {
    * @param installation {@link LegacyInstallation} with HTTP form parameters
    * @return {@link ResponseEntity} with {@link HttpStatus#NO_CONTENT} if successful
    */
+  @Secured(IPT_ROLE)
   @PostMapping(value = "update/{key}", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
   public ResponseEntity<Void> updateIpt(
       @PathVariable("key") UUID installationKey,
@@ -231,6 +235,7 @@ public class IptResource {
    * @param dataset LegacyDataset with HTTP form parameters
    * @return {@link ResponseEntity} with {@link HttpStatus#CREATED} if successful
    */
+  @Secured(IPT_ROLE)
   @PostMapping(
       value = "resource",
       consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE,
@@ -322,6 +327,7 @@ public class IptResource {
    * @param dataset {@link LegacyDataset} with HTTP form parameters
    * @return {@link ResponseEntity} with {@link HttpStatus#CREATED} (201) if successful
    */
+  @Secured(IPT_ROLE)
   @PostMapping(value = "resource/{key}", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
   public ResponseEntity<Void> updateDataset(
       @PathVariable("key") UUID datasetKey,
@@ -345,11 +351,11 @@ public class IptResource {
       }
       // Dataset can only have 1 installation key, log if the hosting installation is being changed
       // Reason: IPT versions before 2.0.5 didn't supply the parameter iptKey on dataset updates
-      else if (dataset.getInstallationKey() != existing.getInstallationKey()) {
+      else if (!dataset.getInstallationKey().equals(existing.getInstallationKey())) {
         LOG.debug(
             "The dataset's technical installation is being changed from {} to {}",
-            dataset.getInstallationKey(),
-            existing.getInstallationKey());
+            existing.getInstallationKey(),
+            dataset.getInstallationKey());
       }
       // populate publishing organization from credentials
       dataset.setPublishingOrganizationKey(extractOrgKeyFromSecurity(authentication));
@@ -433,6 +439,7 @@ public class IptResource {
    * @return {@link ResponseEntity} with {@link HttpStatus#OK} if successful
    */
   @SuppressWarnings("rawtypes")
+  @Secured(IPT_ROLE)
   @DeleteMapping("resource/{key}")
   public ResponseEntity deleteDataset(@PathVariable("key") UUID datasetKey) {
     if (datasetKey != null) {

@@ -30,6 +30,7 @@ import org.gbif.ws.util.CommonWsUtils;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.regex.Pattern;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,6 +56,8 @@ import jakarta.servlet.http.HttpServletResponse;
 public class LegacyOrganizationResource {
 
   private static final Logger LOG = LoggerFactory.getLogger(LegacyOrganizationResource.class);
+  private static final Pattern JSONP_CALLBACK_PATTERN =
+      Pattern.compile("^[A-Za-z_$][A-Za-z0-9_$.]{0,127}$");
 
   private final OrganizationService organizationService;
   private final NodeService nodeService;
@@ -174,12 +177,12 @@ public class LegacyOrganizationResource {
                 .body(new ErrorResponse("Password reminder failed"));
           }
           LOG.debug("Password reminder sent to: {}", emailAddress);
+          // the request needs no authentication, so the e-mail address is not returned
           return ResponseEntity.status(HttpStatus.OK)
               .cacheControl(CacheControl.noCache())
               .body(
-                  "<html><body><b>The password reminder was sent successfully to the email: </b>"
-                      + emailAddress
-                      + "</body></html>");
+                  "<html><body><b>The password reminder was sent successfully to the"
+                      + " organization's primary contact</b></body></html>");
         }
       }
     }
@@ -192,6 +195,12 @@ public class LegacyOrganizationResource {
 
     // callback?
     if (callback != null) {
+      // the callback is written as JavaScript in the response, it must be a plain function name
+      if (!JSONP_CALLBACK_PATTERN.matcher(callback).matches()) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+            .cacheControl(CacheControl.noCache())
+            .body(new ErrorResponse("Invalid callback"));
+      }
       return new JSONPObject(callback, org);
     }
     // simple read?

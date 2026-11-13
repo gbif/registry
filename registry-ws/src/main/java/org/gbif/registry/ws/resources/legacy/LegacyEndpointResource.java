@@ -37,6 +37,7 @@ import org.springframework.http.CacheControl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.Authentication;
 import org.springframework.util.FileCopyUtils;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -52,6 +53,8 @@ import com.google.common.collect.Lists;
 import io.swagger.v3.oas.annotations.Hidden;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.constraints.NotNull;
+
+import static org.gbif.registry.security.UserRoles.IPT_ROLE;
 
 /**
  * Handle all legacy web service Endpoint requests (excluding IPT requests), previously handled by
@@ -78,6 +81,7 @@ public class LegacyEndpointResource {
    * @param endpoint LegacyEndpoint with HTTP form parameters
    * @return {@link ResponseEntity} with {@link HttpStatus#CREATED} if successful
    */
+  @Secured(IPT_ROLE)
   @PostMapping(
       value = "service",
       consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE,
@@ -113,6 +117,7 @@ public class LegacyEndpointResource {
    * @param datasetKey dataset key (UUID) coming in as query param
    * @return {@link ResponseEntity} with {@link HttpStatus#OK} if successful
    */
+  @Secured(IPT_ROLE)
   @DeleteMapping(value = "service", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
   public ResponseEntity deleteAllDatasetEndpoints(
       @RequestParam(value = "resourceKey", required = false) UUID datasetKey) {

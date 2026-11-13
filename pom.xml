@@ -31,6 +31,10 @@
       <id>gbif-thirdparty</id>
       <url>https://repository.gbif.org/content/repositories/thirdparty/</url>
     </repository>
+    <repository>
+      <id>gbif-snapshot</id>
+      <url>https://repository.gbif.org/repository/snapshots/</url>
+    </repository>
   </repositories>
 
   <distributionManagement>
@@ -83,13 +87,13 @@
     <elasticsearch.version>9.0.4</elasticsearch.version>
 
     <!-- GBIF -->
-    <gbif-api.version>2.4.29</gbif-api.version>
+    <gbif-api.version>2.4.30-SNAPSHOT</gbif-api.version>
     <gbif-common.version>0.60</gbif-common.version>
     <gbif-common-mybatis.version>2.0.0</gbif-common-mybatis.version>
-    <gbif-common-ws.version>2.1.1</gbif-common-ws.version>
-    <gbif-directory.version>3.8</gbif-directory.version>
+    <gbif-common-ws.version>2.1.4-PR-33-SNAPSHOT</gbif-common-ws.version>
+    <gbif-directory.version>3.9-SNAPSHOT</gbif-directory.version>
     <gbif-doi.version>3.0.3</gbif-doi.version>
-    <gbif-download-query-tools.version>2.0.12</gbif-download-query-tools.version>
+    <gbif-download-query-tools.version>2.0.13-SNAPSHOT</gbif-download-query-tools.version>
     <gbif-httputils.version>0.10</gbif-httputils.version>
     <gbif-metadata-profile.version>3.0</gbif-metadata-profile.version>
     <gbif-parsers.version>0.67</gbif-parsers.version>
@@ -130,7 +134,7 @@
     <super-csv.version>2.4.0</super-csv.version>
     <opencsv.version>5.12.0</opencsv.version>
     <geojson.version>1.14</geojson.version>
-    <avro.version>1.11.3</avro.version>
+    <avro.version>1.11.5</avro.version>
     <jakarta.xml.bind-api.version>4.0.4</jakarta.xml.bind-api.version>
     <swagger-annotations.version>2.2.41</swagger-annotations.version>
     <resilience4j.version>2.3.0</resilience4j.version>
@@ -180,7 +184,7 @@
     <!-- Plugin versions -->
     <spring-boot-maven-plugin.version>${spring-boot.version}</spring-boot-maven-plugin.version>
     <maven-shade-plugin.version>3.6.1</maven-shade-plugin.version>
-    <parquet.version>1.12.3</parquet.version>
+    <parquet.version>1.17.0</parquet.version>
   </properties>
 
   <dependencyManagement>

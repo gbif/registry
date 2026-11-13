@@ -47,7 +47,7 @@ public class DataCiteConfiguration {
   public String toString() {
     return new StringJoiner(", ", DataCiteConfiguration.class.getSimpleName() + "[", "]")
         .add("username='" + username + "'")
-        .add("password='" + password + "'")
+        .add("password='***'")
         .add("api=" + api)
         .add("threads=" + threads)
         .add("timeout=" + timeout)

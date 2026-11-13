@@ -706,8 +706,20 @@ public class CsvWriter<T> {
 
     private static final Pattern DELIMETERS_MATCH_PATTERN = Pattern.compile(DELIMETERS_MATCH);
 
+    // spreadsheet applications run a cell starting with one of these as a formula
+    private static final Pattern FORMULA_START_PATTERN = Pattern.compile("^[=+\\-@]");
+
+    // numbers and phone numbers, e.g. -12.5 or +45 35 32 14 70, cannot be harmful formulas
+    private static final Pattern NUMBER_LIKE_PATTERN = Pattern.compile("^[+-]?[0-9 ().-]+$");
+
     public static String cleanString(String value) {
-      return DELIMETERS_MATCH_PATTERN.matcher(value).replaceAll(" ");
+      String cleaned = DELIMETERS_MATCH_PATTERN.matcher(value).replaceAll(" ");
+      if (FORMULA_START_PATTERN.matcher(cleaned).find()
+          && !NUMBER_LIKE_PATTERN.matcher(cleaned).matches()) {
+        // the quote makes spreadsheet applications read the cell as text
+        return "'" + cleaned;
+      }
+      return cleaned;
     }
 
     @Override

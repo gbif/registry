@@ -20,6 +20,8 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class RegistryPasswordEncoderTest {
 
@@ -58,5 +60,15 @@ public class RegistryPasswordEncoderTest {
     String encoded2 = encoder.encode(password, encoded1);
 
     assertEquals(encoded1, encoded2);
+  }
+
+  /** The hash is compared exactly: its alphabet is case sensitive. */
+  @ParameterizedTest
+  @MethodSource("testData")
+  public void testMatches(String password, String hash) {
+    assertTrue(encoder.matches(password, hash));
+    assertFalse(encoder.matches(password + "x", hash));
+    assertFalse(encoder.matches(password, hash.substring(0, 12) + hash.substring(12).toUpperCase()));
+    assertFalse(encoder.matches(password, null));
   }
 }

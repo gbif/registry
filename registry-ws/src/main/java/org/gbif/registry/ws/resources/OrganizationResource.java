@@ -42,9 +42,9 @@ import org.gbif.registry.security.SecurityContextCheck;
 import org.gbif.registry.service.WithMyBatis;
 import org.gbif.registry.ws.surety.OrganizationEndorsementService;
 
+import java.security.SecureRandom;
 import java.util.List;
 import java.util.Optional;
-import java.util.Random;
 import java.util.UUID;
 
 import org.apache.ibatis.annotations.Param;
@@ -115,6 +115,7 @@ public class OrganizationResource
 
   public static final int MINIMUM_PASSWORD_SIZE = 12;
   public static final int MAXIMUM_PASSWORD_SIZE = 15;
+  private static final SecureRandom SECURE_RANDOM = new SecureRandom();
   private static final String ALLOWED_CHARACTERS =
       "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";
 
@@ -279,11 +280,10 @@ public class OrganizationResource
    */
   @VisibleForTesting
   protected static String generatePassword() {
-    Random random = new Random();
-    // randomly calculate the size of the password, between 0 and MAXIMUM_PASSWORD_SIZE
-    int size = random.nextInt(MAXIMUM_PASSWORD_SIZE);
-    // ensure the size is at least greater than or equal to MINIMUM_PASSWORD_SIZE
-    size = Math.max(size, MINIMUM_PASSWORD_SIZE);
+    // the password is a shared secret used to authenticate IPTs, it must not be predictable
+    SecureRandom random = SECURE_RANDOM;
+    // size between MINIMUM_PASSWORD_SIZE (included) and MAXIMUM_PASSWORD_SIZE (excluded)
+    int size = MINIMUM_PASSWORD_SIZE + random.nextInt(MAXIMUM_PASSWORD_SIZE - MINIMUM_PASSWORD_SIZE);
 
     // generate the password
     StringBuilder password = new StringBuilder();
@@ -705,9 +705,27 @@ public class OrganizationResource
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
   public ResponseEntity<Void> confirmEndorsementEndpoint(
       @PathVariable("key") UUID organizationKey) {
+    if (!canEndorse(organizationKey)) {
+      return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+    }
     boolean isEndorsed = confirmEndorsement(organizationKey);
     return (isEndorsed ? ResponseEntity.noContent() : ResponseEntity.status(HttpStatus.BAD_REQUEST))
         .build();
+  }
+
+  /**
+   * Endorsement is decided by the endorsing node: editors need rights on the node, rights on the
+   * organization itself are not enough.
+   */
+  private boolean canEndorse(UUID organizationKey) {
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    if (SecurityContextCheck.checkUserInRole(authentication, ADMIN_ROLE)) {
+      return true;
+    }
+    Organization organization = super.get(organizationKey);
+    checkNotNull(organization, "Organization not found");
+    return userAuthService.allowedToModifyEntity(
+        authentication.getName(), organization.getEndorsingNodeKey());
   }
 
   @Override
@@ -725,6 +743,9 @@ public class OrganizationResource
   @DeleteMapping("{key}/endorsement")
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
   public ResponseEntity<Void> revokeEndorsementEndpoint(@PathVariable("key") UUID organizationKey) {
+    if (!canEndorse(organizationKey)) {
+      return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+    }
     return (revokeEndorsement(organizationKey)
             ? ResponseEntity.noContent()
             : ResponseEntity.status(HttpStatus.BAD_REQUEST))
@@ -743,10 +764,20 @@ public class OrganizationResource
   public ResponseEntity<Void> userAllowedToEndorseOrganization(
       @PathVariable("key") UUID organizationKey, @PathVariable("user") String username) {
     Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    boolean isAdmin =
+        authentication != null && SecurityContextCheck.checkUserInRole(authentication, ADMIN_ROLE);
+    // only admins can ask about other users, so the rights of a user cannot be enumerated
+    if (!isAdmin
+        && (authentication == null
+            || authentication.getName() == null
+            || !authentication.getName().equals(username))) {
+      return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+    }
+
     Organization organization = super.get(organizationKey);
     checkNotNull(organization, "Organization not found");
 
-    if (!SecurityContextCheck.checkUserInRole(authentication, ADMIN_ROLE)
+    if (!isAdmin
         && !userAuthService.allowedToModifyEntity(username, organization.getEndorsingNodeKey())) {
       return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
     }

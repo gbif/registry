@@ -282,6 +282,36 @@ public class EditorAuthorizationFilterTest {
   }
 
   @Test
+  public void testDatasetPutTrailingSlashWithoutRightsOnThisEntityFail() {
+    assertDatasetPutWithoutRightsFails("/dataset/" + KEY + "/");
+  }
+
+  @Test
+  public void testDatasetPutEncodedKeyWithoutRightsOnThisEntityFail() {
+    assertDatasetPutWithoutRightsFails("/dataset/" + KEY.toString().replace("-", "%2D"));
+  }
+
+  @Test
+  public void testDatasetPutPathParameterWithoutRightsOnThisEntityFail() {
+    assertDatasetPutWithoutRightsFails("/dataset/" + KEY + ";a=b");
+  }
+
+  /** Variants of the path that Spring MVC routes to the same handler must be checked too. */
+  private void assertDatasetPutWithoutRightsFails(String requestUri) {
+    when(mockAuthenticationFacade.getAuthentication()).thenReturn(mockAuthentication);
+    when(mockRequest.getRequestURI()).thenReturn(requestUri);
+    when(mockRequest.getMethod()).thenReturn("PUT");
+    when(mockAuthentication.getName()).thenReturn(USERNAME);
+    doReturn(ROLES_EDITOR_ONLY).when(mockAuthentication).getAuthorities();
+    when(mockEditorAuthService.allowedToModifyDataset(USERNAME, KEY)).thenReturn(false);
+
+    assertThrows(
+        WebApplicationException.class,
+        () -> filter.doFilter(mockRequest, mockResponse, mockFilterChain));
+    verify(mockEditorAuthService).allowedToModifyDataset(USERNAME, KEY);
+  }
+
+  @Test
   public void testInstallationPostNotNullEditorUserButWithoutRightsOnThisEntityFail() {
     // GIVEN
     when(mockAuthenticationFacade.getAuthentication()).thenReturn(mockAuthentication);

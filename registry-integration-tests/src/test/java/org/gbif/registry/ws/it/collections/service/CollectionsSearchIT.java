@@ -49,6 +49,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -507,7 +508,7 @@ public class CollectionsSearchIT extends BaseServiceIT {
         0,
         0,
         CollectionDescriptorsSearchRequest.builder()
-            .checklistKey("foo")
+            .checklistKey(UUID.randomUUID())
             .taxonIssue(List.of("TAXON_MATCH_HIGHERRANK"))
             .build());
 
@@ -515,7 +516,7 @@ public class CollectionsSearchIT extends BaseServiceIT {
         1,
         7,
         CollectionDescriptorsSearchRequest.builder()
-            .checklistKey("d7dddbf4-2cf0-4f39-9b2a-bb099caae36c")
+            .checklistKey(UUID.fromString("d7dddbf4-2cf0-4f39-9b2a-bb099caae36c"))
             .taxonIssue(List.of("TAXON_MATCH_HIGHERRANK"))
             .build());
 

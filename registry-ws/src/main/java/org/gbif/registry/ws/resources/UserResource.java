@@ -88,8 +88,8 @@ public class UserResource {
       method = {RequestMethod.GET, RequestMethod.POST})
   public ResponseEntity<ExtendedLoggedUser> login(Authentication authentication) {
     // the user shall be authenticated using basic auth. scheme only.
-    ensureNotGbifScheme(authentication);
     ensureUserSetInSecurityContext(authentication);
+    ensureNotGbifScheme(authentication);
 
     String username = authentication.getName();
     // get the user
@@ -117,8 +117,8 @@ public class UserResource {
     LOG.debug("Remote basic authentication: {}", authentication);
     LOG.debug("Remote basic authentication (name): {}", authentication.getName());
     // the user shall be authenticated using basic auth. scheme only.
-    ensureNotGbifScheme(authentication);
     ensureUserSetInSecurityContext(authentication);
+    ensureNotGbifScheme(authentication);
 
     String username = authentication.getName();
     // get the user
@@ -140,8 +140,8 @@ public class UserResource {
       method = {RequestMethod.GET, RequestMethod.POST})
   public ResponseEntity<?> appRemoteAuth(Authentication authentication) {
     // the user shall be authenticated using basic auth. scheme only.
-    ensureGbifScheme(authentication);
     ensureUserSetInSecurityContext(authentication);
+    ensureGbifScheme(authentication);
 
     String username = authentication.getName();
     // get the user. It can be null
@@ -193,8 +193,8 @@ public class UserResource {
   @PostMapping("whoami")
   public ResponseEntity<ExtendedLoggedUser> whoAmI(Authentication authentication) {
     // the user shall be authenticated using basic auth scheme
-    ensureNotGbifScheme(authentication);
     ensureUserSetInSecurityContext(authentication);
+    ensureNotGbifScheme(authentication);
 
     // get the user
     GbifUser user = identityService.get(authentication.getName());
@@ -217,8 +217,8 @@ public class UserResource {
       @RequestBody @NotNull AuthenticationDataParameters authenticationDataParameters,
       Authentication authentication) {
     // the user shall be authenticated using basic auth scheme
-    ensureNotGbifScheme(authentication);
     ensureUserSetInSecurityContext(authentication);
+    ensureNotGbifScheme(authentication);
 
     final String identifier = authentication.getName();
     final GbifUser user = identityService.get(identifier);

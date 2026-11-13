@@ -15,6 +15,7 @@ package org.gbif.registry.ws.it;
 
 import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.common.DoiData;
+import org.gbif.api.model.common.DoiStatus;
 import org.gbif.doi.metadata.datacite.DataCiteMetadata;
 import org.gbif.doi.metadata.datacite.DataCiteMetadata.Creators;
 import org.gbif.doi.metadata.datacite.DataCiteMetadata.Creators.Creator;
@@ -30,17 +31,22 @@ import org.gbif.registry.doi.registration.DoiRegistration;
 import org.gbif.registry.domain.doi.DoiType;
 import org.gbif.registry.search.test.ElasticsearchTestContainerConfiguration;
 import org.gbif.registry.ws.client.DoiInteractionClient;
+import org.gbif.registry.ws.it.fixtures.RequestTestFixture;
 import org.gbif.registry.ws.it.fixtures.TestConstants;
 import org.gbif.registry.ws.it.fixtures.UserTestFixture;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 import org.gbif.ws.security.KeyStore;
 
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.web.server.LocalServerPort;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
  * This is parameterized to run the same test routines for the following DOI Registration elements:
@@ -55,6 +61,8 @@ public class DoiRegistrationIT extends BaseItTest {
 
   private final DoiInteractionService doiRegistrationResource;
   private final DoiInteractionService doiRegistrationClient;
+  private final RequestTestFixture requestTestFixture;
+  private final UserTestFixture userTestFixture;
 
   @Autowired
   public DoiRegistrationIT(
@@ -63,11 +71,61 @@ public class DoiRegistrationIT extends BaseItTest {
       ElasticsearchTestContainerConfiguration elasticsearchTestContainer,
       @LocalServerPort int localServerPort,
       KeyStore keyStore,
-      UserTestFixture userTestFixture) {
+      UserTestFixture userTestFixture,
+      RequestTestFixture requestTestFixture) {
     super(simplePrincipalProvider, elasticsearchTestContainer);
     this.doiRegistrationResource = doiRegistrationResource;
     this.doiRegistrationClient =
         prepareClient(localServerPort, keyStore, DoiInteractionClient.class);
+    this.requestTestFixture = requestTestFixture;
+    this.userTestFixture = userTestFixture;
+  }
+
+  /** Deleting a DOI is reserved to admins and apps. */
+  @Test
+  public void testDeleteRequiresAdminOrApp() throws Exception {
+    DOI doi = doiRegistrationResource.generate(DoiType.DATA_PACKAGE);
+    String path = "/doi/" + doi.getPrefix() + "/" + doi.getSuffix();
+
+    requestTestFixture
+        .deleteRequest(path)
+        .andExpect(result -> assertTrue(isUnauthorizedOrForbidden(result.getResponse().getStatus())));
+
+    prepareUser();
+    requestTestFixture
+        .deleteRequest(UserTestFixture.USERNAME, UserTestFixture.PASSWORD, path)
+        .andExpect(status().isForbidden());
+
+    assertEquals(DoiStatus.NEW, doiRegistrationResource.get(doi.getPrefix(), doi.getSuffix()).getStatus());
+  }
+
+  /** Registering or updating a DOI is reserved to admins and apps. */
+  @Test
+  public void testRegisterRequiresAdminOrApp() throws Exception {
+    prepareUser();
+    DoiRegistration doiRegistration =
+        DoiRegistration.builder()
+            .withType(DoiType.DATA_PACKAGE)
+            .withUser(UserTestFixture.USERNAME)
+            .withMetadata(testMetadata())
+            .build();
+
+    requestTestFixture
+        .postRequest(UserTestFixture.USERNAME, UserTestFixture.PASSWORD, doiRegistration, "/doi")
+        .andExpect(status().isForbidden());
+    requestTestFixture
+        .putRequest(UserTestFixture.USERNAME, UserTestFixture.PASSWORD, doiRegistration, "/doi")
+        .andExpect(status().isForbidden());
+  }
+
+  private void prepareUser() {
+    if (userTestFixture.getUser(UserTestFixture.USERNAME) == null) {
+      userTestFixture.prepareUser();
+    }
+  }
+
+  private static boolean isUnauthorizedOrForbidden(int status) {
+    return status == 401 || status == 403;
   }
 
   /** Generates a new DOI. */

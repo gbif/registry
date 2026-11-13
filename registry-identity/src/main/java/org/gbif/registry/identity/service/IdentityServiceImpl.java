@@ -173,6 +173,15 @@ public class IdentityServiceImpl extends BaseIdentityAccessService implements Id
     return userMapper.getByKey(key);
   }
 
+  /**
+   * getByKey also returns deleted users: confirmations, password and e-mail changes must not
+   * apply to them.
+   */
+  private GbifUser getActiveUserByKey(int key) {
+    GbifUser user = userMapper.getByKey(key);
+    return user != null && user.getDeleted() == null ? user : null;
+  }
+
   @Override
   public GbifUser getBySystemSetting(String key, String value) {
     return userMapper.getBySystemSetting(key, value);
@@ -226,9 +235,7 @@ public class IdentityServiceImpl extends BaseIdentityAccessService implements Id
     GbifUser user = get(username);
 
     if (user != null
-        && PASSWORD_ENCODER
-            .encode(password, user.getPasswordHash())
-            .equalsIgnoreCase(user.getPasswordHash())
+        && PASSWORD_ENCODER.matches(password, user.getPasswordHash())
         && (!userSuretyDelegate.hasChallengeCode(user.getKey()) || user.getLastLogin() != null)) {
       return user;
     }
@@ -253,8 +260,9 @@ public class IdentityServiceImpl extends BaseIdentityAccessService implements Id
 
   @Override
   public boolean confirmUser(int userKey, UUID confirmationKey) {
-    if (confirmationKey != null) {
-      return userSuretyDelegate.confirmUser(getByKey(userKey), confirmationKey);
+    GbifUser user = getActiveUserByKey(userKey);
+    if (confirmationKey != null && user != null) {
+      return userSuretyDelegate.confirmUser(user, confirmationKey);
     }
 
     return false;
@@ -262,8 +270,9 @@ public class IdentityServiceImpl extends BaseIdentityAccessService implements Id
 
   @Override
   public boolean confirmUserAndEmail(int userKey, String email, UUID confirmationKey) {
-    if (confirmationKey != null) {
-      return userSuretyDelegate.confirmUserAndEmail(getByKey(userKey), email, confirmationKey);
+    GbifUser user = getActiveUserByKey(userKey);
+    if (confirmationKey != null && user != null) {
+      return userSuretyDelegate.confirmUserAndEmail(user, email, confirmationKey);
     }
 
     return false;
@@ -271,8 +280,9 @@ public class IdentityServiceImpl extends BaseIdentityAccessService implements Id
 
   @Override
   public boolean confirmAndNotifyUser(int userKey, UUID confirmationKey) {
-    if (confirmationKey != null) {
-      return userSuretyDelegate.confirmAndNotifyUser(getByKey(userKey), confirmationKey);
+    GbifUser user = getActiveUserByKey(userKey);
+    if (confirmationKey != null && user != null) {
+      return userSuretyDelegate.confirmAndNotifyUser(user, confirmationKey);
     }
 
     return false;
@@ -280,7 +290,7 @@ public class IdentityServiceImpl extends BaseIdentityAccessService implements Id
 
   @Override
   public void resetPassword(int userKey) {
-    GbifUser user = userMapper.getByKey(userKey);
+    GbifUser user = getActiveUserByKey(userKey);
 
     if (user != null) {
       userSuretyDelegate.onPasswordReset(user);
@@ -296,7 +306,7 @@ public class IdentityServiceImpl extends BaseIdentityAccessService implements Id
     if (userByEmail != null) {
       result = withError(ModelMutationError.EMAIL_ALREADY_IN_USE);
     } else if (confirmUserAndEmail(userKey, newEmail, confirmationKey)) {
-      GbifUser user = userMapper.getByKey(userKey);
+      GbifUser user = getActiveUserByKey(userKey);
 
       if (user != null) {
         user.setEmail(newEmail);
@@ -328,7 +338,7 @@ public class IdentityServiceImpl extends BaseIdentityAccessService implements Id
 
   @Override
   public UserModelMutationResult updatePassword(int userKey, String newPassword) {
-    GbifUser user = userMapper.getByKey(userKey);
+    GbifUser user = getActiveUserByKey(userKey);
 
     if (user != null) {
       if (StringUtils.isBlank(newPassword)
