@@ -743,10 +743,20 @@ public class OrganizationResource
   public ResponseEntity<Void> userAllowedToEndorseOrganization(
       @PathVariable("key") UUID organizationKey, @PathVariable("user") String username) {
     Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    boolean isAdmin =
+        authentication != null && SecurityContextCheck.checkUserInRole(authentication, ADMIN_ROLE);
+    // only admins can ask about other users, so the rights of a user cannot be enumerated
+    if (!isAdmin
+        && (authentication == null
+            || authentication.getName() == null
+            || !authentication.getName().equals(username))) {
+      return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+    }
+
     Organization organization = super.get(organizationKey);
     checkNotNull(organization, "Organization not found");
 
-    if (!SecurityContextCheck.checkUserInRole(authentication, ADMIN_ROLE)
+    if (!isAdmin
         && !userAuthService.allowedToModifyEntity(username, organization.getEndorsingNodeKey())) {
       return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
     }
