@@ -15,6 +15,7 @@ package org.gbif.registry.security.config;
 
 import org.gbif.registry.identity.util.RegistryPasswordEncoder;
 import org.gbif.registry.security.EditorAuthorizationFilter;
+import org.gbif.registry.security.FormBodyRequestWrapperFilter;
 import org.gbif.registry.security.LegacyAuthorizationFilter;
 import org.gbif.registry.security.ResourceNotFoundRequestFilter;
 import org.gbif.registry.security.WebApplicationExceptionFilter;
@@ -152,6 +153,7 @@ public class WebSecurityConfigurer {
 
     // Add filters
     http.addFilterAfter(context.getBean("httpServletRequestWrapperFilter", HttpServletRequestWrapperFilter.class), CsrfFilter.class)
+        .addFilterBefore(new FormBodyRequestWrapperFilter(), HttpServletRequestWrapperFilter.class)
         .addFilterAfter(context.getBean("requestHeaderParamUpdateFilter", RequestHeaderParamUpdateFilter.class), HttpServletRequestWrapperFilter.class)
         .addFilterAfter(context.getBean("identityFilter", IdentityFilter.class), RequestHeaderParamUpdateFilter.class)
         .addFilterAfter(new WebApplicationExceptionFilter(), IdentityFilter.class)
