@@ -36,6 +36,7 @@ import org.springframework.test.web.servlet.ResultActions;
 
 import static org.gbif.registry.domain.ws.util.LegacyResourceConstants.TECHNICAL_CONTACT_TYPE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -272,8 +273,20 @@ public class LegacyOrganizationResourceIT extends BaseItTest {
 
     String content = requestTestFixture.extractResponse(actions);
     assertEquals(
-        "<html><body><b>The password reminder was sent successfully to the email: </b>trobertson@gbif.org</body></html>",
+        "<html><body><b>The password reminder was sent successfully to the organization's primary contact</b></body></html>",
         content);
+    assertFalse(content.contains("@"));
+  }
+
+  /** The JSONP callback is written as JavaScript, anything but a function name is rejected. */
+  @Test
+  public void testGetOrganizationInvalidCallback() throws Exception {
+    Organization organization = testDataFactory.newPersistedOrganization();
+    String uri =
+        "/registry/organisation/"
+            + organization.getKey()
+            + ".json?callback=alert(document.domain)//";
+    requestTestFixture.getRequest(uri).andExpect(status().isBadRequest());
   }
 
   /**
