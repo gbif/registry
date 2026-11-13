@@ -18,6 +18,7 @@ import org.gbif.api.model.registry.Installation;
 import org.gbif.api.model.registry.MachineTag;
 import org.gbif.api.model.registry.NetworkEntity;
 import org.gbif.api.model.registry.Organization;
+import org.gbif.registry.security.util.RequestPathUtils;
 import org.gbif.ws.WebApplicationException;
 import org.gbif.ws.server.GbifHttpServletRequestWrapper;
 
@@ -189,7 +190,7 @@ public class EditorAuthorizationFilter extends OncePerRequestFilter {
     // all other roles are taken care by simple 'Secured' or JSR250 annotations
     // on the resource methods
     final Authentication authentication = authenticationFacade.getAuthentication();
-    final String path = request.getRequestURI();
+    final String path = RequestPathUtils.normalizedPath(request);
 
     // method + path
     // e.g. POST /organization/8d453ca7-553f-40d2-8054-82708dc354f6/comment
