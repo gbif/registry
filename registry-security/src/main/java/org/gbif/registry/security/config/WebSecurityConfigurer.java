@@ -17,6 +17,7 @@ import org.gbif.registry.identity.util.RegistryPasswordEncoder;
 import org.gbif.registry.security.EditorAuthorizationFilter;
 import org.gbif.registry.security.LegacyAuthorizationFilter;
 import org.gbif.registry.security.ResourceNotFoundRequestFilter;
+import org.gbif.registry.security.WebApplicationExceptionFilter;
 import org.gbif.registry.security.grscicoll.GrSciCollEditorAuthorizationFilter;
 import org.gbif.registry.security.jwt.JwtRequestFilter;
 import org.gbif.registry.security.precheck.AuthPreCheckCreationRequestFilter;
@@ -125,15 +126,18 @@ public class WebSecurityConfigurer {
       .securityContext(securityContext -> securityContext
         .requireExplicitSave(false)
       )
+      // endpoints are secured by method security (@Secured, ...). Requests without credentials are
+      // anonymous since gbif-common-ws 2.1.4, .authenticated() would reject them on public endpoints
       .authorizeHttpRequests(auth -> auth
-        .anyRequest().authenticated()
+        .anyRequest().permitAll()
       );
 
     // Add filters
     http.addFilterAfter(context.getBean("httpServletRequestWrapperFilter", HttpServletRequestWrapperFilter.class), CsrfFilter.class)
         .addFilterAfter(context.getBean("requestHeaderParamUpdateFilter", RequestHeaderParamUpdateFilter.class), HttpServletRequestWrapperFilter.class)
         .addFilterAfter(context.getBean("identityFilter", IdentityFilter.class), RequestHeaderParamUpdateFilter.class)
-        .addFilterAfter(context.getBean("legacyAuthorizationFilter", LegacyAuthorizationFilter.class), IdentityFilter.class)
+        .addFilterAfter(new WebApplicationExceptionFilter(), IdentityFilter.class)
+        .addFilterAfter(context.getBean("legacyAuthorizationFilter", LegacyAuthorizationFilter.class), WebApplicationExceptionFilter.class)
         .addFilterAfter(context.getBean("appIdentityFilter", AppIdentityFilter.class), LegacyAuthorizationFilter.class)
         .addFilterAfter(context.getBean("jwtRequestFilter", JwtRequestFilter.class), AppIdentityFilter.class)
         .addFilterAfter(context.getBean("authPreCheckCreationRequestFilter", AuthPreCheckCreationRequestFilter.class), JwtRequestFilter.class)
