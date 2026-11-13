@@ -705,9 +705,27 @@ public class OrganizationResource
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
   public ResponseEntity<Void> confirmEndorsementEndpoint(
       @PathVariable("key") UUID organizationKey) {
+    if (!canEndorse(organizationKey)) {
+      return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+    }
     boolean isEndorsed = confirmEndorsement(organizationKey);
     return (isEndorsed ? ResponseEntity.noContent() : ResponseEntity.status(HttpStatus.BAD_REQUEST))
         .build();
+  }
+
+  /**
+   * Endorsement is decided by the endorsing node: editors need rights on the node, rights on the
+   * organization itself are not enough.
+   */
+  private boolean canEndorse(UUID organizationKey) {
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    if (SecurityContextCheck.checkUserInRole(authentication, ADMIN_ROLE)) {
+      return true;
+    }
+    Organization organization = super.get(organizationKey);
+    checkNotNull(organization, "Organization not found");
+    return userAuthService.allowedToModifyEntity(
+        authentication.getName(), organization.getEndorsingNodeKey());
   }
 
   @Override
@@ -725,6 +743,9 @@ public class OrganizationResource
   @DeleteMapping("{key}/endorsement")
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
   public ResponseEntity<Void> revokeEndorsementEndpoint(@PathVariable("key") UUID organizationKey) {
+    if (!canEndorse(organizationKey)) {
+      return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+    }
     return (revokeEndorsement(organizationKey)
             ? ResponseEntity.noContent()
             : ResponseEntity.status(HttpStatus.BAD_REQUEST))
