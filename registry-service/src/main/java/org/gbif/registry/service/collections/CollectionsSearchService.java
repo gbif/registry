@@ -223,8 +223,8 @@ public class CollectionsSearchService {
     DescriptorsListParams.DescriptorsListParamsBuilder listParamsBuilder =
         DescriptorsListParams.builder()
             .checklistKey(
-                !Strings.isNullOrEmpty(searchRequest.getChecklistKey())
-                    ? searchRequest.getChecklistKey()
+                searchRequest.getChecklistKey() != null
+                    ? searchRequest.getChecklistKey().toString()
                     : defaultChecklistKey)
             .taxonIssues(searchRequest.getTaxonIssue())
             .contentTypes(searchRequest.getContentTypes())
