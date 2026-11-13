@@ -40,6 +40,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.validation.annotation.Validated;
@@ -54,6 +55,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import io.swagger.v3.oas.annotations.Hidden;
 import jakarta.xml.bind.JAXBException;
+
+import static org.gbif.registry.security.UserRoles.ADMIN_ROLE;
+import static org.gbif.registry.security.UserRoles.APP_ROLE;
 
 /** Resource class that exposes services to interact with DOI issued through GBIF and DataCite. */
 @Hidden
@@ -101,6 +105,7 @@ public class DoiInteractionResource implements DoiInteractionService {
 
   /** Deletes an existent DOI. */
   @DeleteMapping("{prefix}/{suffix}")
+  @Secured({ADMIN_ROLE, APP_ROLE})
   @Override
   public void delete(@PathVariable("prefix") String prefix, @PathVariable("suffix") String suffix) {
     LOG.info("Deleting DOI {} {}", prefix, suffix);
@@ -111,6 +116,7 @@ public class DoiInteractionResource implements DoiInteractionService {
    * Register a new DOI, if the registration object doesn't contain a DOI a new DOI is generated.
    */
   @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
+  @Secured({ADMIN_ROLE, APP_ROLE})
   @Override
   public DOI register(@RequestBody DoiRegistration newDoiRegistration) {
     return createOrUpdate(newDoiRegistration, this::registerPreFilter);
@@ -126,6 +132,7 @@ public class DoiInteractionResource implements DoiInteractionService {
    * Update an existing DOI.
    */
   @PutMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
+  @Secured({ADMIN_ROLE, APP_ROLE})
   @Override
   public DOI update(@RequestBody DoiRegistration existingDoiRegistration) {
     return createOrUpdate(existingDoiRegistration, this::updatePreFilter);
@@ -140,19 +147,21 @@ public class DoiInteractionResource implements DoiInteractionService {
   private DOI createOrUpdate(DoiRegistration doiRegistration, Consumer<DoiData> preFilter) {
     checkIsUserAuthenticated();
     try {
+      // validate the metadata before anything is stored
+      DataCiteMetadata dataCiteMetadata = DataCiteValidator.fromXml(doiRegistration.getMetadata());
+
       DOI doi = doiRegistration.getDoi();
       if (doi != null) {
         // registration contains a DOI already
         DoiData doiData = doiMapper.get(doi);
         preFilter.accept(doiData);
-        doiMapper.update(doi, doiMapper.get(doi), doiRegistration.getMetadata());
+        doiMapper.update(doi, doiData, doiRegistration.getMetadata());
       } else {
         // generate a new one
         doi = genDoiByType(doiRegistration.getType());
       }
 
       // Ensures that the metadata contains the DOI as an alternative identifier
-      DataCiteMetadata dataCiteMetadata = DataCiteValidator.fromXml(doiRegistration.getMetadata());
       DataCiteMetadata metadata =
           DataCiteMetadata.copyOf(dataCiteMetadata)
               .withAlternateIdentifiers(
