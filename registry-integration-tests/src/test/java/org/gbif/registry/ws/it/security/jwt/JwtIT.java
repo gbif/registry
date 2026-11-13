@@ -96,7 +96,7 @@ public class JwtIT extends BaseItTest {
     ResultActions actions =
         requestTestFixture
             .postRequest(token, createInstitution(), PATH)
-            .andExpect(status().isForbidden());
+            .andExpect(status().isUnauthorized());
 
     String newToken = requestTestFixture.getHeader(actions, HEADER_TOKEN);
 
@@ -120,7 +120,7 @@ public class JwtIT extends BaseItTest {
 
     requestTestFixture
         .postRequest(token, createInstitution(), PATH)
-        .andExpect(status().isForbidden());
+        .andExpect(status().isUnauthorized());
   }
 
   @Execution(ExecutionMode.CONCURRENT)
