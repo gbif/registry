@@ -51,11 +51,13 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import org.junit.jupiter.api.Test;
+import org.supercsv.cellprocessor.ift.CellProcessor;
 
 import com.fasterxml.jackson.databind.util.StdDateFormat;
 
 import lombok.SneakyThrows;
 
+import static org.gbif.registry.ws.export.CsvWriter.FormulaNeutralisingEncoder.neutraliseFormula;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -101,17 +103,46 @@ public class CsvWriterTest {
 
   /** Cells that a spreadsheet would run as a formula are written as text. */
   @Test
-  public void cleanStringFormulaTest() {
-    assertEquals("'=HYPERLINK(\"http://x\")", CsvWriter.CleanStringProcessor.cleanString("=HYPERLINK(\"http://x\")"));
-    assertEquals("'+cmd|' /C calc'!A0", CsvWriter.CleanStringProcessor.cleanString("+cmd|' /C calc'!A0"));
-    assertEquals("'-2+3+cmd|' /C calc'!A0", CsvWriter.CleanStringProcessor.cleanString("-2+3+cmd|' /C calc'!A0"));
-    assertEquals("'@SUM(1+1)", CsvWriter.CleanStringProcessor.cleanString("@SUM(1+1)"));
-    // tabs are replaced by spaces, so they cannot hide a formula either
-    assertEquals(" =1+1", CsvWriter.CleanStringProcessor.cleanString("\t=1+1"));
-    // numbers, phone numbers and ordinary text are not changed
-    assertEquals("+45 35 32 14 70", CsvWriter.CleanStringProcessor.cleanString("+45 35 32 14 70"));
-    assertEquals("-12.5", CsvWriter.CleanStringProcessor.cleanString("-12.5"));
-    assertEquals("Natural History Museum", CsvWriter.CleanStringProcessor.cleanString("Natural History Museum"));
+  public void neutraliseFormulaTest() {
+    assertEquals("'=HYPERLINK(\"http://x\")", neutraliseFormula("=HYPERLINK(\"http://x\")"));
+    assertEquals("'+cmd|' /C calc'!A0", neutraliseFormula("+cmd|' /C calc'!A0"));
+    assertEquals("'-2+3+cmd|' /C calc'!A0", neutraliseFormula("-2+3+cmd|' /C calc'!A0"));
+    assertEquals("'@SUM(1+1)", neutraliseFormula("@SUM(1+1)"));
+    assertEquals("'\t=1+1", neutraliseFormula("\t=1+1"));
+    // arithmetic and phone numbers with other separators would be calculated
+    assertEquals("'-(1)", neutraliseFormula("-(1)"));
+    assertEquals("'-12-5", neutraliseFormula("-12-5"));
+    assertEquals("'+1-202-555-0144", neutraliseFormula("+1-202-555-0144"));
+    // plain numbers, phone numbers of digits and spaces and ordinary text are not changed
+    assertEquals("+45 35 32 14 70", neutraliseFormula("+45 35 32 14 70"));
+    assertEquals("-12.5", neutraliseFormula("-12.5"));
+    assertEquals("Natural History Museum", neutraliseFormula("Natural History Museum"));
+  }
+
+  /** Every cell is neutralised when written, also headers and columns without a processor. */
+  @Test
+  public void exportNeutralisesFormulasTest() {
+    String header = "=HYPERLINK(\"http://x\")";
+    StringWriter writer = new StringWriter();
+    CsvWriter.descriptorVerbatims(
+            Collections.singletonList(Collections.singletonMap(header, "@SUM(1+1)")),
+            ExportFormat.TSV,
+            Collections.singleton(header))
+        .exportMap(writer);
+
+    assertEquals("\"'=HYPERLINK(\"\"http://x\"\")\"\n'@SUM(1+1)\n", writer.toString());
+
+    writer = new StringWriter();
+    CsvWriter.<String>builder()
+        .fields(new String[] {"code"})
+        .header(new String[] {"code"})
+        .processors(new CellProcessor[] {null})
+        .preference(ExportFormat.CSV)
+        .mapPager(Collections.singletonList(Collections.singletonMap("code", "-12-5")))
+        .build()
+        .exportMap(writer);
+
+    assertEquals("code\r\n'-12-5\r\n", writer.toString());
   }
 
   @Test

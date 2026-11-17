@@ -46,6 +46,7 @@ import java.util.stream.Collectors;
 
 import org.supercsv.cellprocessor.*;
 import org.supercsv.cellprocessor.ift.CellProcessor;
+import org.supercsv.encoder.DefaultCsvEncoder;
 import org.supercsv.io.CsvBeanWriter;
 import org.supercsv.io.CsvMapWriter;
 import org.supercsv.io.ICsvBeanWriter;
@@ -597,12 +598,46 @@ public class CsvWriter<T> {
   }
 
   private CsvPreference csvPreference() {
+    CsvPreference basePreference;
     if (ExportFormat.CSV == preference) {
-      return CsvPreference.STANDARD_PREFERENCE;
+      basePreference = CsvPreference.STANDARD_PREFERENCE;
     } else if (ExportFormat.TSV == preference) {
-      return CsvPreference.TAB_PREFERENCE;
+      basePreference = CsvPreference.TAB_PREFERENCE;
+    } else {
+      throw new IllegalArgumentException("Export format not supported " + preference);
     }
-    throw new IllegalArgumentException("Export format not supported " + preference);
+    return new CsvPreference.Builder(basePreference)
+        .useEncoder(new FormulaNeutralisingEncoder())
+        .build();
+  }
+
+  /**
+   * Writes every cell, headers included, that a spreadsheet application would run as a formula as
+   * text. Applied when the cell is written, so no column or processor can skip it.
+   */
+  public static class FormulaNeutralisingEncoder extends DefaultCsvEncoder {
+
+    // spreadsheet applications run a cell starting with one of these as a formula
+    private static final Pattern FORMULA_START_PATTERN = Pattern.compile("^[=+\\-@\\t\\r]");
+
+    // plain numbers, e.g. -12.5, and phone numbers of digits and spaces, e.g. +45 35 32 14 70
+    private static final Pattern NUMBER_PATTERN = Pattern.compile("^[+-]?[0-9]+(\\.[0-9]+)?$");
+    private static final Pattern PHONE_NUMBER_PATTERN = Pattern.compile("^\\+[0-9]+( [0-9]+)*$");
+
+    public static String neutraliseFormula(String value) {
+      if (FORMULA_START_PATTERN.matcher(value).find()
+          && !NUMBER_PATTERN.matcher(value).matches()
+          && !PHONE_NUMBER_PATTERN.matcher(value).matches()) {
+        // the quote makes spreadsheet applications read the cell as text
+        return "'" + value;
+      }
+      return value;
+    }
+
+    @Override
+    public String encode(String input, CsvContext context, CsvPreference preference) {
+      return super.encode(neutraliseFormula(input), context, preference);
+    }
   }
 
   @SneakyThrows
@@ -706,20 +741,8 @@ public class CsvWriter<T> {
 
     private static final Pattern DELIMETERS_MATCH_PATTERN = Pattern.compile(DELIMETERS_MATCH);
 
-    // spreadsheet applications run a cell starting with one of these as a formula
-    private static final Pattern FORMULA_START_PATTERN = Pattern.compile("^[=+\\-@]");
-
-    // numbers and phone numbers, e.g. -12.5 or +45 35 32 14 70, cannot be harmful formulas
-    private static final Pattern NUMBER_LIKE_PATTERN = Pattern.compile("^[+-]?[0-9 ().-]+$");
-
     public static String cleanString(String value) {
-      String cleaned = DELIMETERS_MATCH_PATTERN.matcher(value).replaceAll(" ");
-      if (FORMULA_START_PATTERN.matcher(cleaned).find()
-          && !NUMBER_LIKE_PATTERN.matcher(cleaned).matches()) {
-        // the quote makes spreadsheet applications read the cell as text
-        return "'" + cleaned;
-      }
-      return cleaned;
+      return DELIMETERS_MATCH_PATTERN.matcher(value).replaceAll(" ");
     }
 
     @Override
