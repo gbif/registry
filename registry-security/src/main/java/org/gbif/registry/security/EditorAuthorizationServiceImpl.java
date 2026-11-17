@@ -196,6 +196,15 @@ public class EditorAuthorizationServiceImpl implements EditorAuthorizationServic
   }
 
   @Override
+  public boolean allowedToEndorseOrganization(String name, UUID orgKey) {
+    if (name == null || orgKey == null) {
+      return false;
+    }
+    Organization o = organizationMapper.get(orgKey);
+    return o != null && allowedToModifyEntity(name, o.getEndorsingNodeKey());
+  }
+
+  @Override
   public boolean allowedToModifyInstallation(String name, UUID installationKey) {
     if (name == null) {
       return false;

@@ -313,6 +313,10 @@ public class EditorAuthorizationFilter extends OncePerRequestFilter {
         ensureMachineTagRequestWithoutKey(resourceName, username, resourceKey, request);
       }
     }
+    // endorsement requests
+    else if (path.endsWith("/endorsement")) {
+      ensureEndorsementRequest(username, resourceKey);
+    }
     // network entities requests
     else if (NETWORK_ENTITIES.contains(resourceName)) {
       if (resourceKey != null) {
@@ -582,6 +586,25 @@ public class EditorAuthorizationFilter extends OncePerRequestFilter {
    * @param username    username
    * @param resourceKey network entity key
    */
+  private void ensureEndorsementRequest(String username, String organizationKey) {
+    if (isNotUuid(organizationKey)) {
+      // invalid request, it fails later
+      LOG.debug(
+          "Invalid endorsement request. username [{}], organizationKey [{}]",
+          username,
+          organizationKey);
+      return;
+    }
+
+    if (!userAuthService.allowedToEndorseOrganization(username, UUID.fromString(organizationKey))) {
+      LOG.warn("User {} is not allowed to endorse organization {}", username, organizationKey);
+      throw new WebApplicationException(
+          MessageFormat.format(
+              "User {0} is not allowed to endorse organization {1}", username, organizationKey),
+          HttpStatus.FORBIDDEN);
+    }
+  }
+
   private void ensureNetworkEntityRequestWithKey(
       String entityName, String username, String resourceKey) {
     if (isNotUuid(resourceKey)) {

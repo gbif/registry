@@ -43,6 +43,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.atLeast;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -430,6 +431,41 @@ public class EditorAuthorizationFilterTest {
     assertThrows(
         WebApplicationException.class,
         () -> filter.doFilter(mockRequest, mockResponse, mockFilterChain));
+  }
+
+  @Test
+  public void testOrganizationEndorsementPutEditorWithoutNodeRightsFail() {
+    // GIVEN
+    when(mockAuthenticationFacade.getAuthentication()).thenReturn(mockAuthentication);
+    when(mockRequest.getRequestURI()).thenReturn("/organization/" + KEY + "/endorsement");
+    when(mockRequest.getMethod()).thenReturn("PUT");
+    when(mockAuthentication.getName()).thenReturn(USERNAME);
+    doReturn(ROLES_EDITOR_ONLY).when(mockAuthentication).getAuthorities();
+    when(mockEditorAuthService.allowedToEndorseOrganization(USERNAME, KEY)).thenReturn(false);
+
+    // WHEN & THEN
+    assertThrows(
+        WebApplicationException.class,
+        () -> filter.doFilter(mockRequest, mockResponse, mockFilterChain));
+    verify(mockEditorAuthService).allowedToEndorseOrganization(USERNAME, KEY);
+    verify(mockEditorAuthService, never()).allowedToModifyOrganization(USERNAME, KEY);
+  }
+
+  @Test
+  public void testOrganizationEndorsementDeleteEditorWithNodeRightsSuccess() throws Exception {
+    // GIVEN
+    when(mockAuthenticationFacade.getAuthentication()).thenReturn(mockAuthentication);
+    when(mockRequest.getRequestURI()).thenReturn("/organization/" + KEY + "/endorsement");
+    when(mockRequest.getMethod()).thenReturn("DELETE");
+    when(mockAuthentication.getName()).thenReturn(USERNAME);
+    doReturn(ROLES_EDITOR_ONLY).when(mockAuthentication).getAuthorities();
+    when(mockEditorAuthService.allowedToEndorseOrganization(USERNAME, KEY)).thenReturn(true);
+
+    // WHEN
+    filter.doFilter(mockRequest, mockResponse, mockFilterChain);
+
+    // THEN
+    verify(mockFilterChain).doFilter(mockRequest, mockResponse);
   }
 
   @Test
