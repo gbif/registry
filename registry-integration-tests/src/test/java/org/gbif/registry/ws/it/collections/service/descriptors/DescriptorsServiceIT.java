@@ -32,6 +32,7 @@ import org.gbif.registry.ws.it.collections.service.BaseServiceIT;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
 import java.util.*;
+import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -137,7 +138,7 @@ public class DescriptorsServiceIT extends BaseServiceIT {
         descriptorsService
             .listDescriptors(
                 DescriptorSearchRequest.builder()
-                    .checklistKey("bar")
+                    .checklistKey(UUID.randomUUID())
                     .usageKey(
                         Collections.singletonList(
                             NameUsageMatchingServiceMock.DEFAULT_USAGE.getKey()))
@@ -182,7 +183,7 @@ public class DescriptorsServiceIT extends BaseServiceIT {
         descriptorsService
             .listDescriptors(
                 DescriptorSearchRequest.builder()
-                    .checklistKey("foo")
+                    .checklistKey(UUID.randomUUID())
                     .taxonIssues(Collections.singletonList("TAXON_MATCH_HIGHERRANK"))
                     .build())
             .getResults()
@@ -370,7 +371,7 @@ public class DescriptorsServiceIT extends BaseServiceIT {
         descriptorsService
             .listDescriptors(
                 DescriptorSearchRequest.builder()
-                    .checklistKey("foo")
+                    .checklistKey(UUID.randomUUID())
                     .taxonIssues(Collections.singletonList("TAXON_MATCH_HIGHERRANK"))
                     .build())
             .getResults()

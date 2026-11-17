@@ -40,7 +40,7 @@ public class DirectoryConfiguration {
     return new StringJoiner(", ", DirectoryConfiguration.class.getSimpleName() + "[", "]")
         .add("wsUrl='" + wsUrl + "'")
         .add("appKey='" + appKey + "'")
-        .add("appSecret='" + appSecret + "'")
+        .add("appSecret='***'")
         .toString();
   }
 }

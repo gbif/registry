@@ -38,9 +38,11 @@ import org.gbif.api.vocabulary.*;
 import org.gbif.api.vocabulary.collections.CollectionsSortField;
 import org.gbif.api.vocabulary.collections.MasterSourceType;
 import org.gbif.registry.persistence.mapper.collections.params.DuplicatesSearchParams;
+import org.gbif.registry.security.SecurityContextCheck;
 import org.gbif.registry.service.collections.duplicates.DuplicatesService;
 import org.gbif.registry.service.collections.merge.MergeService;
 import org.gbif.registry.ws.resources.Docs;
+import org.gbif.ws.WebApplicationException;
 
 import java.io.IOException;
 import java.lang.annotation.ElementType;
@@ -65,6 +67,8 @@ import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StreamUtils;
 import org.springframework.web.bind.annotation.*;
@@ -88,6 +92,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.SneakyThrows;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static org.gbif.registry.security.UserRoles.ADMIN_ROLE;
+import static org.gbif.registry.security.UserRoles.GRSCICOLL_ADMIN_ROLE;
 
 /** Base class to implement the CRUD methods of a {@link CollectionEntity}. */
 @RequestMapping(produces = MediaType.APPLICATION_JSON_VALUE)
@@ -953,6 +959,7 @@ public abstract class BaseCollectionEntityResource<
       return null;
     }
 
+    checkCanReadBatch(batch);
     BatchView batchView = new BatchView(batch);
 
     // Add file result link
@@ -985,6 +992,7 @@ public abstract class BaseCollectionEntityResource<
     if (batch == null) {
       return ResponseEntity.notFound().build();
     }
+    checkCanReadBatch(batch);
 
     String resultFilePath = batch.getResultFilePath();
     if (resultFilePath != null) {
@@ -1002,6 +1010,24 @@ public abstract class BaseCollectionEntityResource<
     }
 
     return ResponseEntity.notFound().build();
+  }
+
+  /**
+   * Batch keys are sequential and batches contain contact details, so only the user who created
+   * the batch and GrSciColl admins can see it.
+   */
+  private void checkCanReadBatch(Batch batch) {
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    boolean isCreator =
+        authentication != null
+            && authentication.getName() != null
+            && authentication.getName().equals(batch.getCreatedBy());
+    if (!isCreator
+        && (authentication == null
+            || !SecurityContextCheck.checkUserInRole(
+                authentication, GRSCICOLL_ADMIN_ROLE, ADMIN_ROLE))) {
+      throw new WebApplicationException("Not allowed to see this batch", HttpStatus.FORBIDDEN);
+    }
   }
 
   private String getNormalizedApiBaseUrl() {

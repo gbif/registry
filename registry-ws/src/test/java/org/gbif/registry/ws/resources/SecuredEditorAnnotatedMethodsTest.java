@@ -118,9 +118,12 @@ public class SecuredEditorAnnotatedMethodsTest {
       Arrays.asList(
           Pattern.compile("^/organization/[0-9a-f-]+$"),
           Pattern.compile(
-              "^/organization/[0-9a-f-]+/(comment|tag|contact|endpoint|identifier|password|endorsement)$"),
+              "^/organization/[0-9a-f-]+/(comment|tag|contact|endpoint|identifier|password)$"),
           Pattern.compile(
               "^/organization/[0-9a-f-]+/(comment|tag|contact|endpoint|identifier)/[0-9]+$"));
+
+  private static final Pattern ORGANIZATION_ENDORSEMENT_RESOURCE =
+      Pattern.compile("^/organization/[0-9a-f-]+/endorsement$");
 
   private static final Pattern NODE_NETWORK_RESOURCE_WITHOUT_KEY =
       Pattern.compile("^/(node|network)$");
@@ -299,6 +302,9 @@ public class SecuredEditorAnnotatedMethodsTest {
           .thenReturn(isAllowedToModify);
       when(objectMapper.readValue(CONTENT, Organization.class)).thenReturn(ORG);
       when(mockRequest.getContent()).thenReturn(CONTENT);
+    } else if (ORGANIZATION_ENDORSEMENT_RESOURCE.matcher(requestPath).matches()) {
+      when(mockEditorAuthService.allowedToEndorseOrganization(USERNAME, KEY))
+          .thenReturn(isAllowedToModify);
     } else if (ORGANIZATION_RESOURCE_WITH_KEY.stream()
         .anyMatch(p -> p.matcher(requestPath).matches())) {
       when(mockEditorAuthService.allowedToModifyOrganization(USERNAME, KEY))
@@ -347,6 +353,8 @@ public class SecuredEditorAnnotatedMethodsTest {
     } else if (ORGANIZATION_RESOURCE_WITHOUT_KEY.matcher(requestPath).matches()) {
       verify(mockEditorAuthService).allowedToModifyOrganization(USERNAME, ORG);
       verify(mockRequest).getContent();
+    } else if (ORGANIZATION_ENDORSEMENT_RESOURCE.matcher(requestPath).matches()) {
+      verify(mockEditorAuthService).allowedToEndorseOrganization(USERNAME, KEY);
     } else if (ORGANIZATION_RESOURCE_WITH_KEY.stream()
         .anyMatch(p -> p.matcher(requestPath).matches())) {
       verify(mockEditorAuthService).allowedToModifyOrganization(USERNAME, KEY);

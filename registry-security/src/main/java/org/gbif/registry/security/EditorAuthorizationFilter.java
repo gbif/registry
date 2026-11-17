@@ -18,6 +18,7 @@ import org.gbif.api.model.registry.Installation;
 import org.gbif.api.model.registry.MachineTag;
 import org.gbif.api.model.registry.NetworkEntity;
 import org.gbif.api.model.registry.Organization;
+import org.gbif.registry.security.util.RequestPathUtils;
 import org.gbif.ws.WebApplicationException;
 import org.gbif.ws.server.GbifHttpServletRequestWrapper;
 
@@ -189,7 +190,7 @@ public class EditorAuthorizationFilter extends OncePerRequestFilter {
     // all other roles are taken care by simple 'Secured' or JSR250 annotations
     // on the resource methods
     final Authentication authentication = authenticationFacade.getAuthentication();
-    final String path = request.getRequestURI();
+    final String path = RequestPathUtils.normalizedPath(request);
 
     // method + path
     // e.g. POST /organization/8d453ca7-553f-40d2-8054-82708dc354f6/comment
@@ -311,6 +312,10 @@ public class EditorAuthorizationFilter extends OncePerRequestFilter {
       } else {
         ensureMachineTagRequestWithoutKey(resourceName, username, resourceKey, request);
       }
+    }
+    // endorsement requests
+    else if (path.endsWith("/endorsement")) {
+      ensureEndorsementRequest(username, resourceKey);
     }
     // network entities requests
     else if (NETWORK_ENTITIES.contains(resourceName)) {
@@ -581,6 +586,25 @@ public class EditorAuthorizationFilter extends OncePerRequestFilter {
    * @param username    username
    * @param resourceKey network entity key
    */
+  private void ensureEndorsementRequest(String username, String organizationKey) {
+    if (isNotUuid(organizationKey)) {
+      // invalid request, it fails later
+      LOG.debug(
+          "Invalid endorsement request. username [{}], organizationKey [{}]",
+          username,
+          organizationKey);
+      return;
+    }
+
+    if (!userAuthService.allowedToEndorseOrganization(username, UUID.fromString(organizationKey))) {
+      LOG.warn("User {} is not allowed to endorse organization {}", username, organizationKey);
+      throw new WebApplicationException(
+          MessageFormat.format(
+              "User {0} is not allowed to endorse organization {1}", username, organizationKey),
+          HttpStatus.FORBIDDEN);
+    }
+  }
+
   private void ensureNetworkEntityRequestWithKey(
       String entityName, String username, String resourceKey) {
     if (isNotUuid(resourceKey)) {
