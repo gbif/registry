@@ -41,6 +41,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.annotation.Secured;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.validation.annotation.Validated;
@@ -237,7 +238,9 @@ public class DoiInteractionResource implements DoiInteractionService {
   /** Check that the user is authenticated. */
   private void checkIsUserAuthenticated() {
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-    if (authentication == null || authentication.getName() == null)
+    if (authentication == null
+        || authentication instanceof AnonymousAuthenticationToken
+        || authentication.getName() == null)
       throw new WebApplicationException(
           "Authorization is required to perform this operation on DOI", HttpStatus.UNAUTHORIZED);
   }

@@ -109,6 +109,8 @@ public class CsvWriterTest {
     assertEquals("'-2+3+cmd|' /C calc'!A0", neutraliseFormula("-2+3+cmd|' /C calc'!A0"));
     assertEquals("'@SUM(1+1)", neutraliseFormula("@SUM(1+1)"));
     assertEquals("'\t=1+1", neutraliseFormula("\t=1+1"));
+    assertEquals("'\r=1+1", neutraliseFormula("\r=1+1"));
+    assertEquals("'\n=1+1", neutraliseFormula("\n=1+1"));
     // arithmetic and phone numbers with other separators would be calculated
     assertEquals("'-(1)", neutraliseFormula("-(1)"));
     assertEquals("'-12-5", neutraliseFormula("-12-5"));

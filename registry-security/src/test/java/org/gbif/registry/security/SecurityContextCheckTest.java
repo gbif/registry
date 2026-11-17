@@ -18,11 +18,13 @@ import org.gbif.ws.security.GbifAuthentication;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -89,6 +91,17 @@ public class SecurityContextCheckTest {
     when(mockAuth.getName()).thenReturn("anonymous");
     SecurityContextCheck.ensureUserSetInSecurityContext(mockAuth);
     verify(mockAuth).getName();
+  }
+
+  @Test
+  public void testEnsureUserSetInSecurityContextFailAnonymous() {
+    // named "anonymousUser"
+    AnonymousAuthenticationToken anonymous =
+        new AnonymousAuthenticationToken(
+            "key", "anonymousUser", List.of(new SimpleGrantedAuthority("ROLE_ANONYMOUS")));
+    assertThrows(
+        WebApplicationException.class,
+        () -> SecurityContextCheck.ensureUserSetInSecurityContext(anonymous));
   }
 
   @Test

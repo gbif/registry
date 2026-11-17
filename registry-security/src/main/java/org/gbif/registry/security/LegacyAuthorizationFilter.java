@@ -449,7 +449,13 @@ public class LegacyAuthorizationFilter extends OncePerRequestFilter {
       return false;
     }
 
-    byte[] decryptedBytes = Base64.getDecoder().decode(authentication.substring(BASIC_AUTH_HEADER.length()));
+    byte[] decryptedBytes;
+    try {
+      decryptedBytes = Base64.getDecoder().decode(authentication.substring(BASIC_AUTH_HEADER.length()));
+    } catch (IllegalArgumentException e) {
+      // not Base64: not an IPT validation request
+      return false;
+    }
     String decrypted = new String(decryptedBytes);
     Iterator<String> iter = COLON_SPLITTER.split(decrypted).iterator();
     String rawUsername = iter.next();

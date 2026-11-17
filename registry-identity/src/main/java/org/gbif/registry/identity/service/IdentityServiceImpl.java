@@ -109,7 +109,7 @@ public class IdentityServiceImpl extends BaseIdentityAccessService implements Id
   @Override
   public UserModelMutationResult update(GbifUser rawUser) {
     GbifUser user = normalize(rawUser);
-    GbifUser currentUser = getByKey(user.getKey());
+    GbifUser currentUser = getActiveUserByKey(user.getKey());
 
     if (currentUser != null) {
       boolean isEmailChanged = !user.getEmail().equalsIgnoreCase(currentUser.getEmail());

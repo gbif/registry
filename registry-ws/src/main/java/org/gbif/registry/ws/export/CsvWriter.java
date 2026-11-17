@@ -618,7 +618,7 @@ public class CsvWriter<T> {
   public static class FormulaNeutralisingEncoder extends DefaultCsvEncoder {
 
     // spreadsheet applications run a cell starting with one of these as a formula
-    private static final Pattern FORMULA_START_PATTERN = Pattern.compile("^[=+\\-@\\t\\r]");
+    private static final Pattern FORMULA_START_PATTERN = Pattern.compile("^[=+\\-@\\t\\r\\n]");
 
     // plain numbers, e.g. -12.5, and phone numbers of digits and spaces, e.g. +45 35 32 14 70
     private static final Pattern NUMBER_PATTERN = Pattern.compile("^[+-]?[0-9]+(\\.[0-9]+)?$");
