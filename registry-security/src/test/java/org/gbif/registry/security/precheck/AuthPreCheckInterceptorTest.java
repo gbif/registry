@@ -13,6 +13,7 @@
  */
 package org.gbif.registry.security.precheck;
 
+import org.gbif.ws.WebApplicationException;
 import org.gbif.ws.server.GbifHttpServletRequestWrapper;
 
 import org.junit.jupiter.api.Test;
@@ -20,10 +21,14 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.access.annotation.Secured;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.method.HandlerMethod;
 
 import jakarta.servlet.http.HttpServletResponse;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
 
@@ -57,4 +62,21 @@ public class AuthPreCheckInterceptorTest {
         .thenReturn(null);
     assertTrue(authPreCheckInterceptor.preHandle(mockRequest, mockResponse, new Object()));
   }
+
+  /** An anonymous precheck of a secured method is forbidden, not a NullPointerException. */
+  @Test
+  public void checkPermissionsOnlyAnonymousRequestTest() throws Exception {
+    when(mockRequest.getParameter(AuthPreCheckInterceptor.CHECK_PERMISSIONS_ONLY_PARAM))
+        .thenReturn("true");
+    SecurityContextHolder.clearContext();
+    HandlerMethod handler =
+        new HandlerMethod(this, AuthPreCheckInterceptorTest.class.getMethod("securedMethod"));
+
+    assertThrows(
+        WebApplicationException.class,
+        () -> authPreCheckInterceptor.preHandle(mockRequest, mockResponse, handler));
+  }
+
+  @Secured("REGISTRY_EDITOR")
+  public void securedMethod() {}
 }
