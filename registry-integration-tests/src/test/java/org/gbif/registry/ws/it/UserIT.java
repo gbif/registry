@@ -77,6 +77,11 @@ public class UserIT extends BaseItTest {
   }
 
   @Test
+  public void testBasicAuthNoCredentials() throws Exception {
+    requestTestFixture.getRequest("/user/auth/basic").andExpect(status().isUnauthorized());
+  }
+
+  @Test
   public void testLoginGet() throws Exception {
     GbifUser user = userTestFixture.prepareUser();
 

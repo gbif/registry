@@ -114,10 +114,10 @@ public class UserResource {
       path = "auth/basic",
       method = {RequestMethod.GET, RequestMethod.POST})
   public ResponseEntity<?> basicRemoteAuth(Authentication authentication) {
-    LOG.debug("Remote basic authentication: {}", authentication);
-    LOG.debug("Remote basic authentication (name): {}", authentication.getName());
     // the user shall be authenticated using basic auth. scheme only.
     ensureUserSetInSecurityContext(authentication);
+    LOG.debug("Remote basic authentication: {}", authentication);
+    LOG.debug("Remote basic authentication (name): {}", authentication.getName());
     ensureNotGbifScheme(authentication);
 
     String username = authentication.getName();
