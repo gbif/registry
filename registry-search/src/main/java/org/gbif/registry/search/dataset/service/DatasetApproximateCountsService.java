@@ -17,6 +17,9 @@ import org.gbif.api.model.registry.ApproximateCounts;
 
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -24,26 +27,32 @@ import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import co.elastic.clients.elasticsearch.ElasticsearchClient;
+import co.elastic.clients.elasticsearch.ElasticsearchAsyncClient;
 import co.elastic.clients.elasticsearch.core.GetResponse;
 import lombok.extern.slf4j.Slf4j;
 
 /**
  * Reads approximate occurrence / name-usage counts from the dataset search index.
  * Counts are index-time snapshots and may be stale relative to live metrics.
+ *
+ * <p>The counts are an optional extra on every dataset read, so the lookup is bounded by a short
+ * timeout and returns empty rather than holding up the caller when Elasticsearch is slow.
  */
 @Slf4j
 @Service
 public class DatasetApproximateCountsService {
 
-  private final ElasticsearchClient elasticsearchClient;
+  private final ElasticsearchAsyncClient elasticsearchClient;
   private final String index;
+  private final long timeoutMs;
 
   @Autowired
   public DatasetApproximateCountsService(
       @Value("${elasticsearch.registry.index}") String index,
-      ElasticsearchClient elasticsearchClient) {
+      @Value("${elasticsearch.registry.approximateCountsTimeoutMs:2000}") long timeoutMs,
+      ElasticsearchAsyncClient elasticsearchClient) {
     this.index = index;
+    this.timeoutMs = timeoutMs;
     this.elasticsearchClient = elasticsearchClient;
   }
 
@@ -54,9 +63,11 @@ public class DatasetApproximateCountsService {
     if (datasetKey == null) {
       return Optional.empty();
     }
+    CompletableFuture<GetResponse<ObjectNode>> future = null;
     try {
-      GetResponse<ObjectNode> response =
+      future =
           elasticsearchClient.get(g -> g.index(index).id(datasetKey.toString()), ObjectNode.class);
+      GetResponse<ObjectNode> response = future.get(timeoutMs, TimeUnit.MILLISECONDS);
       if (!response.found() || response.source() == null) {
         return Optional.empty();
       }
@@ -72,6 +83,14 @@ public class DatasetApproximateCountsService {
         return Optional.empty();
       }
       return Optional.of(counts);
+    } catch (TimeoutException e) {
+      future.cancel(true);
+      log.warn(
+          "Timed out after {} ms loading approximate counts for dataset {}", timeoutMs, datasetKey);
+      return Optional.empty();
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      return Optional.empty();
     } catch (Exception e) {
       log.warn("Failed to load approximate counts for dataset {}", datasetKey, e);
       return Optional.empty();
