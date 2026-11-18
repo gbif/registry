@@ -35,13 +35,22 @@ import java.net.URI;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import com.google.common.base.Joiner;
+import com.google.common.eventbus.AllowConcurrentEvents;
 import com.google.common.eventbus.Subscribe;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 /**
  * A event bus listener that will flush varnish if registry entities like datasets and organizations
@@ -133,6 +142,12 @@ import com.google.common.eventbus.Subscribe;
  *       <li>grscicoll/{collection|institution}/changeSuggestion/{key} PURGE
  *       <li>grscicoll/{collection|institution}/changeSuggestion BAN
  *     </ul>
+ *     <h3>Threading</h3>
+ *     Purging is best-effort and must never hold up the request that triggered it. Handlers do not
+ *     run on the posting thread: their work is queued on a bounded executor, and when the event is
+ *     posted inside a transaction it is only queued once that transaction commits. This keeps
+ *     remote calls (Varnish, and the lookups done to compute cascades) out of open transactions
+ *     and stops one slow call from blocking every request that posts an event.
  */
 public class VarnishPurgeListener {
 
@@ -143,7 +158,9 @@ public class VarnishPurgeListener {
   private final InstitutionService institutionService;
   private final CollectionService collectionService;
   private final VarnishPurger purger;
+  private final ExecutorService executor;
   private static final Joiner PATH_JOINER = Joiner.on("/").skipNulls();
+  private static final int MAX_QUEUED_PURGES = 10_000;
 
   public VarnishPurgeListener(
       CloseableHttpClient client,
@@ -153,7 +170,8 @@ public class VarnishPurgeListener {
       InstallationService installationService,
       DatasetService datasetService,
       InstitutionService institutionService,
-      CollectionService collectionService) {
+      CollectionService collectionService,
+      int purgingThreads) {
     this.organizationService = organizationService;
     this.installationService = installationService;
     this.datasetService = datasetService;
@@ -162,120 +180,199 @@ public class VarnishPurgeListener {
     eventManager.register(this);
 
     purger = new VarnishPurger(client, apiBaseUrl);
+    int threads = Math.max(1, purgingThreads);
+    executor =
+        new ThreadPoolExecutor(
+            threads,
+            threads,
+            0L,
+            TimeUnit.MILLISECONDS,
+            new LinkedBlockingQueue<>(MAX_QUEUED_PURGES),
+            new ThreadFactoryBuilder().setNameFormat("varnish-purge-%d").setDaemon(true).build());
+  }
+
+  /** Stops the purge executor; called by Spring when the context closes. */
+  public void shutdown() {
+    executor.shutdown();
+  }
+
+  /**
+   * Runs the task on the purge executor, deferring it until after commit when called inside a
+   * transaction. Tasks for a rolled-back transaction are dropped, as nothing changed.
+   */
+  private void submit(Runnable task) {
+    if (TransactionSynchronizationManager.isSynchronizationActive()) {
+      TransactionSynchronizationManager.registerSynchronization(
+          new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+              dispatch(task);
+            }
+          });
+    } else {
+      dispatch(task);
+    }
+  }
+
+  private void dispatch(Runnable task) {
+    try {
+      executor.execute(
+          () -> {
+            try {
+              task.run();
+            } catch (Exception e) {
+              LOG.warn("Varnish purge failed", e);
+            }
+          });
+    } catch (RejectedExecutionException e) {
+      LOG.warn("Varnish purge queue is full or shut down, dropping purge");
+    }
   }
 
   @Subscribe
+  @AllowConcurrentEvents
   public final <T> void created(CreateEvent<T> event) {
-    if (NetworkEntity.class.isAssignableFrom(event.getObjectClass())) {
-      purgeEntityAndBanLists(
-          event.getObjectClass(), ((NetworkEntity) event.getNewObject()).getKey());
-    }
+    submit(
+        () -> {
+          if (NetworkEntity.class.isAssignableFrom(event.getObjectClass())) {
+            purgeEntityAndBanLists(
+                event.getObjectClass(), ((NetworkEntity) event.getNewObject()).getKey());
+          }
 
-    if (event.getObjectClass().equals(Organization.class)) {
-      cascadeOrganizationChange((Organization) event.getNewObject());
-    } else if (event.getObjectClass().equals(Dataset.class)) {
-      cascadeDatasetChange((Dataset) event.getNewObject());
-    } else if (event.getObjectClass().equals(Installation.class)) {
-      cascadeInstallationChange((Installation) event.getNewObject());
-    } else if (event.getObjectClass().equals(DerivedDataset.class)) {
-      cascadeDerivedDatasetChange((DerivedDataset) event.getNewObject());
-    }
+          if (event.getObjectClass().equals(Organization.class)) {
+            cascadeOrganizationChange((Organization) event.getNewObject());
+          } else if (event.getObjectClass().equals(Dataset.class)) {
+            cascadeDatasetChange((Dataset) event.getNewObject());
+          } else if (event.getObjectClass().equals(Installation.class)) {
+            cascadeInstallationChange((Installation) event.getNewObject());
+          } else if (event.getObjectClass().equals(DerivedDataset.class)) {
+            cascadeDerivedDatasetChange((DerivedDataset) event.getNewObject());
+          }
+        });
   }
 
   @Subscribe
+  @AllowConcurrentEvents
   public final <T> void updated(UpdateEvent<T> event) {
-    if (NetworkEntity.class.isAssignableFrom(event.getObjectClass())) {
-      purgeEntityAndBanLists(
-          event.getObjectClass(), ((NetworkEntity) event.getOldObject()).getKey());
-    }
+    submit(
+        () -> {
+          if (NetworkEntity.class.isAssignableFrom(event.getObjectClass())) {
+            purgeEntityAndBanLists(
+                event.getObjectClass(), ((NetworkEntity) event.getOldObject()).getKey());
+          }
 
-    if (event.getObjectClass().equals(Organization.class)) {
-      cascadeOrganizationChange(
-          (Organization) event.getOldObject(), (Organization) event.getNewObject());
-    } else if (event.getObjectClass().equals(Dataset.class)) {
-      cascadeDatasetChange((Dataset) event.getOldObject(), (Dataset) event.getNewObject());
-    } else if (event.getObjectClass().equals(Installation.class)) {
-      cascadeInstallationChange(
-          (Installation) event.getOldObject(), (Installation) event.getNewObject());
-    } else if (event.getObjectClass().equals(DerivedDataset.class)) {
-      cascadeDerivedDatasetChange((DerivedDataset) event.getNewObject());
-    }
+          if (event.getObjectClass().equals(Organization.class)) {
+            cascadeOrganizationChange(
+                (Organization) event.getOldObject(), (Organization) event.getNewObject());
+          } else if (event.getObjectClass().equals(Dataset.class)) {
+            cascadeDatasetChange((Dataset) event.getOldObject(), (Dataset) event.getNewObject());
+          } else if (event.getObjectClass().equals(Installation.class)) {
+            cascadeInstallationChange(
+                (Installation) event.getOldObject(), (Installation) event.getNewObject());
+          } else if (event.getObjectClass().equals(DerivedDataset.class)) {
+            cascadeDerivedDatasetChange((DerivedDataset) event.getNewObject());
+          }
+        });
   }
 
   @Subscribe
+  @AllowConcurrentEvents
   public final <T> void deleted(DeleteEvent<T> event) {
-    if (NetworkEntity.class.isAssignableFrom(event.getObjectClass())) {
-      purgeEntityAndBanLists(
-          event.getObjectClass(), ((NetworkEntity) event.getOldObject()).getKey());
-    }
+    submit(
+        () -> {
+          if (NetworkEntity.class.isAssignableFrom(event.getObjectClass())) {
+            purgeEntityAndBanLists(
+                event.getObjectClass(), ((NetworkEntity) event.getOldObject()).getKey());
+          }
 
-    if (event.getObjectClass().equals(Organization.class)) {
-      cascadeOrganizationChange((Organization) event.getOldObject());
-    } else if (event.getObjectClass().equals(Dataset.class)) {
-      cascadeDatasetChange((Dataset) event.getOldObject());
-    } else if (event.getObjectClass().equals(Installation.class)) {
-      cascadeInstallationChange((Installation) event.getOldObject());
-    } else if (event.getObjectClass().equals(DerivedDataset.class)) {
-      cascadeDerivedDatasetChange((DerivedDataset) event.getOldObject());
-    }
+          if (event.getObjectClass().equals(Organization.class)) {
+            cascadeOrganizationChange((Organization) event.getOldObject());
+          } else if (event.getObjectClass().equals(Dataset.class)) {
+            cascadeDatasetChange((Dataset) event.getOldObject());
+          } else if (event.getObjectClass().equals(Installation.class)) {
+            cascadeInstallationChange((Installation) event.getOldObject());
+          } else if (event.getObjectClass().equals(DerivedDataset.class)) {
+            cascadeDerivedDatasetChange((DerivedDataset) event.getOldObject());
+          }
+        });
   }
 
   @Subscribe
+  @AllowConcurrentEvents
   public final <T extends CollectionEntity> void createdCollection(
       CreateCollectionEntityEvent<T> event) {
-    purgeEntityAndBanLists(
-        path("grscicoll", event.getCollectionEntityType().name().toLowerCase()),
-        event.getNewObject().getKey());
-    purger.ban("grscicoll/search");
+    submit(
+        () -> {
+          purgeEntityAndBanLists(
+              path("grscicoll", event.getCollectionEntityType().name().toLowerCase()),
+              event.getNewObject().getKey());
+          purger.ban("grscicoll/search");
+        });
   }
 
   @Subscribe
+  @AllowConcurrentEvents
   public final <T extends CollectionEntity> void updatedCollection(
       UpdateCollectionEntityEvent<T> event) {
-    purgeEntityAndBanLists(
-        path("grscicoll", event.getCollectionEntityType().name().toLowerCase()),
-        event.getOldObject().getKey());
-    purger.ban("grscicoll/search");
+    submit(
+        () -> {
+          purgeEntityAndBanLists(
+              path("grscicoll", event.getCollectionEntityType().name().toLowerCase()),
+              event.getOldObject().getKey());
+          purger.ban("grscicoll/search");
+        });
   }
 
   @Subscribe
+  @AllowConcurrentEvents
   public final <T extends CollectionEntity> void deletedCollection(
       DeleteCollectionEntityEvent<T> event) {
-    purgeEntityAndBanLists(
-        path("grscicoll", event.getCollectionEntityType().name().toLowerCase()),
-        event.getOldObject().getKey());
-    purger.ban("grscicoll/search");
+    submit(
+        () -> {
+          purgeEntityAndBanLists(
+              path("grscicoll", event.getCollectionEntityType().name().toLowerCase()),
+              event.getOldObject().getKey());
+          purger.ban("grscicoll/search");
+        });
   }
 
   @Subscribe
+  @AllowConcurrentEvents
   public final <T extends CollectionEntity, R> void collectionSubEntityChange(
       SubEntityCollectionEvent<T, R> event) {
-    if (event.getSubEntityClass().equals(ChangeSuggestionDto.class)) {
-      purgeEntityAndBanLists(
-          path(
-              "grscicoll",
-              event.getCollectionEntityType().name().toLowerCase(),
-              "changeSuggestion"),
-          event.getSubEntityKey());
-    } else {
-      purgeEntityAndBanLists(
-          path("grscicoll", event.getCollectionEntityType().name().toLowerCase()),
-          event.getCollectionEntityKey());
-    }
-    purger.ban("grscicoll/search");
+    submit(
+        () -> {
+          if (event.getSubEntityClass().equals(ChangeSuggestionDto.class)) {
+            purgeEntityAndBanLists(
+                path(
+                    "grscicoll",
+                    event.getCollectionEntityType().name().toLowerCase(),
+                    "changeSuggestion"),
+                event.getSubEntityKey());
+          } else {
+            purgeEntityAndBanLists(
+                path("grscicoll", event.getCollectionEntityType().name().toLowerCase()),
+                event.getCollectionEntityKey());
+          }
+          purger.ban("grscicoll/search");
+        });
   }
 
   @Subscribe
+  @AllowConcurrentEvents
   public final void componentChange(ChangedComponentEvent event) {
-    purgeEntityAndBanLists(event.getTargetClass(), event.getTargetEntityKey());
-    // keys have not changed, only some component of the entity itself
-    if (event.getTargetClass().equals(Organization.class)) {
-      cascadeOrganizationChange(organizationService.get(event.getTargetEntityKey()));
-    } else if (event.getTargetClass().equals(Dataset.class)) {
-      cascadeDatasetChange(datasetService.get(event.getTargetEntityKey()));
-    } else if (event.getTargetClass().equals(Installation.class)) {
-      cascadeInstallationChange(installationService.get(event.getTargetEntityKey()));
-    }
+    submit(
+        () -> {
+          purgeEntityAndBanLists(event.getTargetClass(), event.getTargetEntityKey());
+          // keys have not changed, only some component of the entity itself
+          if (event.getTargetClass().equals(Organization.class)) {
+            cascadeOrganizationChange(organizationService.get(event.getTargetEntityKey()));
+          } else if (event.getTargetClass().equals(Dataset.class)) {
+            cascadeDatasetChange(datasetService.get(event.getTargetEntityKey()));
+          } else if (event.getTargetClass().equals(Installation.class)) {
+            cascadeInstallationChange(installationService.get(event.getTargetEntityKey()));
+          }
+        });
   }
 
   // group bans by entity class to avoid too many ban rules and thus bad varnish performance
