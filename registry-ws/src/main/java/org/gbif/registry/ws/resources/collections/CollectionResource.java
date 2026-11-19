@@ -71,6 +71,7 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -1224,7 +1225,12 @@ public class CollectionResource
     ByteArrayResource resource = new ByteArrayResource(fileBytes);
 
     return ResponseEntity.ok()
-        .header("Content-Disposition", "attachment; filename=\"" + filename + "\"")
+        .header(
+            HttpHeaders.CONTENT_DISPOSITION,
+            ContentDisposition.attachment()
+                .filename(filename, StandardCharsets.UTF_8)
+                .build()
+                .toString())
         .contentLength(fileBytes.length)
         .contentType(MediaType.APPLICATION_OCTET_STREAM)
         .body(resource);

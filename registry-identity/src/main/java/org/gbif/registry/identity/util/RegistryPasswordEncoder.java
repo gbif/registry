@@ -101,7 +101,15 @@ public class RegistryPasswordEncoder implements PasswordEncoder {
 
   @Override
   public boolean matches(CharSequence rawPassword, String encodedPassword) {
-    return encode(rawPassword.toString(), encodedPassword).equalsIgnoreCase(encodedPassword);
+    if (rawPassword == null || encodedPassword == null) {
+      return false;
+    }
+    String encoded = encode(rawPassword.toString(), encodedPassword);
+    // the hash alphabet is case sensitive; constant time, so timing does not reveal the hash
+    return encoded != null
+        && MessageDigest.isEqual(
+            encoded.getBytes(StandardCharsets.UTF_8),
+            encodedPassword.getBytes(StandardCharsets.UTF_8));
   }
 
   /**

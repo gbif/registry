@@ -89,7 +89,11 @@ public class JwtRequestFilter extends OncePerRequestFilter {
         response.addHeader(ACCESS_CONTROL_EXPOSE_HEADERS, HEADER_TOKEN);
       } catch (GbifJwtException e) {
         LOG.warn("JWT validation failed: {}", e.getErrorCode());
+        // stop here: continuing would run the request as anonymous
         response.setStatus(HttpStatus.UNAUTHORIZED.value());
+        response.setContentType("text/plain;charset=UTF-8");
+        response.getWriter().write("Invalid JWT");
+        return;
       }
     }
 

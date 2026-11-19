@@ -775,6 +775,40 @@ public class GrSciCollEditorAuthorizationFilterTest {
   }
 
   @Test
+  public void changeInstitutionKeyInCollectionUppercaseKeyAsEditorWithNoRightsTest() {
+    assertCollectionUpdateWithNoRightsForbidden(
+        "/grscicoll/collection/" + COLL_KEY.toString().toUpperCase());
+  }
+
+  @Test
+  public void changeInstitutionKeyInCollectionTrailingSlashAsEditorWithNoRightsTest() {
+    assertCollectionUpdateWithNoRightsForbidden("/grscicoll/collection/" + COLL_KEY + "/");
+  }
+
+  /** Variants of the path that Spring MVC routes to the same handler must be checked too. */
+  private void assertCollectionUpdateWithNoRightsForbidden(String requestUri) {
+    when(mockAuthenticationFacade.getAuthentication()).thenReturn(mockAuthentication);
+    when(mockRequest.getRequestURI()).thenReturn(requestUri);
+    when(mockRequest.getMethod()).thenReturn("PUT");
+
+    UUID anotherInstKey = UUID.randomUUID();
+    when(mockRequest.getContent())
+        .thenReturn(
+            "{\"key\": \"" + COLL_KEY + "\", \"institutionKey\": \"" + anotherInstKey + "\"}");
+    when(mockAuthentication.getName()).thenReturn(USERNAME);
+    doReturn(ROLES_GRSCICOLL_EDITOR_ONLY).when(mockAuthentication).getAuthorities();
+
+    doReturn(true).when(mockUserRightsMapper).keyExistsForUser(USERNAME, anotherInstKey);
+    doReturn(false).when(mockUserRightsMapper).keyExistsForUser(USERNAME, COLL_KEY);
+
+    WebApplicationException ex =
+        assertThrows(
+            WebApplicationException.class,
+            () -> filter.doFilter(mockRequest, mockResponse, mockFilterChain));
+    assertEquals(HttpStatus.FORBIDDEN.value(), ex.getStatus());
+  }
+
+  @Test
   public void changeInstitutionKeyInCollectionAsEditorWithRightsTest() {
     // GIVEN
     when(mockAuthenticationFacade.getAuthentication()).thenReturn(mockAuthentication);

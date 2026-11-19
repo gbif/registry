@@ -247,6 +247,31 @@ public class LegacyEndpointResourceIT extends BaseItTest {
    * The test sends a get all endpoints for dataset (GET) request, the JSON response having at the
    * very least the dataset key, endpoint key, endpoint type, and endpoint url.
    */
+  /**
+   * Without credentials the endpoints are not deleted, also with a trailing slash that the legacy
+   * authorization filter did not recognise.
+   */
+  @Test
+  public void testDeleteAllDatasetEndpointsWithoutCredentials() throws Exception {
+    Organization organization = testDataFactory.newPersistedOrganization();
+    Installation installation = testDataFactory.newPersistedInstallation(organization.getKey());
+    Dataset dataset =
+        testDataFactory.newPersistedDataset(organization.getKey(), installation.getKey());
+    datasetService.addEndpoint(dataset.getKey(), testDataFactory.newEndpoint());
+
+    for (String uri :
+        new String[] {
+          "/registry/service?resourceKey=" + dataset.getKey(),
+          "/registry/service/?resourceKey=" + dataset.getKey()
+        }) {
+      int status =
+          requestTestFixture.deleteRequestUrlEncoded(uri).andReturn().getResponse().getStatus();
+      assertTrue(status == 401 || status == 403, uri + " answered " + status);
+    }
+
+    assertEquals(1, datasetService.listEndpoints(dataset.getKey()).size());
+  }
+
   @Test
   public void testGetLegacyEndpointsForDatasetJSON() throws Exception {
     // persist new organization (IPT hosting organization)

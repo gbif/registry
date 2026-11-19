@@ -34,6 +34,7 @@ import org.gbif.registry.persistence.mapper.collections.InstitutionMapper;
 import org.gbif.registry.persistence.mapper.params.OrganizationListParams;
 import org.gbif.registry.security.AuthenticationFacade;
 import org.gbif.registry.security.grscicoll.GrSciCollEditorAuthorizationFilter;
+import org.gbif.registry.security.util.RequestPathUtils;
 import org.gbif.ws.server.GbifHttpServletRequestWrapper;
 
 import java.io.IOException;
@@ -146,9 +147,10 @@ public class AuthPreCheckCreationRequestFilter extends OncePerRequestFilter {
         && isEmptyBody(((GbifHttpServletRequestWrapper) request).getContent())) {
 
       // if the body is empty we create it
+      // without a user there are no scoped keys: the request is rejected by the next filters
+      Authentication authentication = authenticationFacade.getAuthentication();
       Optional<Resource> resource = getResourceToCreate(request);
-      if (resource.isPresent()) {
-        Authentication authentication = authenticationFacade.getAuthentication();
+      if (resource.isPresent() && authentication != null && authentication.getName() != null) {
         Optional<Object> entity = createEntity(authentication.getName(), resource.get());
         try {
           request =
@@ -313,7 +315,7 @@ public class AuthPreCheckCreationRequestFilter extends OncePerRequestFilter {
 
   @VisibleForTesting
   Optional<Resource> getResourceToCreate(HttpServletRequest request) {
-    final String path = request.getRequestURI();
+    final String path = RequestPathUtils.normalizedPath(request);
 
     if (path.contains("/machineTag")) {
       return Optional.of(new Resource(MACHINE_TAG));
