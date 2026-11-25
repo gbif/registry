@@ -51,7 +51,8 @@ public class AuthPreCheckInterceptor implements HandlerInterceptor {
         }
 
         String[] roles = securedAnnotation.value();
-        if (!SecurityContextCheck.checkUserInRole(authentication, roles)) {
+        if (authentication == null
+            || !SecurityContextCheck.checkUserInRole(authentication, roles)) {
           // safety check. This should never happen since the spring security filters should reject
           // this request before getting here
           throw new WebApplicationException(

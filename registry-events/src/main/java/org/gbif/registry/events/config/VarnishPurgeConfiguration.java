@@ -43,7 +43,7 @@ public class VarnishPurgeConfiguration {
     this.purgingThreads = purgingThreads;
   }
 
-  @Bean
+  @Bean(destroyMethod = "shutdown")
   public VarnishPurgeListener varnishPurgeListener(
       EventManager eventManager,
       OrganizationService organizationService,
@@ -59,6 +59,7 @@ public class VarnishPurgeConfiguration {
         installationService,
         datasetService,
         institutionService,
-        collectionService);
+        collectionService,
+        purgingThreads);
   }
 }

@@ -26,6 +26,7 @@ import org.gbif.registry.domain.ws.UserCreation;
 import org.gbif.registry.identity.model.ModelMutationError;
 import org.gbif.registry.identity.model.UserModelMutationResult;
 import org.gbif.registry.identity.mybatis.IdentitySuretyTestHelper;
+import org.gbif.registry.identity.service.IdentityService;
 import org.gbif.registry.search.test.ElasticsearchTestContainerConfiguration;
 import org.gbif.registry.security.UserRoles;
 import org.gbif.registry.ws.it.fixtures.RequestTestFixture;
@@ -52,6 +53,7 @@ import static org.gbif.registry.ws.it.fixtures.UserTestFixture.PASSWORD;
 import static org.gbif.registry.ws.it.fixtures.UserTestFixture.USERNAME;
 import static org.hamcrest.Matchers.hasSize;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -73,6 +75,7 @@ public class UserManagementIT extends BaseItTest {
   private static final String CHANGED_PASSWORD = "123456";
 
   private final IdentitySuretyTestHelper identitySuretyTestHelper;
+  private final IdentityService identityService;
   private final UserTestFixture userTestFixture;
   private final RequestTestFixture requestTestFixture;
 
@@ -81,12 +84,29 @@ public class UserManagementIT extends BaseItTest {
       UserTestFixture userTestFixture,
       RequestTestFixture requestTestFixture,
       IdentitySuretyTestHelper identitySuretyTestHelper,
+      IdentityService identityService,
       SimplePrincipalProvider simplePrincipalProvider,
       ElasticsearchTestContainerConfiguration elasticsearchTestContainer) {
     super(simplePrincipalProvider, elasticsearchTestContainer);
     this.identitySuretyTestHelper = identitySuretyTestHelper;
+    this.identityService = identityService;
     this.userTestFixture = userTestFixture;
     this.requestTestFixture = requestTestFixture;
+  }
+
+  /** A deleted user's password cannot be changed and its challenge codes are not accepted. */
+  @Test
+  public void testDeletedUserCannotChangePassword() {
+    GbifUser user = userTestFixture.prepareUser();
+    UUID challengeCode = UUID.randomUUID();
+    identityService.delete(user.getKey());
+
+    assertTrue(identityService.updatePassword(user.getKey(), CHANGED_PASSWORD).containsError());
+    assertTrue(
+        identityService
+            .updatePassword(user.getKey(), CHANGED_PASSWORD, challengeCode)
+            .containsError());
+    assertFalse(identityService.confirmUser(user.getKey(), challengeCode));
   }
 
   @Test

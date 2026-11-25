@@ -53,7 +53,7 @@ public class DbConfiguration {
         .add("serverName='" + serverName + "'")
         .add("databaseName='" + databaseName + "'")
         .add("user='" + user + "'")
-        .add("password='" + password + "'")
+        .add("password='***'")
         .add("maximumPoolSize=" + maximumPoolSize)
         .add("connectionTimeout=" + connectionTimeout)
         .toString();

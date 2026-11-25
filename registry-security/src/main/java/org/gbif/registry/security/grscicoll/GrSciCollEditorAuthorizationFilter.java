@@ -24,6 +24,7 @@ import org.gbif.api.model.registry.MachineTag;
 import org.gbif.registry.security.AuthenticationFacade;
 import org.gbif.registry.security.UserRoles;
 import org.gbif.registry.security.grscicoll.GrSciCollAuthorizationService.EntityOperationResponse;
+import org.gbif.registry.security.util.RequestPathUtils;
 import org.gbif.ws.WebApplicationException;
 import org.gbif.ws.server.GbifHttpServletRequestWrapper;
 
@@ -67,22 +68,22 @@ public class GrSciCollEditorAuthorizationFilter extends OncePerRequestFilter {
 
   public static final String GRSCICOLL_PATH = "grscicoll";
   public static final Pattern ENTITY_PATTERN =
-      Pattern.compile(".*/grscicoll/(collection|institution)/([a-f0-9-]+).*");
+      Pattern.compile(".*/grscicoll/(collection|institution)/([a-fA-F0-9-]+).*");
   public static final Pattern FIRST_CLASS_ENTITY_UPDATE =
-      Pattern.compile(".*/grscicoll/(collection|institution|person)/([a-f0-9-]+)$");
+      Pattern.compile(".*/grscicoll/(collection|institution|person)/([a-fA-F0-9-]+)$");
   public static final Pattern CHANGE_SUGGESTION_UPDATE_PATTERN =
       Pattern.compile(".*/grscicoll/(collection|institution)/changeSuggestion/([0-9]+).*");
   public static final Pattern DESCRIPTION_CHANGE_SUGGESTION_UPDATE_PATTERN =
-    Pattern.compile(".*/grscicoll/collection/([a-f0-9-]+)/descriptorGroup/suggestion/([0-9]+).*");
+    Pattern.compile(".*/grscicoll/collection/([a-fA-F0-9-]+)/descriptorGroup/suggestion/([0-9]+).*");
   public static final Pattern INST_COLL_CREATE_PATTERN =
       Pattern.compile(".*/grscicoll/(collection|institution)$");
   public static final Pattern MACHINE_TAG_PATTERN_DELETE =
       Pattern.compile(
-          ".*/grscicoll/(collection|institution|person)/([a-f0-9-]+)/machineTag/([0-9]+).*");
+          ".*/grscicoll/(collection|institution|person)/([a-fA-F0-9-]+)/machineTag/([0-9]+).*");
   public static final Pattern MERGE_PATTERN =
-      Pattern.compile(".*/grscicoll/(collection|institution)/([a-f0-9-]+)/merge$");
+      Pattern.compile(".*/grscicoll/(collection|institution)/([a-fA-F0-9-]+)/merge$");
   public static final Pattern CONVERSION_PATTERN =
-      Pattern.compile(".*/grscicoll/institution/([a-f0-9-]+)/convertToCollection$");
+      Pattern.compile(".*/grscicoll/institution/([a-fA-F0-9-]+)/convertToCollection$");
   // latimerCore sits where ENTITY_PATTERN expects a UUID, so those writes never reached the scope check.
   public static final Pattern LATIMER_CORE_PATTERN =
       Pattern.compile(
@@ -116,7 +117,7 @@ public class GrSciCollEditorAuthorizationFilter extends OncePerRequestFilter {
     // all other roles are taken care by simple 'Secured' or JSR250 annotations on the resource
     // methods
     final Authentication authentication = authenticationFacade.getAuthentication();
-    final String path = request.getRequestURI();
+    final String path = RequestPathUtils.normalizedPath(request);
 
     // skip GET and OPTIONS requests and only check requests to grscicoll
     if (isNotGetOrOptionsRequest(request)

@@ -27,6 +27,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
@@ -61,7 +62,10 @@ public final class SecurityContextCheck {
    */
   public static void ensureUserSetInSecurityContext(
       final Authentication authentication, final HttpStatus status) {
-    if (authentication == null || StringUtils.isBlank(authentication.getName())) {
+    // Spring's anonymous token is named "anonymousUser"
+    if (authentication == null
+        || authentication instanceof AnonymousAuthenticationToken
+        || StringUtils.isBlank(authentication.getName())) {
       LOG.debug("Unauthenticated or incomplete request");
       throw new WebApplicationException("Unauthenticated or incomplete request", status);
     }

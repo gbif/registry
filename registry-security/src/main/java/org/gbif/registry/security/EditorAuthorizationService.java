@@ -130,6 +130,16 @@ public interface EditorAuthorizationService {
   boolean allowedToModifyOrganization(@Nullable String name, @Nullable Organization organization);
 
   /**
+   * Checks whether an editor user can confirm or revoke the endorsement of a registry organization.
+   * Endorsement is decided by the endorsing node, rights on the organization itself are not enough.
+   *
+   * @param name name from the security context
+   * @param orgKey key of the organization in question
+   * @return true if the user has rights on the endorsing node of the organization.
+   */
+  boolean allowedToEndorseOrganization(@Nullable String name, @Nullable UUID orgKey);
+
+  /**
    * Checks whether a given registry installation is part of the list of entities for an editor
    * user. If not it checks parent entities fot the rights (e.g. organization key).
    *

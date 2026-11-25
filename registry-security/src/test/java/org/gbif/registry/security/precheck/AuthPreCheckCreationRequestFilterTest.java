@@ -13,6 +13,7 @@
  */
 package org.gbif.registry.security.precheck;
 
+import org.gbif.registry.security.AuthenticationFacade;
 import org.gbif.registry.security.EditorAuthorizationFilter;
 import org.gbif.registry.security.grscicoll.GrSciCollEditorAuthorizationFilter;
 import org.gbif.ws.server.GbifHttpServletRequestWrapper;
@@ -23,9 +24,11 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import jakarta.servlet.FilterChain;
 import jakarta.servlet.http.HttpServletResponse;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /** Tests the {@link org.gbif.registry.security.precheck.AuthPreCheckCreationRequestFilter} */
@@ -34,6 +37,8 @@ public class AuthPreCheckCreationRequestFilterTest {
 
   @Mock private GbifHttpServletRequestWrapper mockRequest;
   @Mock private HttpServletResponse mockResponse;
+  @Mock private FilterChain mockFilterChain;
+  @Mock private AuthenticationFacade mockAuthenticationFacade;
   @InjectMocks private AuthPreCheckCreationRequestFilter authPreCheckCreationRequestFilter;
 
   @Test
@@ -83,5 +88,19 @@ public class AuthPreCheckCreationRequestFilterTest {
     assertEquals(
         AuthPreCheckCreationRequestFilter.COLLECTION_MERGE,
         authPreCheckCreationRequestFilter.getResourceToCreate(mockRequest).get().name);
+  }
+
+  /** Without a user the request is passed on unchanged, for the next filters to reject it. */
+  @Test
+  public void anonymousCheckPermissionsOnlyRequestTest() throws Exception {
+    when(mockRequest.getParameter(AuthPreCheckInterceptor.CHECK_PERMISSIONS_ONLY_PARAM))
+        .thenReturn("true");
+    when(mockRequest.getMethod()).thenReturn("POST");
+    when(mockRequest.getRequestURI()).thenReturn("/dataset");
+    when(mockAuthenticationFacade.getAuthentication()).thenReturn(null);
+
+    authPreCheckCreationRequestFilter.doFilterInternal(mockRequest, mockResponse, mockFilterChain);
+
+    verify(mockFilterChain).doFilter(mockRequest, mockResponse);
   }
 }

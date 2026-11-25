@@ -14,6 +14,7 @@
 package org.gbif.registry.security;
 
 import org.gbif.registry.domain.ws.util.LegacyResourceConstants;
+import org.gbif.registry.security.util.RequestPathUtils;
 import org.gbif.ws.WebApplicationException;
 import org.gbif.ws.security.LegacyRequestAuthorization;
 import org.gbif.ws.util.CommonWsUtils;
@@ -75,7 +76,7 @@ public class LegacyAuthorizationFilter extends OncePerRequestFilter {
   protected void doFilterInternal(
       HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
       throws ServletException, IOException {
-    String path = request.getRequestURI().toLowerCase();
+    String path = RequestPathUtils.normalizedPath(request).toLowerCase();
 
     if (isGbrdsRequest(path)) {
       LOG.debug("GBRDS authorization request received");
@@ -340,7 +341,7 @@ public class LegacyAuthorizationFilter extends OncePerRequestFilter {
    * @throws WebApplicationException if incoming string key isn't a valid UUID
    */
   private UUID retrieveKeyFromRequestPath(HttpServletRequest request) {
-    String path = request.getRequestURI();
+    String path = RequestPathUtils.normalizedPath(request);
     String key = path.substring(path.lastIndexOf(SLASH) + 1);
     if (key.contains(DOT)) {
       key = key.substring(0, key.lastIndexOf(DOT));
@@ -362,7 +363,7 @@ public class LegacyAuthorizationFilter extends OncePerRequestFilter {
    * @throws WebApplicationException if incoming string key isn't a valid UUID
    */
   private UUID retrieveKeyFromMiddleRequestPath(HttpServletRequest request) {
-    String path = request.getRequestURI();
+    String path = RequestPathUtils.normalizedPath(request);
     String key =
         path.substring(
             path.lastIndexOf(DATASET_UPDATE_OR_DELETE_REQUEST_INDICATOR)
@@ -448,7 +449,13 @@ public class LegacyAuthorizationFilter extends OncePerRequestFilter {
       return false;
     }
 
-    byte[] decryptedBytes = Base64.getDecoder().decode(authentication.substring(BASIC_AUTH_HEADER.length()));
+    byte[] decryptedBytes;
+    try {
+      decryptedBytes = Base64.getDecoder().decode(authentication.substring(BASIC_AUTH_HEADER.length()));
+    } catch (IllegalArgumentException e) {
+      // not Base64: not an IPT validation request
+      return false;
+    }
     String decrypted = new String(decryptedBytes);
     Iterator<String> iter = COLON_SPLITTER.split(decrypted).iterator();
     String rawUsername = iter.next();

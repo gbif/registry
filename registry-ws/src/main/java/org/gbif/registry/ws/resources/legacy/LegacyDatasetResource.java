@@ -40,6 +40,7 @@ import org.springframework.http.CacheControl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -54,6 +55,7 @@ import com.google.common.collect.Lists;
 import io.swagger.v3.oas.annotations.Hidden;
 import jakarta.servlet.http.HttpServletResponse;
 
+import static org.gbif.registry.security.UserRoles.IPT_ROLE;
 import static org.gbif.registry.ws.util.LegacyResourceUtils.extractOrgKeyFromSecurity;
 
 /**
@@ -95,6 +97,7 @@ public class LegacyDatasetResource {
    * @return {@link ResponseEntity}
    * @see IptResource#registerDataset(LegacyDataset, Authentication)
    */
+  @Secured(IPT_ROLE)
   @PostMapping(
       value = "resource",
       consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE,
@@ -117,6 +120,7 @@ public class LegacyDatasetResource {
    * @param dataset {@link LegacyDataset} with HTTP form parameters
    * @return {@link ResponseEntity} with {@link HttpStatus#CREATED} (201) if successful
    */
+  @Secured(IPT_ROLE)
   @PostMapping(
       value = "resource/{key}",
       consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE,
@@ -364,12 +368,14 @@ public class LegacyDatasetResource {
    * @see IptResource#deleteDataset(java.util.UUID)
    */
   @SuppressWarnings("rawtypes")
+  @Secured(IPT_ROLE)
   @DeleteMapping(value = "resource/{key}")
   public ResponseEntity deleteDataset(@PathVariable("key") UUID datasetKey) {
     // reuse existing method
     return iptResource.deleteDataset(datasetKey);
   }
 
+  @Secured(IPT_ROLE)
   @PostMapping(value = "resource/{key}/network/{networkKey}")
   public ResponseEntity<Void> addDatasetToNetwork(
       @PathVariable("networkKey") UUID networkKey, @PathVariable("key") UUID key) {
@@ -377,6 +383,7 @@ public class LegacyDatasetResource {
     return ResponseEntity.noContent().cacheControl(CacheControl.noCache()).build();
   }
 
+  @Secured(IPT_ROLE)
   @DeleteMapping(value = "resource/{key}/network/{networkKey}")
   public ResponseEntity<Void> removeDatasetFromNetwork(
       @PathVariable("networkKey") UUID networkKey, @PathVariable("key") UUID key) {

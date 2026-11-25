@@ -78,6 +78,11 @@ public class EditorAuthorizationServiceStub implements EditorAuthorizationServic
   }
 
   @Override
+  public boolean allowedToEndorseOrganization(String name, UUID orgKey) {
+    return false;
+  }
+
+  @Override
   public boolean allowedToModifyInstallation(String user, UUID installationKey) {
     return false;
   }

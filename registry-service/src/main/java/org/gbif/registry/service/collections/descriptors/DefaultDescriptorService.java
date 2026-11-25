@@ -400,8 +400,8 @@ public class DefaultDescriptorService implements DescriptorsService {
     return DescriptorParams.builder()
         .query(query)
         .checklistKey(
-            !Strings.isNullOrEmpty(searchRequest.getChecklistKey())
-                ? searchRequest.getChecklistKey()
+            searchRequest.getChecklistKey() != null
+                ? searchRequest.getChecklistKey().toString()
                 : defaultChecklistKey)
         .descriptorGroupKey(searchRequest.getDescriptorGroupKey())
         .country(searchRequest.getCountry())
