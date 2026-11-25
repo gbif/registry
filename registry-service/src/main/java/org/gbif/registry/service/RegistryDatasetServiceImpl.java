@@ -296,13 +296,12 @@ public class RegistryDatasetServiceImpl implements RegistryDatasetService {
   @Nullable
   @Override
   public Dataset getPreferredMetadataDataset(UUID key) {
-    List<Metadata> docs = listMetadata(key, null);
-    if (!docs.isEmpty()) {
-      // the list is sorted by priority already, just pick the first!
-      Integer metadataKey = docs.get(0).getKey();
+    Metadata preferred = preferredMetadata(listMetadata(key, null));
+    if (preferred != null) {
+      Integer metadataKey = preferred.getKey();
       byte[] metadataDocument = getMetadataDocument(metadataKey);
       try {
-        switch (docs.get(0).getType()) {
+        switch (preferred.getType()) {
           case DC:
             return DatasetDcParser.build(metadataDocument);
           case EML:
@@ -319,6 +318,36 @@ public class RegistryDatasetServiceImpl implements RegistryDatasetService {
     }
 
     return null;
+  }
+
+  /**
+   * Picks the metadata document the dataset is updated from: the most recently stored EML, COL_DP
+   * or DWC_DP document, so for a dataset with an EML endpoint and a ColDP/DwC-DP archive whichever
+   * source the crawler synced last wins. DC is only used when there is nothing else.
+   *
+   * <p>{@code docs} is sorted by type, then created descending (see MetadataMapper.list).
+   */
+  @Nullable
+  static Metadata preferredMetadata(List<Metadata> docs) {
+    Metadata preferred = null;
+    for (Metadata doc : docs) {
+      if (preferred == null || morePreferred(doc, preferred)) {
+        preferred = doc;
+      }
+    }
+    return preferred;
+  }
+
+  private static boolean morePreferred(Metadata doc, Metadata current) {
+    boolean docIsDc = doc.getType() == MetadataType.DC;
+    boolean currentIsDc = current.getType() == MetadataType.DC;
+    if (docIsDc != currentIsDc) {
+      return currentIsDc;
+    }
+    // strictly later only, so equal dates keep the list's type priority
+    return doc.getCreated() != null
+        && current.getCreated() != null
+        && doc.getCreated().after(current.getCreated());
   }
 
   @Override
