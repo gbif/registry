@@ -46,11 +46,13 @@ import org.gbif.api.vocabulary.MaintenanceUpdateFrequency;
 import org.gbif.api.vocabulary.MetadataType;
 import org.gbif.metrics.ws.client.CubeWsClient;
 import org.gbif.registry.identity.service.IdentityService;
+import org.gbif.registry.persistence.mapper.OrganizationMapper;
 import org.gbif.registry.search.dataset.indexing.DatasetRealtimeIndexer;
 import org.gbif.registry.search.dataset.indexing.ws.taxon.TaxonApiClient;
 import org.gbif.registry.search.test.BaseElasticsearchTest;
 import org.gbif.registry.search.test.DatasetSearchUpdateUtils;
 import org.gbif.registry.search.test.ElasticsearchTestContainerConfiguration;
+import org.gbif.registry.service.privatesector.PrivateSectorCategoryService;
 import org.gbif.registry.test.Datasets;
 import org.gbif.registry.test.TestDataFactory;
 import org.gbif.registry.ws.client.DatasetClient;
@@ -80,6 +82,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.apache.commons.beanutils.BeanUtils;
 import org.apache.ibatis.io.Resources;
@@ -146,6 +149,8 @@ class DatasetIT extends NetworkEntityIT<Dataset> {
   private final RequestTestFixture requestTestFixture;
   private final CubeWsClient cubeWsClient;
   private final TaxonApiClient taxonApiClient;
+  private final PrivateSectorCategoryService privateSectorCategoryService;
+  private final OrganizationMapper organizationMapper;
 
   @RegisterExtension
   BaseElasticsearchTest.ElasticsearchRefreshExtension elasticsearchRefreshExtension;
@@ -165,6 +170,8 @@ class DatasetIT extends NetworkEntityIT<Dataset> {
       ElasticsearchTestContainerConfiguration elasticsearchTestContainer,
       CubeWsClient cubeWsClient,
       TaxonApiClient taxonApiClient,
+      PrivateSectorCategoryService privateSectorCategoryService,
+      OrganizationMapper organizationMapper,
       KeyStore keyStore,
       @LocalServerPort int localServerPort) {
     super(
@@ -189,6 +196,8 @@ class DatasetIT extends NetworkEntityIT<Dataset> {
     this.elasticsearchTestContainer = elasticsearchTestContainer;
     this.cubeWsClient = cubeWsClient;
     this.taxonApiClient = taxonApiClient;
+    this.privateSectorCategoryService = privateSectorCategoryService;
+    this.organizationMapper = organizationMapper;
     this.elasticsearchRefreshExtension = new BaseElasticsearchTest.ElasticsearchRefreshExtension(elasticsearchTestContainer);
   }
 
@@ -2156,5 +2165,115 @@ class DatasetIT extends NetworkEntityIT<Dataset> {
     assertNotNull(detail.getApproximateCounts());
     assertEquals(Long.valueOf(30002), detail.getApproximateCounts().getOccurrenceCount());
     assertEquals(Long.valueOf(10407), detail.getApproximateCounts().getNameUsageCount());
+  }
+
+  // --- dataset categories derived from the publisher's private sector machine tag ---
+
+  private static final String PRIVATE_SECTOR_NS = "privateSector.gbif.org";
+
+  private Set<String> privateSectorTagValues(DatasetService service, UUID datasetKey, String name) {
+    return service.listMachineTags(datasetKey).stream()
+        .filter(t -> PRIVATE_SECTOR_NS.equals(t.getNamespace()) && name.equals(t.getName()))
+        .map(MachineTag::getValue)
+        .collect(Collectors.toSet());
+  }
+
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  public void testPrivateSectorCategoriesOnCreateAndTagRemoval(ServiceType serviceType) {
+    DatasetService service = (DatasetService) getService(serviceType);
+    OrganizationService organizationService =
+        getService(serviceType, organizationResource, organizationClient);
+    Dataset dataset = newEntity(serviceType);
+    UUID orgKey = dataset.getPublishingOrganizationKey();
+    int tagKey =
+        organizationService.addMachineTag(
+            orgKey, new MachineTag(PRIVATE_SECTOR_NS, "sector", "Consulting"));
+
+    // a manual category is kept untouched throughout
+    dataset.setCategory(new HashSet<>(Collections.singleton("CitizenScience")));
+    UUID key = service.create(dataset);
+
+    assertEquals(
+        new HashSet<>(Arrays.asList("CitizenScience", "BusinessSector", "Consulting")),
+        service.get(key).getCategory());
+    assertEquals(
+        new HashSet<>(Arrays.asList("BusinessSector", "Consulting")),
+        privateSectorTagValues(service, key, "autoCategory"));
+
+    organizationService.deleteMachineTag(orgKey, tagKey);
+
+    assertEquals(Collections.singleton("CitizenScience"), service.get(key).getCategory());
+    assertTrue(privateSectorTagValues(service, key, "autoCategory").isEmpty());
+  }
+
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  public void testPrivateSectorCategoriesExistingDatasetsAndManualRemoval(ServiceType serviceType) {
+    DatasetService service = (DatasetService) getService(serviceType);
+    OrganizationService organizationService =
+        getService(serviceType, organizationResource, organizationClient);
+    Dataset dataset = newEntity(serviceType);
+    UUID orgKey = dataset.getPublishingOrganizationKey();
+    UUID key = service.create(dataset);
+    assertNull(service.get(key).getCategory());
+
+    // tagging the publisher updates its existing datasets; an unknown value falls back
+    organizationService.addMachineTag(orgKey, new MachineTag(PRIVATE_SECTOR_NS, "sector", "foo"));
+    assertEquals(Collections.singleton("BusinessSector"), service.get(key).getCategory());
+
+    // an editor removes the category: it's excluded and not added back
+    Dataset update = service.get(key);
+    update.setCategory(null);
+    service.update(update);
+    organizationService.addMachineTag(
+        orgKey, new MachineTag(PRIVATE_SECTOR_NS, "sector", "Energy"));
+
+    assertNull(service.get(key).getCategory());
+    assertEquals(
+        Collections.singleton("BusinessSector"),
+        privateSectorTagValues(service, key, "excludedCategory"));
+    assertTrue(privateSectorTagValues(service, key, "autoCategory").isEmpty());
+  }
+
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  public void testPrivateSectorCategoriesOnPublisherChange(ServiceType serviceType) {
+    DatasetService service = (DatasetService) getService(serviceType);
+    OrganizationService organizationService =
+        getService(serviceType, organizationResource, organizationClient);
+    Dataset dataset = newEntity(serviceType);
+    UUID key = service.create(dataset);
+
+    Dataset other = newEntity(serviceType);
+    UUID taggedOrgKey = other.getPublishingOrganizationKey();
+    organizationService.addMachineTag(
+        taggedOrgKey, new MachineTag(PRIVATE_SECTOR_NS, "sector", "Energy"));
+
+    Dataset update = service.get(key);
+    update.setPublishingOrganizationKey(taggedOrgKey);
+    service.update(update);
+
+    assertEquals(
+        new HashSet<>(Arrays.asList("BusinessSector", "Energy")), service.get(key).getCategory());
+  }
+
+  @Test
+  public void testPrivateSectorCategoriesSyncAll() {
+    DatasetService service = (DatasetService) getService(ServiceType.RESOURCE);
+    Dataset dataset = newEntity(ServiceType.RESOURCE);
+    UUID orgKey = dataset.getPublishingOrganizationKey();
+    organizationResource.addMachineTag(
+        orgKey, new MachineTag(PRIVATE_SECTOR_NS, "sector", "Consulting"));
+    UUID key = service.create(dataset);
+    assertEquals(
+        new HashSet<>(Arrays.asList("BusinessSector", "Consulting")),
+        service.get(key).getCategory());
+
+    // the tag disappears without an event, as if removed before this feature existed
+    organizationMapper.deleteMachineTags(orgKey, PRIVATE_SECTOR_NS, "sector");
+    privateSectorCategoryService.syncAll();
+
+    assertNull(service.get(key).getCategory());
   }
 }

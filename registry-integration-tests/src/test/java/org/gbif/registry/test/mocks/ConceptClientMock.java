@@ -181,7 +181,13 @@ public class ConceptClientMock implements ConceptClient {
 
     Concept concept = new Concept();
     concept.setName(conceptName);
-    return new ConceptView(concept);
+    ConceptView view = new ConceptView(concept);
+    // sector concepts used by the private sector category tests
+    if ("DatasetCategory".equals(vocabName)
+        && ("Consulting".equals(conceptName) || "Energy".equals(conceptName))) {
+      view.setParents(Collections.singletonList("BusinessSector"));
+    }
+    return view;
   }
 
   @Override

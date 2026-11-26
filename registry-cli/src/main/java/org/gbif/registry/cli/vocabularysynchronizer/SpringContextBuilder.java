@@ -32,6 +32,7 @@ import org.gbif.registry.service.DatasetCategoryService;
 import org.gbif.registry.service.VocabularyConceptService;
 import org.gbif.registry.service.WithMyBatis;
 import org.gbif.registry.service.collections.descriptors.DescriptorVocabularySynchronizer;
+import org.gbif.registry.service.privatesector.PrivateSectorCategoryService;
 import org.gbif.registry.ws.client.DatasetClient;
 import org.gbif.registry.ws.client.DatasetDataPackageClient;
 import org.gbif.registry.ws.client.InstallationClient;
@@ -101,6 +102,8 @@ public class SpringContextBuilder {
     ctx.register(VocabularyConceptService.class);
     ctx.register(DescriptorVocabularySynchronizer.class);
     ctx.register(DatasetCategoryService.class);
+    // registered after DatasetCategoryService so deprecated categories are cleaned up first
+    ctx.register(PrivateSectorCategoryService.class);
     ctx.register(WithMyBatis.class);
 
     // Register database configuration
