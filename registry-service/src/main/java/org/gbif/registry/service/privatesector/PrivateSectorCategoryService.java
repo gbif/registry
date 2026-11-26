@@ -197,86 +197,105 @@ public class PrivateSectorCategoryService implements VocabularyPostProcessor {
       return false;
     }
 
-    Set<String> categories =
-        dataset.getCategory() != null
-            ? new LinkedHashSet<>(dataset.getCategory())
-            : new LinkedHashSet<>();
-    List<MachineTag> markers = new ArrayList<>();
-    Set<String> excluded = new LinkedHashSet<>();
-    for (MachineTag tag : listMachineTags(datasetMapper, datasetKey)) {
-      if (NAMESPACE.equals(tag.getNamespace()) && AUTO_CATEGORY_TAG.equals(tag.getName())) {
-        markers.add(tag);
-      } else if (NAMESPACE.equals(tag.getNamespace())
-          && EXCLUDED_CATEGORY_TAG.equals(tag.getName())) {
-        excluded.add(tag.getValue());
-      }
-    }
+    DatasetTags tags = readTags(datasetKey);
+    Changes changes = new Changes(dataset.getCategory());
 
-    List<MachineTag> tagsToDelete = new ArrayList<>();
-    List<MachineTag> tagsToAdd = new ArrayList<>();
-    boolean categoryChanged = false;
-
-    // 1. a marked category that is gone was removed by hand: remember it as excluded
-    List<MachineTag> liveMarkers = new ArrayList<>();
-    for (MachineTag marker : markers) {
-      if (categories.contains(marker.getValue())) {
-        liveMarkers.add(marker);
-      } else {
-        tagsToDelete.add(marker);
-        if (excluded.add(marker.getValue())) {
-          tagsToAdd.add(newTag(EXCLUDED_CATEGORY_TAG, marker.getValue()));
-        }
-      }
-    }
-
+    List<MachineTag> liveMarkers = excludeRemovedCategories(tags, changes);
     Set<String> desired =
-        excluded.contains(BUSINESS_SECTOR)
+        tags.excluded().contains(BUSINESS_SECTOR)
             ? Set.of()
             : desiredCategories(dataset.getPublishingOrganizationKey(), resolved);
+    removeUnwanted(liveMarkers, desired, changes);
+    addMissing(desired, tags.excluded(), changes);
 
-    // 2. remove what we added and is no longer wanted
-    for (MachineTag marker : liveMarkers) {
-      if (!desired.contains(marker.getValue())) {
-        categories.remove(marker.getValue());
-        tagsToDelete.add(marker);
-        categoryChanged = true;
-      }
-    }
-
-    // 3. add what is wanted, unless excluded or already there (an unmarked one is manual)
-    for (String concept : desired) {
-      if (!excluded.contains(concept) && !categories.contains(concept)) {
-        categories.add(concept);
-        tagsToAdd.add(newTag(AUTO_CATEGORY_TAG, concept));
-        categoryChanged = true;
-      }
-    }
-
-    if (!categoryChanged && tagsToDelete.isEmpty() && tagsToAdd.isEmpty()) {
+    if (changes.isEmpty()) {
       return false;
     }
-
-    // category first: if a tag write fails, an unmarked category is treated as manual and kept,
-    // which is safer than a marker without a category (read as a manual removal)
-    if (categoryChanged) {
-      dataset.setCategory(categories.isEmpty() ? null : categories);
-      dataset.setModifiedBy(SYNC_USER);
-      datasetMapper.update(dataset);
-    }
-    for (MachineTag tag : tagsToDelete) {
-      datasetMapper.deleteMachineTag(datasetKey, tag.getKey());
-    }
-    for (MachineTag tag : tagsToAdd) {
-      withMyBatis.addMachineTag(machineTagMapper, datasetMapper, datasetKey, tag);
-    }
-
+    apply(dataset, changes);
     log.info(
         "Private sector categories of dataset {} set to {} (excluded: {})",
         datasetKey,
-        categories,
-        excluded);
+        changes.categories,
+        tags.excluded());
     esDatasetRealtimeIndexer.index(datasetMapper.get(datasetKey));
     return true;
+  }
+
+  /** The dataset's autoCategory markers and excluded concepts. */
+  private DatasetTags readTags(UUID datasetKey) {
+    List<MachineTag> markers = new ArrayList<>();
+    Set<String> excluded = new LinkedHashSet<>();
+    for (MachineTag tag : listMachineTags(datasetMapper, datasetKey)) {
+      if (!NAMESPACE.equals(tag.getNamespace())) {
+        continue;
+      }
+      if (AUTO_CATEGORY_TAG.equals(tag.getName())) {
+        markers.add(tag);
+      } else if (EXCLUDED_CATEGORY_TAG.equals(tag.getName())) {
+        excluded.add(tag.getValue());
+      }
+    }
+    return new DatasetTags(markers, excluded);
+  }
+
+  /**
+   * A marked category that is gone was removed by hand: replace its marker with an exclusion.
+   * Adds the new exclusions to {@code tags.excluded()}.
+   *
+   * @return the markers whose category is still present
+   */
+  private static List<MachineTag> excludeRemovedCategories(DatasetTags tags, Changes changes) {
+    List<MachineTag> liveMarkers = new ArrayList<>();
+    for (MachineTag marker : tags.markers()) {
+      if (changes.categories.contains(marker.getValue())) {
+        liveMarkers.add(marker);
+      } else {
+        changes.tagsToDelete.add(marker);
+        if (tags.excluded().add(marker.getValue())) {
+          changes.tagsToAdd.add(newTag(EXCLUDED_CATEGORY_TAG, marker.getValue()));
+        }
+      }
+    }
+    return liveMarkers;
+  }
+
+  /** Removes categories we added that are no longer wanted, together with their markers. */
+  private static void removeUnwanted(
+      List<MachineTag> liveMarkers, Set<String> desired, Changes changes) {
+    for (MachineTag marker : liveMarkers) {
+      if (!desired.contains(marker.getValue())) {
+        changes.categories.remove(marker.getValue());
+        changes.tagsToDelete.add(marker);
+        changes.categoryChanged = true;
+      }
+    }
+  }
+
+  /** Adds wanted categories unless excluded or already there (an unmarked one is manual). */
+  private static void addMissing(Set<String> desired, Set<String> excluded, Changes changes) {
+    for (String concept : desired) {
+      if (!excluded.contains(concept) && !changes.categories.contains(concept)) {
+        changes.categories.add(concept);
+        changes.tagsToAdd.add(newTag(AUTO_CATEGORY_TAG, concept));
+        changes.categoryChanged = true;
+      }
+    }
+  }
+
+  private void apply(Dataset dataset, Changes changes) {
+    // category first: if a tag write fails, an unmarked category is treated as manual and kept,
+    // which is safer than a marker without a category (read as a manual removal)
+    if (changes.categoryChanged) {
+      dataset.setCategory(changes.categories.isEmpty() ? null : changes.categories);
+      dataset.setModifiedBy(SYNC_USER);
+      datasetMapper.update(dataset);
+    }
+    for (MachineTag tag : changes.tagsToDelete) {
+      datasetMapper.deleteMachineTag(dataset.getKey(), tag.getKey());
+    }
+    for (MachineTag tag : changes.tagsToAdd) {
+      withMyBatis.addMachineTag(machineTagMapper, datasetMapper, dataset.getKey(), tag);
+    }
   }
 
   /**
@@ -386,5 +405,23 @@ public class PrivateSectorCategoryService implements VocabularyPostProcessor {
 
   private static String normalize(String value) {
     return value.trim().toLowerCase(Locale.ROOT);
+  }
+
+  private record DatasetTags(List<MachineTag> markers, Set<String> excluded) {}
+
+  /** What a sync run changes on one dataset. */
+  private static final class Changes {
+    private final Set<String> categories;
+    private final List<MachineTag> tagsToDelete = new ArrayList<>();
+    private final List<MachineTag> tagsToAdd = new ArrayList<>();
+    private boolean categoryChanged;
+
+    private Changes(Set<String> current) {
+      this.categories = current != null ? new LinkedHashSet<>(current) : new LinkedHashSet<>();
+    }
+
+    private boolean isEmpty() {
+      return !categoryChanged && tagsToDelete.isEmpty() && tagsToAdd.isEmpty();
+    }
   }
 }
